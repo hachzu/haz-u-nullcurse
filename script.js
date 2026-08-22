@@ -1768,35 +1768,14 @@ function render() {
 
 
     /*
-       Remove enemies that are no
-       longer valid after level change.
+       note: we used to prune invalid active enemies right
+       here on every render, which sounds fine until you
+       remember render() fires on every keystroke. typing
+       "20" passes through "2" for a split second, which was
+       enough to nuke any level-15+ enemy you had selected.
+       moved this to only run once you're done editing the
+       level field, see pruneInvalidActiveEnemies() below
     */
-
-    for (
-        const enemyName
-        of runState.activeEnemies
-    ) {
-
-        const enemy =
-            enemies.find(
-                item =>
-                    item.name ===
-                    enemyName
-            );
-
-
-        if (
-            enemy &&
-            runState.level <
-            enemy.level
-        ) {
-
-            runState.activeEnemies
-                .delete(enemyName);
-
-        }
-
-    }
 
 
     /* Active curse count */
@@ -1850,6 +1829,44 @@ function render() {
 
 
 /* =========================================================
+   PRUNE INVALID ACTIVE ENEMIES
+   only call this once the level field is actually settled
+   (blur / enter), never on every keystroke - see the long
+   rant in render() about why
+   ========================================================= */
+
+function pruneInvalidActiveEnemies() {
+
+    for (
+        const enemyName
+        of runState.activeEnemies
+    ) {
+
+        const enemy =
+            enemies.find(
+                item =>
+                    item.name ===
+                    enemyName
+            );
+
+
+        if (
+            enemy &&
+            runState.level <
+            enemy.level
+        ) {
+
+            runState.activeEnemies
+                .delete(enemyName);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
    LEVEL INPUT
    ========================================================= */
 
@@ -1858,6 +1875,29 @@ document
     .addEventListener(
         "input",
         render
+    );
+
+
+/*
+   "change" fires on blur / enter, i.e. once the person is
+   actually done typing a number, not mid-keystroke. that's
+   when it's safe to prune enemies that no longer qualify
+*/
+
+document
+    .getElementById("levelInput")
+    .addEventListener(
+        "change",
+        () => {
+
+            runState.level =
+                getLevel();
+
+            pruneInvalidActiveEnemies();
+
+            render();
+
+        }
     );
 
 
