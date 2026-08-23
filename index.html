@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Nullscape Curse Calculator</title>
+    <title>Nullscape Curse Tracker
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
 <body>
@@ -19,7 +25,7 @@
 
         <header class="site-header">
             <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
-            <div class="subtitle">CURSE CALCULATOR</div>
+            <div class="subtitle">CURSE TRACKER</div>
             <div class="credit">
                 Made by <span class="credit-handle">@sxfthazu</span>
             </div>
@@ -40,6 +46,21 @@
         </section>
 
 
+        <section class="control-section level-section">
+
+            <label for="playerCountInput">PLAYER COUNT</label>
+
+            <input
+                type="number"
+                id="playerCountInput"
+                min="1"
+                max="20"
+                value="1"
+            >
+
+        </section>
+
+
         <section class="control-section">
 
             <div class="section-label">
@@ -50,6 +71,11 @@
                 id="difficultyContainer"
                 class="button-grid difficulty-grid"
             ></div>
+
+            <div class="medal-payout-indicator">
+                <span class="medal-payout-label">MEDAL PAYOUT</span>
+                <span class="medal-payout-value" id="medalPayoutValue">0</span>
+            </div>
 
         </section>
 
@@ -159,7 +185,7 @@
                 </div>
 
                 <div class="pool-subtitle">
-                    hold a curse card to add it to the active run
+                    this system will help you prepare for future curses and manage curse selection efficiently. select your current level, difficulty, and active enemies to see the curses that will be available to you.
                 </div>
             </div>
 

@@ -16,6 +16,7 @@ body {
 
 :root {
     --bg-opacity: 0.09;
+    --font-modern: 'Space Grotesk', Arial, Helvetica, sans-serif;
 }
 
 
@@ -135,7 +136,8 @@ body {
 }
 
 
-#levelInput {
+#levelInput,
+#playerCountInput {
     width: 100%;
 
     padding: 14px 15px;
@@ -156,9 +158,48 @@ body {
 }
 
 
-#levelInput:focus {
+#levelInput:focus,
+#playerCountInput:focus {
     border-color: #b866ff;
     box-shadow: 0 0 0 3px rgba(184, 102, 255, 0.18);
+}
+
+
+.medal-payout-indicator {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 10px;
+    padding: 10px 12px;
+
+    background: #0d1720;
+
+    border: 1px solid #00c8ff;
+    border-radius: 8px;
+
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(143, 55, 216, 0.15);
+}
+
+
+.medal-payout-label {
+    color: #8fd9ff;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.medal-payout-value {
+    background: linear-gradient(90deg, #00c8ff, #8f37d8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    font-size: 16px;
+    font-weight: 900;
 }
 
 
@@ -420,6 +461,24 @@ body {
 }
 
 
+.active-curse--medal {
+    background: linear-gradient(90deg, #0077a3, #6a1fd0);
+
+    border-color: #6fe0ff;
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.4), 0 0 14px rgba(143, 55, 216, 0.3);
+}
+
+
+.active-curse--medal-purified {
+    background: linear-gradient(90deg, #4a4d55, #4a4152);
+
+    border-color: #7c8290;
+    box-shadow: 0 0 10px rgba(120, 130, 150, 0.25);
+
+    color: #cfcfd6;
+}
+
+
 .active-curse-content {
     position: relative;
     z-index: 2;
@@ -479,6 +538,47 @@ body {
     border-color: #ffffff;
 
     transform: scale(1.1);
+}
+
+
+.purify-button {
+    flex-shrink: 0;
+
+    margin-left: auto;
+    margin-right: 58px;
+
+    padding: 4px 9px;
+
+    background: rgba(0, 0, 0, 0.25);
+
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.purify-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+
+    border-color: #ffffff;
+}
+
+
+.purify-button.purified {
+    background: rgba(255, 255, 255, 0.12);
+
+    border-color: rgba(255, 255, 255, 0.55);
+
+    color: #d8d8de;
 }
 
 
@@ -574,6 +674,8 @@ body {
     padding: 32px;
 
     overflow-y: auto;
+
+    font-family: var(--font-modern);
 }
 
 
@@ -781,7 +883,9 @@ body {
 
 
 .curse-card {
-    aspect-ratio: 1 / 1;
+    position: relative;
+
+    aspect-ratio: 1 / 1.16;
     min-height: unset;
 
     display: flex;
@@ -809,6 +913,11 @@ body {
         border-color 0.12s,
         transform 0.12s,
         box-shadow 0.12s;
+}
+
+
+.curse-card.medal {
+    margin-bottom: 13px;
 }
 
 
@@ -845,8 +954,8 @@ body {
 .curse-card .card-media {
     flex: 0 0 auto;
 
-    width: 58%;
-    height: 58%;
+    width: 64%;
+    height: 64%;
 
     margin: 2px auto 0;
 }
@@ -902,10 +1011,9 @@ body {
 .curse-name-label {
     margin-top: 2px;
 
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 800;
-    font-size: 9.5px;
-    letter-spacing: 0.2px;
+    font-weight: 700;
+    font-size: 8px;
+    letter-spacing: 0.15px;
     line-height: 1.2;
 
     color: #f0e4ff;
@@ -914,6 +1022,26 @@ body {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+
+#medalCurseContainer .curse-name-label {
+    color: #8fd9ff;
+}
+
+
+#globalCurseContainer .curse-name-label {
+    color: #d59bff;
+}
+
+
+#enemyCurseContainer .curse-name-label {
+    color: #ff9d9d;
+}
+
+
+#greaterCurseContainer .curse-name-label {
+    color: #ffb37a;
 }
 
 
@@ -930,6 +1058,34 @@ body {
     color: #d59bff;
     font-weight: 700;
     letter-spacing: 0.5px;
+}
+
+
+.curse-reward-badge {
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+
+    transform: translateX(-50%);
+
+    padding: 2px 9px;
+
+    background: linear-gradient(135deg, #00c8ff, #6f3fd8);
+
+    border: 1px solid rgba(0, 200, 255, 0.6);
+    border-radius: 999px;
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+
+    white-space: nowrap;
+
+    box-shadow: 0 3px 8px rgba(0, 200, 255, 0.35);
+
+    z-index: 2;
 }
 
 

@@ -8,7 +8,11 @@ const runState = {
 
     activeCurses: new Set(),
 
-    curseStacks: new Map()
+    curseStacks: new Map(),
+
+    medalCurseValues: new Map(),
+
+    medalPurified: new Set()
 
 };
 
@@ -67,7 +71,8 @@ const globalCurses = [
         name: "Bigger Tripmines",
         level: 5,
         casualDisabled: true,
-        medal: true
+        medal: true,
+        value: 200
     },
 
     {
@@ -75,7 +80,8 @@ const globalCurses = [
         level: 5,
         casualDisabled: true,
         max: 2,
-        medal: true
+        medal: true,
+        value: 150
     },
 
     {
@@ -96,6 +102,7 @@ const globalCurses = [
         name: "Lap 2",
         level: 8,
         medal: true,
+        value: 400,
         exclusiveGroup: "lap2-fragilegifts"
     },
 
@@ -105,7 +112,7 @@ const globalCurses = [
         exclusiveGroup: "lap2-fragilegifts"
     },
 
-    { name: "Nothing", level: 8, medal: true },
+    { name: "Nothing", level: 8, medal: true, value: 325 },
 
     { name: "Jackpot", level: 10 },
 
@@ -113,7 +120,8 @@ const globalCurses = [
         name: "Barotrauma",
         level: 15,
         casualDisabled: true,
-        medal: true
+        medal: true,
+        value: 125
     },
 
     {
@@ -123,7 +131,7 @@ const globalCurses = [
         max: 2
     },
 
-    { name: "Beacon Mirage", level: 25, medal: true }
+    { name: "Beacon Mirage", level: 25, medal: true, value: 300 }
 
 ];
 
@@ -131,35 +139,39 @@ const globalCurses = [
 const enemyCurses = [
 
     { name: "More Ringing", enemy: "Bell" },
-    { name: "Mighty Gong", enemy: "Bell", medal: true },
-    { name: "Concussion", enemy: "Bell", medal: true },
+    { name: "Mighty Gong", enemy: "Bell", medal: true, value: 150 },
+    { name: "Concussion", enemy: "Bell", medal: true, value: 200 },
 
     { name: "Bigger Marts", enemy: "Mart" },
 
     {
         name: "Mart Infection",
         enemy: "Mart",
+        level: 8,
         exclusiveGroup: "mart-infection-slide"
     },
 
     {
         name: "Mart Slide",
         enemy: "Mart",
+        level: 8,
         medal: true,
+        value: 330,
         exclusiveGroup: "mart-infection-slide"
     },
 
-    { name: "Pacifier", enemy: "Baby", medal: true },
-    { name: "Problem Child", enemy: "Baby", medal: true },
+    { name: "Pacifier", enemy: "Baby", medal: true, value: 230 },
+    { name: "Problem Child", enemy: "Baby", medal: true, value: 150 },
 
     {
         name: "Bigger Blast",
         enemy: "ICBM",
         medal: true,
+        value: 200,
         max: 2
     },
 
-    { name: "Scorched Earth", enemy: "ICBM", medal: true },
+    { name: "Scorched Earth", enemy: "ICBM", medal: true, value: 150 },
 
     {
         name: "Closer Husk",
@@ -174,21 +186,21 @@ const enemyCurses = [
     },
 
     { name: "Taller Husk", enemy: "Husk" },
-    { name: "Husk Express", enemy: "Husk", medal: true },
-    { name: "Conga Line", enemy: "Husk", medal: true },
-    { name: "Random Husk", enemy: "Husk" },
+    { name: "Husk Express", enemy: "Husk", medal: true, value: 200 },
+    { name: "Conga Line", enemy: "Husk", medal: true, value: 200 },
+    { name: "Random Husk", enemy: "Husk", level: 15 },
 
     { name: "Resonating Shockwaves", enemy: "Springer" },
-    { name: "Springloaded", enemy: "Springer", medal: true },
+    { name: "Springloaded", enemy: "Springer", medal: true, value: 200 },
 
-    { name: "Bloodier Meat", enemy: "Flesh", medal: true },
+    { name: "Bloodier Meat", enemy: "Flesh", medal: true, value: 300 },
     { name: "Blighted Jump Pads", enemy: "Flesh" },
 
     { name: "Camoflauge", enemy: "Guardian" },
-    { name: "Shotgun", enemy: "Guardian", medal: true },
+    { name: "Shotgun", enemy: "Guardian", medal: true, value: 200 },
 
     { name: "Ambush", enemy: "Telefragger" },
-    { name: "Accurate Telefragger", enemy: "Telefragger", medal: true },
+    { name: "Accurate Telefragger", enemy: "Telefragger", medal: true, value: 150 },
 
     { name: "Lost Embers", enemy: "Kolona" },
 
@@ -196,12 +208,13 @@ const enemyCurses = [
         name: "Burning Bouquet",
         enemy: "Kolona",
         medal: true,
+        value: 250,
         requiresCurses: ["Razorbloom"]
     },
 
-    { name: "Blade Carousel", enemy: "Voidbreaker", medal: true },
+    { name: "Blade Carousel", enemy: "Voidbreaker", medal: true, value: 290 },
 
-    { name: "Deadly Melody", enemy: "Cadence", medal: true }
+    { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280 }
 
 ];
 
@@ -218,7 +231,7 @@ const greaterCurses = [
     {
         name: "Run",
         type: "Global",
-        level: 10,
+        level: 15,
         casualDisabled: true
     },
 
@@ -273,6 +286,19 @@ function getLevel() {
 }
 
 
+function getPlayerCount() {
+
+    return Math.min(
+        20,
+        Math.max(
+            1,
+            Number(document.getElementById("playerCountInput").value) || 1
+        )
+    );
+
+}
+
+
 function hasEnemy(name) {
 
     return runState.activeEnemies.has(name);
@@ -290,6 +316,106 @@ function hasCurse(name) {
 function getCurseStackCount(name) {
 
     return runState.curseStacks.get(name) || 0;
+
+}
+
+
+function getTotalMedalCurseValue() {
+
+    let total = 0;
+
+    for (const value of runState.medalCurseValues.values()) {
+
+        total += value;
+
+    }
+
+    return total;
+
+}
+
+
+function getMedalPayout() {
+
+    const totalCurseValue = getTotalMedalCurseValue();
+    const playerCount = getPlayerCount();
+
+    return Math.floor(
+        (40 + totalCurseValue / 7.5) * Math.sqrt(playerCount)
+    );
+
+}
+
+
+function getCurseMedalReward(curseValue) {
+
+    const medalPayout = getMedalPayout();
+
+    return Math.floor((curseValue * 0.8) * medalPayout / 40);
+
+}
+
+
+function isGreaterCurse(curse) {
+
+    return curse.type !== undefined;
+
+}
+
+
+function getCurseTier(curse) {
+
+    if (isGreaterCurse(curse)) {
+
+        return 0;
+
+    }
+
+    if (curse.medal) {
+
+        return 1;
+
+    }
+
+    return 2;
+
+}
+
+
+function togglePurify(curseName) {
+
+    if (runState.medalPurified.has(curseName)) {
+
+        runState.medalPurified.delete(curseName);
+
+        runState.activeCurses.add(curseName);
+        runState.curseStacks.set(curseName, 1);
+
+    } else {
+
+        runState.medalPurified.add(curseName);
+
+        runState.activeCurses.delete(curseName);
+        runState.curseStacks.delete(curseName);
+
+    }
+
+    render();
+
+}
+
+
+function getDisplayedCurseNames() {
+
+    const names = new Set(runState.activeCurses);
+
+    for (const name of runState.medalPurified) {
+
+        names.add(name);
+
+    }
+
+    return Array.from(names);
 
 }
 
@@ -588,23 +714,7 @@ function getGreaterPool() {
 
     const level = getLevel();
 
-    let isGreaterLevel = false;
-
-    if (runState.difficulty === "Casual") {
-
-        isGreaterLevel = level >= 15 && (level === 15 || level >= 25);
-
-    } else if (runState.difficulty === "Standard") {
-
-        isGreaterLevel = level >= 10;
-
-    } else if (runState.difficulty === "Extreme") {
-
-        isGreaterLevel = level >= 10;
-
-    }
-
-    if (!isGreaterLevel) {
+    if (level < 10) {
 
         return [];
 
@@ -620,7 +730,9 @@ function getMedalPool() {
     const global = getGlobalPool();
     const enemy = getEnemyPool();
 
-    return [...global, ...enemy].filter(curse => curse.medal);
+    return [...global, ...enemy]
+        .filter(curse => curse.medal)
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
 
 }
 
@@ -673,6 +785,13 @@ function selectCurse(curse) {
         getCurseStackCount(curse.name) + 1
     );
 
+    if (curse.medal) {
+
+        runState.medalCurseValues.set(curse.name, curse.value || 0);
+        runState.medalPurified.delete(curse.name);
+
+    }
+
     render();
 
 }
@@ -680,12 +799,20 @@ function selectCurse(curse) {
 
 function removeCurse(curseName) {
 
+    const curse = findCurseByName(curseName);
     const currentCount = getCurseStackCount(curseName);
 
     if (currentCount <= 1) {
 
         runState.activeCurses.delete(curseName);
         runState.curseStacks.delete(curseName);
+
+        if (curse && curse.medal) {
+
+            runState.medalPurified.delete(curseName);
+            runState.medalCurseValues.delete(curseName);
+
+        }
 
     } else {
 
@@ -702,15 +829,13 @@ function removeAllCurses() {
 
     runState.activeCurses.clear();
     runState.curseStacks.clear();
+    runState.medalCurseValues.clear();
+    runState.medalPurified.clear();
 
     render();
 
 }
 
-
-/* =========================================================
-   AUDIO
-   ========================================================= */
 
 let audioCtx = null;
 
@@ -741,7 +866,72 @@ function getAudioCtx() {
 }
 
 
-function playClickSound() {
+function createNoiseBuffer(ctx, duration) {
+
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+
+    }
+
+    return buffer;
+
+}
+
+
+function playNoiseHit(ctx, now, duration, filterFreq, filterType, peakGain) {
+
+    const noise = ctx.createBufferSource();
+
+    noise.buffer = createNoiseBuffer(ctx, duration);
+
+    const filter = ctx.createBiquadFilter();
+
+    filter.type = filterType;
+    filter.frequency.value = filterFreq;
+
+    const gain = ctx.createGain();
+
+    gain.gain.setValueAtTime(peakGain, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + duration);
+
+}
+
+
+function playTone(ctx, now, freqStart, freqEnd, duration, type, peakGain) {
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqStart, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 1), now + duration);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(peakGain, now + Math.min(0.006, duration / 3));
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + duration + 0.01);
+
+}
+
+
+function playThockSound() {
 
     const ctx = getAudioCtx();
 
@@ -755,71 +945,175 @@ function playClickSound() {
 
         const now = ctx.currentTime;
 
-        const thump = ctx.createOscillator();
-        const thumpGain = ctx.createGain();
-
-        thump.type = "sine";
-        thump.frequency.setValueAtTime(10, now);
-        thump.frequency.exponentialRampToValueAtTime(48, now + 0.06);
-
-        thumpGain.gain.setValueAtTime(0.0001, now);
-        thumpGain.gain.exponentialRampToValueAtTime(0.55, now + 0.004);
-        thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
-
-        thump.connect(thumpGain);
-        thumpGain.connect(ctx.destination);
-
-        thump.start(now);
-        thump.stop(now + 0.11);
-
-        const knockDuration = 0.1;
-        const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * knockDuration));
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-
-        for (let i = 0; i < bufferSize; i++) {
-
-            data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-
-        }
-
-        const noise = ctx.createBufferSource();
-
-        noise.buffer = noiseBuffer;
-
-        const noiseFilter = ctx.createBiquadFilter();
-
-        noiseFilter.type = "lowpass";
-        noiseFilter.frequency.value = 350;
-
-        const noiseGain = ctx.createGain();
-
-        noiseGain.gain.setValueAtTime(0.3, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + knockDuration);
-
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
-
-        noise.start(now);
-        noise.stop(now + knockDuration);
+        playTone(ctx, now, 380, 190, 0.045, "triangle", 0.4);
+        playNoiseHit(ctx, now, 0.022, 1500, "bandpass", 0.3);
 
     } catch (error) {
 
-        console.warn("couldn't play click sound:", error);
+        console.warn("couldn't play thock sound:", error);
 
     }
 
 }
 
 
-/* =========================================================
-   HOLD-TO-ACTIVATE BUTTONS
-   ========================================================= */
+function playSelectSound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 340, 560, 0.07, "triangle", 0.3);
+        playNoiseHit(ctx, now, 0.018, 2200, "highpass", 0.06);
+
+    } catch (error) {
+
+        console.warn("couldn't play select sound:", error);
+
+    }
+
+}
+
+
+function playEnemySound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 200, 340, 0.06, "sawtooth", 0.16);
+        playNoiseHit(ctx, now, 0.025, 700, "lowpass", 0.14);
+
+    } catch (error) {
+
+        console.warn("couldn't play enemy sound:", error);
+
+    }
+
+}
+
+
+function playDifficultySound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 300, 260, 0.055, "sine", 0.28);
+
+    } catch (error) {
+
+        console.warn("couldn't play difficulty sound:", error);
+
+    }
+
+}
+
+
+function playRemoveSound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 640, 180, 0.06, "square", 0.1);
+        playNoiseHit(ctx, now, 0.035, 2600, "highpass", 0.2);
+
+    } catch (error) {
+
+        console.warn("couldn't play remove sound:", error);
+
+    }
+
+}
+
+
+function playUtilitySound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 720, 700, 0.03, "sine", 0.12);
+
+    } catch (error) {
+
+        console.warn("couldn't play utility sound:", error);
+
+    }
+
+}
+
+
+function playPurifySound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        playTone(ctx, now, 520, 700, 0.06, "sine", 0.22);
+        playTone(ctx, now + 0.05, 780, 900, 0.07, "sine", 0.18);
+
+    } catch (error) {
+
+        console.warn("couldn't play purify sound:", error);
+
+    }
+
+}
+
 
 const HOLD_DURATION_MS = 450;
 
-function attachHoldAction(button, callback) {
+function attachHoldAction(button, callback, soundFn = playThockSound) {
 
     button.classList.add("hold-button");
 
@@ -866,7 +1160,7 @@ function attachHoldAction(button, callback) {
 
             button.classList.remove("holding");
 
-            playClickSound();
+            soundFn();
 
             callback(event);
 
@@ -905,11 +1199,11 @@ function attachHoldAction(button, callback) {
 }
 
 
-function attachClickAction(button, callback) {
+function attachClickAction(button, callback, soundFn = playSelectSound) {
 
     button.addEventListener("click", event => {
 
-        playClickSound();
+        soundFn();
 
         callback(event);
 
@@ -934,7 +1228,7 @@ function createEnemyButton(enemy) {
 
     button.appendChild(media);
 
-    attachClickAction(button, () => toggleEnemy(enemy));
+    attachClickAction(button, () => toggleEnemy(enemy), playEnemySound);
 
     return button;
 
@@ -966,7 +1260,7 @@ function createDifficultyButton(difficulty) {
 
         render();
 
-    });
+    }, playDifficultySound);
 
     return button;
 
@@ -1013,16 +1307,20 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
+    if (isMedal) {
+
+        const reward = document.createElement("div");
+
+        reward.className = "curse-reward-badge";
+        reward.textContent = `+ ${getCurseMedalReward(curse.value || 0)}`;
+
+        card.appendChild(reward);
+
+    }
+
     attachClickAction(card, () => selectCurse(curse));
 
     return card;
-
-}
-
-
-function isGreaterCurse(curse) {
-
-    return curse.type !== undefined;
 
 }
 
@@ -1033,7 +1331,9 @@ function renderActiveCurses() {
 
     container.innerHTML = "";
 
-    if (runState.activeCurses.size === 0) {
+    const allNames = getDisplayedCurseNames();
+
+    if (allNames.length === 0) {
 
         const empty = document.createElement("div");
 
@@ -1046,21 +1346,15 @@ function renderActiveCurses() {
 
     }
 
-    let orderedNames = Array.from(runState.activeCurses).sort((a, b) => {
+    let orderedNames = allNames.sort((a, b) => {
 
         const curseA = findCurseByName(a);
         const curseB = findCurseByName(b);
 
-        const aIsGreater = curseA && isGreaterCurse(curseA);
-        const bIsGreater = curseB && isGreaterCurse(curseB);
+        const tierA = curseA ? getCurseTier(curseA) : 2;
+        const tierB = curseB ? getCurseTier(curseB) : 2;
 
-        if (aIsGreater === bIsGreater) {
-
-            return 0;
-
-        }
-
-        return aIsGreater ? -1 : 1;
+        return tierA - tierB;
 
     });
 
@@ -1099,12 +1393,26 @@ function renderActiveCurses() {
         }
 
         const greater = isGreaterCurse(curse);
+        const isMedalCurse = !!curse.medal;
+        const purified = runState.medalPurified.has(curseName);
 
         const item = document.createElement("div");
 
-        item.className = greater
-            ? "active-curse active-curse--greater"
-            : "active-curse";
+        item.className = "active-curse";
+
+        if (greater) {
+
+            item.classList.add("active-curse--greater");
+
+        } else if (isMedalCurse && purified) {
+
+            item.classList.add("active-curse--medal-purified");
+
+        } else if (isMedalCurse) {
+
+            item.classList.add("active-curse--medal");
+
+        }
 
         const removeButton = document.createElement("button");
 
@@ -1129,7 +1437,7 @@ function renderActiveCurses() {
 
             removeCurse(curse.name);
 
-        });
+        }, playRemoveSound);
 
         item.appendChild(removeButton);
 
@@ -1151,6 +1459,41 @@ function renderActiveCurses() {
         }
 
         content.appendChild(name);
+
+        if (isMedalCurse) {
+
+            const purifyButton = document.createElement("button");
+
+            purifyButton.className = "purify-button";
+
+            if (purified) {
+
+                purifyButton.classList.add("purified");
+
+            }
+
+            const purifyLabel = document.createElement("span");
+
+            purifyLabel.className = "btn-label";
+            purifyLabel.textContent = purified ? "Purified" : "Purify?";
+
+            purifyButton.appendChild(purifyLabel);
+
+            attachClickAction(purifyButton, event => {
+
+                if (event && event.stopPropagation) {
+
+                    event.stopPropagation();
+
+                }
+
+                togglePurify(curse.name);
+
+            }, playPurifySound);
+
+            content.appendChild(purifyButton);
+
+        }
 
         item.appendChild(content);
 
@@ -1207,11 +1550,17 @@ function saveRunState() {
 
             difficulty: runState.difficulty,
 
+            playerCount: getPlayerCount(),
+
             activeEnemies: Array.from(runState.activeEnemies),
 
             activeCurses: Array.from(runState.activeCurses),
 
-            curseStacks: Array.from(runState.curseStacks.entries())
+            curseStacks: Array.from(runState.curseStacks.entries()),
+
+            medalCurseValues: Array.from(runState.medalCurseValues.entries()),
+
+            medalPurified: Array.from(runState.medalPurified)
 
         };
 
@@ -1245,6 +1594,15 @@ function loadRunState() {
         runState.activeEnemies = new Set(saved.activeEnemies || []);
         runState.activeCurses = new Set(saved.activeCurses || []);
         runState.curseStacks = new Map(saved.curseStacks || []);
+        runState.medalCurseValues = new Map(saved.medalCurseValues || []);
+        runState.medalPurified = new Set(saved.medalPurified || []);
+
+        if (saved.playerCount) {
+
+            document.getElementById("playerCountInput").value =
+                Math.min(20, Math.max(1, saved.playerCount));
+
+        }
 
     } catch (error) {
 
@@ -1269,6 +1627,8 @@ function render() {
 
     });
 
+    document.getElementById("medalPayoutValue").textContent = getMedalPayout();
+
     const enemyContainer = document.getElementById("enemyContainer");
 
     enemyContainer.innerHTML = "";
@@ -1281,7 +1641,7 @@ function render() {
 
         });
 
-    document.getElementById("curseCount").textContent = runState.activeCurses.size;
+    document.getElementById("curseCount").textContent = getDisplayedCurseNames().length;
     document.getElementById("enemyCount").textContent = runState.activeEnemies.size;
 
     renderActiveCurses();
@@ -1320,6 +1680,21 @@ document.getElementById("levelInput").addEventListener("change", () => {
     runState.level = getLevel();
 
     pruneInvalidActiveEnemies();
+
+    render();
+
+});
+
+
+document.getElementById("playerCountInput").addEventListener("input", () => {
+
+    const clamped = getPlayerCount();
+
+    if (Number(document.getElementById("playerCountInput").value) !== clamped) {
+
+        document.getElementById("playerCountInput").value = clamped;
+
+    }
 
     render();
 
@@ -1370,7 +1745,7 @@ if (activeCurseSearchClear) {
 
         activeCurseSearchInput.focus();
 
-    });
+    }, playUtilitySound);
 
 }
 
@@ -1383,8 +1758,11 @@ attachHoldAction(document.getElementById("resetButton"), () => {
     runState.activeEnemies.clear();
     runState.activeCurses.clear();
     runState.curseStacks.clear();
+    runState.medalCurseValues.clear();
+    runState.medalPurified.clear();
 
     document.getElementById("levelInput").value = 1;
+    document.getElementById("playerCountInput").value = 1;
 
     if (activeCurseSearchInput) {
 
