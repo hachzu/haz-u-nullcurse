@@ -11,20 +11,9 @@
 
 <body>
 
-<!--
-    background layer, sits behind everything and drifts a little
-    with the mouse. right now it's just a placeholder gradient,
-    swap the background-image in style.css (.bg-layer) for your
-    actual art whenever it's ready. don't touch the sizing/position
-    stuff unless you want to fight the parallax math, ask me first lol
--->
 <div id="bgLayer" class="bg-layer"></div>
 
 <div class="app">
-
-    <!-- =====================================================
-         LEFT SIDE
-         ===================================================== -->
 
     <aside class="left-panel">
 
@@ -36,8 +25,6 @@
             </div>
         </header>
 
-
-        <!-- LEVEL -->
 
         <section class="control-section level-section">
 
@@ -53,8 +40,6 @@
         </section>
 
 
-        <!-- DIFFICULTY -->
-
         <section class="control-section">
 
             <div class="section-label">
@@ -68,8 +53,6 @@
 
         </section>
 
-
-        <!-- ACTIVE ENEMIES -->
 
         <section class="control-section">
 
@@ -94,8 +77,6 @@
         </section>
 
 
-        <!-- ACTIVE CURSES -->
-
         <section class="control-section active-section">
 
             <div class="section-heading">
@@ -108,6 +89,27 @@
                 >
                     0
                 </span>
+
+            </div>
+
+            <div class="active-curse-search">
+
+                <input
+                    type="text"
+                    id="activeCurseSearch"
+                    class="active-curse-search-input"
+                    placeholder="search active curses..."
+                    autocomplete="off"
+                >
+
+                <button
+                    type="button"
+                    id="activeCurseSearchClear"
+                    class="active-curse-search-clear"
+                    aria-label="Clear search"
+                >
+                    <span class="btn-label">&times;</span>
+                </button>
 
             </div>
 
@@ -125,22 +127,27 @@
         </section>
 
 
-        <!-- RESET -->
+        <div class="run-controls">
 
-        <button
-            id="resetButton"
-            class="reset-button"
-        >
-            RESET RUN
-        </button>
+            <button
+                id="resetButton"
+                class="reset-button"
+            >
+                <span class="btn-label">RESET RUN</span>
+            </button>
+
+            <button
+                id="removeAllCursesButton"
+                class="reset-button remove-all-button"
+            >
+                <span class="btn-label">REMOVE ALL CURSES</span>
+            </button>
+
+        </div>
 
     </aside>
 
 
-
-    <!-- =====================================================
-         RIGHT SIDE
-         ===================================================== -->
 
     <main class="right-panel">
 
@@ -148,18 +155,16 @@
 
             <div>
                 <div class="pool-title animated-header-text">
-                    POTENTIAL CURSE POOL
+                    CURSE POOL
                 </div>
 
                 <div class="pool-subtitle">
-                    click a curse to add it to the active run
+                    hold a curse card to add it to the active run
                 </div>
             </div>
 
         </header>
 
-
-        <!-- MEDAL CURSES -->
 
         <section class="result-section">
 
@@ -177,8 +182,6 @@
         </section>
 
 
-        <!-- GLOBAL CURSES -->
-
         <section class="result-section">
 
             <div class="result-heading">
@@ -195,8 +198,6 @@
         </section>
 
 
-        <!-- ENEMY CURSES -->
-
         <section class="result-section">
 
             <div class="result-heading">
@@ -212,8 +213,6 @@
 
         </section>
 
-
-        <!-- GREATER CURSES -->
 
         <section class="result-section">
 

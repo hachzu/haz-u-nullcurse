@@ -1,12 +1,3 @@
-/* =========================================================
-   NULLSCAPE CURSE CALCULATOR
-   ========================================================= */
-
-
-/* =========================================================
-   RUN STATE
-   ========================================================= */
-
 const runState = {
 
     level: 1,
@@ -17,21 +8,10 @@ const runState = {
 
     activeCurses: new Set(),
 
-    /*
-       Tracks how many times each curse has been
-       taken this run. Most curses cap at 1; curses
-       with a `max` (Minefield, More Tripmines,
-       Bigger Blast) can be taken repeatedly up to
-       that number.
-    */
     curseStacks: new Map()
 
 };
 
-
-/* =========================================================
-   DIFFICULTIES
-   ========================================================= */
 
 const difficulties = [
     "Casual",
@@ -40,138 +20,48 @@ const difficulties = [
 ];
 
 
-/* =========================================================
-   ENEMIES
-   ========================================================= */
-
 const enemies = [
 
-    {
-        name: "Bell",
-        level: 1
-    },
-
-    {
-        name: "Baby",
-        level: 1
-    },
-
-    {
-        name: "Husk",
-        level: 1
-    },
-
-    {
-        name: "ICBM",
-        level: 1
-    },
-
-    {
-        name: "Springer",
-        level: 1
-    },
-
-    {
-        name: "Mart",
-        level: 1
-    },
-
-    {
-        name: "Flesh",
-        level: 5
-    },
-
-    {
-        name: "Operator",
-        level: 5
-    },
-
-    {
-        name: "Guardian",
-        level: 8
-    },
-
-    {
-        name: "Telefragger",
-        level: 8
-    },
-
-    {
-        name: "Kolona",
-        level: 10
-    },
+    { name: "Bell", level: 1 },
+    { name: "Baby", level: 1 },
+    { name: "Husk", level: 1 },
+    { name: "ICBM", level: 1 },
+    { name: "Springer", level: 1 },
+    { name: "Mart", level: 1 },
+    { name: "Flesh", level: 5 },
+    { name: "Operator", level: 5 },
+    { name: "Guardian", level: 8 },
+    { name: "Telefragger", level: 8 },
+    { name: "Kolona", level: 10 },
 
     {
         name: "Voidbound Baby",
         level: 10,
-
-        requiresEnemies: [
-            "Baby"
-        ]
+        requiresEnemies: ["Baby"]
     },
 
-    {
-        name: "Cadence",
-        level: 15
-    },
-
-    {
-        name: "Voidbreaker",
-        level: 15
-    },
+    { name: "Cadence", level: 15 },
+    { name: "Voidbreaker", level: 15 },
 
     {
         name: "Voidbound Guardian",
         level: 20,
-
-        requiresEnemies: [
-            "Guardian"
-        ]
+        requiresEnemies: ["Guardian"]
     },
 
-    {
-        name: "Scrapmaw",
-        level: 20
-    },
-
-    {
-        name: "Sigil",
-        level: 20
-    }
+    { name: "Scrapmaw", level: 20 },
+    { name: "Sigil", level: 20 }
 
 ];
 
 
-/* =========================================================
-   GLOBAL CURSES
-   ========================================================= */
-
 const globalCurses = [
 
-    {
-        name: "Lower Gravity",
-        level: 1
-    },
-
-    {
-        name: "Random Spawn",
-        level: 1
-    },
-
-    {
-        name: "Scattered Gifts",
-        level: 1
-    },
-
-    {
-        name: "Weaker Jump Pads",
-        level: 1
-    },
-
-    {
-        name: "Savory Ring",
-        level: 5
-    },
+    { name: "Lower Gravity", level: 1 },
+    { name: "Random Spawn", level: 1 },
+    { name: "Scattered Gifts", level: 1 },
+    { name: "Weaker Jump Pads", level: 1 },
+    { name: "Savory Ring", level: 5 },
 
     {
         name: "Bigger Tripmines",
@@ -182,7 +72,7 @@ const globalCurses = [
 
     {
         name: "More Tripmines",
-        level: 5,   
+        level: 5,
         casualDisabled: true,
         max: 2,
         medal: true
@@ -191,57 +81,37 @@ const globalCurses = [
     {
         name: "High Roller",
         level: 5,
-
-        exclusiveGroup:
-            "highroller-tweakedodds"
+        exclusiveGroup: "highroller-tweakedodds"
     },
 
     {
         name: "Tweaked Odds",
         level: 5,
-
-        exclusiveGroup:
-            "highroller-tweakedodds"
+        exclusiveGroup: "highroller-tweakedodds"
     },
 
-    {
-        name: "Fake Count",
-        level: 8
-    },
+    { name: "Fake Count", level: 8 },
 
     {
         name: "Lap 2",
         level: 8,
-
         medal: true,
-
-        exclusiveGroup:
-            "lap2-fragilegifts"
+        exclusiveGroup: "lap2-fragilegifts"
     },
 
     {
         name: "Fragile Gifts",
         level: 8,
-
-        exclusiveGroup:
-            "lap2-fragilegifts"
+        exclusiveGroup: "lap2-fragilegifts"
     },
 
-    {
-        name: "Nothing",
-        level: 8,
-        medal: true
-    },
+    { name: "Nothing", level: 8, medal: true },
 
-    {
-        name: "Jackpot",
-        level: 10
-    },
+    { name: "Jackpot", level: 10 },
 
     {
         name: "Barotrauma",
         level: 15,
-
         casualDisabled: true,
         medal: true
     },
@@ -249,368 +119,155 @@ const globalCurses = [
     {
         name: "Minefield",
         level: 15,
-
         casualDisabled: true,
         max: 2
     },
 
-    {
-        name: "Beacon Mirage",
-        level: 25,
-
-        medal: true
-    }
+    { name: "Beacon Mirage", level: 25, medal: true }
 
 ];
 
 
-/* =========================================================
-   ENEMY CURSES
-   ========================================================= */
-
 const enemyCurses = [
 
-    /* BELL */
+    { name: "More Ringing", enemy: "Bell" },
+    { name: "Mighty Gong", enemy: "Bell", medal: true },
+    { name: "Concussion", enemy: "Bell", medal: true },
 
-    {
-        name: "More Ringing",
-        enemy: "Bell"
-    },
-
-    {
-        name: "Mighty Gong",
-        enemy: "Bell",
-        medal: true
-    },
-
-    {
-        name: "Concussion",
-        enemy: "Bell",
-        medal: true
-    },
-
-
-    /* MART */
-
-    {
-        name: "Bigger Marts",
-        enemy: "Mart"
-    },
+    { name: "Bigger Marts", enemy: "Mart" },
 
     {
         name: "Mart Infection",
         enemy: "Mart",
-
-        exclusiveGroup:
-            "mart-infection-slide"
+        exclusiveGroup: "mart-infection-slide"
     },
 
     {
         name: "Mart Slide",
         enemy: "Mart",
-
         medal: true,
-
-        exclusiveGroup:
-            "mart-infection-slide"
+        exclusiveGroup: "mart-infection-slide"
     },
 
-
-    /* BABY */
-
-    {
-        name: "Pacifier",
-        enemy: "Baby",
-        medal: true
-    },
-
-    {
-        name: "Problem Child",
-        enemy: "Baby",
-        medal: true
-    },
-
-
-    /* ICBM */
+    { name: "Pacifier", enemy: "Baby", medal: true },
+    { name: "Problem Child", enemy: "Baby", medal: true },
 
     {
         name: "Bigger Blast",
         enemy: "ICBM",
-
         medal: true,
-
         max: 2
     },
 
-    {
-        name: "Scorched Earth",
-        enemy: "ICBM",
-        medal: true
-    },
-
-
-    /* HUSK */
+    { name: "Scorched Earth", enemy: "ICBM", medal: true },
 
     {
         name: "Closer Husk",
         enemy: "Husk",
-
-        exclusiveGroup:
-            "husk-distance"
+        exclusiveGroup: "husk-distance"
     },
 
     {
         name: "Further Husk",
         enemy: "Husk",
-
-        exclusiveGroup:
-            "husk-distance"
+        exclusiveGroup: "husk-distance"
     },
 
-    {
-        name: "Taller Husk",
-        enemy: "Husk"
-    },
+    { name: "Taller Husk", enemy: "Husk" },
+    { name: "Husk Express", enemy: "Husk", medal: true },
+    { name: "Conga Line", enemy: "Husk", medal: true },
+    { name: "Random Husk", enemy: "Husk" },
 
-    {
-        name: "Husk Express",
-        enemy: "Husk",
-        medal: true
-    },
+    { name: "Resonating Shockwaves", enemy: "Springer" },
+    { name: "Springloaded", enemy: "Springer", medal: true },
 
-    {
-        name: "Conga Line",
-        enemy: "Husk",
-        medal: true
-    },
+    { name: "Bloodier Meat", enemy: "Flesh", medal: true },
+    { name: "Blighted Jump Pads", enemy: "Flesh" },
 
-    {
-        name: "Random Husk",
-        enemy: "Husk"
-    },
+    { name: "Camoflauge", enemy: "Guardian" },
+    { name: "Shotgun", enemy: "Guardian", medal: true },
 
+    { name: "Ambush", enemy: "Telefragger" },
+    { name: "Accurate Telefragger", enemy: "Telefragger", medal: true },
 
-    /* SPRINGER */
-
-    {
-        name: "Resonating Shockwaves",
-        enemy: "Springer"
-    },
-
-    {
-        name: "Springloaded",
-        enemy: "Springer",
-        medal: true
-    },
-
-
-    /* FLESH */
-
-    {
-        name: "Bloodier Meat",
-        enemy: "Flesh",
-        medal: true
-    },
-
-    {
-        name: "Blighted Jump Pads",
-        enemy: "Flesh"
-    },
-
-
-    /* GUARDIAN */
-
-    {
-        name: "Camoflauge",
-        enemy: "Guardian"
-    },
-
-    {
-        name: "Shotgun",
-        enemy: "Guardian",
-        medal: true
-    },
-
-
-    /* TELEFRAGGER */
-
-    {
-        name: "Ambush",
-        enemy: "Telefragger"
-    },
-
-    {
-        name: "Accurate Telefragger",
-        enemy: "Telefragger",
-        medal: true
-    },
-
-
-    /* KOLONA */
-
-    {
-        name: "Lost Embers",
-        enemy: "Kolona"
-    },
+    { name: "Lost Embers", enemy: "Kolona" },
 
     {
         name: "Burning Bouquet",
-
         enemy: "Kolona",
-
         medal: true,
-
-        requiresCurses: [
-            "Razorbloom"
-        ]
+        requiresCurses: ["Razorbloom"]
     },
 
+    { name: "Blade Carousel", enemy: "Voidbreaker", medal: true },
 
-    /* VOIDBREAKER */
-
-    {
-        name: "Blade Carousel",
-
-        enemy: "Voidbreaker",
-
-        medal: true
-    },
-
-
-    /* CADENCE */
-
-    {
-        name: "Deadly Melody",
-
-        enemy: "Cadence",
-
-        medal: true
-    }
+    { name: "Deadly Melody", enemy: "Cadence", medal: true }
 
 ];
 
 
-/* =========================================================
-   GREATER CURSES
-   ========================================================= */
-
 const greaterCurses = [
 
-    {
-        name: "One Less Choice",
-        type: "Global"
-    },
-
-    {
-        name: "Inverse Destruction",
-        type: "Global",
-        level: 15
-    },
-
-    {
-        name: "Void Implosions",
-        type: "Global"
-    },
-
-    {
-        name: "Oblivion",
-        type: "Global"
-    },
-
-    {
-        name: "Razorbloom",
-        type: "Global"
-    },
-
-    {
-        name: "Trap Card",
-        type: "Global",
-        level: 15
-    },
+    { name: "One Less Choice", type: "Global" },
+    { name: "Inverse Destruction", type: "Global", level: 15 },
+    { name: "Void Implosions", type: "Global" },
+    { name: "Oblivion", type: "Global" },
+    { name: "Razorbloom", type: "Global" },
+    { name: "Trap Card", type: "Global", level: 15 },
 
     {
         name: "Run",
         type: "Global",
-
         level: 10,
-
         casualDisabled: true
     },
 
     {
         name: "Tantrum",
         type: "Enemy",
-
-        requiresEnemies: [
-            "Baby"
-        ]
+        requiresEnemies: ["Baby"]
     },
 
     {
         name: "Hollow Tiles",
         type: "Enemy",
-
-        requiresEnemies: [
-            "ICBM"
-        ]
+        requiresEnemies: ["ICBM"]
     },
 
     {
         name: "Mass Infection",
         type: "Enemy",
-
-        requiresEnemies: [
-            "Flesh"
-        ]
+        requiresEnemies: ["Flesh"]
     },
 
     {
         name: "Malfunction",
         type: "Enemy",
-
-        requiresEnemies: [
-            "Operator"
-        ]
+        requiresEnemies: ["Operator"]
     },
 
     {
         name: "Ballet of Blades",
         type: "Enemy",
-
-        requiresEnemies: [
-            "Voidbreaker"
-        ],
-
-        exclusiveGroup:
-            "blade-choice"
+        requiresEnemies: ["Voidbreaker"],
+        exclusiveGroup: "blade-choice"
     },
 
     {
         name: "Blade Bombardment",
         type: "Enemy",
-
-        requiresEnemies: [
-            "Voidbreaker"
-        ],
-
-        exclusiveGroup:
-            "blade-choice"
+        requiresEnemies: ["Voidbreaker"],
+        exclusiveGroup: "blade-choice"
     }
 
 ];
 
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
-
 function getLevel() {
 
     return Math.max(
         1,
-        Number(
-            document.getElementById("levelInput").value
-        ) || 1
+        Number(document.getElementById("levelInput").value) || 1
     );
 
 }
@@ -637,29 +294,6 @@ function getCurseStackCount(name) {
 }
 
 
-/* =========================================================
-   ASSET RESOLUTION (image-with-text-fallback)
-   ========================================================= */
-
-/*
-   The browser can't "read" a folder's contents directly,
-   so instead we build the expected filename for each
-   curse/enemy and try to load it. If it loads, we swap
-   the image in. If it 404s, the text placeholder stays.
-
-   Expected file naming:
-     assets/curses/<PascalCaseName>.png
-     assets/enemies/<PascalCaseName>.png
-
-   Naming rule: strip spaces/punctuation, capitalize
-   each word, no separators.
-
-   Examples:
-     "Bigger Tripmines"   -> assets/curses/BiggerTripmines.png
-     "Voidbound Baby"     -> assets/enemies/VoidboundBaby.png
-     "ICBM"               -> assets/enemies/ICBM.png
-*/
-
 const assetCache = new Map();
 
 function slugify(name) {
@@ -667,11 +301,7 @@ function slugify(name) {
     return name
         .split(/[^a-zA-Z0-9]+/)
         .filter(Boolean)
-        .map(
-            word =>
-                word.charAt(0).toUpperCase() +
-                word.slice(1)
-        )
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join("");
 
 }
@@ -688,27 +318,16 @@ function resolveAsset(assetType, name, onResolved) {
 
     const cacheKey = `${assetType}/${name}`;
 
-
-    /*
-       Already know the answer (either the
-       real path, or `false` for "no asset").
-    */
-
     if (assetCache.has(cacheKey)) {
 
-        onResolved(
-            assetCache.get(cacheKey)
-        );
+        onResolved(assetCache.get(cacheKey));
 
         return;
 
     }
 
-
     const path = getAssetPath(assetType, name);
-
     const probe = new Image();
-
 
     probe.onload = () => {
 
@@ -718,7 +337,6 @@ function resolveAsset(assetType, name, onResolved) {
 
     };
 
-
     probe.onerror = () => {
 
         assetCache.set(cacheKey, false);
@@ -727,73 +345,43 @@ function resolveAsset(assetType, name, onResolved) {
 
     };
 
-
     probe.src = path;
 
 }
 
 
-/* =========================================================
-   MEDIA BOX (image OR text placeholder)
-   ========================================================= */
-
 function createMediaBox(assetType, name) {
 
-    const media =
-        document.createElement("div");
+    const media = document.createElement("div");
 
-    media.className =
-        "card-media";
+    media.className = "card-media";
 
+    const placeholder = document.createElement("span");
 
-    /*
-       Text placeholder shows immediately.
-       If an asset is found, it gets swapped
-       out for the image below.
-    */
-
-    const placeholder =
-        document.createElement("span");
-
-    placeholder.className =
-        "card-media-placeholder";
-
-    placeholder.textContent =
-        name;
+    placeholder.className = "card-media-placeholder";
+    placeholder.textContent = name;
 
     media.appendChild(placeholder);
 
+    resolveAsset(assetType, name, path => {
 
-    resolveAsset(
-        assetType,
-        name,
-        path => {
+        if (!path) {
 
-            if (!path) {
-
-                return;
-
-            }
-
-
-            media.innerHTML = "";
-
-
-            const img =
-                document.createElement("img");
-
-            img.className =
-                "card-media-image";
-
-            img.src = path;
-            img.alt = name;
-
-
-            media.appendChild(img);
+            return;
 
         }
-    );
 
+        media.innerHTML = "";
+
+        const img = document.createElement("img");
+
+        img.className = "card-media-image";
+        img.src = path;
+        img.alt = name;
+
+        media.appendChild(img);
+
+    });
 
     return media;
 
@@ -802,46 +390,41 @@ function createMediaBox(assetType, name) {
 
 function createActiveCurseIcon(assetType, name) {
 
-    // unlike createMediaBox, this one has no text
-    // placeholder - the curse name is already sitting
-    // in the bar as real text, so an icon here is purely
-    // decorative. if there's no asset, it just stays empty
-    const icon =
-        document.createElement("div");
+    const icon = document.createElement("div");
 
-    icon.className =
-        "active-curse-icon";
+    icon.className = "active-curse-icon";
 
+    resolveAsset(assetType, name, path => {
 
-    resolveAsset(
-        assetType,
-        name,
-        path => {
+        if (!path) {
 
-            if (!path) {
-
-                return;
-
-            }
-
-
-            const img =
-                document.createElement("img");
-
-            img.className =
-                "active-curse-icon-image";
-
-            img.src = path;
-            img.alt = "";
-
-
-            icon.appendChild(img);
+            return;
 
         }
-    );
 
+        const img = document.createElement("img");
+
+        img.className = "active-curse-icon-image";
+        img.src = path;
+        img.alt = "";
+
+        icon.appendChild(img);
+
+    });
 
     return icon;
+
+}
+
+
+function createCurseNameLabel(name) {
+
+    const label = document.createElement("div");
+
+    label.className = "curse-name-label";
+    label.textContent = name;
+
+    return label;
 
 }
 
@@ -854,28 +437,16 @@ function findCurseByName(name) {
         ...greaterCurses
     ];
 
-    return allCurses.find(
-        item => item.name === name
-    );
+    return allCurses.find(item => item.name === name);
 
 }
 
 
-/* =========================================================
-   CHECK REQUIREMENTS
-   ========================================================= */
-
 function requirementsMet(curse) {
-
-
-    /* Required enemies */
 
     if (curse.requiresEnemies) {
 
-        for (
-            const requiredEnemy
-            of curse.requiresEnemies
-        ) {
+        for (const requiredEnemy of curse.requiresEnemies) {
 
             if (!hasEnemy(requiredEnemy)) {
 
@@ -887,15 +458,9 @@ function requirementsMet(curse) {
 
     }
 
-
-    /* Required curses */
-
     if (curse.requiresCurses) {
 
-        for (
-            const requiredCurse
-            of curse.requiresCurses
-        ) {
+        for (const requiredCurse of curse.requiresCurses) {
 
             if (!hasCurse(requiredCurse)) {
 
@@ -907,15 +472,10 @@ function requirementsMet(curse) {
 
     }
 
-
     return true;
 
 }
 
-
-/* =========================================================
-   CHECK EXCLUSIVE GROUP
-   ========================================================= */
 
 function exclusiveGroupAvailable(curse) {
 
@@ -925,17 +485,7 @@ function exclusiveGroupAvailable(curse) {
 
     }
 
-
-    for (
-        const activeCurse
-        of runState.activeCurses
-    ) {
-
-        /*
-           A curse never excludes itself -
-           this only matters for stackable
-           curses re-appearing in the pool.
-        */
+    for (const activeCurse of runState.activeCurses) {
 
         if (activeCurse === curse.name) {
 
@@ -943,16 +493,9 @@ function exclusiveGroupAvailable(curse) {
 
         }
 
+        const existing = findCurseByName(activeCurse);
 
-        const existing =
-            findCurseByName(activeCurse);
-
-
-        if (
-            existing &&
-            existing.exclusiveGroup ===
-            curse.exclusiveGroup
-        ) {
+        if (existing && existing.exclusiveGroup === curse.exclusiveGroup) {
 
             return false;
 
@@ -960,31 +503,17 @@ function exclusiveGroupAvailable(curse) {
 
     }
 
-
     return true;
 
 }
 
 
-/* =========================================================
-   CAN CURSE APPEAR?
-   ========================================================= */
-
 function canAppear(curse) {
 
     const level = getLevel();
-
-
-    const stackCount =
-        getCurseStackCount(curse.name);
-
+    const stackCount = getCurseStackCount(curse.name);
 
     if (curse.max) {
-
-        /*
-           Stackable curse: stays in the pool
-           until it's reached its max stacks.
-        */
 
         if (stackCount >= curse.max) {
 
@@ -992,14 +521,7 @@ function canAppear(curse) {
 
         }
 
-    }
-
-    else {
-
-        /*
-           Normal curse: once taken, it's gone
-           for the rest of the run.
-        */
+    } else {
 
         if (stackCount >= 1) {
 
@@ -1009,32 +531,17 @@ function canAppear(curse) {
 
     }
 
-
-    /* Level */
-
-    if (
-        curse.level !== undefined &&
-        level < curse.level
-    ) {
+    if (curse.level !== undefined && level < curse.level) {
 
         return false;
 
     }
 
-
-    /* Casual */
-
-    if (
-        runState.difficulty === "Casual" &&
-        curse.casualDisabled
-    ) {
+    if (runState.difficulty === "Casual" && curse.casualDisabled) {
 
         return false;
 
     }
-
-
-    /* Requirements */
 
     if (!requirementsMet(curse)) {
 
@@ -1042,124 +549,60 @@ function canAppear(curse) {
 
     }
 
-
-    /* Exclusive curse */
-
-    if (
-        !exclusiveGroupAvailable(curse)
-    ) {
+    if (!exclusiveGroupAvailable(curse)) {
 
         return false;
 
     }
-
 
     return true;
 
 }
 
 
-/* =========================================================
-   GET GLOBAL POOL
-   ========================================================= */
-
 function getGlobalPool() {
 
-    return globalCurses.filter(
-        canAppear
-    );
+    return globalCurses.filter(canAppear);
 
 }
 
-
-/* =========================================================
-   GET ENEMY POOL
-   ========================================================= */
 
 function getEnemyPool() {
 
-    return enemyCurses.filter(
-        curse => {
+    return enemyCurses.filter(curse => {
 
-            if (
-                !hasEnemy(curse.enemy)
-            ) {
+        if (!hasEnemy(curse.enemy)) {
 
-                return false;
-
-            }
-
-
-            return canAppear(curse);
+            return false;
 
         }
-    );
+
+        return canAppear(curse);
+
+    });
 
 }
 
 
-/* =========================================================
-   GET GREATER CURSE POOL
-   ========================================================= */
-
 function getGreaterPool() {
 
-    const level =
-        getLevel();
-
-
-    /*
-       Greater Curse scheduling:
-
-       Casual:
-       level 15, 25, then every 5
-
-       Standard:
-       level 10, 20, then every 5
-
-       Extreme:
-       level 10, then every 5
-    */
+    const level = getLevel();
 
     let isGreaterLevel = false;
 
+    if (runState.difficulty === "Casual") {
 
-    if (
-        runState.difficulty ===
-        "Casual"
-    ) {
+        isGreaterLevel = level >= 15 && (level === 15 || level >= 25);
 
-        isGreaterLevel =
-            level >= 15 &&
-            (
-                level === 15 ||
-                (
-                    level >= 25 
-                )
-            );
+    } else if (runState.difficulty === "Standard") {
+
+        isGreaterLevel = level >= 10;
+
+    } else if (runState.difficulty === "Extreme") {
+
+        isGreaterLevel = level >= 10;
+
     }
-
-
-    else if (
-        runState.difficulty ===
-        "Standard"
-    ) {
-
-        isGreaterLevel =
-            isGreaterLevel =
-            level >= 10;
-    }
-
-
-    else if (
-        runState.difficulty ===
-        "Extreme"
-    ) {
-
-        isGreaterLevel =
-            level >= 10;
-    }
-
 
     if (!isGreaterLevel) {
 
@@ -1167,74 +610,36 @@ function getGreaterPool() {
 
     }
 
-
-    return greaterCurses.filter(
-        canAppear
-    );
+    return greaterCurses.filter(canAppear);
 
 }
 
-
-/* =========================================================
-   MEDAL POOL
-   ========================================================= */
 
 function getMedalPool() {
 
-    const global =
-        getGlobalPool();
+    const global = getGlobalPool();
+    const enemy = getEnemyPool();
 
-    const enemy =
-        getEnemyPool();
-
-
-    return [
-        ...global,
-        ...enemy
-    ].filter(
-        curse => curse.medal
-    );
+    return [...global, ...enemy].filter(curse => curse.medal);
 
 }
 
 
-/* =========================================================
-   SELECT ENEMY
-   ========================================================= */
-
 function toggleEnemy(enemy) {
 
-    if (
-        runState.activeEnemies
-            .has(enemy.name)
-    ) {
+    if (runState.activeEnemies.has(enemy.name)) {
 
-        runState.activeEnemies
-            .delete(enemy.name);
+        runState.activeEnemies.delete(enemy.name);
 
-    }
-
-    else {
-
-        /*
-           Make sure enemy requirements
-           are satisfied.
-        */
+    } else {
 
         if (enemy.requiresEnemies) {
 
-            for (
-                const required
-                of enemy.requiresEnemies
-            ) {
+            for (const required of enemy.requiresEnemies) {
 
-                if (
-                    !hasEnemy(required)
-                ) {
+                if (!hasEnemy(required)) {
 
-                    alert(
-                        `${enemy.name} requires ${required} to be active.`
-                    );
+                    alert(`${enemy.name} requires ${required} to be active.`);
 
                     return;
 
@@ -1244,27 +649,16 @@ function toggleEnemy(enemy) {
 
         }
 
-
-        runState.activeEnemies
-            .add(enemy.name);
+        runState.activeEnemies.add(enemy.name);
 
     }
-
 
     render();
 
 }
 
 
-/* =========================================================
-   SELECT CURSE
-   ========================================================= */
-
 function selectCurse(curse) {
-
-    /*
-       Prevent selecting a stale card.
-    */
 
     if (!canAppear(curse)) {
 
@@ -1272,69 +666,42 @@ function selectCurse(curse) {
 
     }
 
-
-    /*
-       Store this run's pick. Adding to a Set is
-       harmless even if the name is already in it;
-       the real "how many times" answer lives in
-       curseStacks.
-    */
-
-    runState.activeCurses
-        .add(curse.name);
+    runState.activeCurses.add(curse.name);
 
     runState.curseStacks.set(
         curse.name,
         getCurseStackCount(curse.name) + 1
     );
 
-
-    /*
-       Re-render immediately.
-    */
-
     render();
 
 }
 
-
-/* =========================================================
-   REMOVE CURSE
-   ========================================================= */
 
 function removeCurse(curseName) {
 
-    /*
-       Undo a mistaken pick: drop one stack of
-       this curse. If that was the only stack,
-       it also becomes available again in its
-       original pool (or, for stackable curses,
-       just opens up one more slot toward max).
-    */
-
-    const currentCount =
-        getCurseStackCount(curseName);
-
+    const currentCount = getCurseStackCount(curseName);
 
     if (currentCount <= 1) {
 
-        runState.activeCurses
-            .delete(curseName);
+        runState.activeCurses.delete(curseName);
+        runState.curseStacks.delete(curseName);
 
-        runState.curseStacks
-            .delete(curseName);
+    } else {
 
-    }
-
-    else {
-
-        runState.curseStacks.set(
-            curseName,
-            currentCount - 1
-        );
+        runState.curseStacks.set(curseName, currentCount - 1);
 
     }
 
+    render();
+
+}
+
+
+function removeAllCurses() {
+
+    runState.activeCurses.clear();
+    runState.curseStacks.clear();
 
     render();
 
@@ -1342,205 +709,319 @@ function removeCurse(curseName) {
 
 
 /* =========================================================
-   CREATE ENEMY BUTTON
+   AUDIO
    ========================================================= */
+
+let audioCtx = null;
+
+function getAudioCtx() {
+
+    if (!audioCtx) {
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+
+            return null;
+
+        }
+
+        audioCtx = new AudioContextClass();
+
+    }
+
+    if (audioCtx.state === "suspended") {
+
+        audioCtx.resume();
+
+    }
+
+    return audioCtx;
+
+}
+
+
+function playClickSound() {
+
+    const ctx = getAudioCtx();
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+    try {
+
+        const now = ctx.currentTime;
+
+        const thump = ctx.createOscillator();
+        const thumpGain = ctx.createGain();
+
+        thump.type = "sine";
+        thump.frequency.setValueAtTime(110, now);
+        thump.frequency.exponentialRampToValueAtTime(48, now + 0.06);
+
+        thumpGain.gain.setValueAtTime(0.0001, now);
+        thumpGain.gain.exponentialRampToValueAtTime(0.55, now + 0.004);
+        thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+
+        thump.connect(thumpGain);
+        thumpGain.connect(ctx.destination);
+
+        thump.start(now);
+        thump.stop(now + 0.11);
+
+        const knockDuration = 0.045;
+        const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * knockDuration));
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+
+            data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+
+        }
+
+        const noise = ctx.createBufferSource();
+
+        noise.buffer = noiseBuffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+
+        noiseFilter.type = "lowpass";
+        noiseFilter.frequency.value = 350;
+
+        const noiseGain = ctx.createGain();
+
+        noiseGain.gain.setValueAtTime(0.3, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + knockDuration);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+
+        noise.start(now);
+        noise.stop(now + knockDuration);
+
+    } catch (error) {
+
+        console.warn("couldn't play click sound:", error);
+
+    }
+
+}
+
+
+/* =========================================================
+   HOLD-TO-ACTIVATE BUTTONS
+   ========================================================= */
+
+const HOLD_DURATION_MS = 450;
+
+function attachHoldAction(button, callback) {
+
+    button.classList.add("hold-button");
+
+    const fill = document.createElement("div");
+
+    fill.className = "hold-fill";
+
+    button.appendChild(fill);
+
+    let holdTimer = null;
+    let isHolding = false;
+
+    function resetFill(instant) {
+
+        fill.style.transitionDuration = instant ? "0ms" : "150ms";
+        fill.style.width = "0%";
+
+    }
+
+    function startHold(event) {
+
+        if (isHolding) {
+
+            return;
+
+        }
+
+        getAudioCtx();
+
+        isHolding = true;
+
+        button.classList.add("holding");
+
+        resetFill(true);
+
+        void fill.offsetWidth;
+
+        fill.style.transitionDuration = `${HOLD_DURATION_MS}ms`;
+        fill.style.width = "100%";
+
+        holdTimer = setTimeout(() => {
+
+            isHolding = false;
+
+            button.classList.remove("holding");
+
+            playClickSound();
+
+            callback(event);
+
+            resetFill(false);
+
+        }, HOLD_DURATION_MS);
+
+    }
+
+    function cancelHold() {
+
+        if (!isHolding) {
+
+            return;
+
+        }
+
+        isHolding = false;
+
+        clearTimeout(holdTimer);
+
+        button.classList.remove("holding");
+
+        resetFill(false);
+
+    }
+
+    button.addEventListener("mousedown", startHold);
+    button.addEventListener("touchstart", startHold, { passive: true });
+
+    button.addEventListener("mouseup", cancelHold);
+    button.addEventListener("mouseleave", cancelHold);
+    button.addEventListener("touchend", cancelHold);
+    button.addEventListener("touchcancel", cancelHold);
+
+}
+
+
+function attachClickAction(button, callback) {
+
+    button.addEventListener("click", event => {
+
+        playClickSound();
+
+        callback(event);
+
+    });
+
+}
+
 
 function createEnemyButton(enemy) {
 
-    const button =
-        document.createElement("button");
+    const button = document.createElement("button");
 
-    button.className =
-        "select-button enemy-button";
+    button.className = "select-button enemy-button";
 
+    if (runState.activeEnemies.has(enemy.name)) {
 
-    if (
-        runState.activeEnemies
-            .has(enemy.name)
-    ) {
-
-        button.classList.add(
-            "selected"
-        );
+        button.classList.add("selected");
 
     }
 
-
-    const media =
-        createMediaBox(
-            "enemies",
-            enemy.name
-        );
+    const media = createMediaBox("enemies", enemy.name);
 
     button.appendChild(media);
 
-
-    button.addEventListener(
-        "click",
-        () => toggleEnemy(enemy)
-    );
-
+    attachClickAction(button, () => toggleEnemy(enemy));
 
     return button;
 
 }
 
 
-/* =========================================================
-   CREATE DIFFICULTY BUTTON
-   ========================================================= */
+function createDifficultyButton(difficulty) {
 
-function createDifficultyButton(
-    difficulty
-) {
+    const button = document.createElement("button");
 
-    const button =
-        document.createElement("button");
+    button.className = `select-button difficulty-${difficulty.toLowerCase()}`;
 
-    // base class + a per-difficulty class so css can
-    // give each one its own hover color, see style.css
-    button.className =
-        `select-button difficulty-${difficulty.toLowerCase()}`;
+    if (runState.difficulty === difficulty) {
 
-
-    if (
-        runState.difficulty ===
-        difficulty
-    ) {
-
-        button.classList.add(
-            "selected"
-        );
+        button.classList.add("selected");
 
     }
 
+    const label = document.createElement("span");
 
-    button.textContent =
-        difficulty;
+    label.className = "btn-label";
+    label.textContent = difficulty;
 
+    button.appendChild(label);
 
-    button.addEventListener(
-        "click",
-        () => {
+    attachClickAction(button, () => {
 
-            runState.difficulty =
-                difficulty;
+        runState.difficulty = difficulty;
 
-            render();
+        render();
 
-        }
-    );
-
+    });
 
     return button;
 
 }
 
 
-/* =========================================================
-   CREATE CURSE CARD
-   ========================================================= */
+function createCurseCard(curse, isMedal = false) {
 
-function createCurseCard(
-    curse,
-    isMedal = false
-) {
+    const card = document.createElement("button");
 
-    const card =
-        document.createElement("button");
-
-    card.className =
-        "curse-card";
-
+    card.className = "curse-card";
 
     if (isMedal) {
 
-        card.classList.add(
-            "medal"
-        );
+        card.classList.add("medal");
 
     }
 
-
-    const media =
-        createMediaBox(
-            "curses",
-            curse.name
-        );
+    const media = createMediaBox("curses", curse.name);
 
     card.appendChild(media);
 
+    card.appendChild(createCurseNameLabel(curse.name));
 
-    if (
-        curse.enemy
-    ) {
+    if (curse.enemy) {
 
-        const info =
-            document.createElement("div");
+        const info = document.createElement("div");
 
-        info.className =
-            "curse-info";
-
-        info.textContent =
-            curse.enemy;
+        info.className = "curse-info";
+        info.textContent = curse.enemy;
 
         card.appendChild(info);
 
     }
 
-
     if (curse.max) {
 
-        const stackInfo =
-            document.createElement("div");
+        const stackInfo = document.createElement("div");
 
-        stackInfo.className =
-            "curse-info stack-info";
-
-        stackInfo.textContent =
-            `${getCurseStackCount(curse.name)} / ${curse.max}`;
+        stackInfo.className = "curse-info stack-info";
+        stackInfo.textContent = `${getCurseStackCount(curse.name)} / ${curse.max}`;
 
         card.appendChild(stackInfo);
 
     }
 
-
-    if (isMedal) {
-
-        const medal =
-            document.createElement("div");
-
-        medal.className =
-            "medal-label";
-
-        medal.textContent =
-            "MEDAL";
-
-        card.appendChild(medal);
-
-    }
-
-
-    card.addEventListener(
-        "click",
-        () => selectCurse(curse)
-    );
-
+    attachClickAction(card, () => selectCurse(curse));
 
     return card;
 
 }
 
 
-/* =========================================================
-   RENDER ACTIVE CURSES
-   ========================================================= */
-
 function isGreaterCurse(curse) {
 
-    // only entries from the greaterCurses array carry a
-    // `type` field ("Global"/"Enemy"), everything else
-    // doesn't have one - cheap way to tell them apart
     return curse.type !== undefined;
 
 }
@@ -1548,26 +1029,16 @@ function isGreaterCurse(curse) {
 
 function renderActiveCurses() {
 
-    const container =
-        document.getElementById(
-            "activeCurseContainer"
-        );
+    const container = document.getElementById("activeCurseContainer");
 
     container.innerHTML = "";
 
+    if (runState.activeCurses.size === 0) {
 
-    if (
-        runState.activeCurses.size === 0
-    ) {
+        const empty = document.createElement("div");
 
-        const empty =
-            document.createElement("div");
-
-        empty.className =
-            "empty-state";
-
-        empty.textContent =
-            "no curses selected";
+        empty.className = "empty-state";
+        empty.textContent = "no curses selected";
 
         container.appendChild(empty);
 
@@ -1575,50 +1046,51 @@ function renderActiveCurses() {
 
     }
 
+    let orderedNames = Array.from(runState.activeCurses).sort((a, b) => {
 
-    // greater curses always float to the top of the list,
-    // everything else keeps the order it was picked in.
-    // sort() is stable in every browser that matters here,
-    // so the non-greater ones won't get shuffled around
-    const orderedNames =
-        Array.from(runState.activeCurses)
-            .sort(
-                (a, b) => {
+        const curseA = findCurseByName(a);
+        const curseB = findCurseByName(b);
 
-                    const curseA =
-                        findCurseByName(a);
+        const aIsGreater = curseA && isGreaterCurse(curseA);
+        const bIsGreater = curseB && isGreaterCurse(curseB);
 
-                    const curseB =
-                        findCurseByName(b);
+        if (aIsGreater === bIsGreater) {
 
-                    const aIsGreater =
-                        curseA &&
-                        isGreaterCurse(curseA);
+            return 0;
 
-                    const bIsGreater =
-                        curseB &&
-                        isGreaterCurse(curseB);
+        }
 
-                    if (aIsGreater === bIsGreater) {
+        return aIsGreater ? -1 : 1;
 
-                        return 0;
+    });
 
-                    }
+    const searchInput = document.getElementById("activeCurseSearch");
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
 
-                    return aIsGreater ? -1 : 1;
+    if (query) {
 
-                }
-            );
+        orderedNames = orderedNames.filter(curseName =>
+            curseName.toLowerCase().includes(query)
+        );
 
+    }
 
-    for (
-        const curseName
-        of orderedNames
-    ) {
+    if (orderedNames.length === 0) {
 
-        const curse =
-            findCurseByName(curseName);
+        const empty = document.createElement("div");
 
+        empty.className = "empty-state";
+        empty.textContent = "no active curses match your search";
+
+        container.appendChild(empty);
+
+        return;
+
+    }
+
+    for (const curseName of orderedNames) {
+
+        const curse = findCurseByName(curseName);
 
         if (!curse) {
 
@@ -1626,109 +1098,65 @@ function renderActiveCurses() {
 
         }
 
+        const greater = isGreaterCurse(curse);
 
-        const greater =
-            isGreaterCurse(curse);
+        const item = document.createElement("div");
 
+        item.className = greater
+            ? "active-curse active-curse--greater"
+            : "active-curse";
 
-        const item =
-            document.createElement("div");
+        const removeButton = document.createElement("button");
 
-        item.className =
-            greater
-                ? "active-curse active-curse--greater"
-                : "active-curse";
+        removeButton.className = "active-curse-remove";
 
+        const removeLabel = document.createElement("span");
 
-        /*
-           remove button now lives on the left. figured
-           it's the first thing your eye/mouse should hit
-           when you're trying to undo an oops-click
-        */
+        removeLabel.className = "btn-label";
+        removeLabel.textContent = "\u00d7";
 
-        const removeButton =
-            document.createElement("button");
+        removeButton.appendChild(removeLabel);
 
-        removeButton.className =
-            "active-curse-remove";
+        removeButton.setAttribute("aria-label", `Remove ${curse.name}`);
 
-        removeButton.textContent =
-            "×";
+        attachClickAction(removeButton, event => {
 
-        removeButton.setAttribute(
-            "aria-label",
-            `Remove ${curse.name}`
-        );
-
-        removeButton.addEventListener(
-            "click",
-            event => {
+            if (event && event.stopPropagation) {
 
                 event.stopPropagation();
 
-                removeCurse(curse.name);
-
             }
-        );
+
+            removeCurse(curse.name);
+
+        });
 
         item.appendChild(removeButton);
 
+        const content = document.createElement("div");
 
-        // text content wrapper - needs its own stacking
-        // context so it sits ABOVE the icon fade on the
-        // right, otherwise the icon would paint over it
-        const content =
-            document.createElement("div");
+        content.className = "active-curse-content";
 
-        content.className =
-            "active-curse-content";
+        const name = document.createElement("span");
 
+        name.className = "active-curse-name";
+        name.textContent = curse.name;
 
-        const name =
-            document.createElement("span");
-
-        name.className =
-            "active-curse-name";
-
-        name.textContent =
-            curse.name;
-
-
-        const stackCount =
-            getCurseStackCount(curse.name);
-
+        const stackCount = getCurseStackCount(curse.name);
 
         if (stackCount > 1) {
 
-            name.textContent +=
-                ` ×${stackCount}`;
+            name.textContent += ` \u00d7${stackCount}`;
 
         }
 
-
         content.appendChild(name);
-
-
-        // sub-label (ENEMY/MEDAL/CURSE/GREATER) used to live
-        // here but it was overlapping the icon fade on the
-        // right, removed - the name + gradient color already
-        // tell you what kind of curse this is
 
         item.appendChild(content);
 
-
-        // icon on the right, faded/merged into the bar -
-        // only shows up once (if) an asset actually loads,
-        // no text placeholder here since the name is
-        // already sitting right there in `content`
-        const icon =
-            createActiveCurseIcon(
-                "curses",
-                curse.name
-            );
+        const icon = createActiveCurseIcon("curses", curse.name);
 
         item.appendChild(icon);
-
 
         container.appendChild(item);
 
@@ -1737,34 +1165,18 @@ function renderActiveCurses() {
 }
 
 
-/* =========================================================
-   RENDER RESULT SECTION
-   ========================================================= */
+function renderPool(containerId, curses, medal = false) {
 
-function renderPool(
-    containerId,
-    curses,
-    medal = false
-) {
-
-    const container =
-        document.getElementById(
-            containerId
-        );
+    const container = document.getElementById(containerId);
 
     container.innerHTML = "";
 
-
     if (curses.length === 0) {
 
-        const empty =
-            document.createElement("div");
+        const empty = document.createElement("div");
 
-        empty.className =
-            "empty-pool";
-
-        empty.textContent =
-            "nothing currently available";
+        empty.className = "empty-pool";
+        empty.textContent = "nothing currently available";
 
         container.appendChild(empty);
 
@@ -1772,180 +1184,127 @@ function renderPool(
 
     }
 
+    curses.forEach(curse => {
 
-    curses.forEach(
-        curse => {
+        const card = createCurseCard(curse, medal);
 
-            const card =
-                createCurseCard(
-                    curse,
-                    medal
-                );
+        container.appendChild(card);
 
-            container.appendChild(card);
-
-        }
-    );
+    });
 
 }
 
 
-/* =========================================================
-   RENDER EVERYTHING
-   ========================================================= */
+const STORAGE_KEY = "nullscapeRunState";
+
+function saveRunState() {
+
+    try {
+
+        const payload = {
+
+            level: runState.level,
+
+            difficulty: runState.difficulty,
+
+            activeEnemies: Array.from(runState.activeEnemies),
+
+            activeCurses: Array.from(runState.activeCurses),
+
+            curseStacks: Array.from(runState.curseStacks.entries())
+
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+    } catch (error) {
+
+        console.warn("couldn't save run state:", error);
+
+    }
+
+}
+
+
+function loadRunState() {
+
+    try {
+
+        const raw = localStorage.getItem(STORAGE_KEY);
+
+        if (!raw) {
+
+            return;
+
+        }
+
+        const saved = JSON.parse(raw);
+
+        runState.level = saved.level || 1;
+        runState.difficulty = saved.difficulty || "Standard";
+        runState.activeEnemies = new Set(saved.activeEnemies || []);
+        runState.activeCurses = new Set(saved.activeCurses || []);
+        runState.curseStacks = new Map(saved.curseStacks || []);
+
+    } catch (error) {
+
+        console.warn("couldn't load saved run state, starting fresh:", error);
+
+    }
+
+}
+
 
 function render() {
 
+    runState.level = getLevel();
 
-    /* Level */
-
-    runState.level =
-        getLevel();
-
-
-    /* Difficulty */
-
-    const difficultyContainer =
-        document.getElementById(
-            "difficultyContainer"
-        );
+    const difficultyContainer = document.getElementById("difficultyContainer");
 
     difficultyContainer.innerHTML = "";
 
+    difficulties.forEach(difficulty => {
 
-    difficulties.forEach(
-        difficulty => {
+        difficultyContainer.appendChild(createDifficultyButton(difficulty));
 
-            difficultyContainer.appendChild(
-                createDifficultyButton(
-                    difficulty
-                )
-            );
+    });
 
-        }
-    );
-
-
-    /* Enemies */
-
-    const enemyContainer =
-        document.getElementById(
-            "enemyContainer"
-        );
+    const enemyContainer = document.getElementById("enemyContainer");
 
     enemyContainer.innerHTML = "";
 
-
     enemies
-        .filter(
-            enemy =>
-                runState.level >=
-                enemy.level
-        )
-        .forEach(
-            enemy => {
+        .filter(enemy => runState.level >= enemy.level)
+        .forEach(enemy => {
 
-                enemyContainer.appendChild(
-                    createEnemyButton(
-                        enemy
-                    )
-                );
+            enemyContainer.appendChild(createEnemyButton(enemy));
 
-            }
-        );
+        });
 
-
-    /*
-       note: i used to prune invalid active enemies right
-       here on every render, which sounds fine until you
-       remember render() fires on every keystroke. typing
-       "20" passes through "2" for a split second, which was
-       enough to nuke any level-15+ enemy you had selected.
-       moved this to only run once you're done editing the
-       level field, see pruneInvalidActiveEnemies() below
-    */
-
-
-    /* Active curse count */
-
-    document.getElementById(
-        "curseCount"
-    ).textContent =
-        runState.activeCurses.size;
-
-
-    /* Enemy count */
-
-    document.getElementById(
-        "enemyCount"
-    ).textContent =
-        runState.activeEnemies.size;
-
-
-    /* Active curses */
+    document.getElementById("curseCount").textContent = runState.activeCurses.size;
+    document.getElementById("enemyCount").textContent = runState.activeEnemies.size;
 
     renderActiveCurses();
 
+    renderPool("medalCurseContainer", getMedalPool(), true);
+    renderPool("globalCurseContainer", getGlobalPool());
+    renderPool("enemyCurseContainer", getEnemyPool());
+    renderPool("greaterCurseContainer", getGreaterPool());
 
-    /* Pools */
-
-    renderPool(
-        "medalCurseContainer",
-        getMedalPool(),
-        true
-    );
-
-
-    renderPool(
-        "globalCurseContainer",
-        getGlobalPool()
-    );
-
-
-    renderPool(
-        "enemyCurseContainer",
-        getEnemyPool()
-    );
-
-
-    renderPool(
-        "greaterCurseContainer",
-        getGreaterPool()
-    );
+    saveRunState();
 
 }
 
 
-/* =========================================================
-   PRUNE INVALID ACTIVE ENEMIES
-   only call this once the level field is actually settled
-   (blur / enter), never on every keystroke - see the long
-   rant in render() about why
-   ========================================================= */
-
 function pruneInvalidActiveEnemies() {
 
-    for (
-        const enemyName
-        of runState.activeEnemies
-    ) {
+    for (const enemyName of runState.activeEnemies) {
 
-        const enemy =
-            enemies.find(
-                item =>
-                    item.name ===
-                    enemyName
-            );
+        const enemy = enemies.find(item => item.name === enemyName);
 
+        if (enemy && runState.level < enemy.level) {
 
-        if (
-            enemy &&
-            runState.level <
-            enemy.level
-        ) {
-
-            runState.activeEnemies
-                .delete(enemyName);
+            runState.activeEnemies.delete(enemyName);
 
         }
 
@@ -1954,133 +1313,119 @@ function pruneInvalidActiveEnemies() {
 }
 
 
-/* =========================================================
-   LEVEL INPUT
-   ========================================================= */
+document.getElementById("levelInput").addEventListener("input", render);
 
-document
-    .getElementById("levelInput")
-    .addEventListener(
-        "input",
-        render
+document.getElementById("levelInput").addEventListener("change", () => {
+
+    runState.level = getLevel();
+
+    pruneInvalidActiveEnemies();
+
+    render();
+
+});
+
+
+const activeCurseSearchInput = document.getElementById("activeCurseSearch");
+const activeCurseSearchClear = document.getElementById("activeCurseSearchClear");
+
+function updateSearchClearVisibility() {
+
+    if (!activeCurseSearchInput || !activeCurseSearchClear) {
+
+        return;
+
+    }
+
+    activeCurseSearchClear.classList.toggle(
+        "visible",
+        activeCurseSearchInput.value.length > 0
     );
 
-
-/*
-   "change" fires on blur / enter, i.e. once the person is
-   actually done typing a number, not mid-keystroke. that's
-   when it's safe to prune enemies that no longer qualify
-*/
-
-document
-    .getElementById("levelInput")
-    .addEventListener(
-        "change",
-        () => {
-
-            runState.level =
-                getLevel();
-
-            pruneInvalidActiveEnemies();
-
-            render();
-
-        }
-    );
+}
 
 
-/* =========================================================
-   RESET
-   ========================================================= */
+if (activeCurseSearchInput) {
 
-document
-    .getElementById("resetButton")
-    .addEventListener(
-        "click",
-        () => {
+    activeCurseSearchInput.addEventListener("input", () => {
 
-            runState.level = 1;
+        updateSearchClearVisibility();
 
-            runState.difficulty =
-                "Standard";
+        renderActiveCurses();
 
-            runState.activeEnemies
-                .clear();
+    });
 
-            runState.activeCurses
-                .clear();
-
-            runState.curseStacks
-                .clear();
+}
 
 
-            document
-                .getElementById(
-                    "levelInput"
-                )
-                .value = 1;
+if (activeCurseSearchClear) {
+
+    attachClickAction(activeCurseSearchClear, () => {
+
+        activeCurseSearchInput.value = "";
+
+        updateSearchClearVisibility();
+
+        renderActiveCurses();
+
+        activeCurseSearchInput.focus();
+
+    });
+
+}
 
 
-            render();
+attachHoldAction(document.getElementById("resetButton"), () => {
 
-        }
-    );
+    runState.level = 1;
+    runState.difficulty = "Standard";
+
+    runState.activeEnemies.clear();
+    runState.activeCurses.clear();
+    runState.curseStacks.clear();
+
+    document.getElementById("levelInput").value = 1;
+
+    if (activeCurseSearchInput) {
+
+        activeCurseSearchInput.value = "";
+
+        updateSearchClearVisibility();
+
+    }
+
+    render();
+
+});
 
 
-/* =========================================================
-   background parallax
-   moves #bgLayer a little based on mouse position, just
-   enough to feel alive without making anyone seasick
-   ========================================================= */
+attachHoldAction(document.getElementById("removeAllCursesButton"), () => {
 
-const bgLayer =
-    document.getElementById("bgLayer");
+    removeAllCurses();
 
-// how far the background can drift, in px. keep this small,
-// past like 30 it starts feeling like a bad webcam filter
+});
+
+
+const bgLayer = document.getElementById("bgLayer");
+
 const BG_DRIFT_RANGE = 18;
 
 if (bgLayer) {
 
-    window.addEventListener(
-        "mousemove",
-        event => {
+    window.addEventListener("mousemove", event => {
 
-            // where's the mouse, as -1 (left/top) to 1 (right/bottom),
-            // 0 being dead center of the window
-            const normalizedX =
-                (event.clientX / window.innerWidth) * 2 - 1;
+        const normalizedX = (event.clientX / window.innerWidth) * 2 - 1;
+        const normalizedY = (event.clientY / window.innerHeight) * 2 - 1;
 
-            const normalizedY =
-                (event.clientY / window.innerHeight) * 2 - 1;
+        const moveX = -normalizedX * BG_DRIFT_RANGE;
+        const moveY = -normalizedY * BG_DRIFT_RANGE;
 
-            // negative on purpose - background drifts AWAY from
-            // the cursor, reads as depth instead of "thing glued
-            // to mouse". flip the sign if you want the opposite feel
-            const moveX =
-                -normalizedX * BG_DRIFT_RANGE;
+        bgLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
 
-            const moveY =
-                -normalizedY * BG_DRIFT_RANGE;
-
-            bgLayer.style.transform =
-                `translate(${moveX}px, ${moveY}px)`;
-
-        }
-    );
+    });
 
 }
-// if you're reading this at 3am debugging why the bg won't move,
-// check that #bgLayer actually exists in the html first. ask me how i know
 
-
-/* =========================================================
-   HEADER / LOGO IMAGES
-   same swap-text-for-image trick as the curse/enemy icons,
-   just pointed at a different folder. these don't change
-   at runtime so this only needs to run once, not on every
-   render() like the curse cards do
-   ========================================================= */
 
 function applyHeaderImage(element, label, sizeClass) {
 
@@ -2090,55 +1435,34 @@ function applyHeaderImage(element, label, sizeClass) {
 
     }
 
+    resolveAsset("branding", label, path => {
 
-    resolveAsset(
-        "branding",
-        label,
-        path => {
+        if (!path) {
 
-            if (!path) {
-
-                return;
-
-            }
-
-
-            element.innerHTML = "";
-
-
-            const img =
-                document.createElement("img");
-
-            img.className =
-                sizeClass;
-
-            img.src = path;
-            img.alt = label;
-
-
-            element.appendChild(img);
+            return;
 
         }
-    );
+
+        element.innerHTML = "";
+
+        const img = document.createElement("img");
+
+        img.className = sizeClass;
+        img.src = path;
+        img.alt = label;
+
+        element.appendChild(img);
+
+    });
 
 }
 
 
-// only the logo becomes an image now - the section headers
-// (medal/global/enemy/greater) went back to pure stylized
-// text, see the gradient/glow rules in style.css for those
-// expects (once you add it): assets/branding/Nullscape.png
-// until that exists the plain text logo stays put, nothing breaks
-
-applyHeaderImage(
-    document.getElementById("logoText"),
-    "Nullscape",
-    "logo-image"
-);
+applyHeaderImage(document.getElementById("logoText"), "Nullscape", "logo-image");
 
 
-/* =========================================================
-   INITIAL RENDER
-   ========================================================= */
+loadRunState();
+
+document.getElementById("levelInput").value = runState.level;
 
 render();

@@ -7,40 +7,21 @@
 
 body {
     min-height: 100vh;
-
-    /* actual gradient lives on #bgLayer now so it can move
-       independently of the page. this is just a fallback in
-       case that div ever fails to load, black is safe, black
-       is always safe */
     background: #05010c;
-
     color: #e8dcff;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    /* the bg layer moves around a bit, this keeps the edges
-       from ever peeking through when it does */
+    font-family: Arial, Helvetica, sans-serif;
     overflow-x: hidden;
 }
 
 
-/* =========================================================
-   background layer (placeholder, swap the image in later)
-   ========================================================= */
+:root {
+    --bg-opacity: 0.09;
+}
+
 
 .bg-layer {
     position: fixed;
 
-    /*
-       oversized on purpose - the mouse-move script nudges
-       this thing around by a few px in js, if it were exactly
-       viewport-sized you'd see hard edges peeking in during
-       the movement. -10% padding on every side eats that.
-       DO NOT set this back to 100% i tried it looked so bad
-    */
     top: -10%;
     left: -10%;
     width: 120%;
@@ -49,31 +30,23 @@ body {
     z-index: -1;
     pointer-events: none;
 
-    /*
-       PLACEHOLDER - replace this whole background line with
-       your actual art later, something like:
-       background-image: url("assets/background.png");
-       background-size: cover;
-       background-position: center;
-       leaving the nullscape gradient here for now so there's
-       still *something* moving around instead of a void (technically on theme)
-    */
-    background:
+    background-image:
+        url("assets/background/Background.png"),
         radial-gradient(circle at 20% 10%, #1b0733 0%, transparent 45%),
         radial-gradient(circle at 85% 80%, #2a0a4a 0%, transparent 50%),
         linear-gradient(160deg, #05010c 0%, #0b0116 40%, #170025 100%);
 
-    /* smooths out the follow, higher number = laggier/dreamier,
-       lower = snappier/more "did the background just twitch" */
-    transition: transform 0.25s ease-out;
+    background-size: cover, cover, cover, cover;
+    background-position: center, center, center, center;
+    background-repeat: no-repeat;
+
+    opacity: var(--bg-opacity);
+
+    transition: transform 0.25s ease-out, opacity 0.3s ease;
 
     will-change: transform;
 }
 
-
-/* =========================================================
-   APP
-   ========================================================= */
 
 .app {
     min-height: 100vh;
@@ -82,16 +55,9 @@ body {
 
     grid-template-columns: 400px minmax(0, 1fr);
 
-    /* app itself has no background anymore, so bg-layer shows
-       through - panels below still have their own solid-ish
-       backgrounds so text stays readable, chaos contained */
     position: relative;
 }
 
-
-/* =========================================================
-   LEFT PANEL
-   ========================================================= */
 
 .left-panel {
     padding: 26px;
@@ -115,9 +81,14 @@ body {
     font-weight: 900;
     letter-spacing: 2px;
 
-    background: linear-gradient(90deg, #b866ff, #6a1fd0, #d97dff, #b866ff);
-    /* wider than the element itself so the animated
-       background-position actually has somewhere to go */
+    background: linear-gradient(
+        90deg,
+        #b866ff 0%,
+        #d97dff 25%,
+        #b866ff 50%,
+        #d97dff 75%,
+        #b866ff 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -127,10 +98,6 @@ body {
 }
 
 
-/* once assets/branding/Nullscape.png exists, the text above
-   gets swapped for this. ADJUST THE SIZE HERE - height is
-   the one that matters, width just follows the image's own
-   aspect ratio since it's auto */
 .logo-image {
     height: 64px;
     width: auto;
@@ -148,10 +115,6 @@ body {
     letter-spacing: 2px;
 }
 
-
-/* =========================================================
-   CONTROLS
-   ========================================================= */
 
 .control-section {
     margin-bottom: 28px;
@@ -171,10 +134,6 @@ body {
     letter-spacing: 1px;
 }
 
-
-/* =========================================================
-   LEVEL
-   ========================================================= */
 
 #levelInput {
     width: 100%;
@@ -203,10 +162,6 @@ body {
 }
 
 
-/* =========================================================
-   SECTION HEADERS
-   ========================================================= */
-
 .section-heading {
     display: flex;
 
@@ -228,10 +183,6 @@ body {
 }
 
 
-/* =========================================================
-   BUTTON GRIDS
-   ========================================================= */
-
 .button-grid {
     display: grid;
 
@@ -240,25 +191,15 @@ body {
 
 
 .difficulty-grid {
-    grid-template-columns:
-        repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 
 .enemy-grid {
-    grid-template-columns:
-        repeat(4, 1fr);
-
-    /* tighter gap than the default button-grid - with 4
-       columns in a 400px panel every pixel of gap eats
-       into the square size */
+    grid-template-columns: repeat(4, 1fr);
     gap: 6px;
 }
 
-
-/* =========================================================
-   SELECTABLE BUTTONS
-   ========================================================= */
 
 .select-button {
     min-height: 62px;
@@ -295,16 +236,10 @@ body {
 }
 
 
-/* Enemy buttons get the square, image-ready treatment.
-   Difficulty buttons (plain .select-button) stay as-is. */
-
 .select-button.enemy-button {
     aspect-ratio: 1 / 1;
     min-height: unset;
 
-    /* boxes got a lot smaller going from 2 to 4 per row,
-       less padding so the icon/placeholder actually has
-       room to breathe */
     padding: 5px;
 }
 
@@ -331,14 +266,6 @@ body {
     box-shadow: 0 0 18px rgba(180, 90, 255, 0.4);
 }
 
-
-/* =========================================================
-   difficulty hover colors
-   casual = blue (chill), standard = purple (default vibe),
-   extreme = red (you are going to suffer)
-   double class here on purpose so it beats the plain
-   .select-button:hover rule above without a fight
-   ========================================================= */
 
 .select-button.difficulty-casual:hover {
     background: #0a2440;
@@ -367,9 +294,88 @@ body {
 }
 
 
-/* =========================================================
-   ACTIVE CURSES
-   ========================================================= */
+.active-curse-search {
+    position: relative;
+
+    margin-bottom: 10px;
+}
+
+
+.active-curse-search-input {
+    width: 100%;
+
+    padding: 10px 34px 10px 12px;
+
+    background: #14061f;
+
+    border: 1px solid #3a1a5c;
+    border-radius: 8px;
+
+    color: #f0e4ff;
+
+    outline: none;
+
+    font-size: 12px;
+    font-family: inherit;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.active-curse-search-input::placeholder {
+    color: #5c4880;
+}
+
+
+.active-curse-search-input:focus {
+    border-color: #9147d6;
+    box-shadow: 0 0 0 3px rgba(145, 71, 214, 0.18);
+}
+
+
+.active-curse-search-clear {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+
+    transform: translateY(-50%);
+
+    width: 20px;
+    height: 20px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    border: 1px solid #4a2270;
+    border-radius: 50%;
+
+    color: #b6a3dd;
+
+    font-size: 12px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.active-curse-search-clear.visible {
+    display: flex;
+}
+
+
+.active-curse-search-clear:hover {
+    background: rgba(145, 71, 214, 0.25);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+}
+
 
 .active-curses {
     display: flex;
@@ -389,10 +395,6 @@ body {
 
     align-items: center;
 
-    /* padding moved onto .active-curse-content - this
-       wrapper needs to stay padding-free and overflow
-       hidden so the icon fade doesn't spill past the
-       rounded corners */
     padding: 0;
     overflow: hidden;
 
@@ -410,12 +412,6 @@ body {
 }
 
 
-/* =========================================================
-   greater curses get the orange treatment in this list too,
-   same gradient-bar idea just a different palette. these
-   also always render first, see the sort in script.js
-   ========================================================= */
-
 .active-curse--greater {
     background: linear-gradient(90deg, #b23a00, #ff6200);
 
@@ -424,9 +420,6 @@ body {
 }
 
 
-/* wraps the remove button + text so it sits above the
-   icon layer - z-index only works with a position set,
-   hence position: relative here too */
 .active-curse-content {
     position: relative;
     z-index: 2;
@@ -444,22 +437,9 @@ body {
 
 
 .active-curse-name {
-    /* keeps a long curse name from shoving the type label
-       or the remove button off into the void */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-
-.active-curse-type {
-    margin-left: auto;
-    flex-shrink: 0;
-
-    color: rgba(255, 255, 255, 0.55);
-
-    font-size: 9px;
-    letter-spacing: 1px;
 }
 
 
@@ -468,10 +448,6 @@ body {
 
     width: 22px;
     height: 22px;
-
-    /* no more margin-left - it's the leftmost thing in
-       the bar now, .active-curse-content's gap handles
-       the spacing to whatever comes after it */
 
     display: flex;
 
@@ -506,15 +482,6 @@ body {
 }
 
 
-/* =========================================================
-   active-curse icon
-   sits UNDER .active-curse-content (z-index 1 vs 2), pinned
-   to the right edge, full height of the bar. the mask-image
-   is what makes it "merge" into the bar instead of looking
-   like a slapped-on square thumbnail - it just fades out
-   toward the middle of the bar instead of having a hard edge
-   ========================================================= */
-
 .active-curse-icon {
     position: absolute;
     top: 0;
@@ -523,7 +490,7 @@ body {
 
     z-index: 1;
 
-    width: 72px;
+    width: 75px;
 
     pointer-events: none;
 }
@@ -537,13 +504,8 @@ body {
 
     opacity: 0.9;
 
-    /* the "really small fade" - opaque by 35% of the way
-       across, transparent past that toward the left. tweak
-       the 35% if the merge needs to be more/less aggressive */
-    -webkit-mask-image:
-        linear-gradient(to right, transparent 0%, black 35%);
-    mask-image:
-        linear-gradient(to right, transparent 0%, black 35%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 50%);
+    mask-image: linear-gradient(to right, transparent 0%, black 50%);
 }
 
 
@@ -561,12 +523,15 @@ body {
 }
 
 
-/* =========================================================
-   RESET
-   ========================================================= */
+.run-controls {
+    display: flex;
+
+    gap: 8px;
+}
+
 
 .reset-button {
-    width: 100%;
+    flex: 1;
 
     padding: 13px;
 
@@ -596,9 +561,14 @@ body {
 }
 
 
-/* =========================================================
-   RIGHT PANEL
-   ========================================================= */
+.remove-all-button:hover {
+    background: #3a0a0a;
+
+    border-color: #ae1313;
+
+    color: #ffffff;
+}
+
 
 .right-panel {
     padding: 32px;
@@ -616,7 +586,14 @@ body {
     font-size: 25px;
     font-weight: 900;
 
-    background: linear-gradient(90deg, #d59bff, #7a2fc4, #d59bff);
+    background: linear-gradient(
+        90deg,
+        #d59bff 0%,
+        #7a2fc4 25%,
+        #d59bff 50%,
+        #7a2fc4 75%,
+        #d59bff 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -635,10 +612,6 @@ body {
 }
 
 
-/* =========================================================
-   RESULT SECTION
-   ========================================================= */
-
 .result-section {
     margin-bottom: 42px;
 }
@@ -656,29 +629,23 @@ body {
 
 
 .result-heading h2 {
-    /* back to the site's default sans-serif (inherited from
-       body) - Accanthis felt off, dropped it */
     font-size: 22px;
     font-weight: 700;
     letter-spacing: 0.5px;
 
-    /* fallback color if a browser can't do background-clip
-       text for whatever reason - shouldn't normally show */
     color: #e8dcff;
 }
 
 
-/* =========================================================
-   themed header text
-   same background-clip: text trick as the logo/pool-title,
-   one gradient per curse category, colors match their card
-   themes elsewhere in this file. each gradient repeats its
-   first color as the last stop too - that's what lets the
-   scrolling animation below loop without a visible seam
-   ========================================================= */
-
 #medalHeading {
-    background: linear-gradient(90deg, #00c8ff, #8f37d8, #00c8ff);
+    background: linear-gradient(
+        90deg,
+        #00c8ff 0%,
+        #8f37d8 25%,
+        #00c8ff 50%,
+        #8f37d8 75%,
+        #00c8ff 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -689,7 +656,14 @@ body {
 
 
 #globalHeading {
-    background: linear-gradient(90deg, #d59bff, #7a2fc4, #d59bff);
+    background: linear-gradient(
+        90deg,
+        #d59bff 0%,
+        #7a2fc4 25%,
+        #d59bff 50%,
+        #7a2fc4 75%,
+        #d59bff 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -700,7 +674,14 @@ body {
 
 
 #enemyHeading {
-    background: linear-gradient(90deg, #ff6b6b, #ae1313, #ff6b6b);
+    background: linear-gradient(
+        90deg,
+        #ff6b6b 0%,
+        #ae1313 25%,
+        #ff6b6b 50%,
+        #ae1313 75%,
+        #ff6b6b 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -711,7 +692,14 @@ body {
 
 
 #greaterHeading {
-    background: linear-gradient(90deg, #ffb37a, #ff6200, #ffb37a);
+    background: linear-gradient(
+        90deg,
+        #ffb37a 0%,
+        #ff6200 25%,
+        #ffb37a 50%,
+        #ff6200 75%,
+        #ffb37a 100%
+    );
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -720,24 +708,6 @@ body {
     text-shadow: 0 0 18px rgba(255, 98, 0, 0.45);
 }
 
-
-/* =========================================================
-   animated header text
-   this is the actual "colors sweeping to the right" effect,
-   not a brightness pulse - background-position moves across
-   the (oversized) gradient at a constant speed, one direction,
-   no bouncing back and forth. the static text-shadow glow
-   from each header rule above still applies on top of this,
-   untouched.
-
-   >>> TO CHANGE SPEED: edit --gradient-speed below. lower
-       number = faster scroll, higher = slower. 2s is quite
-       fast, 8s+ starts feeling more like a lazy drift <<<
-
-   >>> TO REVERSE DIRECTION (make it scroll left instead):
-       swap the 0% and 100% background-position values in
-       the @keyframes block just below <<<
-   ========================================================= */
 
 .animated-header-text {
     --gradient-speed: 2.5s;
@@ -753,9 +723,6 @@ body {
     }
 
     100% {
-        /* moving position toward 100% pans the gradient so
-           later colors arrive from the left and travel right
-           across the text - this is the "moving right" part */
         background-position: 100% 50%;
     }
 
@@ -769,10 +736,6 @@ body {
     letter-spacing: 1px;
 }
 
-
-/* =========================================================
-   credit line
-   ========================================================= */
 
 .credit {
     margin-top: 10px;
@@ -808,23 +771,14 @@ body {
 }
 
 
-/* =========================================================
-   RESULT GRID
-   ========================================================= */
-
 .result-grid {
     display: grid;
 
-    grid-template-columns:
-        repeat(auto-fill, minmax(145px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
 
-    gap: 9px;
+    gap: 8px;
 }
 
-
-/* =========================================================
-   CURSE CARD
-   ========================================================= */
 
 .curse-card {
     aspect-ratio: 1 / 1;
@@ -837,9 +791,9 @@ body {
     align-items: center;
     justify-content: flex-start;
 
-    gap: 6px;
+    gap: 3px;
 
-    padding: 10px;
+    padding: 7px;
 
     background: linear-gradient(160deg, #150826 0%, #0d0416 100%);
 
@@ -868,18 +822,6 @@ body {
 }
 
 
-.curse-name {
-    font-size: 12px;
-    font-weight: 700;
-
-    color: #f0e4ff;
-}
-
-
-/* =========================================================
-   MEDIA BOX (image OR text placeholder, same footprint)
-   ========================================================= */
-
 .card-media {
     width: 100%;
     flex: 1 1 auto;
@@ -897,6 +839,16 @@ body {
 
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 6px;
+}
+
+
+.curse-card .card-media {
+    flex: 0 0 auto;
+
+    width: 58%;
+    height: 58%;
+
+    margin: 2px auto 0;
 }
 
 
@@ -919,17 +871,11 @@ body {
     width: 100%;
     height: 100%;
 
-    /* Normalizes any source image to the same
-       square footprint without stretching it.
-       Switch to "cover" if you'd rather crop to
-       fill the square edge-to-edge. */
     object-fit: contain;
 
     display: block;
 }
 
-
-/* Enemy buttons: media box fills the whole square */
 
 .enemy-button .card-media {
     height: 100%;
@@ -942,8 +888,6 @@ body {
 .enemy-button .card-media-placeholder {
     color: #b6a3dd;
 
-    /* smaller boxes now, dropped from 12px so names like
-       "Voidbound Guardian" don't just turn into soup */
     font-size: 9px;
     padding: 3px;
     line-height: 1.15;
@@ -955,8 +899,26 @@ body {
 }
 
 
+.curse-name-label {
+    margin-top: 2px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 800;
+    font-size: 9.5px;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+
+    color: #f0e4ff;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
 .curse-info {
-    margin-top: 6px;
+    margin-top: 2px;
 
     color: #6d5a94;
 
@@ -971,31 +933,11 @@ body {
 }
 
 
-/* Medal marker - cyan mixed with purple, matches #medalHeading */
-
 .curse-card.medal {
     border-color: #00c8ff;
     box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(143, 55, 216, 0.2);
 }
 
-
-.medal-label {
-    margin-top: 7px;
-
-    background: linear-gradient(90deg, #00c8ff, #8f37d8);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-
-/* =========================================================
-   medal curses - cyan mixed with purple
-   ========================================================= */
 
 #medalCurseContainer .curse-card:hover {
     background: linear-gradient(160deg, #002738 0%, #1f0836 100%);
@@ -1014,11 +956,6 @@ body {
     color: #6fa8c9;
 }
 
-
-/* =========================================================
-   greater curses - orange theme
-   these hit hardest so they get the loudest color, felt right
-   ========================================================= */
 
 #greaterCurseContainer .curse-card {
     border-color: rgba(255, 98, 0, 0.35);
@@ -1048,12 +985,6 @@ body {
 }
 
 
-/* =========================================================
-   enemy stuff - blood red theme
-   applies to both the monster buttons (left panel) and the
-   enemy-specific curse pool (right panel), same vibe, two spots
-   ========================================================= */
-
 .enemy-button,
 #enemyCurseContainer .curse-card {
     border-color: rgba(174, 19, 19, 0.4);
@@ -1073,9 +1004,6 @@ body {
 
 
 .enemy-button.selected {
-    /* light red up top fading into dark red/maroon at the
-       bottom - reads more like "this thing is active and
-       angry" than the flat red we had before */
     background: linear-gradient(160deg, #ff5c5c 0%, #7a0e0e 65%, #3d0505 100%);
 
     border-color: #ff9d9d;
@@ -1094,10 +1022,6 @@ body {
 }
 
 
-/* =========================================================
-   EMPTY POOL
-   ========================================================= */
-
 .empty-pool {
     grid-column: 1 / -1;
 
@@ -1114,9 +1038,39 @@ body {
 }
 
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+.hold-button {
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+.hold-button > *:not(.hold-fill) {
+    position: relative;
+    z-index: 1;
+}
+
+
+.hold-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    width: 0%;
+
+    z-index: 0;
+
+    background: linear-gradient(90deg, rgba(220, 20, 20, 0.55), rgba(255, 70, 70, 0.8));
+
+    pointer-events: none;
+}
+
+
+.hold-button.holding {
+    box-shadow: 0 0 16px rgba(255, 40, 40, 0.5);
+}
+
 
 @media (max-width: 900px) {
 
@@ -1147,12 +1101,13 @@ body {
     }
 
 
-    /* 4-across is comfortable on the normal 400px panel,
-       but on a narrow phone that's a lot of tiny squares
-       to tap accurately - back off to 3 */
     .enemy-grid {
-        grid-template-columns:
-            repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+
+    .run-controls {
+        flex-direction: column;
     }
 
 }
