@@ -182,7 +182,7 @@ const globalCurses = [
 
     {
         name: "More Tripmines",
-        level: 5,
+        level: 5,   
         casualDisabled: true,
         max: 2,
         medal: true
@@ -1148,8 +1148,8 @@ function getGreaterPool() {
     ) {
 
         isGreaterLevel =
-            level >= 10 &&
-            level % 5 === 0;
+            isGreaterLevel =
+            level >= 10;
 
     }
 
@@ -1160,8 +1160,7 @@ function getGreaterPool() {
     ) {
 
         isGreaterLevel =
-            level >= 10 &&
-            level % 5 === 0;
+            level >= 10;
 
     }
 
