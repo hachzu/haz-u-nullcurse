@@ -16,7 +16,7 @@
     with the mouse. right now it's just a placeholder gradient,
     swap the background-image in style.css (.bg-layer) for your
     actual art whenever it's ready. don't touch the sizing/position
-    stuff unless you want to fight the parallax math :p
+    stuff unless you want to fight the parallax math, ask me first lol
 -->
 <div id="bgLayer" class="bg-layer"></div>
 
@@ -29,8 +29,11 @@
     <aside class="left-panel">
 
         <header class="site-header">
-            <div class="logo">NULLSCAPE</div>
+            <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
             <div class="subtitle">CURSE CALCULATOR</div>
+            <div class="credit">
+                Made by <span class="credit-handle">@sxfthazu</span>
+            </div>
         </header>
 
 
@@ -144,7 +147,7 @@
         <header class="pool-header">
 
             <div>
-                <div class="pool-title">
+                <div class="pool-title animated-header-text">
                     POTENTIAL CURSE POOL
                 </div>
 
@@ -162,11 +165,7 @@
 
             <div class="result-heading">
 
-                <h2>MEDAL CURSES</h2>
-
-                <span>
-                    medal value
-                </span>
+                <h2 id="medalHeading" class="animated-header-text">MEDAL CURSES</h2>
 
             </div>
 
@@ -184,7 +183,7 @@
 
             <div class="result-heading">
 
-                <h2>GLOBAL CURSES</h2>
+                <h2 id="globalHeading" class="animated-header-text">GLOBAL CURSES</h2>
 
             </div>
 
@@ -202,7 +201,7 @@
 
             <div class="result-heading">
 
-                <h2>ENEMY CURSES</h2>
+                <h2 id="enemyHeading" class="animated-header-text">ENEMY CURSES</h2>
 
             </div>
 
@@ -220,7 +219,7 @@
 
             <div class="result-heading">
 
-                <h2>GREATER CURSES</h2>
+                <h2 id="greaterHeading" class="animated-header-text">GREATER CURSES</h2>
 
             </div>
 

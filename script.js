@@ -184,7 +184,7 @@ const globalCurses = [
         name: "More Tripmines",
         level: 5,
         casualDisabled: true,
-        max: 4,
+        max: 2,
         medal: true
     },
 
@@ -796,6 +796,52 @@ function createMediaBox(assetType, name) {
 
 
     return media;
+
+}
+
+
+function createActiveCurseIcon(assetType, name) {
+
+    // unlike createMediaBox, this one has no text
+    // placeholder - the curse name is already sitting
+    // in the bar as real text, so an icon here is purely
+    // decorative. if there's no asset, it just stays empty
+    const icon =
+        document.createElement("div");
+
+    icon.className =
+        "active-curse-icon";
+
+
+    resolveAsset(
+        assetType,
+        name,
+        path => {
+
+            if (!path) {
+
+                return;
+
+            }
+
+
+            const img =
+                document.createElement("img");
+
+            img.className =
+                "active-curse-icon-image";
+
+            img.src = path;
+            img.alt = "";
+
+
+            icon.appendChild(img);
+
+        }
+    );
+
+
+    return icon;
 
 }
 
@@ -1495,6 +1541,16 @@ function createCurseCard(
    RENDER ACTIVE CURSES
    ========================================================= */
 
+function isGreaterCurse(curse) {
+
+    // only entries from the greaterCurses array carry a
+    // `type` field ("Global"/"Enemy"), everything else
+    // doesn't have one - cheap way to tell them apart
+    return curse.type !== undefined;
+
+}
+
+
 function renderActiveCurses() {
 
     const container =
@@ -1525,9 +1581,44 @@ function renderActiveCurses() {
     }
 
 
+    // greater curses always float to the top of the list,
+    // everything else keeps the order it was picked in.
+    // sort() is stable in every browser that matters here,
+    // so the non-greater ones won't get shuffled around
+    const orderedNames =
+        Array.from(runState.activeCurses)
+            .sort(
+                (a, b) => {
+
+                    const curseA =
+                        findCurseByName(a);
+
+                    const curseB =
+                        findCurseByName(b);
+
+                    const aIsGreater =
+                        curseA &&
+                        isGreaterCurse(curseA);
+
+                    const bIsGreater =
+                        curseB &&
+                        isGreaterCurse(curseB);
+
+                    if (aIsGreater === bIsGreater) {
+
+                        return 0;
+
+                    }
+
+                    return aIsGreater ? -1 : 1;
+
+                }
+            );
+
+
     for (
         const curseName
-        of runState.activeCurses
+        of orderedNames
     ) {
 
         const curse =
@@ -1541,71 +1632,23 @@ function renderActiveCurses() {
         }
 
 
+        const greater =
+            isGreaterCurse(curse);
+
+
         const item =
             document.createElement("div");
 
         item.className =
-            "active-curse";
-
-
-        const name =
-            document.createElement("span");
-
-        name.textContent =
-            curse.name;
-
-
-        const stackCount =
-            getCurseStackCount(curse.name);
-
-
-        if (stackCount > 1) {
-
-            name.textContent +=
-                ` ×${stackCount}`;
-
-        }
-
-
-        item.appendChild(name);
-
-
-        const type =
-            document.createElement("span");
-
-        type.className =
-            "active-curse-type";
-
-
-        if (curse.enemy) {
-
-            type.textContent =
-                "ENEMY";
-
-        }
-
-        else if (curse.medal) {
-
-            type.textContent =
-                "MEDAL";
-
-        }
-
-        else {
-
-            type.textContent =
-                "CURSE";
-
-        }
-
-
-        item.appendChild(type);
+            greater
+                ? "active-curse active-curse--greater"
+                : "active-curse";
 
 
         /*
-           Remove button: undoes the pick
-           and returns the curse to its
-           original pool.
+           remove button now lives on the left. figured
+           it's the first thing your eye/mouse should hit
+           when you're trying to undo an oops-click
         */
 
         const removeButton =
@@ -1626,12 +1669,6 @@ function renderActiveCurses() {
             "click",
             event => {
 
-                /*
-                   Stop this from bubbling up
-                   in case the whole row ever
-                   becomes clickable later.
-                */
-
                 event.stopPropagation();
 
                 removeCurse(curse.name);
@@ -1640,6 +1677,62 @@ function renderActiveCurses() {
         );
 
         item.appendChild(removeButton);
+
+
+        // text content wrapper - needs its own stacking
+        // context so it sits ABOVE the icon fade on the
+        // right, otherwise the icon would paint over it
+        const content =
+            document.createElement("div");
+
+        content.className =
+            "active-curse-content";
+
+
+        const name =
+            document.createElement("span");
+
+        name.className =
+            "active-curse-name";
+
+        name.textContent =
+            curse.name;
+
+
+        const stackCount =
+            getCurseStackCount(curse.name);
+
+
+        if (stackCount > 1) {
+
+            name.textContent +=
+                ` ×${stackCount}`;
+
+        }
+
+
+        content.appendChild(name);
+
+
+        // sub-label (ENEMY/MEDAL/CURSE/GREATER) used to live
+        // here but it was overlapping the icon fade on the
+        // right, removed - the name + gradient color already
+        // tell you what kind of curse this is
+
+        item.appendChild(content);
+
+
+        // icon on the right, faded/merged into the bar -
+        // only shows up once (if) an asset actually loads,
+        // no text placeholder here since the name is
+        // already sitting right there in `content`
+        const icon =
+            createActiveCurseIcon(
+                "curses",
+                curse.name
+            );
+
+        item.appendChild(icon);
 
 
         container.appendChild(item);
@@ -1984,6 +2077,69 @@ if (bgLayer) {
 }
 // if you're reading this at 3am debugging why the bg won't move,
 // check that #bgLayer actually exists in the html first. ask me how i know
+
+
+/* =========================================================
+   HEADER / LOGO IMAGES
+   same swap-text-for-image trick as the curse/enemy icons,
+   just pointed at a different folder. these don't change
+   at runtime so this only needs to run once, not on every
+   render() like the curse cards do
+   ========================================================= */
+
+function applyHeaderImage(element, label, sizeClass) {
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    resolveAsset(
+        "branding",
+        label,
+        path => {
+
+            if (!path) {
+
+                return;
+
+            }
+
+
+            element.innerHTML = "";
+
+
+            const img =
+                document.createElement("img");
+
+            img.className =
+                sizeClass;
+
+            img.src = path;
+            img.alt = label;
+
+
+            element.appendChild(img);
+
+        }
+    );
+
+}
+
+
+// only the logo becomes an image now - the section headers
+// (medal/global/enemy/greater) went back to pure stylized
+// text, see the gradient/glow rules in style.css for those
+// expects (once you add it): assets/branding/Nullscape.png
+// until that exists the plain text logo stays put, nothing breaks
+
+applyHeaderImage(
+    document.getElementById("logoText"),
+    "Nullscape",
+    "logo-image"
+);
 
 
 /* =========================================================
