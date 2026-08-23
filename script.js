@@ -1134,11 +1134,9 @@ function getGreaterPool() {
             (
                 level === 15 ||
                 (
-                    level >= 25 &&
-                    level % 5 === 0
+                    level >= 25 
                 )
             );
-
     }
 
 
@@ -1150,7 +1148,6 @@ function getGreaterPool() {
         isGreaterLevel =
             isGreaterLevel =
             level >= 10;
-
     }
 
 
@@ -1161,7 +1158,6 @@ function getGreaterPool() {
 
         isGreaterLevel =
             level >= 10;
-
     }
 
 
@@ -1860,7 +1856,7 @@ function render() {
 
 
     /*
-       note: we used to prune invalid active enemies right
+       note: i used to prune invalid active enemies right
        here on every render, which sounds fine until you
        remember render() fires on every keystroke. typing
        "20" passes through "2" for a split second, which was
