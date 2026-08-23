@@ -759,7 +759,7 @@ function playClickSound() {
         const thumpGain = ctx.createGain();
 
         thump.type = "sine";
-        thump.frequency.setValueAtTime(110, now);
+        thump.frequency.setValueAtTime(10, now);
         thump.frequency.exponentialRampToValueAtTime(48, now + 0.06);
 
         thumpGain.gain.setValueAtTime(0.0001, now);
@@ -772,7 +772,7 @@ function playClickSound() {
         thump.start(now);
         thump.stop(now + 0.11);
 
-        const knockDuration = 0.045;
+        const knockDuration = 0.1;
         const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * knockDuration));
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = noiseBuffer.getChannelData(0);
