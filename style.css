@@ -676,11 +676,20 @@ body {
     overflow-y: auto;
 
     font-family: var(--font-modern);
+
+    position: relative;
 }
 
 
 .pool-header {
     margin-bottom: 30px;
+
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
 }
 
 
@@ -711,6 +720,172 @@ body {
     color: #c9b7eb;
 
     font-size: 11px;
+}
+
+
+.upgrade-toggle-button {
+    position: relative;
+    z-index: 20;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 18px;
+
+    background: linear-gradient(135deg, #1b0733, #2a0a4a);
+
+    border: 1px solid #6f3fd8;
+    border-radius: 10px;
+
+    color: #d59bff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition:
+        background 0.18s,
+        border-color 0.18s,
+        color 0.18s,
+        transform 0.18s,
+        box-shadow 0.18s;
+}
+
+
+.upgrade-toggle-icon {
+    display: inline-block;
+
+    font-size: 12px;
+    line-height: 1;
+
+    transition: transform 0.25s ease;
+}
+
+
+.upgrade-toggle-key {
+    padding: 1px 6px;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border: 1px solid rgba(213, 155, 255, 0.4);
+    border-radius: 4px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    color: #b6a3dd;
+}
+
+
+.upgrade-toggle-button:hover {
+    background: linear-gradient(135deg, #2a0a4a, #4a1c85);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+
+    transform: translateY(-2px);
+    box-shadow: 0 0 22px rgba(184, 102, 255, 0.45);
+}
+
+
+.upgrade-toggle-button:hover .upgrade-toggle-icon {
+    transform: translateY(-2px) rotate(10deg);
+}
+
+
+.upgrade-toggle-button.active {
+    background: linear-gradient(135deg, #4a1c85, #7a2fc4);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(180, 90, 255, 0.5);
+}
+
+
+.upgrade-toggle-button.active .upgrade-toggle-icon {
+    transform: rotate(180deg);
+}
+
+
+.upgrade-panel {
+    position: absolute;
+    inset: 0;
+
+    z-index: 10;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 32px;
+
+    background: linear-gradient(160deg, #140524 0%, #0c0316 100%);
+
+    border-left: 1px solid #3a1a5c;
+    box-shadow: -24px 0 44px rgba(0, 0, 0, 0.5);
+
+    transform: translateX(100%);
+
+    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+
+    pointer-events: none;
+}
+
+
+.upgrade-panel.open {
+    transform: translateX(0);
+
+    pointer-events: auto;
+}
+
+
+.upgrade-panel-inner {
+    max-width: 420px;
+
+    text-align: center;
+}
+
+
+.upgrade-panel-heading {
+    margin-bottom: 14px;
+
+    font-size: 30px;
+    font-weight: 900;
+
+    background: linear-gradient(
+        90deg,
+        #00c8ff 0%,
+        #8f37d8 25%,
+        #00c8ff 50%,
+        #8f37d8 75%,
+        #00c8ff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow: 0 0 18px rgba(0, 200, 255, 0.4), 0 0 14px rgba(143, 55, 216, 0.3);
+}
+
+
+.upgrade-panel-subtitle {
+    color: #c9b7eb;
+
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 
@@ -1264,6 +1439,11 @@ body {
 
     .run-controls {
         flex-direction: column;
+    }
+
+
+    .pool-header {
+        flex-wrap: wrap;
     }
 
 }

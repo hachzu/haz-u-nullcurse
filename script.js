@@ -1784,6 +1784,67 @@ attachHoldAction(document.getElementById("removeAllCursesButton"), () => {
 });
 
 
+const upgradePanel = document.getElementById("upgradePanel");
+const upgradeToggleButton = document.getElementById("upgradeToggleButton");
+
+function isUpgradePanelOpen() {
+
+    return upgradePanel ? upgradePanel.classList.contains("open") : false;
+
+}
+
+function setUpgradePanelOpen(open) {
+
+    if (!upgradePanel || !upgradeToggleButton) {
+
+        return;
+
+    }
+
+    upgradePanel.classList.toggle("open", open);
+    upgradeToggleButton.classList.toggle("active", open);
+    upgradeToggleButton.setAttribute("aria-expanded", open ? "true" : "false");
+
+}
+
+function toggleUpgradePanel() {
+
+    setUpgradePanelOpen(!isUpgradePanelOpen());
+
+}
+
+if (upgradeToggleButton) {
+
+    attachClickAction(upgradeToggleButton, () => {
+
+        toggleUpgradePanel();
+
+    }, playUtilitySound);
+
+}
+
+document.addEventListener("keydown", event => {
+
+    if (event.key.toLowerCase() !== "b") {
+
+        return;
+
+    }
+
+    const activeElement = document.activeElement;
+    const activeTag = activeElement ? activeElement.tagName : "";
+
+    if (activeTag === "INPUT" || activeTag === "TEXTAREA" || (activeElement && activeElement.isContentEditable)) {
+
+        return;
+
+    }
+
+    toggleUpgradePanel();
+
+});
+
+
 const bgLayer = document.getElementById("bgLayer");
 
 const BG_DRIFT_RANGE = 18;
