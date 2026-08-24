@@ -1,12 +1,4 @@
-/*
- * Upgrade Calculator styles
- * --------------------------
- * Styling for the upgrade toggle button and the sliding upgrade
- * calculator panel. Loaded after style.css so it can sit alongside
- * the base theme without needing to duplicate any of it.
- * Depends on .right-panel { position: relative; } and the flex
- * layout on .pool-header, both defined in style.css.
- */
+
 
 
 .upgrade-toggle-button {
@@ -250,6 +242,33 @@
 }
 
 
+.upgrade-panel-remaining {
+    border-color: rgba(255, 208, 116, 0.5);
+    box-shadow: 0 0 22px rgba(255, 208, 116, 0.25);
+}
+
+
+.upgrade-panel-remaining .upgrade-panel-total-label {
+    color: #ffd074;
+}
+
+
+.upgrade-panel-remaining .upgrade-panel-total-value {
+    background: linear-gradient(90deg, #ffffff, #ffd074);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+
+.upgrade-panel-total-value.upgrade-panel-total-value--negative {
+    background: none;
+    -webkit-text-fill-color: initial;
+
+    color: #ff6b6b;
+}
+
+
 .upgrade-reset-button {
     padding: 10px 16px;
 
@@ -281,6 +300,154 @@
 }
 
 
+/* ---- Mode / player count / Golden Gifts controls ---- */
+
+.upgrade-panel-controls {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: flex-end;
+    gap: 18px;
+
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+
+    border-bottom: 1px solid rgba(143, 217, 255, 0.15);
+}
+
+
+.upgrade-control-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #8fd9ff;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.upgrade-mode-block {
+    flex: 1 1 260px;
+}
+
+
+.upgrade-mode-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+
+.upgrade-mode-button {
+    min-height: 40px;
+
+    padding: 8px;
+
+    font-size: 10px;
+}
+
+
+.upgrade-mode-button.selected {
+    background: linear-gradient(135deg, #0d3a52, #1c6f96);
+
+    border-color: #8fd9ff;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 16px rgba(143, 217, 255, 0.45);
+}
+
+
+.upgrade-players-block,
+.upgrade-gifts-block {
+    flex: 0 0 130px;
+}
+
+
+.upgrade-players-block input,
+.upgrade-gifts-block input {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    background: #071620;
+
+    border: 1px solid rgba(143, 217, 255, 0.35);
+    border-radius: 8px;
+
+    color: #dff5ff;
+
+    outline: none;
+
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-modern);
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.upgrade-players-block input:focus,
+.upgrade-gifts-block input:focus {
+    border-color: #8fd9ff;
+    box-shadow: 0 0 0 3px rgba(143, 217, 255, 0.18);
+}
+
+
+.upgrade-players-block input:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+}
+
+
+.purchase-upgrade-button {
+    flex: 0 0 auto;
+
+    margin-left: auto;
+
+    padding: 12px 22px;
+
+    background: linear-gradient(135deg, #ffd074, #ff9d3d);
+
+    border: 1px solid #ffe3a8;
+    border-radius: 10px;
+
+    color: #241100;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 20px rgba(255, 157, 61, 0.4);
+
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+
+.purchase-upgrade-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 26px rgba(255, 157, 61, 0.6);
+}
+
+
+.purchase-upgrade-button:disabled,
+.purchase-upgrade-button.purchase-upgrade-button--disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+    transform: none;
+}
+
+
 .upgrade-grid {
     flex: 1;
 
@@ -294,6 +461,7 @@
     align-content: start;
 
     padding-right: 4px;
+    padding-bottom: 6px;
 }
 
 
@@ -307,6 +475,7 @@
     align-items: center;
     gap: 5px;
 
+    margin-bottom: 16px;
     padding: 10px 8px 14px;
 
     background: linear-gradient(160deg, rgba(16, 34, 50, 0.9) 0%, rgba(6, 12, 22, 0.95) 100%);
@@ -332,11 +501,36 @@
 }
 
 
-.upgrade-card--active {
-    background: linear-gradient(160deg, rgba(143, 217, 255, 0.24) 0%, rgba(24, 55, 80, 0.9) 100%);
+/* Level requirement met, but not yet selected or affordable */
+.upgrade-card--affordable {
+    border-color: #8fd9ff;
+    box-shadow: 0 0 18px rgba(143, 217, 255, 0.3);
+}
 
-    border-color: #bfe9ff;
-    box-shadow: 0 0 22px rgba(143, 217, 255, 0.5);
+
+/* Currently sitting in the pending purchase queue */
+.upgrade-card--active {
+    background: linear-gradient(160deg, rgba(255, 208, 116, 0.24) 0%, rgba(80, 55, 10, 0.75) 100%);
+
+    border-color: #ffd074;
+    box-shadow: 0 0 22px rgba(255, 208, 116, 0.5);
+}
+
+
+/* Already purchased and maxed out */
+.upgrade-card--owned {
+    background: linear-gradient(160deg, rgba(123, 230, 168, 0.2) 0%, rgba(8, 40, 24, 0.9) 100%);
+
+    border-color: #7be6a8;
+    box-shadow: 0 0 16px rgba(123, 230, 168, 0.3);
+
+    cursor: default;
+}
+
+
+.upgrade-card--owned:hover {
+    box-shadow: 0 0 16px rgba(123, 230, 168, 0.3);
+    transform: none;
 }
 
 
@@ -400,14 +594,6 @@
 }
 
 
-.upgrade-card-price {
-    color: #8fd9ff;
-
-    font-size: 9px;
-    font-weight: 700;
-}
-
-
 .upgrade-card-dots {
     display: flex;
 
@@ -427,8 +613,8 @@
 
 
 .upgrade-dot--filled {
-    background: #8fd9ff;
-    box-shadow: 0 0 8px rgba(143, 217, 255, 0.8);
+    background: #ffd074;
+    box-shadow: 0 0 8px rgba(255, 208, 116, 0.8);
 }
 
 
@@ -449,10 +635,97 @@
 }
 
 
+/* Cost badge sits underneath the card, outside its border -
+   mirrors the .curse-reward-badge treatment used for medal curses. */
+.upgrade-card-cost-badge {
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+
+    transform: translateX(-50%);
+
+    padding: 2px 9px;
+
+    background: linear-gradient(135deg, #ffd074, #ff9d3d);
+
+    border: 1px solid rgba(255, 208, 116, 0.7);
+    border-radius: 999px;
+
+    color: #241100;
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+
+    box-shadow: 0 3px 8px rgba(255, 157, 61, 0.4);
+
+    z-index: 2;
+}
+
+
+.upgrade-card-cost-badge--unaffordable {
+    background: linear-gradient(135deg, #5c5f68, #34363e);
+
+    border-color: rgba(180, 184, 196, 0.5);
+
+    color: #cfd2db;
+
+    box-shadow: none;
+}
+
+
+.upgrade-card-cost-badge--owned {
+    background: linear-gradient(135deg, #7be6a8, #2f9c60);
+
+    border-color: rgba(123, 230, 168, 0.7);
+
+    color: #06210f;
+}
+
+
+.upgrade-card-cost-badge--locked {
+    background: rgba(120, 120, 130, 0.35);
+
+    border-color: rgba(180, 180, 190, 0.4);
+
+    color: #b8bac2;
+
+    box-shadow: none;
+}
+
+
+@media (max-width: 700px) {
+
+    .upgrade-panel-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .upgrade-players-block,
+    .upgrade-gifts-block {
+        flex: 1 1 auto;
+    }
+
+
+    .purchase-upgrade-button {
+        width: 100%;
+        margin-left: 0;
+    }
+
+}
+
+
 @media (max-width: 500px) {
 
     .pool-header {
         flex-wrap: wrap;
+    }
+
+
+    .upgrade-mode-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
 }

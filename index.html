@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="upgrades.css">
+    <link rel="stylesheet" href="Upgrades.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
@@ -185,7 +185,7 @@
                 <div class="upgrade-panel-header">
 
                     <div class="upgrade-panel-heading animated-header-text">
-                        UPGRADE CALCULATOR
+                        UPGRADE CALCULATOR (DO NOT USE, UNFINISHED.)
                     </div>
 
                     <span
@@ -196,9 +196,19 @@
                     </span>
 
                     <div class="upgrade-panel-total">
-                        <span class="upgrade-panel-total-label">TOTAL COST</span>
+                        <span class="upgrade-panel-total-label">PENDING COST</span>
                         <span
                             id="upgradeTotalValue"
+                            class="upgrade-panel-total-value"
+                        >
+                            0
+                        </span>
+                    </div>
+
+                    <div class="upgrade-panel-total upgrade-panel-remaining">
+                        <span class="upgrade-panel-total-label">GIFTS LEFT</span>
+                        <span
+                            id="upgradeRemainingValue"
                             class="upgrade-panel-total-value"
                         >
                             0
@@ -211,6 +221,56 @@
                         type="button"
                     >
                         <span class="btn-label">RESET</span>
+                    </button>
+
+                </div>
+
+                <div class="upgrade-panel-controls">
+
+                    <div class="upgrade-mode-block">
+
+                        <span class="upgrade-control-label">MODE</span>
+
+                        <div
+                            id="upgradeModeContainer"
+                            class="button-grid upgrade-mode-grid"
+                        ></div>
+
+                    </div>
+
+                    <div class="upgrade-players-block">
+
+                        <label for="upgradePlayerCountInput" class="upgrade-control-label">PLAYERS</label>
+
+                        <input
+                            type="number"
+                            id="upgradePlayerCountInput"
+                            min="1"
+                            max="1"
+                            value="1"
+                        >
+
+                    </div>
+
+                    <div class="upgrade-gifts-block">
+
+                        <label for="goldenGiftsInput" class="upgrade-control-label">GOLDEN GIFTS</label>
+
+                        <input
+                            type="number"
+                            id="goldenGiftsInput"
+                            min="0"
+                            value="0"
+                        >
+
+                    </div>
+
+                    <button
+                        id="purchaseUpgradeButton"
+                        class="purchase-upgrade-button"
+                        type="button"
+                    >
+                        <span class="btn-label">PURCHASE UPGRADE</span>
                     </button>
 
                 </div>
@@ -321,7 +381,7 @@
 
 
 <script src="script.js"></script>
-<script src="upgrades.js"></script>
+<script src="Upgrades.js"></script>
 
 </body>
 </html>
