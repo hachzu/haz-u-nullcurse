@@ -181,13 +181,43 @@
 
             <div class="upgrade-panel-inner">
 
-                <div class="upgrade-panel-heading animated-header-text">
-                    UPGRADE CALCULATOR
+                <div class="upgrade-panel-header">
+
+                    <div class="upgrade-panel-heading animated-header-text">
+                        UPGRADE CALCULATOR
+                    </div>
+
+                    <span
+                        id="upgradeNothingIndicator"
+                        class="upgrade-nothing-indicator"
+                    >
+                        NOTHING CURSE &minus;15%
+                    </span>
+
+                    <div class="upgrade-panel-total">
+                        <span class="upgrade-panel-total-label">TOTAL COST</span>
+                        <span
+                            id="upgradeTotalValue"
+                            class="upgrade-panel-total-value"
+                        >
+                            0
+                        </span>
+                    </div>
+
+                    <button
+                        id="upgradeResetButton"
+                        class="upgrade-reset-button"
+                        type="button"
+                    >
+                        <span class="btn-label">RESET</span>
+                    </button>
+
                 </div>
 
-                <div class="upgrade-panel-subtitle">
-                    coming soon &mdash; this panel will use your current level, player count, and difficulty to predict upgrade costs and availability.
-                </div>
+                <div
+                    id="upgradeGrid"
+                    class="upgrade-grid"
+                ></div>
 
             </div>
 
