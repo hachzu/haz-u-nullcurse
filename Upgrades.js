@@ -1,13 +1,15 @@
 /*
  * Upgrade Calculator logic
  * --------------------------
- * Drives the sliding upgrade panel: game-mode / player-count price
- * scaling, a Golden Gifts balance, level + affordability states per
- * upgrade, and a temporary "pending purchase" queue that only spends
- * Golden Gifts once the Purchase Upgrade button is pressed.
+ * Drives the sliding upgrade panel: game-mode price scaling (player
+ * count is shared with the sidebar), a Golden Gifts balance, level +
+ * prerequisite + affordability states per upgrade, a temporary
+ * "pending purchase" queue, and an un-own control for correcting the
+ * owned tracker.
  *
  * Depends on globals defined in script.js: runState, hasCurse,
- * resolveAsset, attachClickAction, attachHoldAction, playSelectSound,
+ * hasEnemy, findCurseByName, canAppear, selectCurse, removeCurse,
+ * getPlayerCount, resolveAsset, attachClickAction, playSelectSound,
  * playDifficultySound, playPurifySound, playRemoveSound, playUtilitySound.
  */
 
@@ -50,58 +52,101 @@ const EXTREME_OVERRIDES = {
 
 const upgradesList = [
 
-    { name: "Adrenaline", price: 50, soloPrice: 50, level: 3 },
-    { name: "Business License", prices: [75, 188], level: 3, maxStack: 2 },
-    { name: "Defuse Kit", price: 30, soloPrice: 30, level: 3 },
-    { name: "Paycheck", price: 55, soloPrice: 55, level: 3 },
-    { name: "Swiftness Ring", price: 80, soloPrice: 80, level: 3 },
+    { name: "Adrenaline", price: 50, soloPrice: 50, level: 3, category: "movement" },
+    { name: "Business License", prices: [75, 188], level: 3, maxStack: 2, category: "eco" },
+    { name: "Defuse Kit", price: 30, soloPrice: 30, level: 3, maxStack: 3, category: "survival" },
+    { name: "Paycheck", price: 55, soloPrice: 55, level: 3, maxStack: 5, category: "eco" },
+    { name: "Swiftness Ring", price: 80, soloPrice: 80, level: 3, maxStack: 3, category: "movement" },
 
-    { name: "Radar", price: 175, soloPrice: 175, level: 5 },
-    { name: "Better Jump Pads", price: 50, soloPrice: 50, level: 5 },
-    { name: "Double Jump", price: 150, soloPrice: 150, level: 5 },
-    { name: "Grapple Points", price: 100, soloPrice: 100, level: 5 },
-    { name: "Tria Orb", price: 100, soloPrice: 100, level: 5 },
-    { name: "Medal", price: 100, soloPrice: 100, level: 5 },
+    { name: "Radar", price: 175, soloPrice: 175, level: 5, category: "environment" },
+    { name: "Better Jump Pads", price: 50, soloPrice: 50, level: 5, category: "environment" },
+    { name: "Double Jump", price: 150, soloPrice: 150, level: 5, category: "movement" },
+    { name: "Grapple Points", price: 100, soloPrice: 100, level: 5, category: "environment" },
+    { name: "Tria Orb", price: 100, soloPrice: 100, level: 5, category: "environment" },
+    { name: "Medal", price: 100, soloPrice: 100, level: 5, category: "eco" },
 
-    { name: "Advanced Gravity Coil", price: 600, soloPrice: 600, level: 8 },
-    { name: "Ice Skates", price: 400, soloPrice: 300, level: 8 },
-    { name: "Fanny Pack", price: 300, soloPrice: 300, level: 8 },
-    { name: "Grace Wings", price: 300, soloPrice: 200, level: 8 },
-    { name: "Helmet", price: 400, soloPrice: 400, level: 8 },
-    { name: "Pocket Bell", price: 300, soloPrice: 300, level: 8 },
-    { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 8 },
-    { name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8 },
-    { name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8 },
-    { name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8 },
+    { name: "Advanced Gravity Coil", price: 600, soloPrice: 600, level: 8, category: "movement" },
+    { name: "Ice Skates", price: 400, soloPrice: 300, level: 8, category: "movement" },
+    { name: "Fanny Pack", price: 300, soloPrice: 300, level: 8, category: "eco" },
+    { name: "Grace Wings", price: 300, soloPrice: 200, level: 8, category: "movement" },
+    { name: "Helmet", price: 400, soloPrice: 400, level: 8, category: "movement" },
 
-    { name: "More Altars", price: 600, soloPrice: 600, level: 10 },
+    {
+        name: "Pocket Bell", price: 300, soloPrice: 300, level: 8, category: "movement",
+        requires: { type: "upgrade", name: "Double Jump", stack: 1 }
+    },
 
-    { name: "Ninja Belt", price: 700, soloPrice: 500, level: 13 },
-    { name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13, maxStack: 2 },
-    { name: "Large Grapple Points", price: 500, soloPrice: 500, level: 13 },
+    { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 8, category: "survival" },
+    { name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment" },
+    { name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8, category: "environment" },
+    { name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment" },
 
-    { name: "Gift Magnet", prices: [1500, 2100, 2700], level: 15, maxStack: 3 },
-    { name: "Matrix Tetrahedron", price: 2500, soloPrice: 2500, level: 15 },
-    { name: "Shield", price: 4000, soloPrice: 1000, level: 15 },
-    { name: "Sport Shoes", price: 1350, soloPrice: 1350, level: 15 },
-    { name: "Shark Tail", price: 1200, soloPrice: 1200, level: 15 },
+    { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
-    { name: "Radar Module : Instruments", price: 1000, soloPrice: 1000, level: 18 },
-    { name: "Panic Necklace", price: 3000, soloPrice: 3000, level: 18 },
+    { name: "Ninja Belt", price: 700, soloPrice: 500, level: 13, category: "movement" },
 
-    { name: "Drowned Ægis", price: 6000, soloPrice: 6000, level: 20 },
-    { name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20 },
-    { name: "Gift Idol", prices: [4000, 8000, 12000, 16000, 20000], level: 20, maxStack: 5 }
+    {
+        name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13,
+        maxStack: 2, category: "survival",
+        requires: { type: "upgrade", name: "Defuse Kit", stack: 3 }
+    },
+
+    {
+        name: "Large Grapple Points", price: 500, soloPrice: 500, level: 13, category: "environment",
+        requires: { type: "upgrade", name: "Grapple Points", stack: 1 }
+    },
+
+    { name: "Gift Magnet", prices: [1500, 2100, 2700], level: 15, maxStack: 3, category: "eco" },
+    { name: "Matrix Tetrahedron", price: 2500, soloPrice: 2500, level: 15, category: "movement" },
+    { name: "Shield", price: 4000, soloPrice: 1000, level: 15, category: "survival" },
+    { name: "Sport Shoes", price: 1350, soloPrice: 1350, level: 15, category: "movement" },
+
+    {
+        name: "Shark Tail", price: 1200, soloPrice: 1200, level: 15, category: "movement",
+        requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
+    },
+
+    {
+        name: "Radar Module : Instruments", price: 1000, soloPrice: 1000, level: 18, category: "environment",
+        requires: { type: "enemy", name: "Cadence" }
+    },
+
+    {
+        name: "Panic Necklace", price: 3000, soloPrice: 3000, level: 18, category: "survival",
+        requires: { type: "upgrade", name: "Shield", stack: 1 }
+    },
+
+    {
+        name: "Drowned Ægis", price: 6000, soloPrice: 6000, level: 20, category: "survival",
+        requires: { type: "upgrade", name: "More Altars", stack: 1 }
+    },
+
+    {
+        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "survival",
+        requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
+    },
+
+    { name: "Gift Idol", prices: [4000, 8000, 12000, 16000, 20000], level: 20, maxStack: 5, category: "eco" }
+
+];
+
+
+const upgradeCategories = [
+
+    { key: "movement", label: "MOVEMENT" },
+    { key: "eco", label: "ECO" },
+    { key: "environment", label: "ENVIRONMENT" },
+    { key: "survival", label: "SURVIVAL" }
 
 ];
 
 
 const upgradeModes = [
 
-    { key: "solo", label: "Solo", min: 1, max: 1 },
-    { key: "duo", label: "Duo", min: 1, max: 2 },
-    { key: "party", label: "Party", min: 1, max: 8 },
-    { key: "partyplus", label: "Party+", min: 1, max: 20 }
+    { key: "solo", label: "Solo" },
+    { key: "duo", label: "Duo" },
+    { key: "party", label: "Party" },
+    { key: "partyplus", label: "Party+" }
 
 ];
 
@@ -109,8 +154,8 @@ const upgradeModes = [
 const upgradeState = {
 
     mode: "solo",
-    playerCount: 1,
     goldenGifts: 0,
+    peakPlayerCount: 1,
 
     pending: new Map(),
     owned: new Map()
@@ -127,8 +172,8 @@ function saveUpgradeState() {
         const payload = {
 
             mode: upgradeState.mode,
-            playerCount: upgradeState.playerCount,
             goldenGifts: upgradeState.goldenGifts,
+            peakPlayerCount: upgradeState.peakPlayerCount,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -162,10 +207,9 @@ function loadUpgradeState() {
 
         upgradeState.mode = saved.mode || "solo";
         upgradeState.goldenGifts = Math.max(0, Number(saved.goldenGifts) || 0);
+        upgradeState.peakPlayerCount = Math.max(1, Number(saved.peakPlayerCount) || 1);
         upgradeState.pending = new Map(saved.pending || []);
         upgradeState.owned = new Map(saved.owned || []);
-
-        upgradeState.playerCount = clampPlayerCountForMode(upgradeState.mode, saved.playerCount || 1);
 
     } catch (error) {
 
@@ -176,18 +220,44 @@ function loadUpgradeState() {
 }
 
 
-function getUpgradeModeConfig() {
+/*
+ * Resets everything owned inside the upgrade shop (owned stacks,
+ * pending selections, Golden Gifts, mode, and the player-count
+ * scaling memory) without touching the sidebar run state.
+ */
+function resetUpgradeShopState() {
 
-    return upgradeModes.find(mode => mode.key === upgradeState.mode) || upgradeModes[0];
+    upgradeState.pending.clear();
+    upgradeState.owned.clear();
+    upgradeState.goldenGifts = 0;
+    upgradeState.mode = "solo";
+    upgradeState.peakPlayerCount = Math.max(1, typeof getPlayerCount === "function" ? getPlayerCount() : 1);
+
+    saveUpgradeState();
+    refreshUpgradePanel();
 
 }
 
 
-function clampPlayerCountForMode(modeKey, count) {
+/*
+ * Prices scale off the player count shown on the sidebar, but per
+ * the in-game rules the scaling never drops back down mid-run - it
+ * only steps up when more players join. We track the highest player
+ * count seen so far and scale against that.
+ */
+function getScalingPlayerCount() {
 
-    const config = upgradeModes.find(mode => mode.key === modeKey) || upgradeModes[0];
+    const current = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
 
-    return Math.min(config.max, Math.max(config.min, Number(count) || config.min));
+    if (current > upgradeState.peakPlayerCount) {
+
+        upgradeState.peakPlayerCount = current;
+
+        saveUpgradeState();
+
+    }
+
+    return upgradeState.peakPlayerCount;
 
 }
 
@@ -216,7 +286,7 @@ function isUpgradeModeRestricted(item) {
 
     if (item.name === "Last Robloxian Standing") {
 
-        return !isPartyLikeMode() || upgradeState.playerCount <= 2;
+        return !isPartyLikeMode() || getScalingPlayerCount() <= 2;
 
     }
 
@@ -292,7 +362,16 @@ function getEffectivePrices(item) {
 }
 
 
-function computeStackPrice(item, stack) {
+/*
+ * Resolves the un-scaled price for owning `stack` total copies of
+ * an item. Items with a "prices" table (Business License, Gift
+ * Magnet, etc.) look the tier up directly - those tables already
+ * represent the full price for owning that many. Items with only a
+ * flat "price" but a maxStack above 1 (Defuse Kit, Swiftness Ring,
+ * Paycheck) scale linearly: each additional copy costs the same
+ * base unit price.
+ */
+function computeBaseForStack(item, stack) {
 
     if (stack <= 0) {
 
@@ -303,29 +382,47 @@ function computeStackPrice(item, stack) {
     const effective = getEffectivePrices(item);
     const isSolo = upgradeState.mode === "solo";
 
-    let base = 0;
-
     if (effective.prices) {
 
         const table = (isSolo && effective.soloPrices) ? effective.soloPrices : effective.prices;
 
-        base = table[stack - 1] !== undefined ? table[stack - 1] : 0;
-
-    } else {
-
-        base = (isSolo && effective.soloPrice !== undefined) ? effective.soloPrice : effective.price;
+        return table[stack - 1] !== undefined ? table[stack - 1] : 0;
 
     }
 
-    const playerCount = upgradeState.playerCount;
+    const unit = (isSolo && effective.soloPrice !== undefined) ? effective.soloPrice : effective.price;
 
-    let scaled = (playerCount === 1) ? base : Math.ceil(base * Math.sqrt(playerCount));
+    return unit * stack;
+
+}
+
+
+/*
+ * ceil(basePrice * sqrt(playerCount)), with the Party+ multiplier
+ * divided by 1.125 before rounding (not after - rounding twice would
+ * throw the number off), then the Nothing-curse -15% discount
+ * applied as its own rounding step on top.
+ */
+function computeStackPrice(item, stack) {
+
+    if (stack <= 0) {
+
+        return 0;
+
+    }
+
+    const base = computeBaseForStack(item, stack);
+    const playerCount = getScalingPlayerCount();
+
+    let multiplier = Math.sqrt(playerCount);
 
     if (upgradeState.mode === "partyplus") {
 
-        scaled = Math.ceil(scaled / 1.125);
+        multiplier = multiplier / 1.125;
 
     }
+
+    let scaled = Math.ceil(base * multiplier);
 
     if (isNothingCurseActive()) {
 
@@ -345,9 +442,36 @@ function isUpgradeLockedByLevel(item) {
 }
 
 
+function isUpgradeRequirementMet(item) {
+
+    if (!item.requires) {
+
+        return true;
+
+    }
+
+    if (item.requires.type === "upgrade") {
+
+        return getOwnedStack(item.requires.name) >= (item.requires.stack || 1);
+
+    }
+
+    if (item.requires.type === "enemy") {
+
+        return typeof hasEnemy === "function" && hasEnemy(item.requires.name);
+
+    }
+
+    return true;
+
+}
+
+
 function isUpgradeUnavailable(item) {
 
-    return isUpgradeLockedByLevel(item) || isUpgradeModeRestricted(item);
+    return isUpgradeLockedByLevel(item)
+        || isUpgradeModeRestricted(item)
+        || !isUpgradeRequirementMet(item);
 
 }
 
@@ -463,18 +587,46 @@ function cycleUpgradeSelection(item) {
 }
 
 
-function resetUpgradeSelections() {
+/*
+ * Lets the user reduce or clear an already-owned stack, e.g. to fix
+ * a mis-tracked purchase. Does not refund Golden Gifts - it's a
+ * tracker correction, not an in-run sale.
+ */
+function unownUpgrade(item) {
 
-    if (upgradeState.pending.size === 0) {
+    const owned = getOwnedStack(item.name);
+
+    if (owned <= 0) {
 
         return;
 
     }
 
-    upgradeState.pending.clear();
+    const newOwned = owned - 1;
+
+    if (newOwned <= 0) {
+
+        upgradeState.owned.delete(item.name);
+
+    } else {
+
+        upgradeState.owned.set(item.name, newOwned);
+
+    }
+
+    upgradeState.pending.delete(item.name);
+
+    playRemoveSound();
 
     saveUpgradeState();
     renderUpgradeGrid();
+
+}
+
+
+function resetUpgradeSelections() {
+
+    resetUpgradeShopState();
 
 }
 
@@ -530,6 +682,39 @@ function purchaseSelectedUpgrades() {
 }
 
 
+function toggleNothingCurse() {
+
+    if (typeof findCurseByName !== "function") {
+
+        return;
+
+    }
+
+    const nothingCurse = findCurseByName("Nothing");
+
+    if (!nothingCurse) {
+
+        return;
+
+    }
+
+    if (isNothingCurseActive()) {
+
+        removeCurse("Nothing");
+
+    } else if (typeof canAppear === "function" && canAppear(nothingCurse)) {
+
+        selectCurse(nothingCurse);
+
+    } else {
+
+        playRemoveSound();
+
+    }
+
+}
+
+
 function createUpgradeIcon(name) {
 
     const icon = document.createElement("div");
@@ -564,6 +749,124 @@ function createUpgradeIcon(name) {
     });
 
     return icon;
+
+}
+
+
+function describeRequirement(requires) {
+
+    if (requires.type === "upgrade") {
+
+        return requires.stack > 1
+            ? `Requires ${requires.stack}x ${requires.name}`
+            : `Requires ${requires.name}`;
+
+    }
+
+    if (requires.type === "enemy") {
+
+        return `Requires ${requires.name} active in the enemy pool`;
+
+    }
+
+    return "";
+
+}
+
+
+function createRequirementChip(item) {
+
+    if (!item.requires) {
+
+        return null;
+
+    }
+
+    const chip = document.createElement("div");
+
+    chip.className = "upgrade-requirement-chip";
+    chip.title = describeRequirement(item.requires);
+
+    if (isUpgradeRequirementMet(item)) {
+
+        chip.classList.add("upgrade-requirement-chip--met");
+
+    }
+
+    const arrow = document.createElement("span");
+
+    arrow.className = "upgrade-requirement-arrow";
+    arrow.textContent = "\u2192";
+
+    chip.appendChild(arrow);
+
+    const icon = document.createElement("div");
+
+    icon.className = "upgrade-requirement-icon";
+
+    if (item.requires.type === "upgrade") {
+
+        const placeholder = document.createElement("span");
+
+        placeholder.className = "upgrade-icon-placeholder";
+        placeholder.textContent = item.requires.name;
+
+        icon.appendChild(placeholder);
+
+        resolveAsset("upgrades", item.requires.name, path => {
+
+            if (!path) {
+
+                return;
+
+            }
+
+            icon.innerHTML = "";
+
+            const img = document.createElement("img");
+
+            img.className = "upgrade-icon-image";
+            img.src = path;
+            img.alt = item.requires.name;
+
+            icon.appendChild(img);
+
+        });
+
+    } else if (item.requires.type === "enemy") {
+
+        const placeholder = document.createElement("span");
+
+        placeholder.className = "upgrade-icon-placeholder";
+        placeholder.textContent = item.requires.name;
+
+        icon.appendChild(placeholder);
+
+        resolveAsset("enemies", item.requires.name, path => {
+
+            if (!path) {
+
+                return;
+
+            }
+
+            icon.innerHTML = "";
+
+            const img = document.createElement("img");
+
+            img.className = "upgrade-icon-image";
+            img.src = path;
+            img.alt = item.requires.name;
+
+            icon.appendChild(img);
+
+        });
+
+    }
+
+    chip.appendChild(icon);
+
+    return chip;
 
 }
 
@@ -615,12 +918,42 @@ function createUpgradeCard(item) {
 
     }
 
+    const requirementChip = createRequirementChip(item);
+
+    if (requirementChip) {
+
+        card.appendChild(requirementChip);
+
+    }
+
     const levelBadge = document.createElement("span");
 
     levelBadge.className = "upgrade-card-level";
     levelBadge.textContent = `Lv${item.level}`;
 
     card.appendChild(levelBadge);
+
+    if (owned > 0) {
+
+        const unownButton = document.createElement("button");
+
+        unownButton.type = "button";
+        unownButton.className = "upgrade-unown-button";
+        unownButton.setAttribute("aria-label", `Un-own ${item.name}`);
+        unownButton.title = `Un-own ${item.name}`;
+        unownButton.textContent = "\u2212";
+
+        unownButton.addEventListener("click", event => {
+
+            event.stopPropagation();
+
+            unownUpgrade(item);
+
+        });
+
+        card.appendChild(unownButton);
+
+    }
 
     card.appendChild(createUpgradeIcon(item.name));
 
@@ -698,25 +1031,59 @@ function createUpgradeCard(item) {
 
 function renderUpgradeGrid() {
 
-    const grid = document.getElementById("upgradeGrid");
+    const container = document.getElementById("upgradeCategories");
 
-    if (!grid) {
+    if (!container) {
 
         return;
 
     }
 
-    grid.innerHTML = "";
+    container.innerHTML = "";
 
-    upgradesList.forEach(item => {
+    upgradeCategories.forEach(category => {
 
-        const card = createUpgradeCard(item);
+        const items = upgradesList.filter(item => item.category === category.key);
+        const visibleCards = [];
 
-        if (card) {
+        items.forEach(item => {
 
-            grid.appendChild(card);
+            const card = createUpgradeCard(item);
+
+            if (card) {
+
+                visibleCards.push(card);
+
+            }
+
+        });
+
+        if (visibleCards.length === 0) {
+
+            return;
 
         }
+
+        const section = document.createElement("div");
+
+        section.className = "upgrade-category";
+
+        const heading = document.createElement("div");
+
+        heading.className = "upgrade-category-heading";
+        heading.textContent = category.label;
+
+        section.appendChild(heading);
+
+        const grid = document.createElement("div");
+
+        grid.className = "upgrade-grid";
+
+        visibleCards.forEach(card => grid.appendChild(card));
+
+        section.appendChild(grid);
+
+        container.appendChild(section);
 
     });
 
@@ -750,7 +1117,12 @@ function updateUpgradeTotals() {
 
     if (nothingIndicator) {
 
-        nothingIndicator.classList.toggle("visible", isNothingCurseActive());
+        const active = isNothingCurseActive();
+        const nothingCurse = typeof findCurseByName === "function" ? findCurseByName("Nothing") : null;
+        const canToggleOn = active || (nothingCurse && typeof canAppear === "function" && canAppear(nothingCurse));
+
+        nothingIndicator.classList.toggle("active", active);
+        nothingIndicator.disabled = !canToggleOn;
 
     }
 
@@ -789,7 +1161,6 @@ function createUpgradeModeButton(mode) {
     attachClickAction(button, () => {
 
         upgradeState.mode = mode.key;
-        upgradeState.playerCount = clampPlayerCountForMode(mode.key, upgradeState.playerCount);
 
         saveUpgradeState();
         refreshUpgradePanel();
@@ -822,26 +1193,6 @@ function renderUpgradeModeButtons() {
 }
 
 
-function syncPlayerCountInput() {
-
-    const input = document.getElementById("upgradePlayerCountInput");
-
-    if (!input) {
-
-        return;
-
-    }
-
-    const config = getUpgradeModeConfig();
-
-    input.min = config.min;
-    input.max = config.max;
-    input.disabled = config.min === config.max;
-    input.value = upgradeState.playerCount;
-
-}
-
-
 function syncGoldenGiftsInput() {
 
     const input = document.getElementById("goldenGiftsInput");
@@ -860,33 +1211,8 @@ function syncGoldenGiftsInput() {
 function refreshUpgradePanel() {
 
     renderUpgradeModeButtons();
-    syncPlayerCountInput();
     syncGoldenGiftsInput();
     renderUpgradeGrid();
-
-}
-
-
-const upgradePlayerCountInput = document.getElementById("upgradePlayerCountInput");
-
-if (upgradePlayerCountInput) {
-
-    upgradePlayerCountInput.addEventListener("input", () => {
-
-        const clamped = clampPlayerCountForMode(upgradeState.mode, upgradePlayerCountInput.value);
-
-        upgradeState.playerCount = clamped;
-
-        if (Number(upgradePlayerCountInput.value) !== clamped) {
-
-            upgradePlayerCountInput.value = clamped;
-
-        }
-
-        saveUpgradeState();
-        renderUpgradeGrid();
-
-    });
 
 }
 
@@ -923,6 +1249,19 @@ if (purchaseUpgradeButton) {
     purchaseUpgradeButton.addEventListener("click", () => {
 
         purchaseSelectedUpgrades();
+
+    });
+
+}
+
+
+const upgradeNothingIndicator = document.getElementById("upgradeNothingIndicator");
+
+if (upgradeNothingIndicator) {
+
+    upgradeNothingIndicator.addEventListener("click", () => {
+
+        toggleNothingCurse();
 
     });
 
@@ -985,4 +1324,5 @@ if (upgradeToggleButton && upgradePanel) {
 
 
 loadUpgradeState();
+getScalingPlayerCount();
 refreshUpgradePanel();

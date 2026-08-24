@@ -1,9 +1,21 @@
-
+/*
+ * Upgrade Calculator styles
+ * --------------------------
+ * Styling for the upgrade toggle button and the sliding upgrade
+ * calculator panel. Loaded after style.css so it can sit alongside
+ * the base theme without needing to duplicate any of it.
+ * Depends on .right-panel { position: relative; }, defined in
+ * style.css. The toggle button is positioned fixed to the viewport
+ * so it stays reachable while the page scrolls.
+ */
 
 
 .upgrade-toggle-button {
-    position: relative;
-    z-index: 20;
+    position: fixed;
+    right: 26px;
+    bottom: 26px;
+
+    z-index: 30;
 
     flex-shrink: 0;
 
@@ -17,7 +29,7 @@
     background: linear-gradient(135deg, #1b0733, #2a0a4a);
 
     border: 1px solid #6f3fd8;
-    border-radius: 10px;
+    border-radius: 999px;
 
     color: #d59bff;
 
@@ -28,6 +40,8 @@
 
     cursor: pointer;
     user-select: none;
+
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55), 0 0 18px rgba(184, 102, 255, 0.3);
 
     transition:
         background 0.18s,
@@ -71,7 +85,7 @@
     color: #ffffff;
 
     transform: translateY(-2px);
-    box-shadow: 0 0 22px rgba(184, 102, 255, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 22px rgba(184, 102, 255, 0.45);
 }
 
 
@@ -87,7 +101,7 @@
 
     color: #ffffff;
 
-    box-shadow: 0 0 18px rgba(180, 90, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 18px rgba(180, 90, 255, 0.5);
 }
 
 
@@ -178,30 +192,50 @@
 }
 
 
+/* Now a live toggle for the "Nothing" curse, not just a passive
+   indicator - always visible, styled by active/inactive state. */
 .upgrade-nothing-indicator {
-    padding: 4px 10px;
+    padding: 4px 12px;
 
-    background: rgba(143, 217, 255, 0.12);
+    background: rgba(143, 217, 255, 0.06);
 
-    border: 1px solid rgba(143, 217, 255, 0.5);
+    border: 1px solid rgba(143, 217, 255, 0.35);
     border-radius: 999px;
 
-    color: #dff5ff;
+    color: #8fd9ff;
 
+    font-family: var(--font-modern);
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.6px;
 
-    opacity: 0;
-    transform: translateY(-4px);
+    cursor: pointer;
 
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
 }
 
 
-.upgrade-nothing-indicator.visible {
-    opacity: 1;
-    transform: translateY(0);
+.upgrade-nothing-indicator:hover {
+    border-color: rgba(143, 217, 255, 0.6);
+    color: #dff5ff;
+}
+
+
+.upgrade-nothing-indicator.active {
+    background: rgba(143, 217, 255, 0.16);
+
+    border-color: #8fd9ff;
+
+    color: #dff5ff;
+
+    box-shadow: 0 0 16px rgba(143, 217, 255, 0.45);
+}
+
+
+.upgrade-nothing-indicator:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
 }
 
 
@@ -300,7 +334,7 @@
 }
 
 
-/* ---- Mode / player count / Golden Gifts controls ---- */
+/* ---- Mode + Golden Gifts controls ---- */
 
 .upgrade-panel-controls {
     display: flex;
@@ -361,13 +395,11 @@
 }
 
 
-.upgrade-players-block,
 .upgrade-gifts-block {
-    flex: 0 0 130px;
+    flex: 0 0 160px;
 }
 
 
-.upgrade-players-block input,
 .upgrade-gifts-block input {
     width: 100%;
 
@@ -390,17 +422,9 @@
 }
 
 
-.upgrade-players-block input:focus,
 .upgrade-gifts-block input:focus {
     border-color: #8fd9ff;
     box-shadow: 0 0 0 3px rgba(143, 217, 255, 0.18);
-}
-
-
-.upgrade-players-block input:disabled {
-    opacity: 0.45;
-
-    cursor: not-allowed;
 }
 
 
@@ -448,20 +472,44 @@
 }
 
 
-.upgrade-grid {
+/* ---- Category sections ---- */
+
+.upgrade-categories {
     flex: 1;
 
     overflow-y: auto;
 
+    display: flex;
+
+    flex-direction: column;
+    gap: 26px;
+
+    padding-right: 4px;
+    padding-bottom: 10px;
+}
+
+
+.upgrade-category-heading {
+    margin-bottom: 12px;
+    padding-bottom: 7px;
+
+    border-bottom: 1px solid rgba(143, 217, 255, 0.18);
+
+    color: #8fd9ff;
+
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+}
+
+
+.upgrade-grid {
     display: grid;
 
     grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
     gap: 10px;
 
     align-content: start;
-
-    padding-right: 4px;
-    padding-bottom: 6px;
 }
 
 
@@ -523,14 +571,6 @@
 
     border-color: #7be6a8;
     box-shadow: 0 0 16px rgba(123, 230, 168, 0.3);
-
-    cursor: default;
-}
-
-
-.upgrade-card--owned:hover {
-    box-shadow: 0 0 16px rgba(123, 230, 168, 0.3);
-    transform: none;
 }
 
 
@@ -635,6 +675,111 @@
 }
 
 
+/* Small "un-own" control shown once at least one stack is owned -
+   sits below the level badge, top right. */
+.upgrade-unown-button {
+    position: absolute;
+    top: 26px;
+    right: 6px;
+
+    width: 16px;
+    height: 16px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(255, 100, 100, 0.18);
+
+    border: 1px solid rgba(255, 130, 130, 0.55);
+    border-radius: 50%;
+
+    color: #ffc2c2;
+
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+
+.upgrade-unown-button:hover {
+    background: rgba(255, 100, 100, 0.35);
+
+    border-color: #ff9d9d;
+
+    color: #ffffff;
+
+    transform: scale(1.1);
+}
+
+
+/* Requirement / prerequisite chip - a small "line progression"
+   indicator pointing at the icon of what's required. */
+.upgrade-requirement-chip {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+
+    display: flex;
+
+    align-items: center;
+    gap: 2px;
+
+    padding: 2px 4px 2px 5px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(143, 217, 255, 0.35);
+    border-radius: 999px;
+}
+
+
+.upgrade-requirement-chip--met {
+    border-color: rgba(123, 230, 168, 0.6);
+}
+
+
+.upgrade-requirement-arrow {
+    color: #6faccf;
+
+    font-size: 9px;
+    line-height: 1;
+}
+
+
+.upgrade-requirement-chip--met .upgrade-requirement-arrow {
+    color: #7be6a8;
+}
+
+
+.upgrade-requirement-icon {
+    width: 16px;
+    height: 16px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+
+.upgrade-requirement-icon .upgrade-icon-placeholder {
+    font-size: 5px;
+}
+
+
 /* Cost badge sits underneath the card, outside its border -
    mirrors the .curse-reward-badge treatment used for medal curses. */
 .upgrade-card-cost-badge {
@@ -703,7 +848,6 @@
     }
 
 
-    .upgrade-players-block,
     .upgrade-gifts-block {
         flex: 1 1 auto;
     }
@@ -719,13 +863,16 @@
 
 @media (max-width: 500px) {
 
-    .pool-header {
-        flex-wrap: wrap;
+    .upgrade-mode-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
 
-    .upgrade-mode-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .upgrade-toggle-button {
+        right: 16px;
+        bottom: 16px;
+
+        padding: 10px 14px;
     }
 
 }

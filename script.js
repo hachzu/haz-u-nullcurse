@@ -1778,6 +1778,12 @@ attachHoldAction(document.getElementById("resetButton"), () => {
 
     }
 
+    if (typeof resetUpgradeShopState === "function") {
+
+        resetUpgradeShopState();
+
+    }
+
     render();
 
 });

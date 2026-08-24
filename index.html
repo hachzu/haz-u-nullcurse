@@ -185,15 +185,16 @@
                 <div class="upgrade-panel-header">
 
                     <div class="upgrade-panel-heading animated-header-text">
-                        UPGRADE CALCULATOR (DO NOT USE, UNFINISHED.)
+                        UPGRADE CALCULATOR
                     </div>
 
-                    <span
+                    <button
+                        type="button"
                         id="upgradeNothingIndicator"
                         class="upgrade-nothing-indicator"
                     >
                         NOTHING CURSE &minus;15%
-                    </span>
+                    </button>
 
                     <div class="upgrade-panel-total">
                         <span class="upgrade-panel-total-label">PENDING COST</span>
@@ -238,20 +239,6 @@
 
                     </div>
 
-                    <div class="upgrade-players-block">
-
-                        <label for="upgradePlayerCountInput" class="upgrade-control-label">PLAYERS</label>
-
-                        <input
-                            type="number"
-                            id="upgradePlayerCountInput"
-                            min="1"
-                            max="1"
-                            value="1"
-                        >
-
-                    </div>
-
                     <div class="upgrade-gifts-block">
 
                         <label for="goldenGiftsInput" class="upgrade-control-label">GOLDEN GIFTS</label>
@@ -276,8 +263,8 @@
                 </div>
 
                 <div
-                    id="upgradeGrid"
-                    class="upgrade-grid"
+                    id="upgradeCategories"
+                    class="upgrade-categories"
                 ></div>
 
             </div>
@@ -295,19 +282,6 @@
                     this system will help you prepare for future curses and manage curse selection efficiently. select your current level, difficulty, and active enemies to see the curses that will be available to you.
                 </div>
             </div>
-
-            <button
-                id="upgradeToggleButton"
-                class="upgrade-toggle-button"
-                type="button"
-                aria-label="Toggle upgrade calculator"
-                aria-expanded="false"
-                aria-keyshortcuts="b"
-            >
-                <span class="upgrade-toggle-icon">&#9650;</span>
-                <span class="btn-label">UPGRADES</span>
-                <span class="upgrade-toggle-key">B</span>
-            </button>
 
         </header>
 
@@ -376,6 +350,19 @@
         </section>
 
     </main>
+
+    <button
+        id="upgradeToggleButton"
+        class="upgrade-toggle-button"
+        type="button"
+        aria-label="Toggle upgrade calculator"
+        aria-expanded="false"
+        aria-keyshortcuts="b"
+    >
+        <span class="upgrade-toggle-icon">&#9650;</span>
+        <span class="btn-label">UPGRADES</span>
+        <span class="upgrade-toggle-key">B</span>
+    </button>
 
 </div>
 
