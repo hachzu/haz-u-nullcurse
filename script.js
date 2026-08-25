@@ -686,6 +686,65 @@ function canAppear(curse) {
 }
 
 
+function canAppearIgnoringLevel(curse) {
+
+    const stackCount = getCurseStackCount(curse.name);
+
+    if (curse.max) {
+
+        if (stackCount >= curse.max) {
+
+            return false;
+
+        }
+
+    } else {
+
+        if (stackCount >= 1) {
+
+            return false;
+
+        }
+
+    }
+
+    if (runState.difficulty === "Casual" && curse.casualDisabled) {
+
+        return false;
+
+    }
+
+    if (!requirementsMet(curse)) {
+
+        return false;
+
+    }
+
+    if (!exclusiveGroupAvailable(curse)) {
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+
+function getGreaterCurseUnlockLevel(curse) {
+
+    return curse.level !== undefined ? curse.level : 10;
+
+}
+
+
+function isGreaterCurseLevelLocked(curse) {
+
+    return getLevel() < getGreaterCurseUnlockLevel(curse);
+
+}
+
+
 function getGlobalPool() {
 
     return globalCurses.filter(canAppear);
@@ -710,17 +769,18 @@ function getEnemyPool() {
 }
 
 
+/*
+ * Greater curses always show once their other requirements are met
+ * (an active enemy for Enemy-type ones, no exclusive-group conflict,
+ * not already maxed/active, not casual-disabled) - level alone no
+ * longer hides them. Cards for ones you haven't reached the level
+ * for yet render locked with an "Unlocks Lv X" indicator instead of
+ * disappearing from the list. Actually selecting one is still
+ * blocked by the real level check inside canAppear/selectCurse.
+ */
 function getGreaterPool() {
 
-    const level = getLevel();
-
-    if (level < 10) {
-
-        return [];
-
-    }
-
-    return greaterCurses.filter(canAppear);
+    return greaterCurses.filter(canAppearIgnoringLevel);
 
 }
 
@@ -1279,6 +1339,15 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
+    const greater = isGreaterCurse(curse);
+    const levelLocked = greater && isGreaterCurseLevelLocked(curse);
+
+    if (levelLocked) {
+
+        card.classList.add("curse-card--level-locked");
+
+    }
+
     const media = createMediaBox("curses", curse.name);
 
     card.appendChild(media);
@@ -1315,6 +1384,17 @@ function createCurseCard(curse, isMedal = false) {
         reward.textContent = `+ ${getCurseMedalReward(curse.value || 0)}`;
 
         card.appendChild(reward);
+
+    }
+
+    if (levelLocked) {
+
+        const unlockBadge = document.createElement("div");
+
+        unlockBadge.className = "curse-unlock-badge";
+        unlockBadge.textContent = `UNLOCKS LV ${getGreaterCurseUnlockLevel(curse)}`;
+
+        card.appendChild(unlockBadge);
 
     }
 

@@ -26,12 +26,21 @@
 
     padding: 12px 18px;
 
-    background: linear-gradient(135deg, #1b0733, #2a0a4a);
+    background: linear-gradient(
+        90deg,
+        #7a2fc4 0%,
+        #b866ff 20%,
+        #00c8ff 45%,
+        #8fd9ff 60%,
+        #7a2fc4 85%,
+        #b866ff 100%
+    );
+    background-size: 260% auto;
 
-    border: 1px solid #6f3fd8;
+    border: 1px solid rgba(216, 230, 255, 0.8);
     border-radius: 999px;
 
-    color: #d59bff;
+    color: #ffffff;
 
     font-family: var(--font-modern);
     font-size: 11px;
@@ -41,14 +50,32 @@
     cursor: pointer;
     user-select: none;
 
-    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55), 0 0 18px rgba(184, 102, 255, 0.3);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+    box-shadow:
+        0 8px 26px rgba(0, 0, 0, 0.55),
+        0 0 22px rgba(184, 102, 255, 0.65),
+        0 0 40px rgba(0, 200, 255, 0.45),
+        0 0 60px rgba(184, 102, 255, 0.3);
+
+    animation: upgrade-toggle-hue-shift 5s linear infinite;
 
     transition:
-        background 0.18s,
-        border-color 0.18s,
-        color 0.18s,
         transform 0.18s,
         box-shadow 0.18s;
+}
+
+
+@keyframes upgrade-toggle-hue-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
 }
 
 
@@ -65,27 +92,26 @@
 .upgrade-toggle-key {
     padding: 1px 6px;
 
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
 
-    border: 1px solid rgba(213, 155, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 4px;
 
     font-size: 9px;
     font-weight: 800;
 
-    color: #b6a3dd;
+    color: #ffffff;
 }
 
 
 .upgrade-toggle-button:hover {
-    background: linear-gradient(135deg, #2a0a4a, #4a1c85);
+    transform: translateY(-2px) scale(1.03);
 
-    border-color: #d59bff;
-
-    color: #ffffff;
-
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 22px rgba(184, 102, 255, 0.45);
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(184, 102, 255, 0.85),
+        0 0 55px rgba(0, 200, 255, 0.65),
+        0 0 80px rgba(184, 102, 255, 0.4);
 }
 
 
@@ -95,13 +121,11 @@
 
 
 .upgrade-toggle-button.active {
-    background: linear-gradient(135deg, #4a1c85, #7a2fc4);
-
-    border-color: #d59bff;
-
-    color: #ffffff;
-
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 18px rgba(180, 90, 255, 0.5);
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 26px rgba(184, 102, 255, 0.9),
+        0 0 48px rgba(0, 200, 255, 0.7),
+        0 0 72px rgba(184, 102, 255, 0.45);
 }
 
 
@@ -740,8 +764,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 
+    font-family: var(--font-modern);
     font-size: 10px;
     font-weight: 700;
+    letter-spacing: 0.3px;
 }
 
 
@@ -750,8 +776,10 @@
 
     color: #6faccf;
 
+    font-family: var(--font-modern);
     font-size: 8px;
     font-weight: 800;
+    letter-spacing: 0.3px;
 }
 
 
@@ -793,6 +821,7 @@
 
     color: #241100;
 
+    font-family: var(--font-modern);
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.3px;
