@@ -243,50 +243,27 @@
 }
 
 
-/* Now a live toggle for the "Nothing" curse, not just a passive
-   indicator - always visible, styled by active/inactive state. */
-.upgrade-nothing-indicator {
-    padding: 4px 12px;
+/* The "Nothing" curse toggle now shares the same track+thumb switch
+   shape as Progressive Mode (see .upgrade-switch below), just with a
+   warm/red accent instead of blue so it still reads as a curse. */
+.upgrade-nothing-indicator.upgrade-switch.active {
+    background: rgba(255, 130, 130, 0.16);
 
-    background: rgba(143, 217, 255, 0.06);
+    border-color: #ff9d9d;
 
-    border: 1px solid rgba(143, 217, 255, 0.35);
-    border-radius: 999px;
-
-    color: #8fd9ff;
-
-    font-family: var(--font-modern);
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.6px;
-
-    cursor: pointer;
-
-    transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+    box-shadow: 0 0 16px rgba(255, 130, 130, 0.45);
 }
 
 
-.upgrade-nothing-indicator:hover {
-    border-color: rgba(143, 217, 255, 0.6);
-    color: #dff5ff;
+.upgrade-nothing-indicator.upgrade-switch.active .upgrade-switch-track {
+    background: linear-gradient(90deg, #8f2f2f, #ff9d9d);
+
+    border-color: #ff9d9d;
 }
 
 
-.upgrade-nothing-indicator.active {
-    background: rgba(143, 217, 255, 0.16);
-
-    border-color: #8fd9ff;
-
-    color: #dff5ff;
-
-    box-shadow: 0 0 16px rgba(143, 217, 255, 0.45);
-}
-
-
-.upgrade-nothing-indicator:disabled {
-    opacity: 0.35;
-
-    cursor: not-allowed;
+.upgrade-nothing-indicator.upgrade-switch.active .upgrade-switch-label {
+    color: #ffdede;
 }
 
 
@@ -419,6 +396,151 @@
 }
 
 
+/* Shared track+thumb switch shape, used by both the Progressive Mode
+   toggle and the "Nothing" curse toggle (see .upgrade-nothing-indicator
+   above for its red accent variant). Default coloring here is the
+   blue Progressive Mode look. */
+.upgrade-switch {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 7px 12px;
+
+    background: rgba(143, 217, 255, 0.06);
+
+    border: 1px solid rgba(143, 217, 255, 0.35);
+    border-radius: 999px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+
+.upgrade-switch:hover {
+    border-color: rgba(143, 217, 255, 0.6);
+}
+
+
+.upgrade-switch.active {
+    background: rgba(143, 217, 255, 0.16);
+
+    border-color: #8fd9ff;
+
+    box-shadow: 0 0 16px rgba(143, 217, 255, 0.35);
+}
+
+
+.upgrade-switch:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+}
+
+
+.upgrade-switch-track {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 18px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(143, 217, 255, 0.4);
+    border-radius: 999px;
+
+    transition: background 0.18s, border-color 0.18s;
+}
+
+
+.upgrade-switch.active .upgrade-switch-track {
+    background: linear-gradient(90deg, #1c6f96, #8fd9ff);
+
+    border-color: #8fd9ff;
+}
+
+
+.upgrade-switch-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 14px;
+    height: 14px;
+
+    background: #dff5ff;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    transition: transform 0.18s ease;
+}
+
+
+.upgrade-switch.active .upgrade-switch-thumb {
+    transform: translateX(14px);
+}
+
+
+.upgrade-switch-label {
+    color: #8fd9ff;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+
+.upgrade-switch.active .upgrade-switch-label {
+    color: #dff5ff;
+}
+
+
+/* Progressive Mode now lives in the top-right corner of the panel
+   header, so its slot is a shrink-to-fit flex item pushed as far
+   right as possible rather than a full-width block. */
+.upgrade-progressive-header-slot {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+
+    margin-left: auto;
+}
+
+
+/* Small live-level badge shown next to the Progressive toggle only
+   while it's on, since the run level keeps advancing with every
+   purchase in that mode. */
+.upgrade-progressive-level {
+    flex-shrink: 0;
+
+    padding: 3px 9px;
+
+    background: rgba(143, 217, 255, 0.14);
+
+    border: 1px solid rgba(102, 151, 175, 0.45);
+    border-radius: 999px;
+
+    color: #dff5ff;
+
+    font-family: var(--font-modern);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+
 .upgrade-mode-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
@@ -492,29 +614,32 @@
 }
 
 
+/* Pending / Left are the two numbers a player checks before every
+   purchase, so they're sized well above the surrounding controls and
+   given a stronger border/glow to stay legible at a glance. */
 .upgrade-panel-total {
     display: flex;
 
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 
-    padding: 8px 14px;
+    padding: 11px 20px;
 
-    background: rgba(143, 217, 255, 0.06);
+    background: rgba(143, 217, 255, 0.09);
 
-    border: 1px solid rgba(143, 217, 255, 0.4);
+    border: 2px solid rgba(143, 217, 255, 0.55);
     border-radius: 999px;
 
-    box-shadow: 0 0 16px rgba(143, 217, 255, 0.2);
+    box-shadow: 0 0 22px rgba(143, 217, 255, 0.3);
 }
 
 
 .upgrade-panel-total-label {
     color: #8fd9ff;
 
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
 }
 
 
@@ -524,14 +649,14 @@
     background-clip: text;
     color: transparent;
 
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 900;
 }
 
 
 .upgrade-panel-remaining {
-    border-color: rgba(255, 208, 116, 0.5);
-    box-shadow: 0 0 16px rgba(255, 208, 116, 0.2);
+    border-color: rgba(255, 208, 116, 0.65);
+    box-shadow: 0 0 22px rgba(255, 208, 116, 0.3);
 }
 
 
