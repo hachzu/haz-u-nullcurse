@@ -334,18 +334,17 @@
 }
 
 
-/* ---- Mode + Golden Gifts controls ---- */
+
+/* ---- Mode + Golden Gifts + purchase controls ---- */
 
 .upgrade-panel-controls {
     display: flex;
 
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 12px;
 
-    align-items: flex-end;
-    gap: 18px;
-
-    margin-bottom: 20px;
-    padding-bottom: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
 
     border-bottom: 1px solid rgba(143, 217, 255, 0.15);
 }
@@ -365,7 +364,7 @@
 
 
 .upgrade-mode-block {
-    flex: 1 1 260px;
+    width: 100%;
 }
 
 
@@ -376,7 +375,7 @@
 
 
 .upgrade-mode-button {
-    min-height: 40px;
+    min-height: 38px;
 
     padding: 8px;
 
@@ -395,15 +394,29 @@
 }
 
 
+/* Golden Gifts input, Pending/Left totals, and the Purchase button
+   sit together directly under mode selection, grouped tightly so
+   the whole "how much / can I afford it / buy" flow reads left to
+   right in one glance. */
+.upgrade-purchase-row {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: flex-end;
+    gap: 10px;
+}
+
+
 .upgrade-gifts-block {
-    flex: 0 0 160px;
+    flex: 0 0 140px;
 }
 
 
 .upgrade-gifts-block input {
     width: 100%;
 
-    padding: 10px 12px;
+    padding: 9px 11px;
 
     background: #071620;
 
@@ -414,7 +427,7 @@
 
     outline: none;
 
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     font-family: var(--font-modern);
 
@@ -428,12 +441,76 @@
 }
 
 
+.upgrade-panel-total {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 14px;
+
+    background: rgba(143, 217, 255, 0.06);
+
+    border: 1px solid rgba(143, 217, 255, 0.4);
+    border-radius: 999px;
+
+    box-shadow: 0 0 16px rgba(143, 217, 255, 0.2);
+}
+
+
+.upgrade-panel-total-label {
+    color: #8fd9ff;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.upgrade-panel-total-value {
+    background: linear-gradient(90deg, #ffffff, #8fd9ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    font-size: 15px;
+    font-weight: 900;
+}
+
+
+.upgrade-panel-remaining {
+    border-color: rgba(255, 208, 116, 0.5);
+    box-shadow: 0 0 16px rgba(255, 208, 116, 0.2);
+}
+
+
+.upgrade-panel-remaining .upgrade-panel-total-label {
+    color: #ffd074;
+}
+
+
+.upgrade-panel-remaining .upgrade-panel-total-value {
+    background: linear-gradient(90deg, #ffffff, #ffd074);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+
+.upgrade-panel-total-value.upgrade-panel-total-value--negative {
+    background: none;
+    -webkit-text-fill-color: initial;
+
+    color: #ff6b6b;
+}
+
+
 .purchase-upgrade-button {
-    flex: 0 0 auto;
+    flex: 1 1 160px;
 
     margin-left: auto;
 
-    padding: 12px 22px;
+    padding: 10px 20px;
 
     background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
@@ -472,109 +549,129 @@
 }
 
 
-/* ---- Category sections ---- */
+/* ---- Category columns (vertical lists, side by side) ---- */
 
+/*
+ * Categories sit side by side as columns so the whole calculator
+ * reads top-to-bottom within each category instead of wrapping
+ * left-to-right - this keeps the panel far shorter overall. Each
+ * column scrolls independently only if it truly overflows.
+ */
 .upgrade-categories {
     flex: 1;
+    min-height: 0;
 
-    overflow-y: auto;
+    display: flex;
+
+    flex-direction: row;
+    gap: 12px;
+}
+
+
+.upgrade-category {
+    flex: 1 1 0;
+    min-width: 0;
 
     display: flex;
 
     flex-direction: column;
-    gap: 26px;
-
-    padding-right: 4px;
-    padding-bottom: 10px;
+    min-height: 0;
 }
 
 
 .upgrade-category-heading {
-    margin-bottom: 12px;
-    padding-bottom: 7px;
+    flex-shrink: 0;
+
+    margin-bottom: 8px;
+    padding-bottom: 6px;
 
     border-bottom: 1px solid rgba(143, 217, 255, 0.18);
 
     color: #8fd9ff;
 
-    font-size: 12px;
+    font-family: var(--font-modern);
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.6px;
 }
 
 
 .upgrade-grid {
-    display: grid;
+    flex: 1;
+    min-height: 0;
 
-    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-    gap: 10px;
-
-    align-content: start;
-}
-
-
-.upgrade-card {
-    position: relative;
+    overflow-y: auto;
 
     display: flex;
 
     flex-direction: column;
+    gap: 6px;
+
+    padding-right: 4px;
+    padding-bottom: 4px;
+}
+
+
+/* ---- Upgrade row (compact, vertical list item) ---- */
+
+.upgrade-row {
+    position: relative;
+
+    display: flex;
 
     align-items: center;
-    gap: 5px;
+    gap: 8px;
 
-    margin-bottom: 16px;
-    padding: 10px 8px 14px;
+    padding: 6px 8px;
 
     background: linear-gradient(160deg, rgba(16, 34, 50, 0.9) 0%, rgba(6, 12, 22, 0.95) 100%);
 
     border: 1px solid rgba(143, 217, 255, 0.2);
-    border-radius: 10px;
+    border-radius: 8px;
 
     color: #dff5ff;
 
-    text-align: center;
-
     cursor: pointer;
 
-    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 
-.upgrade-card:hover {
+.upgrade-row:hover {
     border-color: #8fd9ff;
-    box-shadow: 0 0 20px rgba(143, 217, 255, 0.35);
-
-    transform: translateY(-2px);
+    box-shadow: 0 0 14px rgba(143, 217, 255, 0.3);
 }
 
 
-/* Level requirement met, but not yet selected or affordable */
-.upgrade-card--affordable {
+.upgrade-row:focus-visible {
+    outline: 2px solid #8fd9ff;
+    outline-offset: 1px;
+}
+
+
+.upgrade-row--affordable {
     border-color: #8fd9ff;
-    box-shadow: 0 0 18px rgba(143, 217, 255, 0.3);
+    box-shadow: 0 0 12px rgba(143, 217, 255, 0.25);
 }
 
 
-/* Currently sitting in the pending purchase queue */
-.upgrade-card--active {
+.upgrade-row--active {
     background: linear-gradient(160deg, rgba(255, 208, 116, 0.24) 0%, rgba(80, 55, 10, 0.75) 100%);
 
     border-color: #ffd074;
-    box-shadow: 0 0 22px rgba(255, 208, 116, 0.5);
+    box-shadow: 0 0 16px rgba(255, 208, 116, 0.45);
 }
 
 
-/* Already purchased and maxed out */
-.upgrade-card--owned {
+.upgrade-row--owned {
     background: linear-gradient(160deg, rgba(123, 230, 168, 0.2) 0%, rgba(8, 40, 24, 0.9) 100%);
 
     border-color: #7be6a8;
-    box-shadow: 0 0 16px rgba(123, 230, 168, 0.3);
+    box-shadow: 0 0 12px rgba(123, 230, 168, 0.28);
 }
 
 
-.upgrade-card--locked {
+.upgrade-row--locked {
     cursor: not-allowed;
 
     opacity: 0.4;
@@ -582,17 +679,17 @@
 }
 
 
-.upgrade-card--locked:hover {
+.upgrade-row--locked:hover {
     border-color: rgba(143, 217, 255, 0.2);
     box-shadow: none;
-
-    transform: none;
 }
 
 
 .upgrade-icon {
-    width: 44px;
-    height: 44px;
+    flex-shrink: 0;
+
+    width: 26px;
+    height: 26px;
 
     display: flex;
 
@@ -604,7 +701,7 @@
     background: rgba(255, 255, 255, 0.04);
 
     border: 1px solid rgba(143, 217, 255, 0.15);
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 
@@ -617,33 +714,59 @@
 
 
 .upgrade-icon-placeholder {
-    padding: 3px;
+    padding: 1px;
 
     color: #8fd9ff;
 
-    font-size: 8px;
+    font-size: 5px;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.05;
 }
 
 
-.upgrade-card-name {
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 1.25;
-}
+.upgrade-row-info {
+    flex: 1 1 auto;
+    min-width: 0;
 
-
-.upgrade-card-dots {
     display: flex;
 
-    gap: 4px;
+    align-items: baseline;
+    gap: 6px;
+}
+
+
+.upgrade-row-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.upgrade-row-level {
+    flex-shrink: 0;
+
+    color: #6faccf;
+
+    font-size: 8px;
+    font-weight: 800;
+}
+
+
+.upgrade-row-dots {
+    flex-shrink: 0;
+
+    display: flex;
+
+    gap: 3px;
 }
 
 
 .upgrade-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 
     background: rgba(143, 217, 255, 0.2);
 
@@ -654,33 +777,59 @@
 
 .upgrade-dot--filled {
     background: #ffd074;
-    box-shadow: 0 0 8px rgba(255, 208, 116, 0.8);
+    box-shadow: 0 0 6px rgba(255, 208, 116, 0.8);
 }
 
 
-.upgrade-card-level {
-    position: absolute;
-    top: 6px;
-    right: 6px;
+.upgrade-row-price {
+    flex-shrink: 0;
 
-    padding: 2px 5px;
+    padding: 2px 8px;
 
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 5px;
+    background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
-    color: #6faccf;
+    border: 1px solid rgba(255, 208, 116, 0.7);
+    border-radius: 999px;
 
-    font-size: 8px;
+    color: #241100;
+
+    font-size: 9px;
     font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 
-/* Small "un-own" control shown once at least one stack is owned -
-   sits below the level badge, top right. */
+.upgrade-row-price--unaffordable {
+    background: linear-gradient(135deg, #5c5f68, #34363e);
+
+    border-color: rgba(180, 184, 196, 0.5);
+
+    color: #cfd2db;
+}
+
+
+.upgrade-row-price--owned {
+    background: linear-gradient(135deg, #7be6a8, #2f9c60);
+
+    border-color: rgba(123, 230, 168, 0.7);
+
+    color: #06210f;
+}
+
+
+.upgrade-row-price--locked {
+    background: rgba(120, 120, 130, 0.35);
+
+    border-color: rgba(180, 180, 190, 0.4);
+
+    color: #b8bac2;
+}
+
+
+/* Un-own control - inline at the end of the row */
 .upgrade-unown-button {
-    position: absolute;
-    top: 26px;
-    right: 6px;
+    flex-shrink: 0;
 
     width: 16px;
     height: 16px;
@@ -720,12 +869,10 @@
 }
 
 
-/* Requirement / prerequisite chip - a small "line progression"
+/* Requirement / prerequisite chip - inline "line progression"
    indicator pointing at the icon of what's required. */
 .upgrade-requirement-chip {
-    position: absolute;
-    top: 6px;
-    left: 6px;
+    flex-shrink: 0;
 
     display: flex;
 
@@ -760,8 +907,8 @@
 
 
 .upgrade-requirement-icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 
     display: flex;
 
@@ -776,73 +923,62 @@
 
 
 .upgrade-requirement-icon .upgrade-icon-placeholder {
-    font-size: 5px;
+    font-size: 4px;
 }
 
 
-/* Cost badge sits underneath the card, outside its border -
-   mirrors the .curse-reward-badge treatment used for medal curses. */
-.upgrade-card-cost-badge {
-    position: absolute;
-    left: 50%;
-    bottom: -12px;
+/* Thin, muted scrollbars for the per-category columns - styled to
+   blend in rather than look like a stock browser scrollbar. */
+.upgrade-grid {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(143, 217, 255, 0.35) transparent;
+}
 
-    transform: translateX(-50%);
 
-    padding: 2px 9px;
+.upgrade-grid::-webkit-scrollbar {
+    width: 5px;
+}
 
-    background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
-    border: 1px solid rgba(255, 208, 116, 0.7);
+.upgrade-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.upgrade-grid::-webkit-scrollbar-thumb {
+    background: rgba(143, 217, 255, 0.3);
     border-radius: 999px;
-
-    color: #241100;
-
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-
-    box-shadow: 0 3px 8px rgba(255, 157, 61, 0.4);
-
-    z-index: 2;
 }
 
 
-.upgrade-card-cost-badge--unaffordable {
-    background: linear-gradient(135deg, #5c5f68, #34363e);
-
-    border-color: rgba(180, 184, 196, 0.5);
-
-    color: #cfd2db;
-
-    box-shadow: none;
+.upgrade-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(143, 217, 255, 0.55);
 }
 
 
-.upgrade-card-cost-badge--owned {
-    background: linear-gradient(135deg, #7be6a8, #2f9c60);
+@media (max-width: 900px) {
 
-    border-color: rgba(123, 230, 168, 0.7);
+    .upgrade-categories {
+        flex-direction: column;
+        overflow-x: visible;
+    }
 
-    color: #06210f;
-}
+
+    .upgrade-category {
+        flex: 0 0 auto;
+    }
 
 
-.upgrade-card-cost-badge--locked {
-    background: rgba(120, 120, 130, 0.35);
+    .upgrade-grid {
+        max-height: 260px;
+    }
 
-    border-color: rgba(180, 180, 190, 0.4);
-
-    color: #b8bac2;
-
-    box-shadow: none;
 }
 
 
 @media (max-width: 700px) {
 
-    .upgrade-panel-controls {
+    .upgrade-purchase-row {
         flex-direction: column;
         align-items: stretch;
     }

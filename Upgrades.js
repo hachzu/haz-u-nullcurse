@@ -80,6 +80,7 @@ const upgradesList = [
     { name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment" },
     { name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8, category: "environment" },
     { name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment" },
+    { name: "Radar Module : Players", price: 200, soloPrice: 200, level: 8, category: "environment" },
 
     { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
@@ -122,7 +123,7 @@ const upgradesList = [
     },
 
     {
-        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "survival",
+        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "movement",
         requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
     },
 
@@ -155,7 +156,6 @@ const upgradeState = {
 
     mode: "solo",
     goldenGifts: 0,
-    peakPlayerCount: 1,
 
     pending: new Map(),
     owned: new Map()
@@ -173,7 +173,6 @@ function saveUpgradeState() {
 
             mode: upgradeState.mode,
             goldenGifts: upgradeState.goldenGifts,
-            peakPlayerCount: upgradeState.peakPlayerCount,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -207,7 +206,6 @@ function loadUpgradeState() {
 
         upgradeState.mode = saved.mode || "solo";
         upgradeState.goldenGifts = Math.max(0, Number(saved.goldenGifts) || 0);
-        upgradeState.peakPlayerCount = Math.max(1, Number(saved.peakPlayerCount) || 1);
         upgradeState.pending = new Map(saved.pending || []);
         upgradeState.owned = new Map(saved.owned || []);
 
@@ -222,8 +220,8 @@ function loadUpgradeState() {
 
 /*
  * Resets everything owned inside the upgrade shop (owned stacks,
- * pending selections, Golden Gifts, mode, and the player-count
- * scaling memory) without touching the sidebar run state.
+ * pending selections, Golden Gifts, and mode) without touching the
+ * sidebar run state.
  */
 function resetUpgradeShopState() {
 
@@ -231,7 +229,6 @@ function resetUpgradeShopState() {
     upgradeState.owned.clear();
     upgradeState.goldenGifts = 0;
     upgradeState.mode = "solo";
-    upgradeState.peakPlayerCount = Math.max(1, typeof getPlayerCount === "function" ? getPlayerCount() : 1);
 
     saveUpgradeState();
     refreshUpgradePanel();
@@ -240,24 +237,22 @@ function resetUpgradeShopState() {
 
 
 /*
- * Prices scale off the player count shown on the sidebar, but per
- * the in-game rules the scaling never drops back down mid-run - it
- * only steps up when more players join. We track the highest player
- * count seen so far and scale against that.
+ * Prices scale directly off the current player count shown on the
+ * sidebar - going up or down as that number changes. Solo always
+ * scales as 1 player, since that's the definition of Solo,
+ * regardless of what the sidebar's player count says.
  */
 function getScalingPlayerCount() {
 
-    const current = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
+    if (upgradeState.mode === "solo") {
 
-    if (current > upgradeState.peakPlayerCount) {
-
-        upgradeState.peakPlayerCount = current;
-
-        saveUpgradeState();
+        return 1;
 
     }
 
-    return upgradeState.peakPlayerCount;
+    const current = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
+
+    return Math.max(1, current);
 
 }
 
@@ -276,38 +271,50 @@ function isNothingCurseActive() {
 }
 
 
-function isUpgradeModeRestricted(item) {
+function isUpgradeContextHidden(item) {
 
-    if (item.name === "Adrenaline") {
+    const difficultyKey = (runState.difficulty || "Standard").toLowerCase();
 
-        return isPartyLikeMode();
+    if (difficultyKey === "casual" && CASUAL_OVERRIDES[item.name] && CASUAL_OVERRIDES[item.name].hidden) {
+
+        return true;
+
+    }
+
+    if (difficultyKey === "extreme" && EXTREME_OVERRIDES[item.name] && EXTREME_OVERRIDES[item.name].hidden) {
+
+        return true;
+
+    }
+
+    if (item.name === "Adrenaline" && isPartyLikeMode()) {
+
+        return true;
 
     }
 
     if (item.name === "Last Robloxian Standing") {
 
-        return !isPartyLikeMode() || getScalingPlayerCount() <= 2;
+        const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
+        const eligible = isPartyLikeMode() || (upgradeState.mode === "duo" && playerCount >= 2);
+
+        if (!eligible) {
+
+            return true;
+
+        }
 
     }
 
-    return false;
+    if (item.name === "Radar Module : Players") {
 
-}
+        const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
 
+        if (playerCount < 2) {
 
-function isUpgradeHiddenForDifficulty(item) {
+            return true;
 
-    const difficultyKey = (runState.difficulty || "Standard").toLowerCase();
-
-    if (difficultyKey === "casual") {
-
-        return !!(CASUAL_OVERRIDES[item.name] && CASUAL_OVERRIDES[item.name].hidden);
-
-    }
-
-    if (difficultyKey === "extreme") {
-
-        return !!(EXTREME_OVERRIDES[item.name] && EXTREME_OVERRIDES[item.name].hidden);
+        }
 
     }
 
@@ -470,7 +477,6 @@ function isUpgradeRequirementMet(item) {
 function isUpgradeUnavailable(item) {
 
     return isUpgradeLockedByLevel(item)
-        || isUpgradeModeRestricted(item)
         || !isUpgradeRequirementMet(item);
 
 }
@@ -506,7 +512,7 @@ function computePendingTotal() {
 
     for (const item of upgradesList) {
 
-        if (isUpgradeHiddenForDifficulty(item)) {
+        if (isUpgradeContextHidden(item)) {
 
             continue;
 
@@ -530,7 +536,7 @@ function computeRemainingGifts() {
 
 function cycleUpgradeSelection(item) {
 
-    if (isUpgradeUnavailable(item) || isUpgradeHiddenForDifficulty(item)) {
+    if (isUpgradeUnavailable(item) || isUpgradeContextHidden(item)) {
 
         return;
 
@@ -653,7 +659,7 @@ function purchaseSelectedUpgrades() {
 
         const item = upgradesList.find(candidate => candidate.name === name);
 
-        if (!item || isUpgradeUnavailable(item) || isUpgradeHiddenForDifficulty(item)) {
+        if (!item || isUpgradeUnavailable(item) || isUpgradeContextHidden(item)) {
 
             playRemoveSound();
 
@@ -873,16 +879,17 @@ function createRequirementChip(item) {
 
 function createUpgradeCard(item) {
 
-    if (isUpgradeHiddenForDifficulty(item)) {
+    if (isUpgradeContextHidden(item)) {
 
         return null;
 
     }
 
-    const card = document.createElement("button");
+    const row = document.createElement("div");
 
-    card.type = "button";
-    card.className = "upgrade-card";
+    row.className = "upgrade-row";
+    row.setAttribute("role", "button");
+    row.tabIndex = 0;
 
     const locked = isUpgradeUnavailable(item);
     const owned = getOwnedStack(item.name);
@@ -902,19 +909,19 @@ function createUpgradeCard(item) {
 
     if (locked) {
 
-        card.classList.add("upgrade-card--locked");
+        row.classList.add("upgrade-row--locked");
 
     } else if (isFullyOwned) {
 
-        card.classList.add("upgrade-card--owned");
+        row.classList.add("upgrade-row--owned");
 
     } else if (isSelected) {
 
-        card.classList.add("upgrade-card--active");
+        row.classList.add("upgrade-row--active");
 
     } else if (canAffordNext) {
 
-        card.classList.add("upgrade-card--affordable");
+        row.classList.add("upgrade-row--affordable");
 
     }
 
@@ -922,16 +929,85 @@ function createUpgradeCard(item) {
 
     if (requirementChip) {
 
-        card.appendChild(requirementChip);
+        row.appendChild(requirementChip);
 
     }
 
+    row.appendChild(createUpgradeIcon(item.name));
+
+    const info = document.createElement("div");
+
+    info.className = "upgrade-row-info";
+
+    const nameLabel = document.createElement("span");
+
+    nameLabel.className = "upgrade-row-name";
+    nameLabel.textContent = item.name;
+
+    info.appendChild(nameLabel);
+
     const levelBadge = document.createElement("span");
 
-    levelBadge.className = "upgrade-card-level";
+    levelBadge.className = "upgrade-row-level";
     levelBadge.textContent = `Lv${item.level}`;
 
-    card.appendChild(levelBadge);
+    info.appendChild(levelBadge);
+
+    row.appendChild(info);
+
+    if (maxStack > 1) {
+
+        const dots = document.createElement("div");
+
+        dots.className = "upgrade-row-dots";
+
+        for (let i = 0; i < maxStack; i++) {
+
+            const dot = document.createElement("span");
+
+            dot.className = "upgrade-dot";
+
+            if (i < pending) {
+
+                dot.classList.add("upgrade-dot--filled");
+
+            }
+
+            dots.appendChild(dot);
+
+        }
+
+        row.appendChild(dots);
+
+    }
+
+    const badge = document.createElement("span");
+
+    badge.className = "upgrade-row-price";
+
+    if (locked) {
+
+        badge.classList.add("upgrade-row-price--locked");
+        badge.textContent = "LOCKED";
+
+    } else if (isFullyOwned) {
+
+        badge.classList.add("upgrade-row-price--owned");
+        badge.textContent = "OWNED";
+
+    } else {
+
+        if (!canAffordNext) {
+
+            badge.classList.add("upgrade-row-price--unaffordable");
+
+        }
+
+        badge.textContent = nextTierCost.toLocaleString();
+
+    }
+
+    row.appendChild(badge);
 
     if (owned > 0) {
 
@@ -951,80 +1027,28 @@ function createUpgradeCard(item) {
 
         });
 
-        card.appendChild(unownButton);
+        row.appendChild(unownButton);
 
     }
-
-    card.appendChild(createUpgradeIcon(item.name));
-
-    const nameLabel = document.createElement("div");
-
-    nameLabel.className = "upgrade-card-name";
-    nameLabel.textContent = item.name;
-
-    card.appendChild(nameLabel);
-
-    if (maxStack > 1) {
-
-        const dots = document.createElement("div");
-
-        dots.className = "upgrade-card-dots";
-
-        for (let i = 0; i < maxStack; i++) {
-
-            const dot = document.createElement("span");
-
-            dot.className = "upgrade-dot";
-
-            if (i < pending) {
-
-                dot.classList.add("upgrade-dot--filled");
-
-            }
-
-            dots.appendChild(dot);
-
-        }
-
-        card.appendChild(dots);
-
-    }
-
-    const badge = document.createElement("div");
-
-    badge.className = "upgrade-card-cost-badge";
-
-    if (locked) {
-
-        badge.classList.add("upgrade-card-cost-badge--locked");
-        badge.textContent = "LOCKED";
-
-    } else if (isFullyOwned) {
-
-        badge.classList.add("upgrade-card-cost-badge--owned");
-        badge.textContent = "OWNED";
-
-    } else {
-
-        if (!canAffordNext) {
-
-            badge.classList.add("upgrade-card-cost-badge--unaffordable");
-
-        }
-
-        badge.textContent = nextTierCost.toLocaleString();
-
-    }
-
-    card.appendChild(badge);
 
     if (!locked && !isFullyOwned) {
 
-        card.addEventListener("click", () => cycleUpgradeSelection(item));
+        row.addEventListener("click", () => cycleUpgradeSelection(item));
+
+        row.addEventListener("keydown", event => {
+
+            if (event.key === "Enter" || event.key === " ") {
+
+                event.preventDefault();
+                cycleUpgradeSelection(item);
+
+            }
+
+        });
 
     }
 
-    return card;
+    return row;
 
 }
 
@@ -1324,5 +1348,4 @@ if (upgradeToggleButton && upgradePanel) {
 
 
 loadUpgradeState();
-getScalingPlayerCount();
 refreshUpgradePanel();
