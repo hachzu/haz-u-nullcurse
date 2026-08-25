@@ -174,6 +174,33 @@
     display: flex;
 
     flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(143, 217, 255, 0.35) transparent;
+}
+
+
+.upgrade-panel-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.upgrade-panel-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.upgrade-panel-inner::-webkit-scrollbar-thumb {
+    background: rgba(143, 217, 255, 0.3);
+    border-radius: 999px;
+}
+
+
+.upgrade-panel-inner::-webkit-scrollbar-thumb:hover {
+    background: rgba(143, 217, 255, 0.55);
 }
 
 
@@ -578,16 +605,16 @@
 /*
  * Categories sit side by side as columns so the whole calculator
  * reads top-to-bottom within each category instead of wrapping
- * left-to-right - this keeps the panel far shorter overall. Each
- * column scrolls independently only if it truly overflows.
+ * left-to-right - this keeps the panel far shorter overall. Columns
+ * no longer stretch to match the tallest sibling or scroll on their
+ * own - each is only as tall as its own content, and the whole
+ * panel (.upgrade-panel-inner) scrolls as a single region instead.
  */
 .upgrade-categories {
-    flex: 1;
-    min-height: 0;
-
     display: flex;
 
     flex-direction: row;
+    align-items: flex-start;
     gap: 12px;
 }
 
@@ -599,7 +626,6 @@
     display: flex;
 
     flex-direction: column;
-    min-height: 0;
 }
 
 
@@ -621,32 +647,100 @@
 
 
 .upgrade-grid {
-    flex: 1;
-    min-height: 0;
+    display: grid;
 
-    overflow-y: auto;
+    /* level | icon | name (+ stack dots) | price | unown - the
+       stack indicator no longer has its own edge column; it now
+       sits inline next to the item name in the middle of the card
+       (see .upgrade-row-dots) instead of pinned to the left edge. */
+    grid-template-columns: 22px 40px minmax(0, 1fr) 84px 20px;
+    align-content: start;
+    align-items: center;
 
-    display: flex;
-
-    flex-direction: column;
-    gap: 6px;
+    row-gap: 9px;
+    column-gap: 8px;
 
     padding-right: 4px;
     padding-bottom: 4px;
 }
 
 
-/* ---- Upgrade row (compact, vertical list item) ---- */
-
-.upgrade-row {
-    position: relative;
+/* A distinct "OWNED UPGRADES" basin sits below the buyable
+   categories, split into the same 4 category columns so each column
+   lines up directly under its matching category above. */
+.upgrade-owned-banner {
+    flex-shrink: 0;
 
     display: flex;
 
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 
-    padding: 6px 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    padding-bottom: 8px;
+
+    border-top: 1px solid rgba(123, 230, 168, 0.3);
+
+    color: #7be6a8;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+}
+
+
+.upgrade-owned-categories {
+    flex: 0 0 auto;
+}
+
+
+.upgrade-category-heading--owned {
+    color: #7be6a8;
+
+    border-bottom-color: rgba(123, 230, 168, 0.25);
+}
+
+
+.upgrade-empty-row {
+    grid-column: 1 / -1;
+
+    padding: 10px 8px;
+
+    color: #5c7a68;
+
+    font-family: var(--font-modern);
+    font-size: 9px;
+    font-style: italic;
+    text-align: center;
+}
+
+
+/* ---- Upgrade row (compact, vertical list item) ----
+   Each row is itself a grid that shares the parent's column tracks
+   (subgrid), so its icon/name/dots/price/unown cells align with
+   every other row's cells instead of drifting with content width. */
+
+.upgrade-row {
+    position: relative;
+
+    /* Minimum height, not a fixed one - rows stay aligned to a
+       consistent baseline size but are never clipped if their
+       content (stack dots, price) needs a touch more room.
+       overflow is visible so the dependency badge can sit slightly
+       outside the card's corner. */
+    min-height: 42px;
+    box-sizing: border-box;
+    overflow: visible;
+
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    column-gap: 8px;
+    align-items: center;
+
+    padding: 4px 8px;
 
     background: linear-gradient(160deg, rgba(16, 34, 50, 0.9) 0%, rgba(6, 12, 22, 0.95) 100%);
 
@@ -709,11 +803,17 @@
 }
 
 
+/* No boxed background/border anymore - the icon sits directly in
+   the row's own gradient so it reads as part of the row instead of
+   a separate tile stuck inside it. A soft drop-shadow keeps it from
+   visually flattening into that background. */
 .upgrade-icon {
+    grid-column: 2;
+
     flex-shrink: 0;
 
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
 
     display: flex;
 
@@ -722,10 +822,7 @@
 
     overflow: hidden;
 
-    background: rgba(255, 255, 255, 0.04);
-
-    border: 1px solid rgba(143, 217, 255, 0.15);
-    border-radius: 6px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 
@@ -742,14 +839,15 @@
 
     color: #8fd9ff;
 
-    font-size: 5px;
+    font-size: 6px;
     font-weight: 700;
-    line-height: 1.05;
+    line-height: 1.1;
+    text-align: center;
 }
 
 
 .upgrade-row-info {
-    flex: 1 1 auto;
+    grid-column: 3;
     min-width: 0;
 
     display: flex;
@@ -771,7 +869,12 @@
 }
 
 
+/* Required-level indicator, placed to the left of the icon rather
+   than crowded next to the name. */
 .upgrade-row-level {
+    grid-column: 1;
+    justify-self: center;
+
     flex-shrink: 0;
 
     color: #6faccf;
@@ -780,21 +883,29 @@
     font-size: 8px;
     font-weight: 800;
     letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 
+/* Stack indicator - now sits inline next to the item name (inside
+   .upgrade-row-info), in the middle of the card, laid out as a
+   single horizontal row of pips rather than a stacked column pinned
+   to the card's edge. flex-shrink: 0 keeps it fully visible even
+   when the name is long enough to need truncating. */
 .upgrade-row-dots {
     flex-shrink: 0;
 
     display: flex;
+    flex-direction: row;
+    align-items: center;
 
     gap: 3px;
 }
 
 
 .upgrade-dot {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
 
     background: rgba(143, 217, 255, 0.2);
 
@@ -810,9 +921,17 @@
 
 
 .upgrade-row-price {
+    grid-column: 4;
+    justify-self: start;
+
     flex-shrink: 0;
 
-    padding: 2px 8px;
+    display: flex;
+
+    align-items: center;
+    gap: 4px;
+
+    padding: 4px 10px;
 
     background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
@@ -822,10 +941,25 @@
     color: #241100;
 
     font-family: var(--font-modern);
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.3px;
     white-space: nowrap;
+}
+
+
+.upgrade-row-price-icon {
+    width: 12px;
+    height: 12px;
+
+    flex-shrink: 0;
+
+    object-fit: contain;
+}
+
+
+.upgrade-row-price-amount {
+    line-height: 1;
 }
 
 
@@ -858,10 +992,13 @@
 
 /* Un-own control - inline at the end of the row */
 .upgrade-unown-button {
+    grid-column: 5;
+    justify-self: center;
+
     flex-shrink: 0;
 
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
 
     display: flex;
 
@@ -898,10 +1035,15 @@
 }
 
 
-/* Requirement / prerequisite chip - inline "line progression"
-   indicator pointing at the icon of what's required. */
+/* Requirement / prerequisite chip - a small badge pinned to the
+   card's top-left corner, sitting slightly outside the row's own
+   border rather than sharing a grid cell with the level text, so it
+   never overlaps or merges with it. */
 .upgrade-requirement-chip {
-    flex-shrink: 0;
+    position: absolute;
+    top: -8px;
+    left: -10px;
+    z-index: 2;
 
     display: flex;
 
@@ -910,10 +1052,12 @@
 
     padding: 2px 4px 2px 5px;
 
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(6, 12, 22, 0.95);
 
     border: 1px solid rgba(143, 217, 255, 0.35);
     border-radius: 999px;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 
@@ -936,8 +1080,8 @@
 
 
 .upgrade-requirement-icon {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
 
     display: flex;
 
@@ -956,35 +1100,6 @@
 }
 
 
-/* Thin, muted scrollbars for the per-category columns - styled to
-   blend in rather than look like a stock browser scrollbar. */
-.upgrade-grid {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(143, 217, 255, 0.35) transparent;
-}
-
-
-.upgrade-grid::-webkit-scrollbar {
-    width: 5px;
-}
-
-
-.upgrade-grid::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-.upgrade-grid::-webkit-scrollbar-thumb {
-    background: rgba(143, 217, 255, 0.3);
-    border-radius: 999px;
-}
-
-
-.upgrade-grid::-webkit-scrollbar-thumb:hover {
-    background: rgba(143, 217, 255, 0.55);
-}
-
-
 @media (max-width: 900px) {
 
     .upgrade-categories {
@@ -995,11 +1110,6 @@
 
     .upgrade-category {
         flex: 0 0 auto;
-    }
-
-
-    .upgrade-grid {
-        max-height: 260px;
     }
 
 }

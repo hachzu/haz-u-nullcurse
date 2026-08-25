@@ -65,6 +65,7 @@ const upgradesList = [
     { name: "Tria Orb", price: 100, soloPrice: 100, level: 5, category: "environment" },
     { name: "Medal", price: 100, soloPrice: 100, level: 5, category: "eco" },
 
+
     { name: "Advanced Gravity Coil", price: 600, soloPrice: 600, level: 8, category: "movement" },
     { name: "Ice Skates", price: 400, soloPrice: 300, level: 8, category: "movement" },
     { name: "Fanny Pack", price: 300, soloPrice: 300, level: 8, category: "eco" },
@@ -77,10 +78,26 @@ const upgradesList = [
     },
 
     { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 8, category: "survival" },
-    { name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment" },
-    { name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8, category: "environment" },
-    { name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment" },
-    { name: "Radar Module : Players", price: 200, soloPrice: 200, level: 8, category: "environment" },
+
+    {
+        name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment",
+        requires: { type: "upgrade", name: "Radar", stack: 1 }
+    },
+
+    {
+        name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8, category: "environment",
+        requires: { type: "upgrade", name: "Radar", stack: 1 }
+    },
+
+    {
+        name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment",
+        requires: { type: "upgrade", name: "Radar", stack: 1 }
+    },
+
+    {
+        name: "Radar Module : Players", price: 200, soloPrice: 200, level: 8, category: "environment",
+        requires: { type: "upgrade", name: "Radar", stack: 1 }
+    },
 
     { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
@@ -552,38 +569,37 @@ function cycleUpgradeSelection(item) {
     }
 
     const pending = getPendingStack(item.name);
-    let nextPending;
 
-    if (pending >= maxStack) {
-
-        nextPending = owned;
-
-    } else {
-
-        nextPending = pending + 1;
-
-        const incrementCost = computeStackPrice(item, nextPending) - computeStackPrice(item, pending);
-        const remaining = computeRemainingGifts();
-
-        if (incrementCost > remaining) {
-
-            playRemoveSound();
-
-            return;
-
-        }
-
-    }
-
-    if (nextPending === owned) {
+    // Only one stack can be queued per upgrade per purchase - clicking
+    // an already-selected row deselects it rather than queuing a
+    // second stack on top.
+    if (pending > owned) {
 
         upgradeState.pending.delete(item.name);
 
-    } else {
+        playSelectSound();
 
-        upgradeState.pending.set(item.name, nextPending);
+        saveUpgradeState();
+        renderUpgradeGrid();
+
+        return;
 
     }
+
+    const nextPending = owned + 1;
+
+    const incrementCost = computeStackPrice(item, nextPending) - computeStackPrice(item, pending);
+    const remaining = computeRemainingGifts();
+
+    if (incrementCost > remaining) {
+
+        playRemoveSound();
+
+        return;
+
+    }
+
+    upgradeState.pending.set(item.name, nextPending);
 
     playSelectSound();
 
@@ -901,8 +917,19 @@ function createUpgradeCard(item) {
 
     const remaining = computeRemainingGifts();
 
+    // The price shown is always the cost of the stack the user is
+    // looking at: if they've already selected a stack (isSelected),
+    // that's the cost of the pending selection itself - not a
+    // further, nonexistent tier beyond it (which used to collapse
+    // to 0 once pending hit maxStack, wrongly reading as "free").
+    // If nothing's selected yet, it's the cost of the next single
+    // stack increment.
+    const priceTargetStack = (!locked && !isFullyOwned)
+        ? (isSelected ? pending : Math.min(owned + 1, maxStack))
+        : owned;
+
     const nextTierCost = (!locked && !isFullyOwned)
-        ? computeStackPrice(item, Math.min(pending + 1, maxStack)) - computeStackPrice(item, pending)
+        ? computeStackPrice(item, priceTargetStack) - computeStackPrice(item, owned)
         : 0;
 
     const canAffordNext = !locked && !isFullyOwned && nextTierCost <= remaining;
@@ -933,6 +960,13 @@ function createUpgradeCard(item) {
 
     }
 
+    const levelBadge = document.createElement("span");
+
+    levelBadge.className = "upgrade-row-level";
+    levelBadge.textContent = `Lv${item.level}`;
+
+    row.appendChild(levelBadge);
+
     row.appendChild(createUpgradeIcon(item.name));
 
     const info = document.createElement("div");
@@ -945,15 +979,6 @@ function createUpgradeCard(item) {
     nameLabel.textContent = item.name;
 
     info.appendChild(nameLabel);
-
-    const levelBadge = document.createElement("span");
-
-    levelBadge.className = "upgrade-row-level";
-    levelBadge.textContent = `Lv${item.level}`;
-
-    info.appendChild(levelBadge);
-
-    row.appendChild(info);
 
     if (maxStack > 1) {
 
@@ -977,9 +1002,11 @@ function createUpgradeCard(item) {
 
         }
 
-        row.appendChild(dots);
+        info.appendChild(dots);
 
     }
+
+    row.appendChild(info);
 
     const badge = document.createElement("span");
 
@@ -1003,7 +1030,20 @@ function createUpgradeCard(item) {
 
         }
 
-        badge.textContent = nextTierCost.toLocaleString();
+        const priceIcon = document.createElement("img");
+
+        priceIcon.className = "upgrade-row-price-icon";
+        priceIcon.src = "assets/upgrades/GoldGiftIcon.png";
+        priceIcon.alt = "";
+
+        badge.appendChild(priceIcon);
+
+        const priceAmount = document.createElement("span");
+
+        priceAmount.className = "upgrade-row-price-amount";
+        priceAmount.textContent = nextTierCost.toLocaleString();
+
+        badge.appendChild(priceAmount);
 
     }
 
@@ -1053,61 +1093,135 @@ function createUpgradeCard(item) {
 }
 
 
+function createUpgradeEmptyRow(text) {
+
+    const empty = document.createElement("div");
+
+    empty.className = "upgrade-empty-row";
+    empty.textContent = text;
+
+    return empty;
+
+}
+
+
+function buildUpgradeCategoryColumn(category, rows, emptyText, headingModifierClass) {
+
+    const section = document.createElement("div");
+
+    section.className = "upgrade-category";
+
+    const heading = document.createElement("div");
+
+    heading.className = "upgrade-category-heading";
+
+    if (headingModifierClass) {
+
+        heading.classList.add(headingModifierClass);
+
+    }
+
+    heading.textContent = category.label;
+
+    section.appendChild(heading);
+
+    const grid = document.createElement("div");
+
+    grid.className = "upgrade-grid";
+
+    if (rows.length > 0) {
+
+        rows.forEach(row => grid.appendChild(row));
+
+    } else {
+
+        grid.appendChild(createUpgradeEmptyRow(emptyText));
+
+    }
+
+    section.appendChild(grid);
+
+    return section;
+
+}
+
+
+/*
+ * Renders two aligned rows of category columns: buyable/locked
+ * upgrades on top, and a separate "Owned" basin below holding
+ * anything fully purchased. Every category always gets a column in
+ * both rows (even if empty) so a column in the Owned basin lines up
+ * directly under its matching category above, instead of drifting
+ * out of alignment when one section has fewer categories with items
+ * than the other.
+ */
 function renderUpgradeGrid() {
 
-    const container = document.getElementById("upgradeCategories");
+    const activeContainer = document.getElementById("upgradeCategories");
+    const ownedContainer = document.getElementById("upgradeOwnedCategories");
 
-    if (!container) {
+    if (!activeContainer) {
 
         return;
 
     }
 
-    container.innerHTML = "";
+    activeContainer.innerHTML = "";
+
+    if (ownedContainer) {
+
+        ownedContainer.innerHTML = "";
+
+    }
 
     upgradeCategories.forEach(category => {
 
         const items = upgradesList.filter(item => item.category === category.key);
-        const visibleCards = [];
+        const activeRows = [];
+        const ownedRows = [];
 
         items.forEach(item => {
 
-            const card = createUpgradeCard(item);
+            if (isUpgradeContextHidden(item)) {
 
-            if (card) {
+                return;
 
-                visibleCards.push(card);
+            }
+
+            const owned = getOwnedStack(item.name);
+            const maxStack = item.maxStack || 1;
+
+            const row = createUpgradeCard(item);
+
+            if (!row) {
+
+                return;
+
+            }
+
+            if (owned >= maxStack) {
+
+                ownedRows.push(row);
+
+            } else {
+
+                activeRows.push(row);
 
             }
 
         });
 
-        if (visibleCards.length === 0) {
+        activeContainer.appendChild(
+            buildUpgradeCategoryColumn(category, activeRows, "All owned")
+        );
 
-            return;
+        if (ownedContainer) {
+
+            ownedContainer.appendChild(
+                buildUpgradeCategoryColumn(category, ownedRows, "Nothing owned yet", "upgrade-category-heading--owned")
+            );
 
         }
-
-        const section = document.createElement("div");
-
-        section.className = "upgrade-category";
-
-        const heading = document.createElement("div");
-
-        heading.className = "upgrade-category-heading";
-        heading.textContent = category.label;
-
-        section.appendChild(heading);
-
-        const grid = document.createElement("div");
-
-        grid.className = "upgrade-grid";
-
-        visibleCards.forEach(card => grid.appendChild(card));
-
-        section.appendChild(grid);
-
-        container.appendChild(section);
 
     });
 
