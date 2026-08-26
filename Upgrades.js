@@ -692,6 +692,29 @@ function resetUpgradeSelections() {
 }
 
 
+/*
+ * Marks every upgrade as fully owned at once - a quick way to see
+ * the whole owned board, not an in-run purchase. Doesn't touch
+ * Golden Gifts (same "tracker correction, no refund/no charge" idea
+ * as the un-own controls), and clears out any pending selections
+ * since there's nothing left to buy once everything's owned.
+ */
+function ownAllUpgrades() {
+
+    upgradesList.forEach(item => {
+
+        upgradeState.owned.set(item.name, item.maxStack || 1);
+
+    });
+
+    upgradeState.pending.clear();
+
+    saveUpgradeState();
+    refreshUpgradePanel();
+
+}
+
+
 function purchaseSelectedUpgrades() {
 
     if (upgradeState.pending.size === 0) {
@@ -758,7 +781,13 @@ function isNothingCurseSelectable(nothingCurse) {
 
     if (typeof isCurseSelectable === "function") {
 
-        return isCurseSelectable(nothingCurse);
+        return isCurseSelectable(nothingCurse, true);
+
+    }
+
+    if (typeof canAppearIgnoringLevel === "function") {
+
+        return canAppearIgnoringLevel(nothingCurse);
 
     }
 
@@ -789,7 +818,7 @@ function toggleNothingCurse() {
 
     } else if (isNothingCurseSelectable(nothingCurse)) {
 
-        selectCurse(nothingCurse);
+        selectCurse(nothingCurse, true);
 
     } else {
 
@@ -1373,7 +1402,7 @@ function updateUpgradeTotals() {
 
         const active = isNothingCurseActive();
         const nothingCurse = typeof findCurseByName === "function" ? findCurseByName("Nothing") : null;
-        const canToggleOn = active || (nothingCurse && typeof canAppear === "function" && canAppear(nothingCurse));
+        const canToggleOn = active || (nothingCurse && isNothingCurseSelectable(nothingCurse));
 
         nothingIndicator.classList.toggle("active", active);
         nothingIndicator.setAttribute("aria-checked", active ? "true" : "false");
@@ -1479,10 +1508,9 @@ function createProgressiveToggle() {
     button.id = "upgradeProgressiveToggle";
     button.className = "upgrade-switch upgrade-progressive-toggle";
     button.setAttribute("role", "switch");
-    button.title = "Progressive mode: off leaves every upgrade open with no level or "
-        + "prerequisite needed. On restores normal level/dependency gating, and each "
-        + "purchase advances the run level to the next shop tier (levels ending in "
-        + "0, 3, 5, or 8), gradually unlocking level-gated upgrades as you go.";
+    button.title = "OFF: every upgrade is unlocked, so you can freely plan any "
+        + "purchase no matter your level. ON: upgrades stay level-locked like a "
+        + "real run, and each purchase moves you up to the next shop level.";
 
     const track = document.createElement("span");
 
@@ -1505,7 +1533,38 @@ function createProgressiveToggle() {
 
         upgradeState.progressive = !upgradeState.progressive;
 
+        // Progressive mode simulates a real run, and shops don't
+        // start appearing until level 3 - force-start there instead
+        // of leaving the player stuck at level 1 with nothing to buy.
+        // Only bumps up, never down, so turning it on at a higher
+        // level (e.g. level 20) doesn't reset progress.
+        if (
+            upgradeState.progressive
+            && typeof runState !== "undefined" && runState
+            && typeof runState.level === "number"
+            && runState.level < 3
+        ) {
+
+            runState.level = 3;
+
+            const levelInput = document.getElementById("levelInput");
+
+            if (levelInput) {
+
+                levelInput.value = 3;
+
+            }
+
+        }
+
         saveUpgradeState();
+
+        if (typeof render === "function") {
+
+            render();
+
+        }
+
         refreshUpgradePanel();
 
     }, playUtilitySound);
@@ -1645,6 +1704,15 @@ const upgradeResetButton = document.getElementById("upgradeResetButton");
 if (upgradeResetButton) {
 
     attachClickAction(upgradeResetButton, resetUpgradeSelections, playRemoveSound);
+
+}
+
+
+const upgradeOwnAllButton = document.getElementById("upgradeOwnAllButton");
+
+if (upgradeOwnAllButton) {
+
+    attachClickAction(upgradeOwnAllButton, ownAllUpgrades, playPurifySound);
 
 }
 

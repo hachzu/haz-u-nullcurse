@@ -153,8 +153,11 @@
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(143, 217, 255, 0.05);
 
     transform: translateX(100%);
+    opacity: 0;
 
-    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.4s ease-out;
 
     pointer-events: none;
 }
@@ -162,6 +165,7 @@
 
 .upgrade-panel.open {
     transform: translateX(0);
+    opacity: 1;
 
     pointer-events: auto;
 }
@@ -359,6 +363,24 @@
     color: #ffffff;
 
     box-shadow: 0 0 18px rgba(143, 217, 255, 0.4);
+}
+
+
+.upgrade-own-all-button {
+    border-color: rgba(123, 230, 168, 0.45);
+
+    color: #7be6a8;
+}
+
+
+.upgrade-own-all-button:hover {
+    background: rgba(123, 230, 168, 0.14);
+
+    border-color: #7be6a8;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(123, 230, 168, 0.4);
 }
 
 

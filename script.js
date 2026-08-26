@@ -770,7 +770,15 @@ function isCurseDependencyMet(curse, ignoreLevel) {
 
     const level = getLevel();
 
-    if (!ignoreLevel && curse.level !== undefined && level < curse.level) {
+    // Greater curses without an explicit "level" default to an
+    // unlock level of 10 (see getGreaterCurseUnlockLevel) - that
+    // default has to be enforced here too, not just in the "Level X"
+    // badge, or those curses show locked but are still selectable.
+    const requiredLevel = isGreaterCurse(curse)
+        ? getGreaterCurseUnlockLevel(curse)
+        : curse.level;
+
+    if (!ignoreLevel && requiredLevel !== undefined && level < requiredLevel) {
 
         return false;
 
@@ -839,8 +847,13 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
  * group check - but a curse already at its own stack cap is still
  * blocked, since that's not a "dependency" to unlock, it's the
  * curse's own limit.
+ *
+ * ignoreLevel skips just the level check while still enforcing
+ * everything else - used by the upgrade panel's Nothing-curse
+ * discount toggle, which should always be available regardless of
+ * the sidebar's current level.
  */
-function isCurseSelectable(curse) {
+function isCurseSelectable(curse, ignoreLevel = false) {
 
     if (isCurseAtCap(curse)) {
 
@@ -854,7 +867,7 @@ function isCurseSelectable(curse) {
 
     }
 
-    return isCurseDependencyMet(curse, false);
+    return isCurseDependencyMet(curse, ignoreLevel);
 
 }
 
@@ -868,8 +881,8 @@ function getCurseUnlockLevel(curse) {
 
 /*
  * True only when level is the single thing standing between this
- * curse and being selectable - used to pick between the specific
- * "UNLOCKS LV X" badge and the generic "LOCKED" one.
+ * curse and being selectable - used to pick the red "Level X" badge
+ * over the purple "OWNED" one, or no badge at all.
  */
 function isCurseLockedOnlyByLevel(curse) {
 
@@ -908,21 +921,29 @@ function isCurseLockedOnlyByLevel(curse) {
 }
 
 
-function getCurseLockLabel(curse) {
+/*
+ * Returns what badge (if any) to show on a locked curse card.
+ * Capped curses get a purple "OWNED" badge, curses blocked purely
+ * by level get a red "Level XX" badge, and anything locked for a
+ * different reason (missing enemy, exclusive-group conflict,
+ * casual-disabled) gets no badge at all - the dimmed/grayscale card
+ * styling alone communicates it's unavailable.
+ */
+function getCurseLockBadgeInfo(curse) {
 
     if (isCurseAtCap(curse)) {
 
-        return "MAXED";
+        return { text: "OWNED", className: "curse-lock-badge--owned" };
 
     }
 
     if (isCurseLockedOnlyByLevel(curse)) {
 
-        return `UNLOCKS LV ${getCurseUnlockLevel(curse)}`;
+        return { text: `Level ${getCurseUnlockLevel(curse)}`, className: "curse-lock-badge--level" };
 
     }
 
-    return "LOCKED";
+    return null;
 
 }
 
@@ -1019,9 +1040,9 @@ function toggleEnemy(enemy) {
 }
 
 
-function selectCurse(curse) {
+function selectCurse(curse, ignoreLevel = false) {
 
-    if (!isCurseSelectable(curse)) {
+    if (!isCurseSelectable(curse, ignoreLevel)) {
 
         return;
 
@@ -1551,10 +1572,18 @@ function createCurseCard(curse, isMedal = false) {
 
     const selectable = isCurseSelectable(curse);
     const locked = !selectable;
+    const capped = isCurseAtCap(curse);
+    const removableViaCard = curseVisibilityState.unlockAll && capped;
 
     if (locked) {
 
         card.classList.add("curse-card--locked");
+
+    }
+
+    if (removableViaCard) {
+
+        card.classList.add("curse-card--removable");
 
     }
 
@@ -1600,16 +1629,37 @@ function createCurseCard(curse, isMedal = false) {
 
     if (locked) {
 
-        const lockBadge = document.createElement("div");
+        const badgeInfo = getCurseLockBadgeInfo(curse);
 
-        lockBadge.className = "curse-unlock-badge";
-        lockBadge.textContent = getCurseLockLabel(curse);
+        if (badgeInfo) {
 
-        card.appendChild(lockBadge);
+            const lockBadge = document.createElement("div");
+
+            lockBadge.className = `curse-lock-badge ${badgeInfo.className}`;
+            lockBadge.textContent = badgeInfo.text;
+
+            card.appendChild(lockBadge);
+
+        }
 
     }
 
-    attachClickAction(card, () => selectCurse(curse));
+    attachClickAction(card, () => {
+
+        // Unlock All Curses: reclicking an already-owned/maxed card
+        // removes it right from the pool, instead of making the user
+        // hunt it down in the Active Curses list to hit its × button.
+        if (curseVisibilityState.unlockAll && isCurseAtCap(curse)) {
+
+            removeCurse(curse.name);
+
+            return;
+
+        }
+
+        selectCurse(curse);
+
+    });
 
     return card;
 

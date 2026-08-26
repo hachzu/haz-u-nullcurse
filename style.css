@@ -1381,7 +1381,31 @@ body {
 }
 
 
-.curse-unlock-badge {
+/* Unlock All Curses: an owned/maxed card is still shown dimmed like
+   any other locked card, but it's actually clickable (reclicking
+   removes it), so the cursor and hover feedback need to read as
+   interactive rather than dead-ended. Declared after
+   .curse-card--locked:hover so it wins on the properties both set. */
+.curse-card--removable {
+    cursor: pointer;
+}
+
+
+.curse-card--removable:hover {
+    background: linear-gradient(160deg, #3a0a0a 0%, #150826 100%);
+
+    border-color: #ff9d9d;
+    box-shadow: 0 0 18px rgba(174, 19, 19, 0.35);
+
+    transform: translateY(-2px);
+
+    opacity: 0.7;
+}
+
+
+/* Shared geometry for the badge on a locked curse card; the color
+   comes from one of the modifier classes below. */
+.curse-lock-badge {
     position: absolute;
     left: 50%;
     bottom: -10px;
@@ -1390,12 +1414,7 @@ body {
 
     padding: 2px 9px;
 
-    background: linear-gradient(135deg, #ffb37a, #ff6200);
-
-    border: 1px solid rgba(255, 179, 122, 0.7);
     border-radius: 999px;
-
-    color: #241100;
 
     font-size: 8px;
     font-weight: 800;
@@ -1403,9 +1422,31 @@ body {
 
     white-space: nowrap;
 
-    box-shadow: 0 3px 8px rgba(255, 98, 0, 0.4);
-
     z-index: 2;
+}
+
+
+/* Already owned/maxed - purple palette. */
+.curse-lock-badge--owned {
+    background: linear-gradient(135deg, #d59bff, #6a1fd0);
+
+    border: 1px solid rgba(184, 102, 255, 0.7);
+
+    color: #f5eaff;
+
+    box-shadow: 0 3px 8px rgba(122, 47, 196, 0.45);
+}
+
+
+/* Blocked purely by level - red palette. */
+.curse-lock-badge--level {
+    background: linear-gradient(135deg, #ff9d9d, #ae1313);
+
+    border: 1px solid rgba(255, 157, 157, 0.7);
+
+    color: #fff0f0;
+
+    box-shadow: 0 3px 8px rgba(174, 19, 19, 0.45);
 }
 
 
