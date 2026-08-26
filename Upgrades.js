@@ -627,14 +627,25 @@ function cycleUpgradeSelection(item) {
 
     const nextPending = owned + 1;
 
-    const incrementCost = computeStackPrice(item, nextPending) - computeStackPrice(item, pending);
-    const remaining = computeRemainingGifts();
+    // Affordability is only enforced in Progressive mode, since
+    // that's meant to simulate a real run. With Progressive off,
+    // this is a free planning sandbox - selections go through even
+    // past what Golden Gifts you have on hand, so purchasing later
+    // can leave "Left" negative. The price badge still shows red
+    // when a selection is over budget either way, it just isn't a
+    // hard block unless Progressive is on.
+    if (upgradeState.progressive) {
 
-    if (incrementCost > remaining) {
+        const incrementCost = computeStackPrice(item, nextPending) - computeStackPrice(item, pending);
+        const remaining = computeRemainingGifts();
 
-        playRemoveSound();
+        if (incrementCost > remaining) {
 
-        return;
+            playRemoveSound();
+
+            return;
+
+        }
 
     }
 
@@ -725,7 +736,10 @@ function purchaseSelectedUpgrades() {
 
     const total = computePendingTotal();
 
-    if (total > upgradeState.goldenGifts) {
+    // Same rule as cycleUpgradeSelection: affordability is only a
+    // hard requirement in Progressive mode. With it off, the
+    // purchase always goes through and Golden Gifts can go negative.
+    if (upgradeState.progressive && total > upgradeState.goldenGifts) {
 
         playRemoveSound();
 
@@ -757,21 +771,54 @@ function purchaseSelectedUpgrades() {
 
     upgradeState.pending.clear();
 
-    // Progressive mode: each purchase moves the run forward to the
-    // next level where a shop is available, gradually unlocking
-    // whatever level-gated upgrades that tier opens up.
-    if (upgradeState.progressive && runState && typeof runState.level === "number") {
-
-        runState.level = getNextShopLevel(runState.level);
-
-    }
-
     playPurifySound();
 
     saveUpgradeState();
 
-    // Full refresh (not just the grid) so the Progressive level badge
-    // picks up the level bump above, too.
+    // Full refresh so any other panel state (mode, totals, etc.)
+    // stays in sync after the purchase.
+    refreshUpgradePanel();
+
+}
+
+
+/*
+ * Progressive mode no longer advances the level automatically on
+ * purchase - the player clicks this explicitly (see the "-> Lv X"
+ * button next to the Progressive toggle, built in
+ * renderProgressiveLevelBadge) whenever they're ready to move up to
+ * the next shop tier.
+ */
+function advanceProgressiveLevel() {
+
+    if (!upgradeState.progressive) {
+
+        return;
+
+    }
+
+    if (!runState || typeof runState.level !== "number") {
+
+        return;
+
+    }
+
+    runState.level = getNextShopLevel(runState.level);
+
+    const levelInput = document.getElementById("levelInput");
+
+    if (levelInput) {
+
+        levelInput.value = runState.level;
+
+    }
+
+    if (typeof render === "function") {
+
+        render();
+
+    }
+
     refreshUpgradePanel();
 
 }
@@ -1335,44 +1382,6 @@ function renderUpgradeGrid() {
 }
 
 
-/*
- * The Nothing-curse indicator exists in the static markup as a plain
- * button. Give it the same track+thumb switch internals as the
- * Progressive toggle (see .upgrade-switch in Upgrades.css) the first
- * time it's touched, then leave it alone on later refreshes.
- */
-function ensureNothingToggleMarkup(indicator) {
-
-    if (indicator.querySelector(".upgrade-switch-track")) {
-
-        return;
-
-    }
-
-    indicator.classList.add("upgrade-switch");
-    indicator.setAttribute("role", "switch");
-    indicator.innerHTML = "";
-
-    const track = document.createElement("span");
-
-    track.className = "upgrade-switch-track";
-
-    const thumb = document.createElement("span");
-
-    thumb.className = "upgrade-switch-thumb";
-
-    track.appendChild(thumb);
-    indicator.appendChild(track);
-
-    const label = document.createElement("span");
-
-    label.className = "upgrade-switch-label";
-
-    indicator.appendChild(label);
-
-}
-
-
 function updateUpgradeTotals() {
 
     const totalValueEl = document.getElementById("upgradeTotalValue");
@@ -1398,8 +1407,9 @@ function updateUpgradeTotals() {
 
     if (nothingIndicator) {
 
-        ensureNothingToggleMarkup(nothingIndicator);
-
+        // Nothing Curse now shares the exact same switch markup and
+        // styling as the Progressive toggle (see .upgrade-switch in
+        // Upgrades.css) - just update its state and ON/OFF label.
         const active = isNothingCurseActive();
         const nothingCurse = typeof findCurseByName === "function" ? findCurseByName("Nothing") : null;
         const canToggleOn = active || (nothingCurse && isNothingCurseSelectable(nothingCurse));
@@ -1412,7 +1422,7 @@ function updateUpgradeTotals() {
 
         if (nothingLabelEl) {
 
-            nothingLabelEl.textContent = active ? "NOTHING: ON" : "NOTHING";
+            nothingLabelEl.textContent = active ? "ON" : "OFF";
 
         }
 
@@ -1420,7 +1430,12 @@ function updateUpgradeTotals() {
 
     if (purchaseButton) {
 
-        const disabled = upgradeState.pending.size === 0 || total > upgradeState.goldenGifts;
+        // Same rule as the two functions above: only Progressive
+        // mode locks the button on insufficient Golden Gifts. With
+        // it off, the button stays clickable and the purchase can
+        // push "Left" negative.
+        const disabled = upgradeState.pending.size === 0
+            || (upgradeState.progressive && total > upgradeState.goldenGifts);
 
         purchaseButton.disabled = disabled;
         purchaseButton.classList.toggle("purchase-upgrade-button--disabled", disabled);
@@ -1508,9 +1523,12 @@ function createProgressiveToggle() {
     button.id = "upgradeProgressiveToggle";
     button.className = "upgrade-switch upgrade-progressive-toggle";
     button.setAttribute("role", "switch");
-    button.title = "OFF: every upgrade is unlocked, so you can freely plan any "
-        + "purchase no matter your level. ON: upgrades stay level-locked like a "
-        + "real run, and each purchase moves you up to the next shop level.";
+    button.title = "OFF: Sandbox mode. Every upgrade is unlocked no matter your "
+        + "level, and you can still select and buy things even without enough "
+        + "Golden Gifts - \"Left\" will just show a negative number. "
+        + "ON: Simulates a real run. Upgrades stay level-locked, purchases "
+        + "require enough Golden Gifts to go through, and you move up to the "
+        + "next shop level yourself using the button that appears here.";
 
     const track = document.createElement("span");
 
@@ -1576,9 +1594,11 @@ function createProgressiveToggle() {
 
 /*
  * Small badge next to the Progressive toggle showing the current run
- * level - only shown while Progressive mode is on, since that's the
- * only time the level actually moves (it advances on every
- * purchase, see purchaseSelectedUpgrades).
+ * level, plus a button showing (and letting the player click through
+ * to) the next shop level - only shown while Progressive mode is on,
+ * since that's the only time the level is meant to move at all.
+ * Advancing is now an explicit click (see advanceProgressiveLevel),
+ * not something that happens automatically on purchase.
  */
 function renderProgressiveLevelBadge(wrapper) {
 
@@ -1595,15 +1615,41 @@ function renderProgressiveLevelBadge(wrapper) {
 
     }
 
-    const showLevel = upgradeState.progressive
+    let advanceButton = document.getElementById("upgradeProgressiveAdvanceButton");
+
+    if (!advanceButton) {
+
+        advanceButton = document.createElement("button");
+
+        advanceButton.type = "button";
+        advanceButton.id = "upgradeProgressiveAdvanceButton";
+        advanceButton.className = "upgrade-progressive-advance-button";
+
+        wrapper.appendChild(advanceButton);
+
+        attachClickAction(advanceButton, () => {
+
+            advanceProgressiveLevel();
+
+        }, playDifficultySound);
+
+    }
+
+    const showControls = upgradeState.progressive
         && typeof runState !== "undefined" && runState
         && typeof runState.level === "number";
 
-    levelEl.style.display = showLevel ? "" : "none";
+    levelEl.style.display = showControls ? "" : "none";
+    advanceButton.style.display = showControls ? "" : "none";
 
-    if (showLevel) {
+    if (showControls) {
 
         levelEl.textContent = "LVL " + runState.level;
+
+        const nextLevel = getNextShopLevel(runState.level);
+
+        advanceButton.textContent = "\u2192 Lv " + nextLevel;
+        advanceButton.title = "Advance the run to level " + nextLevel;
 
     }
 
@@ -1612,10 +1658,10 @@ function renderProgressiveLevelBadge(wrapper) {
 
 /*
  * The toggle isn't part of the static markup (it's new), so the
- * first call builds it once and drops it at the top-right corner of
- * the panel header (the heading's own auto margin, plus this slot's
- * margin-left: auto, keep it pinned to the far right); later calls
- * just sync its on/off state and the level badge.
+ * first call builds it once and drops it into the toggle group that
+ * sits beside the Purchase Upgrade button (alongside the Nothing
+ * Curse toggle); later calls just sync its on/off state and the
+ * level badge.
  */
 function renderProgressiveToggle() {
 
@@ -1623,9 +1669,9 @@ function renderProgressiveToggle() {
 
     if (!wrapper) {
 
-        const header = document.querySelector(".upgrade-panel-header");
+        const toggleGroup = document.getElementById("upgradeToggleGroup");
 
-        if (!header) {
+        if (!toggleGroup) {
 
             return;
 
@@ -1645,7 +1691,7 @@ function renderProgressiveToggle() {
         wrapper.appendChild(label);
         wrapper.appendChild(createProgressiveToggle());
 
-        header.appendChild(wrapper);
+        toggleGroup.appendChild(wrapper);
 
     }
 
@@ -1746,6 +1792,14 @@ if (upgradeNothingIndicator) {
 const upgradeToggleButton = document.getElementById("upgradeToggleButton");
 const upgradePanel = document.getElementById("upgradePanel");
 
+// Player Count and Game Mode (Solo/Duo/Party/Party+) only matter
+// while the Upgrade Shop Calculator is open, so their sidebar
+// sections are hidden by default and revealed/removed in lockstep
+// with the panel itself (see .upgrade-panel-only-section in
+// Upgrades.css). Both sections share that same class, so a single
+// querySelectorAll toggles them together.
+const upgradePanelOnlySections = document.querySelectorAll(".upgrade-panel-only-section");
+
 function setUpgradePanelOpen(isOpen) {
 
     if (!upgradePanel || !upgradeToggleButton) {
@@ -1757,6 +1811,12 @@ function setUpgradePanelOpen(isOpen) {
     upgradePanel.classList.toggle("open", isOpen);
     upgradeToggleButton.classList.toggle("active", isOpen);
     upgradeToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+    upgradePanelOnlySections.forEach(section => {
+
+        section.classList.toggle("visible", isOpen);
+
+    });
 
 }
 

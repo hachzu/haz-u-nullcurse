@@ -59,7 +59,15 @@
         </section>
 
 
-        <section class="control-section level-section">
+        <!--
+            Player Count and Game Mode only matter while the Upgrade
+            Shop Calculator is open, so both stay hidden on the curse
+            tracker and are revealed/removed in step with the upgrade
+            panel's own open state (see setUpgradePanelOpen in
+            Upgrades.js, and .upgrade-panel-only-section in
+            Upgrades.css).
+        -->
+        <section class="control-section level-section upgrade-panel-only-section">
 
             <label for="playerCountInput">PLAYER COUNT <span class="label-note">(for upgrade shop calculation)</span></label>
 
@@ -70,6 +78,20 @@
                 max="20"
                 value="1"
             >
+
+        </section>
+
+
+        <section class="control-section upgrade-panel-only-section">
+
+            <div class="section-label">
+                GAME MODE <span class="label-note">(for upgrade shop calculator)</span>
+            </div>
+
+            <div
+                id="upgradeModeContainer"
+                class="button-grid upgrade-mode-grid"
+            ></div>
 
         </section>
 
@@ -200,45 +222,30 @@
                         SHOP UPGRADE CALCULATOR
                     </div>
 
-                    <button
-                        type="button"
-                        id="upgradeNothingIndicator"
-                        class="upgrade-nothing-indicator"
-                    >
-                        NOTHING CURSE &minus;15%
-                    </button>
+                    <div class="upgrade-header-buttons">
 
-                    <button
-                        id="upgradeOwnAllButton"
-                        class="upgrade-reset-button upgrade-own-all-button"
-                        type="button"
-                        title="Mark every upgrade as fully owned - a quick way to see the full owned state, not an in-run purchase"
-                    >
-                        <span class="btn-label">OWN ALL</span>
-                    </button>
+                        <button
+                            id="upgradeOwnAllButton"
+                            class="upgrade-reset-button upgrade-own-all-button"
+                            type="button"
+                            title="Mark every upgrade as fully owned - a quick way to see the full owned state, not an in-run purchase"
+                        >
+                            <span class="btn-label">OWN ALL</span>
+                        </button>
 
-                    <button
-                        id="upgradeResetButton"
-                        class="upgrade-reset-button"
-                        type="button"
-                    >
-                        <span class="btn-label">RESET</span>
-                    </button>
+                        <button
+                            id="upgradeResetButton"
+                            class="upgrade-reset-button"
+                            type="button"
+                        >
+                            <span class="btn-label">RESET</span>
+                        </button>
+
+                    </div>
 
                 </div>
 
                 <div class="upgrade-panel-controls">
-
-                    <div class="upgrade-mode-block">
-
-                        <span class="upgrade-control-label">MODE</span>
-
-                        <div
-                            id="upgradeModeContainer"
-                            class="button-grid upgrade-mode-grid"
-                        ></div>
-
-                    </div>
 
                     <div class="upgrade-purchase-row">
 
@@ -273,6 +280,35 @@
                             >
                                 0
                             </span>
+                        </div>
+
+                        <!--
+                            Nothing Curse and Progressive Mode now
+                            share one look: a small label next to a
+                            track+thumb switch showing ON/OFF (see
+                            .upgrade-toggle-block in Upgrades.css).
+                            The Progressive block is injected right
+                            after this one by Upgrades.js.
+                        -->
+                        <div id="upgradeToggleGroup" class="upgrade-toggle-group">
+
+                            <div class="upgrade-toggle-block">
+
+                                <span class="upgrade-control-label upgrade-toggle-block-label">Nothing &minus;15%</span>
+
+                                <button
+                                    type="button"
+                                    id="upgradeNothingIndicator"
+                                    class="upgrade-switch upgrade-nothing-indicator"
+                                    role="switch"
+                                    aria-checked="false"
+                                >
+                                    <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
+                                    <span class="upgrade-switch-label">OFF</span>
+                                </button>
+
+                            </div>
+
                         </div>
 
                         <button
