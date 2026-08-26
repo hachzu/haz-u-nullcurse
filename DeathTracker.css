@@ -1,0 +1,1045 @@
+/*
+ * Death Tracker styles
+ * --------------------------
+ * Same toggle-button + sliding-panel shell as the Upgrade toggle
+ * (Upgrades.css), reskinned red/black. The panel itself is a
+ * per-player death tracker: add players, +/- their death count, and
+ * every death gets attributed to whatever level is currently being
+ * recorded (see the level controls block + DeathTracker.js).
+ * Depends on .right-panel { position: relative; }, defined in
+ * style.css.
+ */
+
+
+.death-toggle-button {
+    position: fixed;
+    right: 190px;
+    bottom: 26px;
+
+    z-index: 30;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 18px;
+
+    background: linear-gradient(
+        90deg,
+        #3d0000 0%,
+        #ae1313 20%,
+        #ff2d2d 45%,
+        #ff6b6b 60%,
+        #3d0000 85%,
+        #ae1313 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid rgba(255, 157, 157, 0.8);
+    border-radius: 999px;
+
+    color: #ffffff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+    user-select: none;
+
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+
+    box-shadow:
+        0 8px 26px rgba(0, 0, 0, 0.55),
+        0 0 10px rgba(174, 19, 19, 0.45),
+        0 0 18px rgba(255, 45, 45, 0.25),
+        0 0 26px rgba(0, 0, 0, 0.3);
+
+    animation: death-toggle-hue-shift 5s linear infinite;
+
+    transition:
+        transform 0.18s,
+        box-shadow 0.18s;
+}
+
+
+@keyframes death-toggle-hue-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.death-toggle-icon {
+    display: inline-block;
+
+    font-size: 12px;
+    line-height: 1;
+
+    transition: transform 0.25s ease;
+}
+
+
+.death-toggle-key {
+    padding: 1px 6px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    color: #ffffff;
+}
+
+
+.death-toggle-button:hover {
+    transform: translateY(-2px) scale(1.03);
+
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 14px rgba(174, 19, 19, 0.6),
+        0 0 24px rgba(255, 45, 45, 0.4),
+        0 0 34px rgba(0, 0, 0, 0.35);
+}
+
+
+.death-toggle-button:hover .death-toggle-icon {
+    transform: translateY(-2px) rotate(10deg);
+}
+
+
+.death-toggle-button.active {
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 12px rgba(174, 19, 19, 0.65),
+        0 0 22px rgba(255, 45, 45, 0.45),
+        0 0 32px rgba(0, 0, 0, 0.3);
+}
+
+
+.death-toggle-button.active .death-toggle-icon {
+    transform: rotate(180deg);
+}
+
+
+.death-panel {
+    position: absolute;
+    inset: 0;
+
+    z-index: 11;
+
+    display: flex;
+
+    align-items: stretch;
+    justify-content: stretch;
+
+    padding: 32px;
+
+    background: linear-gradient(160deg, #0c0000 0%, #1a0303 100%);
+
+    border-left: 1px solid rgba(255, 109, 109, 0.35);
+    box-shadow: -24px 0 50px rgba(0, 0, 0, 0.6), inset 0 0 90px rgba(174, 19, 19, 0.06);
+
+    transform: translateX(100%);
+    opacity: 0;
+
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.4s ease-out;
+
+    pointer-events: none;
+}
+
+
+.death-panel.open {
+    transform: translateX(0);
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+.death-panel-inner {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 109, 109, 0.35) transparent;
+}
+
+
+.death-panel-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.death-panel-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.death-panel-inner::-webkit-scrollbar-thumb {
+    background: rgba(255, 109, 109, 0.3);
+    border-radius: 999px;
+}
+
+
+.death-panel-inner::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 109, 109, 0.55);
+}
+
+
+.death-panel-header {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+
+    border-bottom: 1px solid rgba(255, 109, 109, 0.22);
+}
+
+
+.death-panel-heading {
+    margin-right: auto;
+
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    background: linear-gradient(
+        90deg,
+        #ffffff 0%,
+        #ff6b6b 25%,
+        #ffffff 50%,
+        #ff6b6b 75%,
+        #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow: 0 0 20px rgba(255, 60, 60, 0.55);
+}
+
+
+.death-header-buttons {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+
+.death-reset-button {
+    padding: 10px 16px;
+
+    background: transparent;
+
+    border: 1px solid rgba(255, 109, 109, 0.4);
+    border-radius: 8px;
+
+    color: #ff9d9d;
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+
+.death-reset-button:hover {
+    background: rgba(255, 109, 109, 0.14);
+
+    border-color: #ffe0e0;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(255, 109, 109, 0.4);
+}
+
+
+/* ---- Level tracking row: start level, current level, advance, total ---- */
+
+.death-level-controls {
+    display: flex;
+
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+
+    border-bottom: 1px solid rgba(255, 109, 109, 0.15);
+}
+
+
+.death-control-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #ff9d9d;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.death-level-block {
+    flex: 0 0 110px;
+}
+
+
+.death-level-block input {
+    width: 100%;
+
+    padding: 9px 11px;
+
+    background: #1a0505;
+
+    border: 1px solid rgba(255, 109, 109, 0.35);
+    border-radius: 8px;
+
+    color: #ffe0e0;
+
+    outline: none;
+
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-modern);
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.death-level-block input:focus {
+    border-color: #ff9d9d;
+    box-shadow: 0 0 0 3px rgba(255, 109, 109, 0.18);
+}
+
+
+.death-panel-total {
+    display: flex;
+
+    align-items: center;
+    gap: 10px;
+
+    padding: 11px 20px;
+
+    background: rgba(255, 109, 109, 0.09);
+
+    border: 2px solid rgba(255, 109, 109, 0.55);
+    border-radius: 999px;
+
+    box-shadow: 0 0 22px rgba(255, 109, 109, 0.3);
+}
+
+
+.death-panel-total-label {
+    color: #ff9d9d;
+
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+
+.death-panel-total-value {
+    background: linear-gradient(90deg, #ffffff, #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    font-size: 22px;
+    font-weight: 900;
+}
+
+
+/* Advance-level button - same "elevator" idea as the Progressive
+   mode advance button in the Upgrade panel, just red/black. Always
+   moves exactly one level up; every death logged before the next
+   click is attributed to the level shown in death-current-level. */
+.death-next-level-button {
+    flex-shrink: 0;
+
+    padding: 11px 18px;
+
+    background: linear-gradient(
+        90deg,
+        #ff6b6b 0%,
+        #ae1313 25%,
+        #ff9d9d 50%,
+        #ae1313 75%,
+        #ff6b6b 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid #ffb3b3;
+    border-radius: 999px;
+
+    color: #1a0000;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 12px rgba(255, 45, 45, 0.4);
+
+    animation: death-advance-gradient-shift 3.5s linear infinite;
+
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+
+@keyframes death-advance-gradient-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.death-next-level-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(255, 45, 45, 0.55);
+}
+
+
+/* ---- Player count / add-player row ---- */
+
+.death-player-controls {
+    display: flex;
+
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+
+.death-player-count-block {
+    flex: 0 0 auto;
+}
+
+
+.death-player-count-row {
+    display: flex;
+
+    align-items: center;
+    gap: 6px;
+}
+
+
+.death-player-count-row input {
+    width: 64px;
+
+    padding: 9px 10px;
+
+    background: #1a0505;
+
+    border: 1px solid rgba(255, 109, 109, 0.35);
+    border-radius: 8px;
+
+    color: #ffe0e0;
+
+    outline: none;
+
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-modern);
+
+    text-align: center;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.death-player-count-row input:focus {
+    border-color: #ff9d9d;
+    box-shadow: 0 0 0 3px rgba(255, 109, 109, 0.18);
+}
+
+
+/* Shared round +/- button used both for the player-count row and
+   each player's own death counter. */
+.death-count-button {
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(255, 109, 109, 0.12);
+
+    border: 1px solid rgba(255, 109, 109, 0.4);
+    border-radius: 50%;
+
+    color: #ff9d9d;
+
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+
+.death-count-button:hover:not(:disabled) {
+    background: rgba(255, 109, 109, 0.3);
+
+    border-color: #ffe0e0;
+
+    color: #ffffff;
+
+    transform: scale(1.08);
+}
+
+
+.death-count-button:disabled {
+    opacity: 0.3;
+
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+.death-count-button--minus {
+    background: rgba(120, 120, 130, 0.18);
+
+    border-color: rgba(180, 184, 196, 0.4);
+
+    color: #cfd2db;
+}
+
+
+.death-count-button--minus:hover:not(:disabled) {
+    background: rgba(120, 120, 130, 0.32);
+
+    border-color: #dfe1e8;
+
+    color: #ffffff;
+}
+
+
+/* ---- Player list ---- */
+
+.death-player-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.death-player-row {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding: 10px 14px;
+
+    background: linear-gradient(160deg, rgba(50, 10, 10, 0.9) 0%, rgba(10, 2, 2, 0.95) 100%);
+
+    border: 1px solid rgba(255, 109, 109, 0.25);
+    border-radius: 8px;
+}
+
+
+.death-player-name-input {
+    flex: 1 1 140px;
+    min-width: 0;
+
+    padding: 8px 10px;
+
+    background: rgba(0, 0, 0, 0.3);
+
+    border: 1px solid rgba(255, 109, 109, 0.3);
+    border-radius: 6px;
+
+    color: #ffe0e0;
+
+    outline: none;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+    font-weight: 700;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.death-player-name-input::placeholder {
+    color: #7a4444;
+}
+
+
+.death-player-name-input:focus {
+    border-color: #ff9d9d;
+    box-shadow: 0 0 0 3px rgba(255, 109, 109, 0.18);
+}
+
+
+.death-player-death-controls {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+
+.death-player-death-count {
+    min-width: 26px;
+
+    text-align: center;
+
+    color: #ffffff;
+
+    font-family: var(--font-modern);
+    font-size: 16px;
+    font-weight: 900;
+
+    text-shadow: 0 0 8px rgba(255, 60, 60, 0.5);
+}
+
+
+.death-player-remove {
+    flex-shrink: 0;
+
+    width: 24px;
+    height: 24px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.25);
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+
+    color: #ffe0e0;
+
+    font-size: 13px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, transform 0.12s;
+}
+
+
+.death-player-remove:hover {
+    background: rgba(255, 255, 255, 0.15);
+
+    border-color: #ffffff;
+
+    transform: scale(1.1);
+}
+
+
+/* Per-level breakdown - wraps under the row, only rendered once a
+   player has at least one death logged. Reads like "L3: 2  L5: 1" */
+.death-player-level-breakdown {
+    flex-basis: 100%;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 6px;
+}
+
+
+.death-level-chip {
+    padding: 2px 8px;
+
+    background: rgba(255, 109, 109, 0.12);
+
+    border: 1px solid rgba(255, 109, 109, 0.35);
+    border-radius: 999px;
+
+    color: #ff9d9d;
+
+    font-family: var(--font-modern);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+
+.death-empty-row {
+    padding: 18px;
+
+    border: 1px dashed rgba(255, 109, 109, 0.35);
+    border-radius: 8px;
+
+    color: #a35c5c;
+
+    text-align: center;
+
+    font-size: 11px;
+}
+
+
+@media (max-width: 700px) {
+
+    .death-level-controls,
+    .death-player-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .death-toggle-button {
+        right: 16px;
+        bottom: 76px;
+
+        padding: 10px 14px;
+    }
+
+}
+
+/* ---- Death Tracker player/level UI ---- */
+.death-level-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 109, 109, 0.15);
+}
+
+.death-level-block {
+    flex: 0 0 110px;
+}
+
+.death-level-block input {
+    box-sizing: border-box;
+}
+
+.death-current-level-block {
+    flex-basis: 130px;
+}
+
+.death-current-level {
+    min-height: 18px;
+    padding: 8px 11px;
+    background: rgba(255, 109, 109, 0.1);
+    border: 1px solid rgba(255, 109, 109, 0.4);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-align: center;
+    box-shadow: 0 0 14px rgba(255, 45, 45, 0.15);
+}
+
+.death-control-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #ff9d9d;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.death-next-level-button {
+    flex-shrink: 0;
+}
+
+.death-player-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.death-player-count-block {
+    flex: 0 0 auto;
+}
+
+.death-player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.death-player-count-row input {
+    width: 64px;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    background: #1a0505;
+    border: 1px solid rgba(255, 109, 109, 0.35);
+    border-radius: 8px;
+    color: #ffe0e0;
+    outline: none;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-modern);
+    text-align: center;
+}
+
+.death-player-hint {
+    flex: 1 1 280px;
+    min-width: 220px;
+    padding: 9px 12px;
+    color: #a96a6a;
+    font-size: 10px;
+    line-height: 1.5;
+    border-left: 1px solid rgba(255, 109, 109, 0.25);
+}
+
+.death-player-hint strong {
+    color: #ffb0b0;
+}
+
+.death-player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.death-player-row {
+    display: block;
+    padding: 10px 14px;
+    background: linear-gradient(160deg, rgba(50, 10, 10, 0.9) 0%, rgba(10, 2, 2, 0.95) 100%);
+    border: 1px solid rgba(255, 109, 109, 0.25);
+    border-radius: 8px;
+}
+
+.death-player-row-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.death-player-name-input {
+    flex: 1 1 140px;
+    min-width: 0;
+}
+
+.death-player-death-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.death-player-death-count {
+    min-width: 26px;
+    text-align: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 900;
+    text-shadow: 0 0 8px rgba(255, 60, 60, 0.5);
+}
+
+.death-player-remove {
+    display: none;
+}
+
+.death-player-level-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.death-log-section {
+    margin-top: 4px;
+}
+
+.death-log-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 9px;
+    color: #ffb0b0;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.death-level-summary {
+    color: #8d5555;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.death-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.death-log-level-group {
+    padding: 8px;
+    background: rgba(255, 109, 109, 0.035);
+    border: 1px solid rgba(255, 109, 109, 0.12);
+    border-radius: 8px;
+}
+
+.death-log-level-heading {
+    margin: 2px 4px 6px;
+    color: #ff7777;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.death-log-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 9px;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 6px;
+    color: #ffe0e0;
+    font-size: 11px;
+}
+
+.death-log-entry + .death-log-entry {
+    margin-top: 4px;
+}
+
+.death-log-entry-remove {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 109, 109, 0.28);
+    border-radius: 50%;
+    background: transparent;
+    color: #ff9d9d;
+    cursor: pointer;
+}
+
+.death-log-entry-remove:hover {
+    background: rgba(255, 109, 109, 0.18);
+    border-color: #ff9d9d;
+    color: #fff;
+}
+
+@media (max-width: 700px) {
+    .death-level-controls,
+    .death-player-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .death-level-block,
+    .death-current-level-block {
+        flex-basis: auto;
+        width: 100%;
+    }
+
+    .death-player-hint {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 109, 109, 0.2);
+        padding: 10px 0 0;
+    }
+}
+
+/* COMPACT BOX DEATH TRACKER */
+.death-level-controls,.death-player-controls{
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;width:100%;
+}
+.death-level-block,.death-player-count-block{flex:0 0 auto;width:auto;max-width:180px;}
+.death-level-block input,.death-player-count-row input{width:76px;box-sizing:border-box;}
+.death-player-count-row{display:inline-flex;align-items:center;gap:6px;width:auto;}
+.death-player-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(235px,1fr));
+    gap:10px;margin-top:6px;
+}
+.death-player-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto auto;
+    gap:9px;min-width:0;padding:12px;border-radius:10px;
+}
+.death-player-name-input{width:100%;min-width:0;box-sizing:border-box;}
+.death-player-death-controls{display:inline-flex;align-items:center;justify-content:flex-end;gap:7px;}
+.death-player-level-breakdown{grid-column:1/-1;flex-basis:auto;min-height:18px;}
+.death-level-chip{padding:3px 8px;font-size:9px;}
+.death-panel-total{width:max-content;max-width:100%;box-sizing:border-box;}
+@media(max-width:700px){.death-player-list{grid-template-columns:1fr;}}
+
+.death-current-level-box{
+    display:flex;align-items:center;justify-content:center;
+    min-width:76px;height:34px;padding:0 10px;box-sizing:border-box;
+    background:#1a0505;border:1px solid rgba(255,109,109,.35);
+    border-radius:8px;color:#ffe0e0;font-size:13px;font-weight:800;
+    font-family:var(--font-modern);
+}

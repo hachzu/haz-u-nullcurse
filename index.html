@@ -13,6 +13,7 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Upgrades.css">
+    <link rel="stylesheet" href="DeathTracker.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 </head>
 
@@ -344,6 +345,87 @@
 
         </div>
 
+        <!--
+            Death Tracker panel - same sliding-overlay pattern as the
+            Upgrade panel above (see .death-panel in DeathTracker.css
+            and setDeathPanelOpen in DeathTracker.js). Toggled by the
+            deathToggleButton fixed button below.
+        -->
+        <div id="deathPanel" class="death-panel">
+
+            <div class="death-panel-inner">
+
+                <div class="death-panel-header">
+
+                    <div class="death-panel-heading animated-header-text">
+                        DEATH TRACKER
+                    </div>
+
+                    <div class="death-header-buttons">
+
+                        <button
+                            id="deathResetButton"
+                            class="death-reset-button"
+                            type="button"
+                        >
+                            <span class="btn-label">RESET</span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="death-level-controls">
+                    <div class="death-level-block">
+                        <label class="death-control-label" for="deathStartLevelInput">START LEVEL</label>
+                        <input type="number" id="deathStartLevelInput" min="1" value="1" inputmode="numeric">
+                    </div>
+
+                    <div class="death-level-block death-current-level-block">
+                        <span class="death-control-label">RECORDING LEVEL</span>
+                        <div class="death-current-level" id="deathCurrentLevel">LV1</div>
+                    </div>
+
+                    <button id="deathNextLevelButton" class="death-next-level-button" type="button">
+                        NEXT LEVEL &rarr;
+                    </button>
+
+                    <div class="death-panel-total">
+                        <span class="death-panel-total-label">TOTAL DEATHS</span>
+                        <span id="deathTotalValue" class="death-panel-total-value">0</span>
+                    </div>
+                </div>
+
+                <div class="death-player-controls">
+                    <div class="death-player-count-block">
+                        <span class="death-control-label">PLAYERS</span>
+                        <div class="death-player-count-row">
+                            <button id="deathPlayerCountMinus" class="death-count-button death-count-button--minus" type="button" aria-label="Remove player">&minus;</button>
+                            <input type="number" id="deathPlayerCountInput" min="1" max="50" value="1" aria-label="Player count">
+                            <button id="deathPlayerCountPlus" class="death-count-button" type="button" aria-label="Add player">+</button>
+                        </div>
+                    </div>
+
+                    <div class="death-player-hint">
+                        Add a player, type their name, then use <strong>+</strong> when they die.
+                        Each death is recorded on the current level.
+                    </div>
+                </div>
+
+                <div id="deathPlayerList" class="death-player-list"></div>
+
+                <div class="death-log-section">
+                    <div class="death-log-heading">
+                        <span>RUN DEATH LOG</span>
+                        <span id="deathLevelSummary" class="death-level-summary"></span>
+                    </div>
+                    <div id="deathLogList" class="death-log-list"></div>
+                </div>
+
+            </div>
+
+        </div>
+
         <header class="pool-header">
 
             <div>
@@ -465,11 +547,25 @@
         <span class="upgrade-toggle-key">B</span>
     </button>
 
+    <button
+        id="deathToggleButton"
+        class="death-toggle-button"
+        type="button"
+        aria-label="Toggle death tracker"
+        aria-expanded="false"
+        aria-keyshortcuts="n"
+    >
+        <span class="death-toggle-icon">&#9760;</span>
+        <span class="btn-label">DEATHS</span>
+        <span class="death-toggle-key">N</span>
+    </button>
+
 </div>
 
 
 <script src="script.js"></script>
 <script src="Upgrades.js"></script>
+<script src="DeathTracker.js"></script>
 
 </body>
 </html>
