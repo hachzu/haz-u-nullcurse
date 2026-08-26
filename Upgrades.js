@@ -590,9 +590,160 @@ function computeRemainingGifts() {
 }
 
 
+/*
+ * True for upgrades priced off a per-tier table (Business License,
+ * Gift Magnet, Gift Idol, Subspacial Barrier) rather than a flat
+ * unit price times stack count. These don't scale linearly, so
+ * jumping straight to a tier (via its dot) is the correct way to
+ * price them - unlike linear items, "3 stacks" isn't just "1 stack
+ * priced 3 times".
+ */
+function hasVariablePricing(item) {
+
+    return Boolean(item.prices);
+
+}
+
+
+/*
+ * Single source of truth for moving an upgrade's stack toward a
+ * specific target count - used by row clicks, the stepper buttons,
+ * and the clickable per-tier dots alike. Works the same way
+ * regardless of whether the item prices linearly or off a table,
+ * since computeStackPrice already resolves either correctly for any
+ * target stack.
+ *
+ * - Target at or below what's already owned: reduces the owned
+ *   stack as a tracker correction (no refund), same as the old
+ *   dedicated un-own button. Clears any pending selection too, since
+ *   it no longer makes sense against the new owned count. Landing
+ *   exactly on the current owned count with nothing pending is a
+ *   no-op; with a pending selection queued, it cancels that
+ *   selection instead of touching owned.
+ * - Target above what's owned: queues that target as the pending
+ *   selection (what would be bought on the next Purchase). Clicking
+ *   the tier that's already pending cancels it back down to owned.
+ *   Affordability is only enforced in Progressive mode, matching the
+ *   rest of the shop - with it off this is a free planning sandbox.
+ */
+function setStackTarget(item, targetStack) {
+
+    if (isUpgradeContextHidden(item)) {
+
+        return;
+
+    }
+
+    const owned = getOwnedStack(item.name);
+    const maxStack = item.maxStack || 1;
+
+    const target = Math.max(0, Math.min(maxStack, targetStack));
+
+    if (target <= owned) {
+
+        const pending = getPendingStack(item.name);
+
+        if (target === owned) {
+
+            if (pending > owned) {
+
+                upgradeState.pending.delete(item.name);
+
+                playSelectSound();
+
+                saveUpgradeState();
+                renderUpgradeGrid();
+
+            }
+
+            return;
+
+        }
+
+        if (target <= 0) {
+
+            upgradeState.owned.delete(item.name);
+
+        } else {
+
+            upgradeState.owned.set(item.name, target);
+
+        }
+
+        upgradeState.pending.delete(item.name);
+
+        playRemoveSound();
+
+        saveUpgradeState();
+        renderUpgradeGrid();
+
+        return;
+
+    }
+
+    if (isUpgradeUnavailable(item)) {
+
+        return;
+
+    }
+
+    const pending = getPendingStack(item.name);
+
+    // Clicking the tier that's already queued as pending cancels it,
+    // same as clicking an already-selected row used to.
+    if (target === pending) {
+
+        upgradeState.pending.delete(item.name);
+
+        playSelectSound();
+
+        saveUpgradeState();
+        renderUpgradeGrid();
+
+        return;
+
+    }
+
+    if (upgradeState.progressive) {
+
+        const oldPendingCost = computeStackPrice(item, pending) - computeStackPrice(item, owned);
+        const newTargetCost = computeStackPrice(item, target) - computeStackPrice(item, owned);
+        const remaining = computeRemainingGifts();
+
+        if ((newTargetCost - oldPendingCost) > remaining) {
+
+            playRemoveSound();
+
+            return;
+
+        }
+
+    }
+
+    upgradeState.pending.set(item.name, target);
+
+    playSelectSound();
+
+    saveUpgradeState();
+    renderUpgradeGrid();
+
+}
+
+
+/*
+ * Row-click shortcut: queues one more stack than what's currently
+ * owned/pending, or cancels a pending selection if one's already
+ * queued. Same +1-per-click cycle for every stackable upgrade,
+ * whether it's flat-priced (Swiftness Ring, Paycheck, Defuse Kit) or
+ * priced off a per-tier table (Business License, Gift Magnet, Gift
+ * Idol, Subspacial Barrier) - setStackTarget/computeStackPrice
+ * already resolve the correct cost either way. The up/down stepper
+ * (see createStackStepper) offers the same +1/-1 stepping as a
+ * secondary control alongside the row click.
+ */
 function cycleUpgradeSelection(item) {
 
-    if (isUpgradeUnavailable(item) || isUpgradeContextHidden(item)) {
+    if (isUpgradeContextHidden(item)) {
 
         return;
 
@@ -609,89 +760,21 @@ function cycleUpgradeSelection(item) {
 
     const pending = getPendingStack(item.name);
 
-    // Only one stack can be queued per upgrade per purchase - clicking
-    // an already-selected row deselects it rather than queuing a
-    // second stack on top.
     if (pending > owned) {
 
-        upgradeState.pending.delete(item.name);
-
-        playSelectSound();
-
-        saveUpgradeState();
-        renderUpgradeGrid();
+        setStackTarget(item, owned);
 
         return;
 
     }
 
-    const nextPending = owned + 1;
-
-    // Affordability is only enforced in Progressive mode, since
-    // that's meant to simulate a real run. With Progressive off,
-    // this is a free planning sandbox - selections go through even
-    // past what Golden Gifts you have on hand, so purchasing later
-    // can leave "Left" negative. The price badge still shows red
-    // when a selection is over budget either way, it just isn't a
-    // hard block unless Progressive is on.
-    if (upgradeState.progressive) {
-
-        const incrementCost = computeStackPrice(item, nextPending) - computeStackPrice(item, pending);
-        const remaining = computeRemainingGifts();
-
-        if (incrementCost > remaining) {
-
-            playRemoveSound();
-
-            return;
-
-        }
-
-    }
-
-    upgradeState.pending.set(item.name, nextPending);
-
-    playSelectSound();
-
-    saveUpgradeState();
-    renderUpgradeGrid();
-
-}
-
-
-/*
- * Lets the user reduce or clear an already-owned stack, e.g. to fix
- * a mis-tracked purchase. Does not refund Golden Gifts - it's a
- * tracker correction, not an in-run sale.
- */
-function unownUpgrade(item) {
-
-    const owned = getOwnedStack(item.name);
-
-    if (owned <= 0) {
+    if (isUpgradeUnavailable(item)) {
 
         return;
 
     }
 
-    const newOwned = owned - 1;
-
-    if (newOwned <= 0) {
-
-        upgradeState.owned.delete(item.name);
-
-    } else {
-
-        upgradeState.owned.set(item.name, newOwned);
-
-    }
-
-    upgradeState.pending.delete(item.name);
-
-    playRemoveSound();
-
-    saveUpgradeState();
-    renderUpgradeGrid();
+    setStackTarget(item, owned + 1);
 
 }
 
@@ -1032,6 +1115,82 @@ function createRequirementChip(item) {
 }
 
 
+/*
+ * Up/down stepper shown on rows that aren't fully owned yet - the
+ * "unowned" stacks. Up queues one more pending stack (mirrors a row
+ * click); down cancels a pending stack back toward what's actually
+ * owned. It never un-owns an already-purchased stack itself - that's
+ * the single "-" button's job once a row is fully owned and sitting
+ * in the OWNED UPGRADES basin. Works the same for linear and
+ * per-tier-priced items alike, since setStackTarget/computeStackPrice
+ * already resolve either correctly - each arrow press on a
+ * variable-priced item steps one tier "elevator style," pricing off
+ * that tier's own table entry rather than adding tiers together.
+ */
+function createStackStepper(item, locked) {
+
+    const owned = getOwnedStack(item.name);
+    const pending = getPendingStack(item.name);
+    const maxStack = item.maxStack || 1;
+
+    const wrapper = document.createElement("div");
+
+    wrapper.className = "upgrade-row-stepper";
+
+    const upButton = document.createElement("button");
+
+    upButton.type = "button";
+    upButton.className = "upgrade-stepper-button upgrade-stepper-button--up";
+    upButton.setAttribute("aria-label", `Select one more ${item.name} stack`);
+    upButton.title = "Select one more stack";
+    upButton.textContent = "\u25B2";
+    upButton.disabled = locked || pending >= maxStack;
+
+    const downButton = document.createElement("button");
+
+    downButton.type = "button";
+    downButton.className = "upgrade-stepper-button upgrade-stepper-button--down";
+    downButton.setAttribute("aria-label", `Deselect a pending ${item.name} stack`);
+    downButton.title = "Cancel one pending stack";
+    downButton.textContent = "\u25BC";
+    downButton.disabled = pending <= owned;
+
+    upButton.addEventListener("click", event => {
+
+        event.stopPropagation();
+
+        if (upButton.disabled) {
+
+            return;
+
+        }
+
+        setStackTarget(item, pending + 1);
+
+    });
+
+    downButton.addEventListener("click", event => {
+
+        event.stopPropagation();
+
+        if (downButton.disabled) {
+
+            return;
+
+        }
+
+        setStackTarget(item, pending - 1);
+
+    });
+
+    wrapper.appendChild(upButton);
+    wrapper.appendChild(downButton);
+
+    return wrapper;
+
+}
+
+
 function createUpgradeCard(item) {
 
     if (isUpgradeContextHidden(item)) {
@@ -1055,16 +1214,25 @@ function createUpgradeCard(item) {
     const isSelected = !locked && pending > owned;
 
     const remaining = computeRemainingGifts();
+    const variablePricing = hasVariablePricing(item);
 
-    // The price shown is always the cost of the stack the user is
-    // looking at: if they've already selected a stack (isSelected),
-    // that's the cost of the pending selection itself - not a
-    // further, nonexistent tier beyond it (which used to collapse
-    // to 0 once pending hit maxStack, wrongly reading as "free").
-    // If nothing's selected yet, it's the cost of the next single
-    // stack increment.
+    // Flat-priced upgrades (Swiftness Ring, Paycheck, Defuse Kit, and
+    // friends) charge the exact same static price for every stack -
+    // scaled only by player count/difficulty/Nothing curse, never by
+    // how many you've already got or how many are queued up. So
+    // their badge always shows that one flat "cost of one more"
+    // number, whether you're on stack 1 or the last one, instead of
+    // ballooning into the cumulative total of everything queued.
+    //
+    // Per-tier-priced upgrades (Business License, Gift Magnet, Gift
+    // Idol, Subspacial Barrier) genuinely do differ tier to tier, so
+    // their badge keeps showing the cost of reaching whatever's
+    // currently selected (or the next single tier if nothing's
+    // selected yet) - the "elevator" price for that specific floor.
     const priceTargetStack = (!locked && !isFullyOwned)
-        ? (isSelected ? pending : Math.min(owned + 1, maxStack))
+        ? (variablePricing
+            ? (isSelected ? pending : Math.min(owned + 1, maxStack))
+            : owned + 1)
         : owned;
 
     const nextTierCost = (!locked && !isFullyOwned)
@@ -1144,9 +1312,18 @@ function createUpgradeCard(item) {
 
             dot.className = "upgrade-dot";
 
-            if (i < pending) {
+            // Elevator-style indicator: a stack that's actually been
+            // bought turns green, and at most one further dot lights
+            // up - the specific tier currently selected/pending, not
+            // every dot leading up to it - so the row reads as "which
+            // floor am I on" rather than a filled progress bar.
+            if (i < owned) {
 
-                dot.classList.add("upgrade-dot--filled");
+                dot.classList.add("upgrade-dot--owned");
+
+            } else if (i === pending - 1 && pending > owned) {
+
+                dot.classList.add("upgrade-dot--current");
 
             }
 
@@ -1201,7 +1378,22 @@ function createUpgradeCard(item) {
 
     row.appendChild(badge);
 
-    if (owned > 0) {
+    // Active (not-yet-fully-owned) rows get the up/down stepper, but
+    // only when the upgrade actually stacks (maxStack > 1) - a
+    // one-off upgrade has nothing to step through, so it keeps the
+    // plain row-click buy behavior with no arrows at all. Once a row
+    // is fully owned it moves into the OWNED UPGRADES basin and
+    // switches to the single un-own "-" button instead, for
+    // correcting an already-purchased stack.
+    if (!isFullyOwned) {
+
+        if (maxStack > 1) {
+
+            row.appendChild(createStackStepper(item, locked));
+
+        }
+
+    } else {
 
         const unownButton = document.createElement("button");
 
@@ -1215,7 +1407,12 @@ function createUpgradeCard(item) {
 
             event.stopPropagation();
 
-            unownUpgrade(item);
+            // Removing from the OWNED UPGRADES basin clears the whole
+            // stack back to 0 rather than peeling off one at a time -
+            // the stepper (while it was still active/unowned) is where
+            // stack count gets fine-tuned; this button is just "take
+            // it off the owned board."
+            setStackTarget(item, 0);
 
         });
 
@@ -1223,6 +1420,15 @@ function createUpgradeCard(item) {
 
     }
 
+    // Clicking the whole box cycles the stack up by one (same as
+    // pressing the up arrow once), or cancels a pending selection if
+    // one's already queued - this now works the same for every
+    // stackable upgrade, flat-priced (Swiftness Ring, Paycheck,
+    // Defuse Kit - each stack costs the same as the first, so the
+    // price tag just adds unit price per stack) or per-tier-priced
+    // (Business License, Gift Magnet, Gift Idol, Subspacial Barrier -
+    // each tier priced from its own table entry). The arrows remain
+    // available alongside it for stepping/cancelling one at a time.
     if (!locked && !isFullyOwned) {
 
         row.addEventListener("click", () => cycleUpgradeSelection(item));

@@ -1165,7 +1165,22 @@
 }
 
 
-.upgrade-dot--filled {
+/* Green once that specific stack has actually been bought - distinct
+   from the single "current floor" dot below, so owned and
+   selected-but-not-yet-purchased read differently at a glance. */
+.upgrade-dot--owned {
+    background: #7be6a8;
+
+    border-color: #7be6a8;
+
+    box-shadow: 0 0 6px rgba(123, 230, 168, 0.8);
+}
+
+
+/* Elevator-style position indicator - at most one dot lights up per
+   row: the specific tier currently selected/pending, not every dot
+   leading up to it. */
+.upgrade-dot--current {
     background: #ffd074;
     box-shadow: 0 0 6px rgba(255, 208, 116, 0.8);
 }
@@ -1241,7 +1256,96 @@
 }
 
 
-/* Un-own control - inline at the end of the row */
+/* Stack stepper - replaces the old single un-own "-" button. Up
+   queues one more stack (same as clicking the row); down either
+   cancels a pending stack that hasn't been purchased yet, or - once
+   there's no pending left to cancel - un-owns one already-owned
+   stack as a tracker correction (no refund, matching the old unown
+   button's behavior). Stacked vertically so it fits the narrow
+   trailing grid column. */
+.upgrade-row-stepper {
+    grid-column: 6;
+    justify-self: center;
+
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.upgrade-stepper-button {
+    width: 16px;
+    height: 14px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(143, 217, 255, 0.12);
+
+    border: 1px solid rgba(143, 217, 255, 0.4);
+    border-radius: 3px;
+
+    color: #8fd9ff;
+
+    font-size: 7px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+
+.upgrade-stepper-button:hover:not(:disabled) {
+    background: rgba(143, 217, 255, 0.3);
+
+    border-color: #dff5ff;
+
+    color: #ffffff;
+
+    transform: scale(1.08);
+}
+
+
+/* Down step reads as the "remove" action, so it borrows the old
+   unown button's red accent instead of the default blue. */
+.upgrade-stepper-button--down {
+    background: rgba(255, 100, 100, 0.18);
+
+    border-color: rgba(255, 130, 130, 0.55);
+
+    color: #ffc2c2;
+}
+
+
+.upgrade-stepper-button--down:hover:not(:disabled) {
+    background: rgba(255, 100, 100, 0.35);
+
+    border-color: #ff9d9d;
+
+    color: #ffffff;
+}
+
+
+.upgrade-stepper-button:disabled {
+    opacity: 0.3;
+
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* Un-own control - now shown only on rows that have moved into the
+   OWNED UPGRADES basin, as the single way to correct/reduce an
+   already-purchased stack. Active (not-yet-fully-owned) rows use the
+   stepper above instead. */
 .upgrade-unown-button {
     grid-column: 6;
     justify-self: center;
