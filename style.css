@@ -244,7 +244,7 @@ body {
     border: 1px solid #00c8ff;
     border-radius: 8px;
 
-    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(255, 92, 200, 0.18);
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(143, 217, 255, 0.22);
 }
 
 
@@ -258,7 +258,7 @@ body {
 
 
 .medal-payout-value {
-    background: linear-gradient(90deg, #00c8ff, #ff5cc8);
+    background: linear-gradient(90deg, #0d6efd, #8fd9ff);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -302,8 +302,8 @@ body {
 
 
 .enemy-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
 }
 
 
@@ -370,6 +370,39 @@ body {
     color: #ffffff;
 
     box-shadow: 0 0 18px rgba(180, 90, 255, 0.4);
+}
+
+
+.select-button.difficulty-casual.selected {
+    background: linear-gradient(135deg, #123a5c, #3a8dff);
+
+    border-color: #8fd9ff;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(58, 141, 255, 0.5);
+}
+
+
+.select-button.difficulty-standard.selected {
+    background: linear-gradient(135deg, #4a1c85, #7a2fc4);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(180, 90, 255, 0.4);
+}
+
+
+.select-button.difficulty-extreme.selected {
+    background: linear-gradient(135deg, #5c0a0a, #ff2d2d);
+
+    border-color: #ff9d9d;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(255, 45, 45, 0.5);
 }
 
 
@@ -561,6 +594,9 @@ body {
 
 
 .active-curse-name {
+    flex: 1 1 auto;
+    min-width: 0;
+
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -648,6 +684,23 @@ body {
     border-color: rgba(255, 255, 255, 0.55);
 
     color: #d8d8de;
+}
+
+
+.purify-price {
+    flex: 0 0 56px;
+
+    text-align: right;
+
+    color: #ff6b6b;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+
+    text-shadow: 0 0 8px rgba(255, 107, 107, 0.45);
 }
 
 
@@ -1221,6 +1274,9 @@ body {
     height: 64%;
 
     margin: 2px auto 0;
+
+    background: transparent;
+    border: none;
 }
 
 
@@ -1586,6 +1642,38 @@ body {
 
 .hold-button.holding {
     box-shadow: 0 0 16px rgba(255, 40, 40, 0.5);
+}
+
+
+.left-panel,
+.right-panel {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(184, 102, 255, 0.35) transparent;
+}
+
+
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.left-panel::-webkit-scrollbar-track,
+.right-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.left-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb {
+    background: rgba(184, 102, 255, 0.3);
+    border-radius: 999px;
+}
+
+
+.left-panel::-webkit-scrollbar-thumb:hover,
+.right-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(184, 102, 255, 0.55);
 }
 
 

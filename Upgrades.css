@@ -26,6 +26,16 @@
 }
 
 
+/* Inverse of the above: Active Enemies is normally visible in the
+   left panel, but only matters for the curse tracker, not the
+   upgrade shop calculator - so it's temporarily hidden while the
+   upgrade panel is open, and toggled back in lockstep by the same
+   setUpgradePanelOpen() in Upgrades.js. */
+.hide-when-upgrades-open.upgrades-open {
+    display: none;
+}
+
+
 .upgrade-toggle-button {
     position: fixed;
     right: 26px;
@@ -70,9 +80,9 @@
 
     box-shadow:
         0 8px 26px rgba(0, 0, 0, 0.55),
-        0 0 22px rgba(184, 102, 255, 0.65),
-        0 0 40px rgba(0, 200, 255, 0.45),
-        0 0 60px rgba(184, 102, 255, 0.3);
+        0 0 10px rgba(184, 102, 255, 0.35),
+        0 0 18px rgba(0, 200, 255, 0.22),
+        0 0 26px rgba(184, 102, 255, 0.14);
 
     animation: upgrade-toggle-hue-shift 5s linear infinite;
 
@@ -125,9 +135,9 @@
 
     box-shadow:
         0 10px 32px rgba(0, 0, 0, 0.6),
-        0 0 30px rgba(184, 102, 255, 0.85),
-        0 0 55px rgba(0, 200, 255, 0.65),
-        0 0 80px rgba(184, 102, 255, 0.4);
+        0 0 14px rgba(184, 102, 255, 0.5),
+        0 0 24px rgba(0, 200, 255, 0.35),
+        0 0 34px rgba(184, 102, 255, 0.2);
 }
 
 
@@ -139,9 +149,9 @@
 .upgrade-toggle-button.active {
     box-shadow:
         0 10px 32px rgba(0, 0, 0, 0.6),
-        0 0 26px rgba(184, 102, 255, 0.9),
-        0 0 48px rgba(0, 200, 255, 0.7),
-        0 0 72px rgba(184, 102, 255, 0.45);
+        0 0 12px rgba(184, 102, 255, 0.55),
+        0 0 22px rgba(0, 200, 255, 0.4),
+        0 0 32px rgba(184, 102, 255, 0.25);
 }
 
 
@@ -594,7 +604,15 @@
 
     padding: 5px 12px;
 
-    background: linear-gradient(135deg, #ffd074, #ff9d3d);
+    background: linear-gradient(
+        90deg,
+        #ffd074 0%,
+        #ff9d3d 25%,
+        #ffe3a8 50%,
+        #ff9d3d 75%,
+        #ffd074 100%
+    );
+    background-size: 260% auto;
 
     border: 1px solid #ffe3a8;
     border-radius: 999px;
@@ -611,7 +629,22 @@
 
     box-shadow: 0 0 12px rgba(255, 157, 61, 0.35);
 
+    animation: upgrade-advance-gradient-shift 3.5s linear infinite;
+
     transition: transform 0.15s, box-shadow 0.15s;
+}
+
+
+@keyframes upgrade-advance-gradient-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
 }
 
 
@@ -647,6 +680,42 @@
     color: #ffffff;
 
     box-shadow: 0 0 16px rgba(143, 217, 255, 0.45);
+}
+
+
+.upgrade-mode-solo.selected {
+    background: linear-gradient(135deg, #0d5c3a, #2fc48a);
+
+    border-color: #7be6a8;
+
+    box-shadow: 0 0 16px rgba(123, 230, 168, 0.45);
+}
+
+
+.upgrade-mode-duo.selected {
+    background: linear-gradient(135deg, #0d3a52, #1c6f96);
+
+    border-color: #8fd9ff;
+
+    box-shadow: 0 0 16px rgba(143, 217, 255, 0.45);
+}
+
+
+.upgrade-mode-party.selected {
+    background: linear-gradient(135deg, #4a1c85, #9147d6);
+
+    border-color: #d59bff;
+
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.45);
+}
+
+
+.upgrade-mode-partyplus.selected {
+    background: linear-gradient(135deg, #8a5200, #ffb347);
+
+    border-color: #ffd074;
+
+    box-shadow: 0 0 16px rgba(255, 179, 71, 0.45);
 }
 
 

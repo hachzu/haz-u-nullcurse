@@ -1656,7 +1656,7 @@ function createUpgradeModeButton(mode) {
     const button = document.createElement("button");
 
     button.type = "button";
-    button.className = "select-button upgrade-mode-button";
+    button.className = `select-button upgrade-mode-button upgrade-mode-${mode.key}`;
 
     if (upgradeState.mode === mode.key) {
 
@@ -2006,6 +2006,11 @@ const upgradePanel = document.getElementById("upgradePanel");
 // querySelectorAll toggles them together.
 const upgradePanelOnlySections = document.querySelectorAll(".upgrade-panel-only-section");
 
+// Active Enemies is the inverse case - normally shown in the left
+// panel, but only relevant to the curse tracker, so it hides
+// temporarily while the upgrade shop calculator is open instead.
+const activeEnemiesSection = document.getElementById("activeEnemiesSection");
+
 function setUpgradePanelOpen(isOpen) {
 
     if (!upgradePanel || !upgradeToggleButton) {
@@ -2023,6 +2028,12 @@ function setUpgradePanelOpen(isOpen) {
         section.classList.toggle("visible", isOpen);
 
     });
+
+    if (activeEnemiesSection) {
+
+        activeEnemiesSection.classList.toggle("upgrades-open", isOpen);
+
+    }
 
 }
 

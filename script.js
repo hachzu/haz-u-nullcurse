@@ -428,6 +428,26 @@ function getCurseMedalReward(curseValue) {
 }
 
 
+function getPurifyLevelMultiplier() {
+
+    return Math.min(12, Math.floor(getLevel() / 5) * 2);
+
+}
+
+
+function computePurificationPrice(curseName) {
+
+    const curse = findCurseByName(curseName);
+    const curseValue = (curse && curse.value) || 0;
+
+    const levelMult = getPurifyLevelMultiplier();
+    const playerCount = getPlayerCount();
+
+    return Math.floor(curseValue * levelMult * Math.sqrt(playerCount));
+
+}
+
+
 function isGreaterCurse(curse) {
 
     return curse.type !== undefined;
@@ -1802,6 +1822,17 @@ function renderActiveCurses() {
         content.appendChild(name);
 
         if (isMedalCurse) {
+
+            if (!purified) {
+
+                const priceLabel = document.createElement("span");
+
+                priceLabel.className = "purify-price";
+                priceLabel.textContent = `-${computePurificationPrice(curse.name).toLocaleString()}`;
+
+                content.appendChild(priceLabel);
+
+            }
 
             const purifyButton = document.createElement("button");
 
