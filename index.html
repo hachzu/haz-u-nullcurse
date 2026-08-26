@@ -25,7 +25,19 @@
     <aside class="left-panel">
 
         <header class="site-header">
-            <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
+            <div class="site-header-top">
+                <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
+                <button
+                    type="button"
+                    id="muteToggleButton"
+                    class="mute-toggle-button"
+                    aria-pressed="false"
+                    aria-label="Mute sound effects"
+                    title="Mute sound effects"
+                >
+                    <span class="mute-toggle-icon" id="muteToggleIcon">&#128266;</span>
+                </button>
+            </div>
             <div class="subtitle">UPGRADE &amp; CURSE TRACKER</div>
             <div class="credit">
                 Made by <span class="credit-handle">@sxfthazu</span>
@@ -235,7 +247,7 @@
                         </div>
 
                         <div class="upgrade-panel-total">
-                            <span class="upgrade-panel-total-label">PENDING</span>
+                            <span class="upgrade-panel-total-label">TOTAL</span>
                             <span
                                 id="upgradeTotalValue"
                                 class="upgrade-panel-total-value"
@@ -295,6 +307,34 @@
                 <div class="pool-subtitle">
                     this system will help you prepare for future curses and manage curse selection efficiently. select your current level, difficulty, and active enemies to see the curses that will be available to you.
                 </div>
+            </div>
+
+            <div class="pool-controls">
+
+                <button
+                    type="button"
+                    id="showAllCursesToggle"
+                    class="curse-visibility-toggle"
+                    role="switch"
+                    aria-checked="false"
+                    title="Show every curse in every pool, even ones you don't currently meet the requirements for"
+                >
+                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                    <span class="curse-visibility-label">SHOW ALL CURSES</span>
+                </button>
+
+                <button
+                    type="button"
+                    id="unlockAllCursesToggle"
+                    class="curse-visibility-toggle"
+                    role="switch"
+                    aria-checked="false"
+                    title="Let any shown curse be selected with no level, enemy, or other dependency required"
+                >
+                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                    <span class="curse-visibility-label">UNLOCK ALL CURSES</span>
+                </button>
+
             </div>
 
         </header>

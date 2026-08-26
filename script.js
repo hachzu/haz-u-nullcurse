@@ -17,6 +17,78 @@ const runState = {
 };
 
 
+/*
+ * Two independent toggles for browsing/planning curse pools.
+ *
+ * showAll: reveals every curse in every pool regardless of level,
+ * casual-disabled, exclusive-group conflicts, missing enemy/curse
+ * requirements, or already being maxed - unmet ones render as
+ * locked cards instead of disappearing from the list.
+ *
+ * unlockAll: lets the user actually select those otherwise-locked
+ * curses (no dependency required to add them). A curse already at
+ * its stack cap still can't be selected again - that's not a
+ * "dependency", it's the curse's own hard limit.
+ *
+ * unlockAll only has anything to unlock once showAll is revealing
+ * the extra curses, so the UI keeps the Unlock All toggle disabled
+ * until Show All is on, and turning Show All off also turns Unlock
+ * All back off.
+ */
+const curseVisibilityState = {
+
+    showAll: false,
+    unlockAll: false
+
+};
+
+
+const CURSE_VISIBILITY_STORAGE_KEY = "nullscapeCurseVisibilityState";
+
+function saveCurseVisibilityState() {
+
+    try {
+
+        localStorage.setItem(
+            CURSE_VISIBILITY_STORAGE_KEY,
+            JSON.stringify(curseVisibilityState)
+        );
+
+    } catch (error) {
+
+        console.warn("couldn't save curse visibility state:", error);
+
+    }
+
+}
+
+
+function loadCurseVisibilityState() {
+
+    try {
+
+        const raw = localStorage.getItem(CURSE_VISIBILITY_STORAGE_KEY);
+
+        if (!raw) {
+
+            return;
+
+        }
+
+        const saved = JSON.parse(raw);
+
+        curseVisibilityState.showAll = Boolean(saved.showAll);
+        curseVisibilityState.unlockAll = Boolean(saved.unlockAll) && curseVisibilityState.showAll;
+
+    } catch (error) {
+
+        console.warn("couldn't load curse visibility state, starting fresh:", error);
+
+    }
+
+}
+
+
 const difficulties = [
     "Casual",
     "Standard",
@@ -543,6 +615,45 @@ function createActiveCurseIcon(assetType, name) {
 }
 
 
+function createCurseEnemyBadge(enemyName) {
+
+    const badge = document.createElement("div");
+
+    badge.className = "curse-enemy-badge";
+    badge.title = enemyName;
+
+    const placeholder = document.createElement("span");
+
+    placeholder.className = "curse-enemy-badge-placeholder";
+    placeholder.textContent = enemyName;
+
+    badge.appendChild(placeholder);
+
+    resolveAsset("enemies", enemyName, path => {
+
+        if (!path) {
+
+            return;
+
+        }
+
+        badge.innerHTML = "";
+
+        const img = document.createElement("img");
+
+        img.className = "curse-enemy-badge-image";
+        img.src = path;
+        img.alt = enemyName;
+
+        badge.appendChild(img);
+
+    });
+
+    return badge;
+
+}
+
+
 function createCurseNameLabel(name) {
 
     const label = document.createElement("div");
@@ -569,6 +680,12 @@ function findCurseByName(name) {
 
 
 function requirementsMet(curse) {
+
+    if (curse.enemy && !hasEnemy(curse.enemy)) {
+
+        return false;
+
+    }
 
     if (curse.requiresEnemies) {
 
@@ -634,30 +751,26 @@ function exclusiveGroupAvailable(curse) {
 }
 
 
-function canAppear(curse) {
+function isCurseAtCap(curse) {
 
-    const level = getLevel();
     const stackCount = getCurseStackCount(curse.name);
 
     if (curse.max) {
 
-        if (stackCount >= curse.max) {
-
-            return false;
-
-        }
-
-    } else {
-
-        if (stackCount >= 1) {
-
-            return false;
-
-        }
+        return stackCount >= curse.max;
 
     }
 
-    if (curse.level !== undefined && level < curse.level) {
+    return stackCount >= 1;
+
+}
+
+
+function isCurseDependencyMet(curse, ignoreLevel) {
+
+    const level = getLevel();
+
+    if (!ignoreLevel && curse.level !== undefined && level < curse.level) {
 
         return false;
 
@@ -686,25 +799,83 @@ function canAppear(curse) {
 }
 
 
+function canAppear(curse) {
+
+    return !isCurseAtCap(curse) && isCurseDependencyMet(curse, false);
+
+}
+
+
 function canAppearIgnoringLevel(curse) {
 
-    const stackCount = getCurseStackCount(curse.name);
+    return !isCurseAtCap(curse) && isCurseDependencyMet(curse, true);
 
-    if (curse.max) {
+}
 
-        if (stackCount >= curse.max) {
 
-            return false;
+/*
+ * Whether a curse should show up in a pool listing at all. With
+ * neither toggle on, this is identical to canAppear/
+ * canAppearIgnoringLevel - unchanged default behavior. With Show
+ * All or Unlock All on, every curse in the category shows up, met
+ * or not; createCurseCard renders the unmet ones as locked.
+ */
+function isCurseVisibleInPool(curse, ignoreLevel) {
 
-        }
+    if (curseVisibilityState.showAll || curseVisibilityState.unlockAll) {
 
-    } else {
+        return true;
 
-        if (stackCount >= 1) {
+    }
 
-            return false;
+    return !isCurseAtCap(curse) && isCurseDependencyMet(curse, ignoreLevel);
 
-        }
+}
+
+
+/*
+ * Whether a curse can actually be added right now. Unlock All lets
+ * the player add a curse with no level/casual/requirement/exclusive-
+ * group check - but a curse already at its own stack cap is still
+ * blocked, since that's not a "dependency" to unlock, it's the
+ * curse's own limit.
+ */
+function isCurseSelectable(curse) {
+
+    if (isCurseAtCap(curse)) {
+
+        return false;
+
+    }
+
+    if (curseVisibilityState.unlockAll) {
+
+        return true;
+
+    }
+
+    return isCurseDependencyMet(curse, false);
+
+}
+
+
+function getCurseUnlockLevel(curse) {
+
+    return isGreaterCurse(curse) ? getGreaterCurseUnlockLevel(curse) : curse.level;
+
+}
+
+
+/*
+ * True only when level is the single thing standing between this
+ * curse and being selectable - used to pick between the specific
+ * "UNLOCKS LV X" badge and the generic "LOCKED" one.
+ */
+function isCurseLockedOnlyByLevel(curse) {
+
+    if (isCurseAtCap(curse)) {
+
+        return false;
 
     }
 
@@ -726,7 +897,32 @@ function canAppearIgnoringLevel(curse) {
 
     }
 
-    return true;
+    if (isGreaterCurse(curse)) {
+
+        return isGreaterCurseLevelLocked(curse);
+
+    }
+
+    return curse.level !== undefined && getLevel() < curse.level;
+
+}
+
+
+function getCurseLockLabel(curse) {
+
+    if (isCurseAtCap(curse)) {
+
+        return "MAXED";
+
+    }
+
+    if (isCurseLockedOnlyByLevel(curse)) {
+
+        return `UNLOCKS LV ${getCurseUnlockLevel(curse)}`;
+
+    }
+
+    return "LOCKED";
 
 }
 
@@ -747,24 +943,14 @@ function isGreaterCurseLevelLocked(curse) {
 
 function getGlobalPool() {
 
-    return globalCurses.filter(canAppear);
+    return globalCurses.filter(curse => isCurseVisibleInPool(curse, false));
 
 }
 
 
 function getEnemyPool() {
 
-    return enemyCurses.filter(curse => {
-
-        if (!hasEnemy(curse.enemy)) {
-
-            return false;
-
-        }
-
-        return canAppear(curse);
-
-    });
+    return enemyCurses.filter(curse => isCurseVisibleInPool(curse, false));
 
 }
 
@@ -776,11 +962,14 @@ function getEnemyPool() {
  * longer hides them. Cards for ones you haven't reached the level
  * for yet render locked with an "Unlocks Lv X" indicator instead of
  * disappearing from the list. Actually selecting one is still
- * blocked by the real level check inside canAppear/selectCurse.
+ * blocked by the real level check inside canAppear/selectCurse
+ * (unless Unlock All Curses is on - see isCurseSelectable). With
+ * Show All Curses on, this same locked-card treatment extends to
+ * greater curses whose other requirements aren't met either.
  */
 function getGreaterPool() {
 
-    return greaterCurses.filter(canAppearIgnoringLevel);
+    return greaterCurses.filter(curse => isCurseVisibleInPool(curse, true));
 
 }
 
@@ -832,7 +1021,7 @@ function toggleEnemy(enemy) {
 
 function selectCurse(curse) {
 
-    if (!canAppear(curse)) {
+    if (!isCurseSelectable(curse)) {
 
         return;
 
@@ -897,9 +1086,30 @@ function removeAllCurses() {
 }
 
 
+const SOUND_MUTE_KEY = "nullscapeSoundMuted";
+
+let soundMuted = false;
+
+try {
+
+    soundMuted = localStorage.getItem(SOUND_MUTE_KEY) === "true";
+
+} catch (error) {
+
+    soundMuted = false;
+
+}
+
+
 let audioCtx = null;
 
 function getAudioCtx() {
+
+    if (soundMuted) {
+
+        return null;
+
+    }
 
     if (!audioCtx) {
 
@@ -1339,12 +1549,12 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
-    const greater = isGreaterCurse(curse);
-    const levelLocked = greater && isGreaterCurseLevelLocked(curse);
+    const selectable = isCurseSelectable(curse);
+    const locked = !selectable;
 
-    if (levelLocked) {
+    if (locked) {
 
-        card.classList.add("curse-card--level-locked");
+        card.classList.add("curse-card--locked");
 
     }
 
@@ -1354,14 +1564,11 @@ function createCurseCard(curse, isMedal = false) {
 
     card.appendChild(createCurseNameLabel(curse.name));
 
-    if (curse.enemy) {
+    const dependentEnemy = curse.enemy || (curse.requiresEnemies && curse.requiresEnemies[0]);
 
-        const info = document.createElement("div");
+    if (dependentEnemy) {
 
-        info.className = "curse-info";
-        info.textContent = curse.enemy;
-
-        card.appendChild(info);
+        card.appendChild(createCurseEnemyBadge(dependentEnemy));
 
     }
 
@@ -1376,7 +1583,11 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
-    if (isMedal) {
+    // Reward and lock badges share the same bottom-center spot, so a
+    // locked medal curse shows only the lock badge - previewing a
+    // reward for something you can't select yet would be misleading
+    // anyway.
+    if (isMedal && !locked) {
 
         const reward = document.createElement("div");
 
@@ -1387,14 +1598,14 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
-    if (levelLocked) {
+    if (locked) {
 
-        const unlockBadge = document.createElement("div");
+        const lockBadge = document.createElement("div");
 
-        unlockBadge.className = "curse-unlock-badge";
-        unlockBadge.textContent = `UNLOCKS LV ${getGreaterCurseUnlockLevel(curse)}`;
+        lockBadge.className = "curse-unlock-badge";
+        lockBadge.textContent = getCurseLockLabel(curse);
 
-        card.appendChild(unlockBadge);
+        card.appendChild(lockBadge);
 
     }
 
@@ -1874,6 +2085,126 @@ attachHoldAction(document.getElementById("removeAllCursesButton"), () => {
     removeAllCurses();
 
 });
+
+
+const muteToggleButton = document.getElementById("muteToggleButton");
+const muteToggleIcon = document.getElementById("muteToggleIcon");
+
+function updateMuteToggleUI() {
+
+    if (!muteToggleButton) {
+
+        return;
+
+    }
+
+    muteToggleButton.classList.toggle("muted", soundMuted);
+    muteToggleButton.setAttribute("aria-pressed", soundMuted ? "true" : "false");
+
+    if (muteToggleIcon) {
+
+        muteToggleIcon.innerHTML = soundMuted ? "&#128263;" : "&#128266;";
+
+    }
+
+}
+
+if (muteToggleButton) {
+
+    muteToggleButton.addEventListener("click", () => {
+
+        soundMuted = !soundMuted;
+
+        try {
+
+            localStorage.setItem(SOUND_MUTE_KEY, soundMuted ? "true" : "false");
+
+        } catch (error) {
+
+            console.warn("couldn't save mute preference:", error);
+
+        }
+
+        updateMuteToggleUI();
+
+    });
+
+}
+
+updateMuteToggleUI();
+
+
+const showAllCursesToggle = document.getElementById("showAllCursesToggle");
+const unlockAllCursesToggle = document.getElementById("unlockAllCursesToggle");
+
+function updateCurseVisibilityToggleUI() {
+
+    if (showAllCursesToggle) {
+
+        showAllCursesToggle.classList.toggle("active", curseVisibilityState.showAll);
+        showAllCursesToggle.setAttribute("aria-checked", curseVisibilityState.showAll ? "true" : "false");
+
+    }
+
+    if (unlockAllCursesToggle) {
+
+        unlockAllCursesToggle.classList.toggle("active", curseVisibilityState.unlockAll);
+        unlockAllCursesToggle.setAttribute("aria-checked", curseVisibilityState.unlockAll ? "true" : "false");
+
+        // Unlock All only makes sense once Show All is revealing the
+        // extra curses there'd be something to unlock - keep it
+        // disabled until then instead of letting it silently do
+        // nothing.
+        unlockAllCursesToggle.disabled = !curseVisibilityState.showAll;
+
+    }
+
+}
+
+if (showAllCursesToggle) {
+
+    attachClickAction(showAllCursesToggle, () => {
+
+        curseVisibilityState.showAll = !curseVisibilityState.showAll;
+
+        if (!curseVisibilityState.showAll) {
+
+            curseVisibilityState.unlockAll = false;
+
+        }
+
+        saveCurseVisibilityState();
+        updateCurseVisibilityToggleUI();
+        render();
+
+    }, playUtilitySound);
+
+}
+
+if (unlockAllCursesToggle) {
+
+    unlockAllCursesToggle.addEventListener("click", () => {
+
+        if (unlockAllCursesToggle.disabled) {
+
+            return;
+
+        }
+
+        playUtilitySound();
+
+        curseVisibilityState.unlockAll = !curseVisibilityState.unlockAll;
+
+        saveCurseVisibilityState();
+        updateCurseVisibilityToggleUI();
+        render();
+
+    });
+
+}
+
+loadCurseVisibilityState();
+updateCurseVisibilityToggleUI();
 
 
 const bgLayer = document.getElementById("bgLayer");

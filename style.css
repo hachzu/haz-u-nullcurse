@@ -77,6 +77,61 @@ body {
 }
 
 
+.site-header-top {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.mute-toggle-button {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(184, 102, 255, 0.08);
+
+    border: 1px solid #4a2270;
+    border-radius: 50%;
+
+    color: #b6a3dd;
+
+    font-size: 14px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+
+.mute-toggle-button:hover {
+    background: #2a1145;
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+}
+
+
+.mute-toggle-button.muted {
+    background: rgba(174, 19, 19, 0.15);
+
+    border-color: #ae1313;
+
+    color: #ff9d9d;
+}
+
+
 .logo {
     font-size: 24px;
     font-weight: 900;
@@ -189,7 +244,7 @@ body {
     border: 1px solid #00c8ff;
     border-radius: 8px;
 
-    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(143, 55, 216, 0.15);
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(255, 92, 200, 0.18);
 }
 
 
@@ -203,7 +258,7 @@ body {
 
 
 .medal-payout-value {
-    background: linear-gradient(90deg, #00c8ff, #8f37d8);
+    background: linear-gradient(90deg, #00c8ff, #ff5cc8);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -472,10 +527,10 @@ body {
 
 
 .active-curse--medal {
-    background: linear-gradient(90deg, #0077a3, #6a1fd0);
+    background: linear-gradient(90deg, #0077a3, #b0177f);
 
     border-color: #6fe0ff;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.4), 0 0 14px rgba(143, 55, 216, 0.3);
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.4), 0 0 14px rgba(255, 92, 200, 0.35);
 }
 
 
@@ -737,6 +792,124 @@ body {
 }
 
 
+.pool-controls {
+    flex-shrink: 0;
+
+    display: flex;
+
+    flex-direction: column;
+    align-items: flex-end;
+
+    gap: 8px;
+}
+
+
+/* Track+thumb switch used for the Show All / Unlock All Curses
+   toggles above the curse pools. Unlock All is disabled (see
+   :disabled below) until Show All is on, since it has nothing to
+   unlock until Show All is revealing the extra curses. */
+.curse-visibility-toggle {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 7px 12px;
+
+    background: rgba(184, 102, 255, 0.06);
+
+    border: 1px solid rgba(184, 102, 255, 0.35);
+    border-radius: 999px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+
+.curse-visibility-toggle:hover {
+    border-color: rgba(184, 102, 255, 0.65);
+}
+
+
+.curse-visibility-toggle.active {
+    background: rgba(184, 102, 255, 0.16);
+
+    border-color: #b866ff;
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.35);
+}
+
+
+.curse-visibility-toggle:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+}
+
+
+.curse-visibility-track {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 18px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(184, 102, 255, 0.4);
+    border-radius: 999px;
+
+    transition: background 0.18s, border-color 0.18s;
+}
+
+
+.curse-visibility-toggle.active .curse-visibility-track {
+    background: linear-gradient(90deg, #6a2f96, #d59bff);
+
+    border-color: #d59bff;
+}
+
+
+.curse-visibility-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 14px;
+    height: 14px;
+
+    background: #f0e4ff;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    transition: transform 0.18s ease;
+}
+
+
+.curse-visibility-toggle.active .curse-visibility-thumb {
+    transform: translateX(14px);
+}
+
+
+.curse-visibility-label {
+    color: #b6a3dd;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+
+.curse-visibility-toggle.active .curse-visibility-label {
+    color: #f0e4ff;
+}
+
+
 .result-section {
     margin-bottom: 42px;
 }
@@ -766,9 +939,9 @@ body {
     background: linear-gradient(
         90deg,
         #00c8ff 0%,
-        #8f37d8 25%,
+        #ff5cc8 25%,
         #00c8ff 50%,
-        #8f37d8 75%,
+        #ff5cc8 75%,
         #00c8ff 100%
     );
     background-size: 200% auto;
@@ -776,7 +949,7 @@ body {
     background-clip: text;
     color: transparent;
 
-    text-shadow: 0 0 18px rgba(0, 200, 255, 0.4), 0 0 14px rgba(143, 55, 216, 0.3);
+    text-shadow: 0 0 18px rgba(0, 200, 255, 0.4), 0 0 14px rgba(255, 92, 200, 0.35);
 }
 
 
@@ -901,7 +1074,8 @@ body {
 
     grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
 
-    gap: 8px;
+    column-gap: 8px;
+    row-gap: 26px;
 }
 
 
@@ -941,6 +1115,72 @@ body {
 
 .curse-card.medal {
     margin-bottom: 13px;
+}
+
+
+/* Enemy icon badges intentionally do NOT get a margin-top spacer
+   here - pushing a card's own box down to make room for its badge
+   broke row alignment, since grid items with a definite (aspect-
+   ratio driven) size don't stretch to fill the row, so extra
+   margin-top just shifted that one card down relative to its
+   siblings. Instead, .result-grid's row-gap (below) is sized to
+   give every row's badges room, keeping all cards' top edges level. */
+
+
+/* Small circular badge showing the enemy an enemy-specific or
+   enemy-gated curse depends on, in place of a plain text label.
+   Positioned so it sits mostly outside the card, poking out past
+   the top edge - the same "sticking out" treatment as the reward
+   and unlock badges use at the bottom of the card. */
+.curse-enemy-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 2;
+
+    width: 26px;
+    height: 26px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    background: linear-gradient(160deg, #2e0808 0%, #150826 100%);
+
+    border: 1px solid #ff9d9d;
+    border-radius: 50%;
+
+    box-shadow: 0 3px 8px rgba(174, 19, 19, 0.45);
+}
+
+
+.curse-enemy-badge-image {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+}
+
+
+.curse-enemy-badge-placeholder {
+    padding: 1px;
+
+    color: #ff9d9d;
+
+    font-size: 5px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+
+    word-break: break-word;
 }
 
 
@@ -1097,7 +1337,7 @@ body {
 
     padding: 2px 9px;
 
-    background: linear-gradient(135deg, #00c8ff, #6f3fd8);
+    background: linear-gradient(135deg, #00c8ff, #ff5cc8);
 
     border: 1px solid rgba(0, 200, 255, 0.6);
     border-radius: 999px;
@@ -1110,16 +1350,18 @@ body {
 
     white-space: nowrap;
 
-    box-shadow: 0 3px 8px rgba(0, 200, 255, 0.35);
+    box-shadow: 0 3px 8px rgba(255, 92, 200, 0.35);
 
     z-index: 2;
 }
 
 
-/* Greater curses that are visible but not yet reachable at the
-   current level - dimmed card with an "unlocks at" badge underneath
+/* Any curse that's visible in its pool but not currently selectable
+   - a greater curse under its unlock level, or (with Show All
+   Curses on) any curse missing its level/enemy/other requirement,
+   already maxed, etc. Dimmed card with a lock badge underneath
    instead of disappearing from the list entirely. */
-.curse-card--level-locked {
+.curse-card--locked {
     margin-bottom: 13px;
 
     cursor: not-allowed;
@@ -1129,7 +1371,7 @@ body {
 }
 
 
-.curse-card--level-locked:hover {
+.curse-card--locked:hover {
     background: linear-gradient(160deg, #150826 0%, #0d0416 100%);
 
     border-color: #3a1a5c;
@@ -1169,15 +1411,15 @@ body {
 
 .curse-card.medal {
     border-color: #00c8ff;
-    box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(143, 55, 216, 0.2);
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(255, 92, 200, 0.22);
 }
 
 
 #medalCurseContainer .curse-card:hover {
-    background: linear-gradient(160deg, #002738 0%, #1f0836 100%);
+    background: linear-gradient(160deg, #002738 0%, #380726 100%);
 
     border-color: #00c8ff;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3), 0 0 14px rgba(143, 55, 216, 0.25);
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3), 0 0 14px rgba(255, 92, 200, 0.28);
 }
 
 
@@ -1342,6 +1584,18 @@ body {
 
     .run-controls {
         flex-direction: column;
+    }
+
+
+    .pool-header {
+        flex-direction: column;
+    }
+
+
+    .pool-controls {
+        align-items: flex-start;
+
+        width: 100%;
     }
 
 }

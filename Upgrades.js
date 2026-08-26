@@ -754,6 +754,19 @@ function purchaseSelectedUpgrades() {
 }
 
 
+function isNothingCurseSelectable(nothingCurse) {
+
+    if (typeof isCurseSelectable === "function") {
+
+        return isCurseSelectable(nothingCurse);
+
+    }
+
+    return typeof canAppear === "function" && canAppear(nothingCurse);
+
+}
+
+
 function toggleNothingCurse() {
 
     if (typeof findCurseByName !== "function") {
@@ -774,7 +787,7 @@ function toggleNothingCurse() {
 
         removeCurse("Nothing");
 
-    } else if (typeof canAppear === "function" && canAppear(nothingCurse)) {
+    } else if (isNothingCurseSelectable(nothingCurse)) {
 
         selectCurse(nothingCurse);
 
@@ -1030,7 +1043,20 @@ function createUpgradeCard(item) {
 
     info.appendChild(nameLabel);
 
+    row.appendChild(info);
+
     if (maxStack > 1) {
+
+        const stack = document.createElement("div");
+
+        stack.className = "upgrade-row-stack";
+
+        const stackText = document.createElement("span");
+
+        stackText.className = "upgrade-row-stack-text";
+        stackText.textContent = `${pending}/${maxStack}`;
+
+        stack.appendChild(stackText);
 
         const dots = document.createElement("div");
 
@@ -1052,11 +1078,11 @@ function createUpgradeCard(item) {
 
         }
 
-        info.appendChild(dots);
+        stack.appendChild(dots);
+
+        row.appendChild(stack);
 
     }
-
-    row.appendChild(info);
 
     const badge = document.createElement("span");
 

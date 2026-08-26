@@ -774,11 +774,12 @@
 .upgrade-grid {
     display: grid;
 
-    /* level | icon | name (+ stack dots) | price | unown - the
-       stack indicator no longer has its own edge column; it now
-       sits inline next to the item name in the middle of the card
-       (see .upgrade-row-dots) instead of pinned to the left edge. */
-    grid-template-columns: 22px 40px minmax(0, 1fr) 84px 20px;
+    /* level | icon | name | stack | price | unown - the stack
+       indicator gets its own fixed-width column (see
+       .upgrade-row-stack) so it lines up across every row in a
+       category instead of drifting with how long each item's name
+       is, and price stays pinned to the right of it. */
+    grid-template-columns: 22px 40px minmax(0, 1fr) 52px 84px 20px;
     align-content: start;
     align-items: center;
 
@@ -1012,14 +1013,37 @@
 }
 
 
-/* Stack indicator - now sits inline next to the item name (inside
-   .upgrade-row-info), in the middle of the card, laid out as a
-   single horizontal row of pips rather than a stacked column pinned
-   to the card's edge. flex-shrink: 0 keeps it fully visible even
-   when the name is long enough to need truncating. */
-.upgrade-row-dots {
+/* Stack indicator - its own fixed column between the name and the
+   price (see the upgrade-grid template above), so it lines up
+   across every row in a category instead of drifting with how long
+   each item's name is. Shows both a numeric readout (e.g. "2/3")
+   and the row of pips underneath it. */
+.upgrade-row-stack {
+    grid-column: 4;
+    justify-self: center;
+
     flex-shrink: 0;
 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 3px;
+}
+
+
+.upgrade-row-stack-text {
+    color: #8fd9ff;
+
+    font-family: var(--font-modern);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+
+.upgrade-row-dots {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -1046,7 +1070,7 @@
 
 
 .upgrade-row-price {
-    grid-column: 4;
+    grid-column: 5;
     justify-self: start;
 
     flex-shrink: 0;
@@ -1117,7 +1141,7 @@
 
 /* Un-own control - inline at the end of the row */
 .upgrade-unown-button {
-    grid-column: 5;
+    grid-column: 6;
     justify-self: center;
 
     flex-shrink: 0;
