@@ -60,15 +60,138 @@ body {
 }
 
 
+/*
+ * @property registration lets these two custom properties (the
+ * left panel's gradient stops) be treated as animatable <color>
+ * values - without this, browsers can't smoothly interpolate a
+ * linear-gradient's colors when they change, they just hard-cut.
+ */
+@property --left-panel-grad-a {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #0c0316;
+}
+
+@property --left-panel-grad-b {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #140524;
+}
+
+@property --lp-dim {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #3a1a5c;
+}
+
+@property --lp-soft {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #4a2270;
+}
+
+@property --lp-mid {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #9147d6;
+}
+
+@property --lp-bright {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #d59bff;
+}
+
+@property --lp-text {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #9a7cc9;
+}
+
+@property --lp-text-dim {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #5c4880;
+}
+
+@property --lp-hover-bg {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #2a1145;
+}
+
+
 .left-panel {
     padding: 26px;
 
-    background: linear-gradient(180deg, #0c0316 0%, #140524 100%);
+    --left-panel-grad-a: #0c0316;
+    --left-panel-grad-b: #140524;
+
+    --lp-dim: #3a1a5c;
+    --lp-soft: #4a2270;
+    --lp-mid: #9147d6;
+    --lp-bright: #d59bff;
+    --lp-text: #9a7cc9;
+    --lp-text-dim: #5c4880;
+    --lp-hover-bg: #2a1145;
+
+    background: linear-gradient(180deg, var(--left-panel-grad-a) 0%, var(--left-panel-grad-b) 100%);
 
     border-right: 1px solid #3a1a5c;
     box-shadow: inset -1px 0 20px rgba(150, 60, 220, 0.08);
 
     overflow-y: auto;
+
+    transition:
+        border-color 0.45s ease,
+        box-shadow 0.45s ease,
+        --left-panel-grad-a 0.45s ease,
+        --left-panel-grad-b 0.45s ease,
+        --lp-dim 0.45s ease,
+        --lp-soft 0.45s ease,
+        --lp-mid 0.45s ease,
+        --lp-bright 0.45s ease,
+        --lp-text 0.45s ease,
+        --lp-text-dim 0.45s ease,
+        --lp-hover-bg 0.45s ease;
+}
+
+
+/* Matches the Upgrade Shop Calculator's blue/cyan theme (see
+   Upgrades.css) while that panel is open. */
+.left-panel.left-panel--upgrades {
+    --left-panel-grad-a: #03121c;
+    --left-panel-grad-b: #061424;
+
+    --lp-dim: #0d3a52;
+    --lp-soft: #1c6f96;
+    --lp-mid: #2f8fc2;
+    --lp-bright: #8fd9ff;
+    --lp-text: #8fd9ff;
+    --lp-text-dim: #4a7a91;
+    --lp-hover-bg: #0a2440;
+
+    border-right-color: rgba(143, 217, 255, 0.55);
+    box-shadow: inset -1px 0 26px rgba(143, 217, 255, 0.16);
+}
+
+
+/* Matches the Death Tracker's red/danger theme while that panel is
+   open. */
+.left-panel.left-panel--death {
+    --left-panel-grad-a: #1c0505;
+    --left-panel-grad-b: #240a0a;
+
+    --lp-dim: #4a1010;
+    --lp-soft: #7a1f1f;
+    --lp-mid: #c23a3a;
+    --lp-bright: #ff9d9d;
+    --lp-text: #e0a3a3;
+    --lp-text-dim: #8a5c5c;
+    --lp-hover-bg: #3a0a0a;
+
+    border-right-color: rgba(255, 157, 157, 0.55);
+    box-shadow: inset -1px 0 26px rgba(174, 19, 19, 0.18);
 }
 
 
@@ -100,7 +223,7 @@ body {
 
     background: rgba(184, 102, 255, 0.08);
 
-    border: 1px solid #4a2270;
+    border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 50%;
 
     color: #b6a3dd;
@@ -115,9 +238,9 @@ body {
 
 
 .mute-toggle-button:hover {
-    background: #2a1145;
+    background: var(--lp-hover-bg, #2a1145);
 
-    border-color: #d59bff;
+    border-color: var(--lp-bright, #d59bff);
 
     color: #ffffff;
 }
@@ -183,7 +306,7 @@ body {
 
     margin-bottom: 9px;
 
-    color: #9a7cc9;
+    color: var(--lp-text, #9a7cc9);
 
     font-size: 11px;
     font-weight: 700;
@@ -192,7 +315,7 @@ body {
 
 
 .label-note {
-    color: #5c4880;
+    color: var(--lp-text-dim, #5c4880);
 
     font-size: 9px;
     font-weight: 500;
@@ -209,7 +332,7 @@ body {
 
     background: #14061f;
 
-    border: 1px solid #4a2270;
+    border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 8px;
 
     color: #f0e4ff;
@@ -225,8 +348,8 @@ body {
 
 #levelInput:focus,
 #playerCountInput:focus {
-    border-color: #b866ff;
-    box-shadow: 0 0 0 3px rgba(184, 102, 255, 0.18);
+    border-color: var(--lp-bright, #b866ff);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-bright, #b866ff) 18%, transparent);
 }
 
 
@@ -276,7 +399,7 @@ body {
 
     margin-bottom: 10px;
 
-    color: #a98fd6;
+    color: var(--lp-text, #a98fd6);
 
     font-size: 11px;
     font-weight: 700;
@@ -285,7 +408,122 @@ body {
 
 
 .count {
-    color: #5c4880;
+    color: var(--lp-text-dim, #5c4880);
+}
+
+
+.section-heading-controls {
+    display: flex;
+
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* Compact version of the curse-visibility-toggle switch (see below),
+   sized to fit next to the Active Enemies header's count badge
+   without crowding the sidebar. Warm/red accent so it reads as
+   "enemy" controls rather than being confused with the curse pool
+   toggles above. */
+.mini-visibility-toggle {
+    display: flex;
+
+    align-items: center;
+    gap: 4px;
+
+    padding: 3px 7px;
+
+    background: rgba(174, 19, 19, 0.08);
+
+    border: 1px solid rgba(255, 157, 157, 0.35);
+    border-radius: 999px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+
+.mini-visibility-toggle:hover {
+    border-color: rgba(255, 157, 157, 0.65);
+}
+
+
+.mini-visibility-toggle.active {
+    background: rgba(255, 157, 157, 0.18);
+
+    border-color: #ff9d9d;
+    box-shadow: 0 0 10px rgba(174, 19, 19, 0.35);
+}
+
+
+.mini-visibility-toggle:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+}
+
+
+.mini-visibility-track {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 20px;
+    height: 12px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(255, 157, 157, 0.4);
+    border-radius: 999px;
+
+    transition: background 0.18s, border-color 0.18s;
+}
+
+
+.mini-visibility-toggle.active .mini-visibility-track {
+    background: linear-gradient(90deg, #7a0e0e, #ff9d9d);
+
+    border-color: #ff9d9d;
+}
+
+
+.mini-visibility-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 8px;
+    height: 8px;
+
+    background: #fff0f0;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+    transition: transform 0.18s ease;
+}
+
+
+.mini-visibility-toggle.active .mini-visibility-thumb {
+    transform: translateX(8px);
+}
+
+
+.mini-visibility-label {
+    color: #e0a3a3;
+
+    font-family: var(--font-modern);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+
+.mini-visibility-toggle.active .mini-visibility-label {
+    color: #fff0f0;
 }
 
 
@@ -319,7 +557,7 @@ body {
 
     background: #150826;
 
-    border: 1px solid #3a1a5c;
+    border: 1px solid var(--lp-dim, #3a1a5c);
     border-radius: 8px;
 
     color: #b6a3dd;
@@ -343,6 +581,8 @@ body {
 
 
 .select-button.enemy-button {
+    position: relative;
+
     aspect-ratio: 1 / 1;
     min-height: unset;
 
@@ -350,15 +590,101 @@ body {
 }
 
 
+/* Shown (via Show All Enemies) but not currently selectable - below
+   its required level, or missing an enemy dependency (e.g.
+   Voidbound Baby needing 2x Baby active). Same dimmed/grayscale
+   treatment as a locked curse card. */
+.select-button.enemy-button--locked {
+    cursor: not-allowed;
+
+    opacity: 0.4;
+    filter: grayscale(0.6);
+}
+
+
+.select-button.enemy-button--locked:hover {
+    background: #150826;
+
+    border-color: rgba(174, 19, 19, 0.4);
+    box-shadow: none;
+
+    transform: none;
+}
+
+
+/* Small readout for enemies that can be marked active twice (Baby,
+   Husk, Guardian), showing the current stack against its cap. */
+.enemy-stack-badge {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+
+    z-index: 2;
+
+    padding: 1px 4px;
+
+    background: rgba(0, 0, 0, 0.6);
+
+    border: 1px solid rgba(255, 157, 157, 0.6);
+    border-radius: 999px;
+
+    color: #ffdede;
+
+    font-family: var(--font-modern);
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+
+/* Dependency badge shown on an enemy button itself (Voidbound Baby
+   showing a 2x Baby icon, etc). Reuses .curse-enemy-badge's shape
+   and asset-loading logic, but pinned to the button's own
+   bottom-right corner instead of poking out above it like the
+   curse-card version does - the enemy grid's row-gap is only 5px,
+   nowhere near enough room for that protrusion, so this stays fully
+   inside the button's own bounds. Kept noticeably smaller than the
+   curse-card version too, since these buttons are tiny (~1/5th of
+   the sidebar wide). */
+.enemy-dependency-badge {
+    top: auto;
+    left: auto;
+    right: 2px;
+    bottom: 2px;
+
+    transform: none;
+
+    width: 12px;
+    height: 12px;
+
+    box-shadow: 0 1px 3px rgba(174, 19, 19, 0.55);
+}
+
+
+/* Points back in toward the button's center (up-left) instead of
+   further into the corner, so it doesn't spill past the button's
+   own edge into whatever sits below/beside it. */
+.enemy-dependency-badge .curse-enemy-badge-count {
+    right: auto;
+    bottom: auto;
+    left: -5px;
+    top: -5px;
+
+    padding: 0 3px;
+
+    font-size: 6px;
+}
+
+
 .select-button:hover {
     background: #20103a;
 
-    border-color: #9147d6;
+    border-color: var(--lp-mid, #9147d6);
 
     color: #ffffff;
 
     transform: translateY(-1px);
-    box-shadow: 0 0 16px rgba(145, 71, 214, 0.25);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--lp-mid, #9147d6) 25%, transparent);
 }
 
 
@@ -447,7 +773,7 @@ body {
 
     background: #14061f;
 
-    border: 1px solid #3a1a5c;
+    border: 1px solid var(--lp-dim, #3a1a5c);
     border-radius: 8px;
 
     color: #f0e4ff;
@@ -462,13 +788,13 @@ body {
 
 
 .active-curse-search-input::placeholder {
-    color: #5c4880;
+    color: var(--lp-text-dim, #5c4880);
 }
 
 
 .active-curse-search-input:focus {
-    border-color: #9147d6;
-    box-shadow: 0 0 0 3px rgba(145, 71, 214, 0.18);
+    border-color: var(--lp-mid, #9147d6);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-mid, #9147d6) 18%, transparent);
 }
 
 
@@ -1197,6 +1523,23 @@ body {
     width: 26px;
     height: 26px;
 
+    background: linear-gradient(160deg, #2e0808 0%, #150826 100%);
+
+    border: 1px solid #ff9d9d;
+    border-radius: 50%;
+
+    box-shadow: 0 3px 8px rgba(174, 19, 19, 0.45);
+}
+
+
+/* Holds the icon/placeholder and does the actual circular
+   cropping - kept separate from .curse-enemy-badge itself so that
+   badge's overflow doesn't also clip the count label, which is
+   meant to poke out past this circle's edge. */
+.curse-enemy-badge-inner {
+    width: 100%;
+    height: 100%;
+
     display: flex;
 
     align-items: center;
@@ -1204,12 +1547,7 @@ body {
 
     overflow: hidden;
 
-    background: linear-gradient(160deg, #2e0808 0%, #150826 100%);
-
-    border: 1px solid #ff9d9d;
     border-radius: 50%;
-
-    box-shadow: 0 3px 8px rgba(174, 19, 19, 0.45);
 }
 
 
@@ -1220,6 +1558,34 @@ body {
     object-fit: cover;
 
     display: block;
+}
+
+
+/* Overlay showing how many of that enemy are required, for
+   dependencies asking for more than 1 (Husk Express, Voidbound
+   Baby/Guardian). Sits directly on .curse-enemy-badge (outside the
+   .curse-enemy-badge-inner circular mask - see above) so it's never
+   clipped off. */
+.curse-enemy-badge-count {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+
+    z-index: 3;
+
+    padding: 1px 4px;
+
+    background: #ae1313;
+
+    border: 1px solid #ff9d9d;
+    border-radius: 999px;
+
+    color: #fff0f0;
+
+    font-family: var(--font-modern);
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1.1;
 }
 
 

@@ -22,7 +22,7 @@ const CASUAL_OVERRIDES = {
 
     "Shield": { casualPrice: 2000, casualSoloPrice: 1000 },
     "Ice Skates": { casualPrice: 400, casualSoloPrice: 300 },
-    "Ninja Belt": { casualPrice: 700, casualSoloPrice: 500 },
+    "Ninja Belt": { casualPrice: 500, casualSoloPrice: 500 },
     "Matrix Tetrahedron": { casualPrice: 1500, casualSoloPrice: 1500 },
     "Shark Tail": { casualPrice: 800, casualSoloPrice: 800 },
     "Drowned Ægis": { casualPrice: 4000, casualSoloPrice: 4000 },
@@ -54,7 +54,7 @@ const upgradesList = [
 
     { name: "Adrenaline", price: 50, soloPrice: 50, level: 3, category: "movement" },
     { name: "Business License", prices: [75, 188], level: 3, maxStack: 2, category: "eco" },
-    { name: "Defuse Kit", price: 30, soloPrice: 30, level: 3, maxStack: 3, category: "survival" },
+    { name: "Defuse Kit", price: 30, soloPrice: 30, level: 5, maxStack: 3, category: "survival" },
     { name: "Paycheck", price: 55, soloPrice: 55, level: 3, maxStack: 5, category: "eco" },
     { name: "Swiftness Ring", price: 80, soloPrice: 80, level: 3, maxStack: 3, category: "movement" },
 
@@ -77,7 +77,7 @@ const upgradesList = [
         requires: { type: "upgrade", name: "Double Jump", stack: 1 }
     },
 
-    { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 8, category: "survival" },
+    { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 5, category: "survival" },
 
     {
         name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment",
@@ -95,7 +95,7 @@ const upgradesList = [
     },
 
     {
-        name: "Radar Module : Players", price: 200, soloPrice: 200, level: 8, category: "environment",
+        name: "Radar Module : Players", price: 150, soloPrice: 150, level: 8, category: "environment",
         requires: { type: "upgrade", name: "Radar", stack: 1 }
     },
 
@@ -105,6 +105,7 @@ const upgradesList = [
 
     {
         name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13,
+        casualLevel: 15,
         maxStack: 2, category: "survival",
         requires: { type: "upgrade", name: "Defuse Kit", stack: 3 }
     },
@@ -125,7 +126,7 @@ const upgradesList = [
     },
 
     {
-        name: "Radar Module : Instruments", price: 1000, soloPrice: 1000, level: 18, category: "environment",
+        name: "Radar Module : Instruments", price: 1000, soloPrice: 1000, level: 15, category: "environment",
         requires: { type: "enemy", name: "Cadence" }
     },
 
@@ -420,6 +421,11 @@ function computeBaseForStack(item, stack) {
 
         const table = (isSolo && effective.soloPrices) ? effective.soloPrices : effective.prices;
 
+        // Elevator-style pricing: each table entry is the flat price
+        // to be sitting at that specific tier (1st stack, 2nd stack,
+        // etc.), not a marginal cost to be added to the ones before
+        // it - so the price of owning `stack` copies is just that
+        // one entry, not a running sum.
         return table[stack - 1] !== undefined ? table[stack - 1] : 0;
 
     }
@@ -432,10 +438,11 @@ function computeBaseForStack(item, stack) {
 
 
 /*
- * ceil(basePrice * sqrt(playerCount)), with the Party+ multiplier
- * divided by 1.125 before rounding (not after - rounding twice would
- * throw the number off), then the Nothing-curse -15% discount
- * applied as its own rounding step on top.
+ * basePrice * sqrt(playerCount), with the Party+ multiplier divided
+ * by 1.125 and the Nothing-curse -15% discount (if active) applied
+ * on top, then rounded with a single ceil() at the very end -
+ * rounding more than once along the way can throw the final number
+ * off by a Golden Gift or two.
  */
 function computeStackPrice(item, stack) {
 
@@ -456,22 +463,42 @@ function computeStackPrice(item, stack) {
 
     }
 
-    let scaled = Math.ceil(base * multiplier);
+    let scaled = base * multiplier;
 
     if (isNothingCurseActive()) {
 
-        scaled = Math.ceil(scaled * 0.85);
+        scaled *= 0.85;
 
     }
 
-    return scaled;
+    return Math.ceil(scaled);
+
+}
+
+
+/*
+ * Most upgrades unlock at the same level regardless of difficulty,
+ * but a few (Subspacial Barrier) unlock later specifically on
+ * Casual - item.casualLevel overrides item.level only in that case.
+ */
+function getEffectiveUpgradeLevel(item) {
+
+    const difficultyKey = (runState.difficulty || "Standard").toLowerCase();
+
+    if (difficultyKey === "casual" && item.casualLevel !== undefined) {
+
+        return item.casualLevel;
+
+    }
+
+    return item.level;
 
 }
 
 
 function isUpgradeLockedByLevel(item) {
 
-    return runState.level < item.level;
+    return runState.level < getEffectiveUpgradeLevel(item);
 
 }
 
@@ -1270,7 +1297,7 @@ function createUpgradeCard(item) {
     const levelBadge = document.createElement("span");
 
     levelBadge.className = "upgrade-row-level";
-    levelBadge.textContent = `Lv${item.level}`;
+    levelBadge.textContent = `Lv${getEffectiveUpgradeLevel(item)}`;
 
     row.appendChild(levelBadge);
 
@@ -2016,6 +2043,14 @@ function setUpgradePanelOpen(isOpen) {
     if (!upgradePanel || !upgradeToggleButton) {
 
         return;
+
+    }
+
+    // Panels are mutually exclusive - opening this one closes the
+    // Death Tracker panel instead of letting the two overlay.
+    if (isOpen && typeof setDeathPanelOpen === "function") {
+
+        setDeathPanelOpen(false);
 
     }
 

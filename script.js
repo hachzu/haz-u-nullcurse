@@ -4,7 +4,7 @@ const runState = {
 
     difficulty: "Standard",
 
-    activeEnemies: new Set(),
+    activeEnemies: new Map(),
 
     activeCurses: new Set(),
 
@@ -89,6 +89,75 @@ function loadCurseVisibilityState() {
 }
 
 
+/*
+ * Same idea as curseVisibilityState, but for the Active Enemies
+ * grid in the sidebar.
+ *
+ * showAll: reveals every enemy in the pool regardless of level or
+ * an unmet enemy-dependency (e.g. Voidbound Baby needing 2x Baby
+ * active) - unmet ones render dimmed/locked instead of disappearing.
+ *
+ * unlockAll: lets the user actually mark those otherwise-locked
+ * enemies active with no level or dependency required.
+ *
+ * unlockAll only has anything to unlock once showAll is revealing
+ * the extra enemies, so it stays disabled until showAll is on, and
+ * turning showAll off also turns unlockAll back off.
+ */
+const enemyVisibilityState = {
+
+    showAll: false,
+    unlockAll: false
+
+};
+
+
+const ENEMY_VISIBILITY_STORAGE_KEY = "nullscapeEnemyVisibilityState";
+
+function saveEnemyVisibilityState() {
+
+    try {
+
+        localStorage.setItem(
+            ENEMY_VISIBILITY_STORAGE_KEY,
+            JSON.stringify(enemyVisibilityState)
+        );
+
+    } catch (error) {
+
+        console.warn("couldn't save enemy visibility state:", error);
+
+    }
+
+}
+
+
+function loadEnemyVisibilityState() {
+
+    try {
+
+        const raw = localStorage.getItem(ENEMY_VISIBILITY_STORAGE_KEY);
+
+        if (!raw) {
+
+            return;
+
+        }
+
+        const saved = JSON.parse(raw);
+
+        enemyVisibilityState.showAll = Boolean(saved.showAll);
+        enemyVisibilityState.unlockAll = Boolean(saved.unlockAll) && enemyVisibilityState.showAll;
+
+    } catch (error) {
+
+        console.warn("couldn't load enemy visibility state, starting fresh:", error);
+
+    }
+
+}
+
+
 const difficulties = [
     "Casual",
     "Standard",
@@ -99,21 +168,21 @@ const difficulties = [
 const enemies = [
 
     { name: "Bell", level: 1 },
-    { name: "Baby", level: 1 },
-    { name: "Husk", level: 1 },
+    { name: "Baby", level: 1, maxStack: 2 },
+    { name: "Husk", level: 1, maxStack: 2 },
     { name: "ICBM", level: 1 },
     { name: "Springer", level: 1 },
     { name: "Mart", level: 1 },
     { name: "Flesh", level: 5 },
     { name: "Operator", level: 5 },
-    { name: "Guardian", level: 8 },
+    { name: "Guardian", level: 8, maxStack: 2 },
     { name: "Telefragger", level: 8 },
     { name: "Kolona", level: 10 },
 
     {
         name: "Voidbound Baby",
         level: 10,
-        requiresEnemies: ["Baby"]
+        requiresEnemies: [{ name: "Baby", count: 2 }]
     },
 
     { name: "Cadence", level: 15 },
@@ -122,7 +191,7 @@ const enemies = [
     {
         name: "Voidbound Guardian",
         level: 20,
-        requiresEnemies: ["Guardian"]
+        requiresEnemies: [{ name: "Guardian", count: 2 }]
     },
 
     { name: "Scrapmaw", level: 20 },
@@ -258,7 +327,7 @@ const enemyCurses = [
     },
 
     { name: "Taller Husk", enemy: "Husk" },
-    { name: "Husk Express", enemy: "Husk", medal: true, value: 200 },
+    { name: "Husk Express", enemy: "Husk", enemyCount: 2, medal: true, value: 200 },
     { name: "Conga Line", enemy: "Husk", medal: true, value: 200 },
     { name: "Random Husk", enemy: "Husk", level: 15 },
 
@@ -361,7 +430,7 @@ function getLevel() {
 function getPlayerCount() {
 
     return Math.min(
-        20,
+        100,
         Math.max(
             1,
             Number(document.getElementById("playerCountInput").value) || 1
@@ -371,9 +440,40 @@ function getPlayerCount() {
 }
 
 
+function getEnemyCount(name) {
+
+    return runState.activeEnemies.get(name) || 0;
+
+}
+
+
 function hasEnemy(name) {
 
-    return runState.activeEnemies.has(name);
+    return getEnemyCount(name) > 0;
+
+}
+
+
+function getEnemyMaxStack(enemy) {
+
+    return enemy.maxStack || 1;
+
+}
+
+
+/*
+ * A dependency entry can be either a plain enemy name (meaning "at
+ * least 1 active", the original behavior) or an { name, count }
+ * object for the new 2x-style requirements (Husk Express, Voidbound
+ * Baby/Guardian). Used both by curses' requiresEnemies/enemy fields
+ * and by the enemies pool's own requiresEnemies field.
+ */
+function meetsEnemyRequirement(entry) {
+
+    const name = typeof entry === "string" ? entry : entry.name;
+    const count = typeof entry === "string" ? 1 : (entry.count || 1);
+
+    return getEnemyCount(name) >= count;
 
 }
 
@@ -635,19 +735,39 @@ function createActiveCurseIcon(assetType, name) {
 }
 
 
-function createCurseEnemyBadge(enemyName) {
+function createDependencyBadge(enemyName, count = 1, extraClass) {
 
     const badge = document.createElement("div");
 
-    badge.className = "curse-enemy-badge";
-    badge.title = enemyName;
+    badge.className = extraClass ? `curse-enemy-badge ${extraClass}` : "curse-enemy-badge";
+    badge.title = count > 1 ? `${count}x ${enemyName}` : enemyName;
+
+    // The circular mask (overflow: hidden, so the icon image crops
+    // to a circle) lives on this inner wrapper instead of the badge
+    // itself - the count label below is appended straight onto the
+    // badge, outside that mask, so it isn't clipped off.
+    const inner = document.createElement("div");
+
+    inner.className = "curse-enemy-badge-inner";
 
     const placeholder = document.createElement("span");
 
     placeholder.className = "curse-enemy-badge-placeholder";
     placeholder.textContent = enemyName;
 
-    badge.appendChild(placeholder);
+    inner.appendChild(placeholder);
+    badge.appendChild(inner);
+
+    if (count > 1) {
+
+        const countLabel = document.createElement("span");
+
+        countLabel.className = "curse-enemy-badge-count";
+        countLabel.textContent = `\u00d7${count}`;
+
+        badge.appendChild(countLabel);
+
+    }
 
     resolveAsset("enemies", enemyName, path => {
 
@@ -657,7 +777,7 @@ function createCurseEnemyBadge(enemyName) {
 
         }
 
-        badge.innerHTML = "";
+        inner.innerHTML = "";
 
         const img = document.createElement("img");
 
@@ -665,11 +785,32 @@ function createCurseEnemyBadge(enemyName) {
         img.src = path;
         img.alt = enemyName;
 
-        badge.appendChild(img);
+        inner.appendChild(img);
 
     });
 
     return badge;
+
+}
+
+
+function createCurseEnemyBadge(enemyName, count = 1) {
+
+    return createDependencyBadge(enemyName, count);
+
+}
+
+
+/*
+ * Same badge, scaled down and repositioned to sit inside an enemy
+ * button's own small corner (rather than protruding above it, which
+ * only works on curse cards because .result-grid reserves extra
+ * row-gap for that). Used to show what an enemy itself depends on -
+ * e.g. Voidbound Baby showing a 2x Baby icon.
+ */
+function createEnemyDependencyBadge(enemyName, count = 1) {
+
+    return createDependencyBadge(enemyName, count, "enemy-dependency-badge");
 
 }
 
@@ -701,7 +842,7 @@ function findCurseByName(name) {
 
 function requirementsMet(curse) {
 
-    if (curse.enemy && !hasEnemy(curse.enemy)) {
+    if (curse.enemy && !meetsEnemyRequirement({ name: curse.enemy, count: curse.enemyCount || 1 })) {
 
         return false;
 
@@ -711,7 +852,7 @@ function requirementsMet(curse) {
 
         for (const requiredEnemy of curse.requiresEnemies) {
 
-            if (!hasEnemy(requiredEnemy)) {
+            if (!meetsEnemyRequirement(requiredEnemy)) {
 
                 return false;
 
@@ -1027,33 +1168,128 @@ function getMedalPool() {
 }
 
 
+function isEnemyLevelMet(enemy) {
+
+    return runState.level >= (enemy.level || 1);
+
+}
+
+
+function isEnemyDependencyMet(enemy) {
+
+    if (!enemy.requiresEnemies) {
+
+        return true;
+
+    }
+
+    return enemy.requiresEnemies.every(req => meetsEnemyRequirement(req));
+
+}
+
+
+/*
+ * Whether an enemy should show up in the Active Enemies grid at
+ * all. With Show/Unlock All Enemies off, this is the original
+ * level-only filter. With either on, every enemy in the pool shows
+ * up, met or not - createEnemyButton renders the unmet ones dimmed
+ * and disabled.
+ */
+function isEnemyVisible(enemy) {
+
+    if (enemyVisibilityState.showAll || enemyVisibilityState.unlockAll) {
+
+        return true;
+
+    }
+
+    return isEnemyLevelMet(enemy) && isEnemyDependencyMet(enemy);
+
+}
+
+
+/*
+ * Whether an enemy can actually be marked active right now.
+ * Unlock All Enemies skips the level and dependency checks
+ * entirely, same as Unlock All Curses does for the curse pools.
+ */
+function isEnemySelectable(enemy) {
+
+    if (enemyVisibilityState.unlockAll) {
+
+        return true;
+
+    }
+
+    return isEnemyLevelMet(enemy) && isEnemyDependencyMet(enemy);
+
+}
+
+
+function findUnmetEnemyRequirement(enemy) {
+
+    if (!enemy.requiresEnemies) {
+
+        return null;
+
+    }
+
+    return enemy.requiresEnemies.find(req => !meetsEnemyRequirement(req)) || null;
+
+}
+
+
+/*
+ * Base enemies (Baby, Husk, Guardian) can now be marked active more
+ * than once - some dependencies (Husk Express, Voidbound Baby/
+ * Guardian) need 2 of them active at the same time. Clicking cycles
+ * the stack up by one until it hits the enemy's maxStack, then
+ * resets it back to 0. Enemies with no maxStack behave exactly as
+ * before: a plain on/off toggle.
+ */
 function toggleEnemy(enemy) {
 
-    if (runState.activeEnemies.has(enemy.name)) {
+    const maxStack = getEnemyMaxStack(enemy);
+    const current = getEnemyCount(enemy.name);
 
-        runState.activeEnemies.delete(enemy.name);
+    if (current > 0) {
 
-    } else {
+        if (current < maxStack) {
 
-        if (enemy.requiresEnemies) {
+            runState.activeEnemies.set(enemy.name, current + 1);
 
-            for (const required of enemy.requiresEnemies) {
+        } else {
 
-                if (!hasEnemy(required)) {
-
-                    alert(`${enemy.name} requires ${required} to be active.`);
-
-                    return;
-
-                }
-
-            }
+            runState.activeEnemies.delete(enemy.name);
 
         }
 
-        runState.activeEnemies.add(enemy.name);
+        render();
+
+        return;
 
     }
+
+    if (!enemyVisibilityState.unlockAll && !isEnemySelectable(enemy)) {
+
+        const unmet = findUnmetEnemyRequirement(enemy);
+
+        if (unmet) {
+
+            const name = typeof unmet === "string" ? unmet : unmet.name;
+            const count = typeof unmet === "string" ? 1 : (unmet.count || 1);
+
+            alert(count > 1
+                ? `${enemy.name} requires ${count}x ${name} to be active.`
+                : `${enemy.name} requires ${name} to be active.`);
+
+        }
+
+        return;
+
+    }
+
+    runState.activeEnemies.set(enemy.name, 1);
 
     render();
 
@@ -1529,15 +1765,68 @@ function createEnemyButton(enemy) {
 
     button.className = "select-button enemy-button";
 
-    if (runState.activeEnemies.has(enemy.name)) {
+    const count = getEnemyCount(enemy.name);
+    const maxStack = getEnemyMaxStack(enemy);
+    const selectable = enemyVisibilityState.unlockAll || isEnemySelectable(enemy);
+    const locked = count === 0 && !selectable;
+
+    if (count > 0) {
 
         button.classList.add("selected");
+
+    }
+
+    if (locked) {
+
+        button.classList.add("enemy-button--locked");
+
+        if (!isEnemyLevelMet(enemy)) {
+
+            button.title = `Unlocks at level ${enemy.level}`;
+
+        } else {
+
+            const unmet = findUnmetEnemyRequirement(enemy);
+
+            if (unmet) {
+
+                const name = typeof unmet === "string" ? unmet : unmet.name;
+                const reqCount = typeof unmet === "string" ? 1 : (unmet.count || 1);
+
+                button.title = reqCount > 1
+                    ? `Requires ${reqCount}x ${name} active`
+                    : `Requires ${name} active`;
+
+            }
+
+        }
 
     }
 
     const media = createMediaBox("enemies", enemy.name);
 
     button.appendChild(media);
+
+    if (enemy.requiresEnemies && enemy.requiresEnemies.length > 0) {
+
+        const [dependency] = enemy.requiresEnemies;
+        const dependencyName = typeof dependency === "string" ? dependency : dependency.name;
+        const dependencyCount = typeof dependency === "string" ? 1 : (dependency.count || 1);
+
+        button.appendChild(createEnemyDependencyBadge(dependencyName, dependencyCount));
+
+    }
+
+    if (maxStack > 1 && count > 0) {
+
+        const stackBadge = document.createElement("span");
+
+        stackBadge.className = "enemy-stack-badge";
+        stackBadge.textContent = `${count}/${maxStack}`;
+
+        button.appendChild(stackBadge);
+
+    }
 
     attachClickAction(button, () => toggleEnemy(enemy), playEnemySound);
 
@@ -1613,11 +1902,16 @@ function createCurseCard(curse, isMedal = false) {
 
     card.appendChild(createCurseNameLabel(curse.name));
 
-    const dependentEnemy = curse.enemy || (curse.requiresEnemies && curse.requiresEnemies[0]);
+    const dependentEnemyRaw = curse.enemy || (curse.requiresEnemies && curse.requiresEnemies[0]);
+    const dependentEnemy = typeof dependentEnemyRaw === "string" ? dependentEnemyRaw : (dependentEnemyRaw && dependentEnemyRaw.name);
+
+    const dependentEnemyCount = curse.enemy
+        ? (curse.enemyCount || 1)
+        : (dependentEnemyRaw && typeof dependentEnemyRaw === "object" ? (dependentEnemyRaw.count || 1) : 1);
 
     if (dependentEnemy) {
 
-        card.appendChild(createCurseEnemyBadge(dependentEnemy));
+        card.appendChild(createCurseEnemyBadge(dependentEnemy, dependentEnemyCount));
 
     }
 
@@ -1963,7 +2257,9 @@ function loadRunState() {
 
         runState.level = saved.level || 1;
         runState.difficulty = saved.difficulty || "Standard";
-        runState.activeEnemies = new Set(saved.activeEnemies || []);
+        runState.activeEnemies = new Map(
+            (saved.activeEnemies || []).map(entry => Array.isArray(entry) ? entry : [entry, 1])
+        );
         runState.activeCurses = new Set(saved.activeCurses || []);
         runState.curseStacks = new Map(saved.curseStacks || []);
         runState.medalCurseValues = new Map(saved.medalCurseValues || []);
@@ -1972,7 +2268,7 @@ function loadRunState() {
         if (saved.playerCount) {
 
             document.getElementById("playerCountInput").value =
-                Math.min(20, Math.max(1, saved.playerCount));
+                Math.min(100, Math.max(1, saved.playerCount));
 
         }
 
@@ -2006,7 +2302,7 @@ function render() {
     enemyContainer.innerHTML = "";
 
     enemies
-        .filter(enemy => runState.level >= enemy.level)
+        .filter(enemy => isEnemyVisible(enemy) || getEnemyCount(enemy.name) > 0)
         .forEach(enemy => {
 
             enemyContainer.appendChild(createEnemyButton(enemy));
@@ -2036,7 +2332,7 @@ function render() {
 
 function pruneInvalidActiveEnemies() {
 
-    for (const enemyName of runState.activeEnemies) {
+    for (const enemyName of runState.activeEnemies.keys()) {
 
         const enemy = enemies.find(item => item.name === enemyName);
 
@@ -2064,15 +2360,30 @@ document.getElementById("levelInput").addEventListener("change", () => {
 });
 
 
-document.getElementById("playerCountInput").addEventListener("input", () => {
+const playerCountInputEl = document.getElementById("playerCountInput");
+
+// While typing, just re-render with whatever's currently in the box
+// (getPlayerCount() already falls back to 1 for calculations if it's
+// empty or invalid) - don't rewrite the field's value here. Doing so
+// on every keystroke was the cause of a real bug: clearing the "1" to
+// type "12" produces an empty string for an instant, which clamped
+// straight back to "1" and blocked the rest of the digits from ever
+// being entered.
+playerCountInputEl.addEventListener("input", () => {
+
+    render();
+
+});
+
+// Only normalize/clamp the field itself once the user's done editing
+// (on blur, or Enter via the native "change" event) - so an empty or
+// out-of-range value settles back to a valid one without fighting the
+// user mid-type.
+playerCountInputEl.addEventListener("change", () => {
 
     const clamped = getPlayerCount();
 
-    if (Number(document.getElementById("playerCountInput").value) !== clamped) {
-
-        document.getElementById("playerCountInput").value = clamped;
-
-    }
+    playerCountInputEl.value = clamped;
 
     render();
 
@@ -2286,6 +2597,130 @@ if (unlockAllCursesToggle) {
 
 loadCurseVisibilityState();
 updateCurseVisibilityToggleUI();
+
+
+const showAllEnemiesToggle = document.getElementById("showAllEnemiesToggle");
+const unlockAllEnemiesToggle = document.getElementById("unlockAllEnemiesToggle");
+
+function updateEnemyVisibilityToggleUI() {
+
+    if (showAllEnemiesToggle) {
+
+        showAllEnemiesToggle.classList.toggle("active", enemyVisibilityState.showAll);
+        showAllEnemiesToggle.setAttribute("aria-checked", enemyVisibilityState.showAll ? "true" : "false");
+
+    }
+
+    if (unlockAllEnemiesToggle) {
+
+        unlockAllEnemiesToggle.classList.toggle("active", enemyVisibilityState.unlockAll);
+        unlockAllEnemiesToggle.setAttribute("aria-checked", enemyVisibilityState.unlockAll ? "true" : "false");
+
+        // Same rule as Unlock All Curses - nothing to unlock until
+        // Show All is revealing the extra enemies.
+        unlockAllEnemiesToggle.disabled = !enemyVisibilityState.showAll;
+
+    }
+
+}
+
+if (showAllEnemiesToggle) {
+
+    attachClickAction(showAllEnemiesToggle, () => {
+
+        enemyVisibilityState.showAll = !enemyVisibilityState.showAll;
+
+        if (!enemyVisibilityState.showAll) {
+
+            enemyVisibilityState.unlockAll = false;
+
+        }
+
+        saveEnemyVisibilityState();
+        updateEnemyVisibilityToggleUI();
+        render();
+
+    }, playUtilitySound);
+
+}
+
+if (unlockAllEnemiesToggle) {
+
+    unlockAllEnemiesToggle.addEventListener("click", () => {
+
+        if (unlockAllEnemiesToggle.disabled) {
+
+            return;
+
+        }
+
+        playUtilitySound();
+
+        enemyVisibilityState.unlockAll = !enemyVisibilityState.unlockAll;
+
+        saveEnemyVisibilityState();
+        updateEnemyVisibilityToggleUI();
+        render();
+
+    });
+
+}
+
+loadEnemyVisibilityState();
+updateEnemyVisibilityToggleUI();
+
+
+/*
+ * Left panel accent sync
+ * --------------------------
+ * The left sidebar's border/glow shifts to match whichever
+ * right-side panel is open - blue/cyan for the Upgrade Shop
+ * Calculator, red for the Death Tracker, and back to the default
+ * purple curse-tracker look when neither is open (see the
+ * .left-panel--upgrades / .left-panel--death variants + transition
+ * in style.css).
+ *
+ * This watches #upgradePanel and #deathPanel directly for their own
+ * "open" class being toggled, rather than being called from
+ * setUpgradePanelOpen/setDeathPanelOpen - so it works regardless of
+ * which file toggles which panel, and doesn't need any changes in
+ * DeathTracker.js.
+ */
+const leftPanelEl = document.querySelector(".left-panel");
+const upgradePanelForAccent = document.getElementById("upgradePanel");
+const deathPanelForAccent = document.getElementById("deathPanel");
+
+function updateLeftPanelAccent() {
+
+    if (!leftPanelEl) {
+
+        return;
+
+    }
+
+    const upgradesOpen = Boolean(upgradePanelForAccent && upgradePanelForAccent.classList.contains("open"));
+    const deathOpen = Boolean(deathPanelForAccent && deathPanelForAccent.classList.contains("open"));
+
+    leftPanelEl.classList.toggle("left-panel--upgrades", upgradesOpen);
+    leftPanelEl.classList.toggle("left-panel--death", deathOpen);
+
+}
+
+[upgradePanelForAccent, deathPanelForAccent].forEach(panel => {
+
+    if (!panel) {
+
+        return;
+
+    }
+
+    const observer = new MutationObserver(updateLeftPanelAccent);
+
+    observer.observe(panel, { attributes: true, attributeFilter: ["class"] });
+
+});
+
+updateLeftPanelAccent();
 
 
 const bgLayer = document.getElementById("bgLayer");
