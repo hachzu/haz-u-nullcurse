@@ -423,6 +423,35 @@
 }
 
 
+.upgrade-icon-mode-button {
+    border-color: rgba(255, 208, 116, 0.45);
+
+    color: #ffd074;
+}
+
+
+.upgrade-icon-mode-button:hover {
+    background: rgba(255, 208, 116, 0.14);
+
+    border-color: #ffd074;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(255, 208, 116, 0.4);
+}
+
+
+.upgrade-icon-mode-button.active {
+    background: rgba(255, 208, 116, 0.22);
+
+    border-color: #ffd074;
+
+    color: #241100;
+
+    box-shadow: 0 0 18px rgba(255, 208, 116, 0.55);
+}
+
+
 
 /* ---- Golden Gifts + purchase controls ---- */
 
@@ -906,22 +935,42 @@
  * own - each is only as tall as its own content, and the whole
  * panel (.upgrade-panel-inner) scrolls as a single region instead.
  */
+/* auto-fit lets each category claim at least 200px before another
+   column is allowed to squeeze in - with 5 categories now instead
+   of 4, that means the row wraps onto a second line on narrower
+   panels rather than cramming every column down until item names
+   have no room left to show. On wide panels all 5 still sit on one
+   line same as before. */
 .upgrade-categories {
-    display: flex;
+    display: grid;
 
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    align-items: stretch;
+
+    gap: 10px 14px;
 }
 
 
 .upgrade-category {
-    flex: 1 1 0;
     min-width: 0;
 
     display: flex;
 
     flex-direction: column;
+}
+
+
+/* Divider between category columns - a single left border on every
+   column but the first, so it still reads correctly if a row wraps
+   (the wrapped column just starts a fresh line). Applies to both
+   the buyable categories row and the OWNED UPGRADES basin below it
+   (both use .upgrade-category), and works the same whether Icon
+   Mode is on or off since it's keyed off the column wrapper itself,
+   not anything inside it. */
+.upgrade-category:not(:first-child) {
+    padding-left: 14px;
+
+    border-left: 1px solid rgba(143, 217, 255, 0.16);
 }
 
 
@@ -945,17 +994,20 @@
 .upgrade-grid {
     display: grid;
 
-    /* level | icon | name | stack | price | unown - the stack
+    /* level | icon | name+price | stack | unown - the stack
        indicator gets its own fixed-width column (see
        .upgrade-row-stack) so it lines up across every row in a
        category instead of drifting with how long each item's name
-       is, and price stays pinned to the right of it. */
-    grid-template-columns: 22px 40px minmax(0, 1fr) 52px 84px 20px;
+       is. Price no longer gets its own column - it now sits under
+       the name instead (see .upgrade-row-info below), which is what
+       actually gives the name room to show in full now that there
+       are 5 categories sharing the panel width instead of 4. */
+    grid-template-columns: 22px 40px minmax(0, 1fr) 44px 20px;
     align-content: start;
     align-items: center;
 
     row-gap: 9px;
-    column-gap: 8px;
+    column-gap: 6px;
 
     padding-right: 4px;
     padding-bottom: 4px;
@@ -1027,7 +1079,7 @@
        content (stack dots, price) needs a touch more room.
        overflow is visible so the dependency badge can sit slightly
        outside the card's corner. */
-    min-height: 42px;
+    min-height: 46px;
     box-sizing: border-box;
     overflow: visible;
 
@@ -1148,9 +1200,10 @@
     min-width: 0;
 
     display: flex;
+    flex-direction: column;
+    justify-content: center;
 
-    align-items: baseline;
-    gap: 6px;
+    gap: 3px;
 }
 
 
@@ -1256,17 +1309,16 @@
 
 
 .upgrade-row-price {
-    grid-column: 5;
-    justify-self: start;
+    align-self: flex-start;
 
     flex-shrink: 0;
 
-    display: flex;
+    display: inline-flex;
 
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 
-    padding: 4px 10px;
+    padding: 3px 7px;
 
     background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
@@ -1276,7 +1328,7 @@
     color: #241100;
 
     font-family: var(--font-modern);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.3px;
     white-space: nowrap;
@@ -1333,7 +1385,7 @@
    button's behavior). Stacked vertically so it fits the narrow
    trailing grid column. */
 .upgrade-row-stepper {
-    grid-column: 6;
+    grid-column: 5;
     justify-self: center;
 
     flex-shrink: 0;
@@ -1416,7 +1468,7 @@
    already-purchased stack. Active (not-yet-fully-owned) rows use the
    stepper above instead. */
 .upgrade-unown-button {
-    grid-column: 6;
+    grid-column: 5;
     justify-self: center;
 
     flex-shrink: 0;
@@ -1524,16 +1576,222 @@
 }
 
 
+/* ---- Icon Mode ----
+   Strips each row down to just its icon, a compact price badge, and
+   the stack controls - only the item name drops out visually. Level
+   pokes out past the top edge of the tile (same "sticking out"
+   treatment curse cards use for their enemy badges), styled
+   stale/muted gray rather than the bright gold price treatment so it
+   doesn't compete with the price badge for attention. Any dependency
+   requirement chip keeps its own default spot poking past the
+   top-left corner. The stack stepper/un-own button sit at the
+   bottom of the tile, laid out horizontally.
+   2 columns per category (was 3) so each tile gets roughly twice
+   the room - everything inside (icon, level badge, price badge,
+   stepper/unown controls, dots) is scaled up to match rather than
+   just leaving the extra space empty. Nothing is actually lost from
+   hiding the name either: every row still carries a title/aria-label
+   with the full name/level/price/stack info (see createUpgradeCard
+   in Upgrades.js). Toggled via #upgradeIconModeToggle, which
+   adds/removes this class on #upgradePanel itself. */
+.upgrade-panel.icon-mode .upgrade-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+
+    row-gap: 30px;
+    column-gap: 18px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row {
+    grid-column: auto;
+    grid-template-columns: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 6px;
+
+    min-height: unset;
+    aspect-ratio: unset;
+
+    padding: 12px 8px;
+}
+
+
+/* Only the name drops out visually in Icon Mode - the price badge
+   now lives inside this same wrapper (see .upgrade-row-info in the
+   normal-mode rules above), so the wrapper itself has to stay
+   visible here, just centered under the icon instead of left-
+   aligned next to a name. */
+.upgrade-panel.icon-mode .upgrade-row-info {
+    align-items: center;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-name {
+    display: none;
+}
+
+
+/* Explicit stacking order - icon, then stack dots (if any), then
+   price, then the stepper/unown controls - since the price badge
+   now sits inside .upgrade-row-info, which appears earlier in the
+   DOM than the stack dots (see Upgrades.js). Without this the price
+   would render above the stack dots instead of below them. */
+.upgrade-panel.icon-mode .upgrade-icon {
+    order: 1;
+
+    width: 70%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+
+    flex: 0 0 auto;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-stack {
+    order: 2;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-info {
+    order: 3;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-stepper,
+.upgrade-panel.icon-mode .upgrade-unown-button {
+    order: 4;
+}
+
+
+/* Level indicator - normally an inline label to the left of the
+   icon (see .upgrade-row-level). In Icon Mode it's pulled out of
+   the flex flow and pinned above the tile's top edge instead,
+   staying outside the box entirely so it never covers the icon. */
+.upgrade-panel.icon-mode .upgrade-row-level {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 2;
+
+    grid-column: unset;
+    justify-self: unset;
+
+    padding: 2px 7px;
+
+    background: rgba(40, 42, 48, 0.85);
+
+    border: 1px solid rgba(180, 186, 196, 0.35);
+    border-radius: 999px;
+
+    color: #b7bcc4;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-requirement-chip {
+    top: -11px;
+    left: -11px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-requirement-icon {
+    width: 16px;
+    height: 16px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-stack {
+    flex-direction: row;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-stack-text {
+    display: none;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-dot {
+    width: 6px;
+    height: 6px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-price {
+    padding: 5px 12px;
+
+    font-size: 15px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-price-amount {
+    font-size: 15px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-row-price-icon {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* Stack stepper + un-own button sit at the bottom of the tile,
+   laid out horizontally so the pair fits in one compact row instead
+   of the normal mode's vertical up/down stack in its own grid
+   column. Sized up to match the rest of the enlarged tile. */
+.upgrade-panel.icon-mode .upgrade-row-stepper {
+    grid-column: unset;
+    justify-self: unset;
+
+    flex-direction: row;
+    gap: 6px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-stepper-button {
+    width: 22px;
+    height: 18px;
+
+    font-size: 9px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-unown-button {
+    grid-column: unset;
+    justify-self: unset;
+
+    width: 20px;
+    height: 20px;
+
+    font-size: 14px;
+}
+
+
 @media (max-width: 900px) {
 
     .upgrade-categories {
-        flex-direction: column;
-        overflow-x: visible;
+        grid-template-columns: 1fr;
     }
 
 
-    .upgrade-category {
-        flex: 0 0 auto;
+    .upgrade-category:not(:first-child) {
+        padding-left: 0;
+        padding-top: 14px;
+        margin-top: 14px;
+
+        border-left: none;
+        border-top: 1px solid rgba(143, 217, 255, 0.16);
     }
 
 }

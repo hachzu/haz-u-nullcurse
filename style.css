@@ -814,7 +814,7 @@ body {
 
     background: rgba(255, 255, 255, 0.06);
 
-    border: 1px solid #4a2270;
+    border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 50%;
 
     color: #b6a3dd;
@@ -834,9 +834,9 @@ body {
 
 
 .active-curse-search-clear:hover {
-    background: rgba(145, 71, 214, 0.25);
+    background: color-mix(in srgb, var(--lp-mid, #9147d6) 25%, transparent);
 
-    border-color: #d59bff;
+    border-color: var(--lp-bright, #d59bff);
 
     color: #ffffff;
 }
@@ -1060,10 +1060,10 @@ body {
 .empty-state {
     padding: 18px;
 
-    border: 1px dashed #3a1a5c;
+    border: 1px dashed var(--lp-dim, #3a1a5c);
     border-radius: 8px;
 
-    color: #5c4880;
+    color: var(--lp-text-dim, #5c4880);
 
     text-align: center;
 
@@ -1085,10 +1085,10 @@ body {
 
     background: transparent;
 
-    border: 1px solid #4a2270;
+    border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 8px;
 
-    color: #9a7cc9;
+    color: var(--lp-text, #9a7cc9);
 
     font-size: 11px;
     font-weight: 700;
@@ -1101,9 +1101,9 @@ body {
 
 
 .reset-button:hover {
-    background: #2a1145;
+    background: var(--lp-hover-bg, #2a1145);
 
-    border-color: #d59bff;
+    border-color: var(--lp-bright, #d59bff);
 
     color: #ffffff;
 }
@@ -1425,7 +1425,7 @@ body {
 
 
 .credit-handle {
-    color: #d59bff;
+    color: var(--lp-bright, #d59bff);
     font-weight: 700;
 
     animation: credit-glow-pulse 2.5s ease-in-out infinite;
@@ -1436,12 +1436,12 @@ body {
 
     0%,
     100% {
-        text-shadow: 0 0 5px rgba(184, 102, 255, 0.35);
+        text-shadow: 0 0 5px color-mix(in srgb, var(--lp-bright, #d59bff) 35%, transparent);
     }
 
     50% {
         text-shadow:
-            0 0 12px rgba(184, 102, 255, 0.75),
+            0 0 12px color-mix(in srgb, var(--lp-bright, #d59bff) 75%, transparent),
             0 0 4px rgba(255, 255, 255, 0.4);
     }
 
@@ -2014,7 +2014,6 @@ body {
 .left-panel,
 .right-panel {
     scrollbar-width: thin;
-    scrollbar-color: rgba(184, 102, 255, 0.35) transparent;
 }
 
 
@@ -2030,16 +2029,35 @@ body {
 }
 
 
-.left-panel::-webkit-scrollbar-thumb,
+.right-panel {
+    scrollbar-color: rgba(184, 102, 255, 0.35) transparent;
+}
+
+
 .right-panel::-webkit-scrollbar-thumb {
     background: rgba(184, 102, 255, 0.3);
     border-radius: 999px;
 }
 
 
-.left-panel::-webkit-scrollbar-thumb:hover,
 .right-panel::-webkit-scrollbar-thumb:hover {
     background: rgba(184, 102, 255, 0.55);
+}
+
+
+.left-panel {
+    scrollbar-color: var(--lp-mid, #9147d6) transparent;
+}
+
+
+.left-panel::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--lp-mid, #9147d6) 45%, transparent);
+    border-radius: 999px;
+}
+
+
+.left-panel::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--lp-mid, #9147d6) 70%, transparent);
 }
 
 

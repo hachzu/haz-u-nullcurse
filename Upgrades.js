@@ -70,7 +70,7 @@ const upgradesList = [
     { name: "Ice Skates", price: 400, soloPrice: 300, level: 8, category: "movement" },
     { name: "Fanny Pack", price: 300, soloPrice: 300, level: 8, category: "eco" },
     { name: "Grace Wings", price: 300, soloPrice: 200, level: 8, category: "movement" },
-    { name: "Helmet", price: 400, soloPrice: 400, level: 8, category: "movement" },
+    { name: "Helmet", price: 400, soloPrice: 400, level: 8, category: "class" },
 
     {
         name: "Pocket Bell", price: 300, soloPrice: 300, level: 8, category: "movement",
@@ -101,7 +101,7 @@ const upgradesList = [
 
     { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
-    { name: "Ninja Belt", price: 700, soloPrice: 500, level: 13, category: "movement" },
+    { name: "Ninja Belt", price: 700, soloPrice: 500, level: 13, category: "class" },
 
     {
         name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13,
@@ -121,7 +121,7 @@ const upgradesList = [
     { name: "Sport Shoes", price: 1350, soloPrice: 1350, level: 15, category: "movement" },
 
     {
-        name: "Shark Tail", price: 1200, soloPrice: 1200, level: 15, category: "movement",
+        name: "Shark Tail", price: 1200, soloPrice: 1200, level: 15, category: "class",
         requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
     },
 
@@ -141,7 +141,7 @@ const upgradesList = [
     },
 
     {
-        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "movement",
+        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "class",
         requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
     },
 
@@ -152,10 +152,11 @@ const upgradesList = [
 
 const upgradeCategories = [
 
-    { key: "movement", label: "MOVEMENT" },
     { key: "eco", label: "ECO" },
-    { key: "environment", label: "ENVIRONMENT" },
-    { key: "survival", label: "SURVIVAL" }
+    { key: "movement", label: "MOVEMENT" },
+    { key: "class", label: "CLASS" },
+    { key: "survival", label: "SURVIVAL" },
+    { key: "environment", label: "ENVIRONMENT" }
 
 ];
 
@@ -182,6 +183,12 @@ const upgradeState = {
     // purchase - see getNextShopLevel().
     progressive: false,
 
+    // Icon Mode: off by default. On strips names/level text from
+    // every upgrade row down to just the icon (see .icon-mode in
+    // Upgrades.css) for a quicker visual scan - full details move
+    // into each row's title tooltip instead of disappearing.
+    iconMode: false,
+
     pending: new Map(),
     owned: new Map()
 
@@ -199,6 +206,7 @@ function saveUpgradeState() {
             mode: upgradeState.mode,
             goldenGifts: upgradeState.goldenGifts,
             progressive: upgradeState.progressive,
+            iconMode: upgradeState.iconMode,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -233,6 +241,7 @@ function loadUpgradeState() {
         upgradeState.mode = saved.mode || "solo";
         upgradeState.goldenGifts = Math.max(0, Number(saved.goldenGifts) || 0);
         upgradeState.progressive = Boolean(saved.progressive);
+        upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.pending = new Map(saved.pending || []);
         upgradeState.owned = new Map(saved.owned || []);
 
@@ -1268,6 +1277,34 @@ function createUpgradeCard(item) {
 
     const canAffordNext = !locked && !isFullyOwned && nextTierCost <= remaining;
 
+    // Icon Mode hides the name/level/price text visually, so this
+    // tooltip (and the matching aria-label below) is how that same
+    // information stays reachable on hover/for screen readers.
+    const titleParts = [`${item.name} (Lv${getEffectiveUpgradeLevel(item)})`];
+
+    if (locked) {
+
+        titleParts.push("Locked");
+
+    } else if (isFullyOwned) {
+
+        titleParts.push("Owned");
+
+    } else {
+
+        titleParts.push(`${nextTierCost.toLocaleString()} Golden Gifts`);
+
+    }
+
+    if (maxStack > 1) {
+
+        titleParts.push(`${pending}/${maxStack} stacks`);
+
+    }
+
+    row.title = titleParts.join(" \u2022 ");
+    row.setAttribute("aria-label", titleParts.join(", "));
+
     if (locked) {
 
         row.classList.add("upgrade-row--locked");
@@ -1403,7 +1440,12 @@ function createUpgradeCard(item) {
 
     }
 
-    row.appendChild(badge);
+    // Nested inside `info` (the name column) rather than appended
+    // directly to the row, so the price badge renders as a second
+    // line under the name instead of eating its own grid column -
+    // that column-per-price layout was starving the name of width
+    // once there were 5 categories sharing the panel instead of 4.
+    info.appendChild(badge);
 
     // Active (not-yet-fully-owned) rows get the up/down stepper, but
     // only when the upgrade actually stacks (maxStack > 1) - a
@@ -1952,11 +1994,104 @@ function renderProgressiveToggle() {
 }
 
 
+/*
+ * Icon Mode toggle - a plain button dropped into the header's
+ * button group (alongside Own All / Reset), since it's a display
+ * preference rather than a purchase-affecting mechanic like
+ * Progressive or Nothing. Toggling it flips .icon-mode on the panel
+ * itself (see applyIconModeState), which is what the CSS in
+ * Upgrades.css actually keys off of.
+ */
+function toggleIconMode() {
+
+    upgradeState.iconMode = !upgradeState.iconMode;
+
+    saveUpgradeState();
+    applyIconModeState();
+
+}
+
+
+function applyIconModeState() {
+
+    const panel = document.getElementById("upgradePanel");
+
+    if (panel) {
+
+        panel.classList.toggle("icon-mode", upgradeState.iconMode);
+
+    }
+
+    const toggleButton = document.getElementById("upgradeIconModeToggle");
+
+    if (toggleButton) {
+
+        toggleButton.classList.toggle("active", upgradeState.iconMode);
+        toggleButton.setAttribute("aria-pressed", upgradeState.iconMode ? "true" : "false");
+
+        const labelEl = toggleButton.querySelector(".btn-label");
+
+        if (labelEl) {
+
+            labelEl.textContent = upgradeState.iconMode ? "ICONS: ON" : "ICONS";
+
+        }
+
+    }
+
+}
+
+
+function renderIconModeToggle() {
+
+    let button = document.getElementById("upgradeIconModeToggle");
+
+    if (!button) {
+
+        const container = document.querySelector(".upgrade-header-buttons");
+
+        if (!container) {
+
+            return;
+
+        }
+
+        button = document.createElement("button");
+
+        button.type = "button";
+        button.id = "upgradeIconModeToggle";
+        button.className = "upgrade-reset-button upgrade-icon-mode-button";
+        button.setAttribute("aria-pressed", "false");
+        button.title = "Show upgrades as icons only, hiding names and levels for a quicker visual scan. "
+            + "Full details are still available as a tooltip on hover.";
+
+        const label = document.createElement("span");
+
+        label.className = "btn-label";
+        label.textContent = "ICONS";
+
+        button.appendChild(label);
+
+        // Placed first so the order reads left-to-right as
+        // "view preference, then destructive/bulk actions" - Icon
+        // Mode, then Own All, then Reset.
+        container.insertBefore(button, container.firstChild);
+
+        attachClickAction(button, toggleIconMode, playUtilitySound);
+
+    }
+
+    applyIconModeState();
+
+}
+
+
 function refreshUpgradePanel() {
 
     renderUpgradeModeButtons();
     syncGoldenGiftsInput();
     renderProgressiveToggle();
+    renderIconModeToggle();
     renderUpgradeGrid();
 
 }
