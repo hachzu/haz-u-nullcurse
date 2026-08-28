@@ -199,6 +199,29 @@ body {
     margin-bottom: 32px;
 }
 
+.live-viewer-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 5px 10px;
+
+    background: rgba(184, 102, 255, 0.08);
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 999px;
+
+    color: #b6a3dd;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.live-viewer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #7be6a8;
+    box-shadow: 0 0 6px rgba(123, 230, 168, 0.8);
+}
 
 .site-header-top {
     display: flex;
