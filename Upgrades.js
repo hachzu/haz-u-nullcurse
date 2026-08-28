@@ -1669,13 +1669,13 @@ function updateUpgradeTotals() {
 
     if (totalValueEl) {
 
-        totalValueEl.textContent = total.toLocaleString();
+        tweenNumberText(totalValueEl, total);
 
     }
 
     if (remainingValueEl) {
 
-        remainingValueEl.textContent = remaining.toLocaleString();
+        tweenNumberText(remainingValueEl, remaining);
         remainingValueEl.classList.toggle("upgrade-panel-total-value--negative", remaining < 0);
 
     }

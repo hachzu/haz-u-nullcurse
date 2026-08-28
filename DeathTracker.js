@@ -91,7 +91,7 @@ function renderDeathTracker() {
     const countEl = document.getElementById("deathPlayerCountInput");
     const nextButton = document.getElementById("deathNextLevelButton");
 
-    if (totalEl) totalEl.textContent = deathState.players.reduce((sum, p) => sum + p.deaths, 0);
+    if (totalEl) tweenNumberText(totalEl, deathState.players.reduce((sum, p) => sum + p.deaths, 0));
     if (startEl && Number(startEl.value) !== deathState.startLevel) startEl.value = deathState.startLevel;
     if (countEl && Number(countEl.value) !== deathState.players.length) countEl.value = deathState.players.length;
     if (nextButton) nextButton.textContent = `NEXT LEVEL \u2192 Lv${deathState.currentLevel + 1}`;

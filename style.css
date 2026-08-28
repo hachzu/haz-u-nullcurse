@@ -2034,6 +2034,38 @@ body {
 }
 
 
+/*
+ * Rolling number animation support (see tweenNumberText in
+ * script.js). `.roll-pill` wrappers get their width flipped via
+ * inline styles during a change, so overflow stays clipped to the
+ * pill's rounded shape while that's happening. `.roll-number-active`
+ * is applied to the number itself for the duration of the tween, for
+ * a brief brightness pulse that reads as "this just changed."
+ */
+.roll-pill {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+
+.roll-number-active {
+    animation: roll-number-glow 0.55s ease-out;
+}
+
+
+@keyframes roll-number-glow {
+
+    0% {
+        filter: brightness(1.5);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+
+}
+
+
 .left-panel,
 .right-panel {
     scrollbar-width: thin;

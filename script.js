@@ -158,6 +158,136 @@ function loadEnemyVisibilityState() {
 }
 
 
+/*
+ * Rolling number animation
+ * --------------------------
+ * Smoothly tweens a numeric readout's text from whatever it
+ * currently shows to a new target value, instead of snapping
+ * straight to it - used for stat-style numbers that change on their
+ * own as a side effect of other actions (medal payout, curse/enemy
+ * counts, death totals, upgrade totals) rather than numbers the
+ * player is actively typing into an input.
+ *
+ * If the element sits inside a `.roll-pill` wrapper, the wrapper's
+ * own width is animated too (a small FLIP: measure the width before
+ * and after the value changes, then transition between the two) so
+ * a pill growing or shrinking - e.g. payout going from 2 digits to
+ * 3 - stretches smoothly instead of snapping to its new size the
+ * instant the extra digit appears.
+ */
+function tweenNumberText(el, targetValue, options = {}) {
+
+    if (!el) {
+
+        return;
+
+    }
+
+    const duration = options.duration ?? 550;
+    const format = options.format || (value => Math.round(value).toLocaleString());
+
+    const target = Number(targetValue);
+
+    if (!Number.isFinite(target)) {
+
+        return;
+
+    }
+
+    const previous = el.dataset.rollValue !== undefined
+        ? parseFloat(el.dataset.rollValue)
+        : NaN;
+
+    const startValue = Number.isFinite(previous) ? previous : target;
+
+    el.dataset.rollValue = target;
+
+    if (startValue === target) {
+
+        el.textContent = format(target);
+
+        return;
+
+    }
+
+    if (el._rollRAF) {
+
+        cancelAnimationFrame(el._rollRAF);
+        el._rollRAF = null;
+
+    }
+
+    const pill = el.closest(".roll-pill");
+
+    if (pill) {
+
+        const firstWidth = pill.getBoundingClientRect().width;
+
+        const currentText = el.textContent;
+
+        el.textContent = format(target);
+
+        const lastWidth = pill.getBoundingClientRect().width;
+
+        el.textContent = currentText;
+
+        if (Math.abs(lastWidth - firstWidth) > 0.5) {
+
+            pill.style.transition = "none";
+            pill.style.width = `${firstWidth}px`;
+
+            void pill.offsetWidth;
+
+            pill.style.transition = "width 0.4s cubic-bezier(0.22, 1, 0.36, 1)";
+            pill.style.width = `${lastWidth}px`;
+
+            const clearPillWidth = () => {
+
+                pill.style.transition = "";
+                pill.style.width = "";
+                pill.removeEventListener("transitionend", clearPillWidth);
+
+            };
+
+            pill.addEventListener("transitionend", clearPillWidth);
+
+        }
+
+    }
+
+    el.classList.add("roll-number-active");
+
+    const startTime = performance.now();
+
+    function step(now) {
+
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        const current = startValue + (target - startValue) * eased;
+
+        el.textContent = format(current);
+
+        if (t < 1) {
+
+            el._rollRAF = requestAnimationFrame(step);
+
+        } else {
+
+            el.textContent = format(target);
+            el._rollRAF = null;
+            el.classList.remove("roll-number-active");
+
+        }
+
+    }
+
+    el._rollRAF = requestAnimationFrame(step);
+
+}
+
+
 const difficulties = [
     "Casual",
     "Standard",
@@ -2295,7 +2425,7 @@ function render() {
 
     });
 
-    document.getElementById("medalPayoutValue").textContent = getMedalPayout();
+    tweenNumberText(document.getElementById("medalPayoutValue"), getMedalPayout());
 
     const enemyContainer = document.getElementById("enemyContainer");
 
@@ -2309,8 +2439,8 @@ function render() {
 
         });
 
-    document.getElementById("curseCount").textContent = getDisplayedCurseNames().length;
-    document.getElementById("enemyCount").textContent = runState.activeEnemies.size;
+    tweenNumberText(document.getElementById("curseCount"), getDisplayedCurseNames().length);
+    tweenNumberText(document.getElementById("enemyCount"), runState.activeEnemies.size);
 
     renderActiveCurses();
 
