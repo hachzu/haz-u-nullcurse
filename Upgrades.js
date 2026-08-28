@@ -151,13 +151,12 @@ const upgradesList = [
 
 
 const upgradeCategories = [
-
+    
     { key: "eco", label: "ECO" },
     { key: "movement", label: "MOVEMENT" },
-    { key: "class", label: "CLASS" },
+    { key: "environment", label: "ENVIRONMENT" },
     { key: "survival", label: "SURVIVAL" },
-    { key: "environment", label: "ENVIRONMENT" }
-
+    { key: "class", label: "CLASS" }
 ];
 
 
