@@ -7,6 +7,25 @@
     <title>Nullscape Upgrade & Curse Tracker
     </title>
 
+    <!--
+        Link preview metadata (Discord, Slack, iMessage, Twitter/X,
+        etc all read these). No og:image/twitter:image yet - add one
+        later at assets/branding/embed-preview.png (ideally 1200x630)
+        and then add:
+            <meta property="og:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/branding/embed-preview.png">
+            <meta name="twitter:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/branding/embed-preview.png">
+        and change twitter:card below from "summary" to
+        "summary_large_image" once that's in place.
+    -->
+    <meta property="og:title" content="Nullscape Upgrade & Curse Tracker">
+    <meta property="og:description" content="Track deaths and plan upgrade purchases for Nullscape runs - curse pools, enemy pools, and a full shop calculator.">
+    <meta property="og:url" content="https://hachzu.github.io/haz-u-nullcurse/">
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Nullscape Upgrade & Curse Tracker">
+    <meta name="twitter:description" content="Track deaths and plan upgrade purchases for Nullscape runs - curse pools, enemy pools, and a full shop calculator.">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,22 +45,28 @@
     <aside class="left-panel">
 
         <header class="site-header">
-            <div class="live-viewer-badge" id="liveViewerBadge">
-            <span class="live-viewer-dot"></span>
-            <span id="liveViewerCount">1</span> online
-            </div>  
             <div class="site-header-top">
                 <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
-                <button
-                    type="button"
-                    id="muteToggleButton"
-                    class="mute-toggle-button"
-                    aria-pressed="false"
-                    aria-label="Mute sound effects"
-                    title="Mute sound effects"
-                >
-                    <span class="mute-toggle-icon" id="muteToggleIcon">&#128266;</span>
-                </button>
+
+                <div class="site-header-controls">
+
+                    <div class="live-viewer-badge" id="liveViewerBadge">
+                        <span class="live-viewer-dot"></span>
+                        <span id="liveViewerCount">1</span> online
+                    </div>
+
+                    <button
+                        type="button"
+                        id="muteToggleButton"
+                        class="mute-toggle-button"
+                        aria-pressed="false"
+                        aria-label="Mute sound effects"
+                        title="Mute sound effects"
+                    >
+                        <span class="mute-toggle-icon" id="muteToggleIcon">&#128266;</span>
+                    </button>
+
+                </div>
             </div>
             <div class="subtitle">UPGRADE &amp; CURSE TRACKER</div>
             <div class="credit">
@@ -598,6 +623,7 @@
     </button>
 
 </div>
+
 
 <script type="module" src="Presence.js"></script>
 <script src="script.js"></script>
