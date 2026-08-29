@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nullscape Toolkits
+    </title>
+
+    <!--
+        Link preview metadata (Discord, Slack, iMessage, Twitter/X,
+        etc all read these).
+    -->
+    <meta property="og:title" content="Nullscape Toolkits">
+    <meta property="og:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
+    <meta property="og:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
+    <meta property="og:url" content="https://hachzu.github.io/haz-u-nullcurse/">
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Nullscape Toolkits">
+    <meta name="twitter:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
+    <meta name="twitter:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="DeathTracker.css">
+    <link rel="stylesheet" href="Particles.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="Upgrades.css">
+    <link rel="stylesheet" href="Altars.css">
+    <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
+</head>
+
+<body>
+
+<div id="bgLayer" class="bg-layer"></div>
+<canvas id="particleCanvas" class="particle-canvas"></canvas>
+<div class="app">
+
+    <aside class="left-panel">
+
+        <header class="site-header">
+            <div class="site-header-top">
+                <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
+
+                <div class="site-header-controls">
+
+                    <div class="live-viewer-badge" id="liveViewerBadge">
+                        <span class="live-viewer-dot"></span>
+                        <span id="liveViewerCount">1</span> online
+                    </div>
+
+                    <button
+                        type="button"
+                        id="muteToggleButton"
+                        class="mute-toggle-button"
+                        aria-pressed="false"
+                        aria-label="Mute sound effects"
+                        title="Mute sound effects"
+                    >
+                        <span class="mute-toggle-icon" id="muteToggleIcon">&#128266;</span>
+                    </button>
+
+                </div>
+            </div>
+            <div class="subtitle">TOOLKITS</div>
+            <div class="credit">
+                Made by <span class="credit-handle">@sxfthazu.html</span>
+            </div>
+            <div class="data-source-note">
+                Values are sourced from the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a> and may contain errors!
+            </div>
+        </header>
+
+
+        <section class="control-section level-section">
+
+            <label for="levelInput">CURRENT LEVEL</label>
+
+            <input
+                type="number"
+                id="levelInput"
+                min="1"
+                value="1"
+            >
+
+        </section>
+
+
+        <!--
+            Player Count now stays visible in the left panel at all
+            times (it's used by the medal payout calc too, not just
+            the upgrade shop). Game Mode still only matters while the
+            Upgrade Shop Calculator is open, so it stays hidden on
+            the curse tracker and is revealed/removed in step with
+            the upgrade panel's own open state (see
+            setUpgradePanelOpen in Upgrades.js, and
+            .upgrade-panel-only-section in Upgrades.css).
+        -->
+        <section class="control-section level-section">
+
+            <label for="playerCountInput">PLAYER COUNT <span class="label-note"></span></label>
+
+            <input
+                type="number"
+                id="playerCountInput"
+                min="1"
+                max="100"
+                value="1"
+            >
+
+        </section>
+
+
+        <section class="control-section upgrade-panel-only-section">
+
+            <div class="section-label">
+                GAME MODE <span class="label-note">(for upgrade shop calculator)</span>
+            </div>
+
+            <div
+                id="upgradeModeContainer"
+                class="button-grid upgrade-mode-grid"
+            ></div>
+
+        </section>
+
+
+        <section class="control-section">
+
+            <div class="section-label">
+                DIFFICULTY
+            </div>
+
+            <div
+                id="difficultyContainer"
+                class="button-grid difficulty-grid"
+            ></div>
+
+            <div class="medal-payout-indicator roll-pill">
+                <span class="medal-payout-label">MEDAL PAYOUT</span>
+                <span class="medal-payout-value" id="medalPayoutValue">0</span>
+            </div>
+
+        </section>
+
+
+        <section id="activeEnemiesSection" class="control-section hide-when-upgrades-open">
+
+            <div class="section-heading">
+
+                <span>ACTIVE ENEMIES</span>
+
+                <div class="section-heading-controls">
+
+                    <span
+                        id="enemyCount"
+                        class="count"
+                    >
+                        0
+                    </span>
+
+                    <button
+                        type="button"
+                        id="showAllEnemiesToggle"
+                        class="mini-visibility-toggle"
+                        role="switch"
+                        aria-checked="false"
+                        title="Show every enemy, even ones you don't currently meet the level or dependency requirements for"
+                    >
+                        <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
+                        <span class="mini-visibility-label">ALL</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        id="unlockAllEnemiesToggle"
+                        class="mini-visibility-toggle"
+                        role="switch"
+                        aria-checked="false"
+                        title="Let any shown enemy be marked active with no level or dependency required"
+                    >
+                        <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
+                        <span class="mini-visibility-label">UNLOCK</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div
+                id="enemyContainer"
+                class="button-grid enemy-grid"
+            ></div>
+
+        </section>
+
+
+        <section class="control-section active-section">
+
+            <div class="section-heading">
+
+                <span>ACTIVE CURSES</span>
+
+                <span
+                    id="curseCount"
+                    class="count"
+                >
+                    0
+                </span>
+
+            </div>
+
+            <div class="active-curse-search">
+
+                <input
+                    type="text"
+                    id="activeCurseSearch"
+                    class="active-curse-search-input"
+                    placeholder="search active curses..."
+                    autocomplete="off"
+                >
+
+                <button
+                    type="button"
+                    id="activeCurseSearchClear"
+                    class="active-curse-search-clear"
+                    aria-label="Clear search"
+                >
+                    <span class="btn-label">&times;</span>
+                </button>
+
+            </div>
+
+            <div
+                id="activeCurseContainer"
+                class="active-curses"
+            >
+
+                <div class="empty-state">
+                    no curses selected
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <div class="run-controls">
+
+            <button
+                id="resetButton"
+                class="reset-button"
+            >
+                <span class="btn-label">RESET RUN</span>
+            </button>
+
+            <button
+                id="removeAllCursesButton"
+                class="reset-button remove-all-button"
+            >
+                <span class="btn-label">REMOVE ALL CURSES</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <main class="right-panel">
+
+        <div id="upgradePanel" class="upgrade-panel">
+
+            <div class="upgrade-panel-inner">
+
+                <div class="upgrade-panel-header">
+
+                    <div class="upgrade-panel-heading animated-header-text">
+                        SHOP UPGRADE CALCULATOR
+                    </div>
+
+                    <div class="upgrade-header-buttons">
+
+                        <button
+                            id="upgradeOwnAllButton"
+                            class="upgrade-reset-button upgrade-own-all-button"
+                            type="button"
+                            title="Mark every upgrade as fully owned - a quick way to see the full owned state, not an in-run purchase"
+                        >
+                            <span class="btn-label">OWN ALL</span>
+                        </button>
+
+                        <button
+                            id="upgradeResetButton"
+                            class="upgrade-reset-button"
+                            type="button"
+                        >
+                            <span class="btn-label">RESET</span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="upgrade-panel-controls">
+
+                    <div class="upgrade-purchase-row">
+
+                        <div class="upgrade-gifts-block">
+
+                            <label for="goldenGiftsInput" class="upgrade-control-label">GOLDEN GIFTS</label>
+
+                            <input
+                                type="number"
+                                id="goldenGiftsInput"
+                                min="0"
+                                value="0"
+                            >
+
+                        </div>
+
+                        <div class="upgrade-panel-total roll-pill">
+                            <span class="upgrade-panel-total-label">TOTAL</span>
+                            <span
+                                id="upgradeTotalValue"
+                                class="upgrade-panel-total-value"
+                            >
+                                0
+                            </span>
+                        </div>
+
+                        <div class="upgrade-panel-total upgrade-panel-remaining roll-pill">
+                            <span class="upgrade-panel-total-label">LEFT</span>
+                            <span
+                                id="upgradeRemainingValue"
+                                class="upgrade-panel-total-value"
+                            >
+                                0
+                            </span>
+                        </div>
+
+                        <!--
+                            Nothing Curse and Progressive Mode now
+                            share one look: a small label next to a
+                            track+thumb switch showing ON/OFF (see
+                            .upgrade-toggle-block in Upgrades.css).
+                            The Progressive block is injected right
+                            after this one by Upgrades.js.
+                        -->
+                        <div id="upgradeToggleGroup" class="upgrade-toggle-group">
+
+                            <div class="upgrade-toggle-block">
+
+                                <span class="upgrade-control-label upgrade-toggle-block-label">Nothing &minus;15%</span>
+
+                                <button
+                                    type="button"
+                                    id="upgradeNothingIndicator"
+                                    class="upgrade-switch upgrade-nothing-indicator"
+                                    role="switch"
+                                    aria-checked="false"
+                                >
+                                    <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
+                                    <span class="upgrade-switch-label">OFF</span>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <button
+                            id="purchaseUpgradeButton"
+                            class="purchase-upgrade-button"
+                            type="button"
+                        >
+                            <span class="btn-label">PURCHASE UPGRADE</span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="upgradeCategories"
+                    class="upgrade-categories"
+                ></div>
+
+                <div class="upgrade-owned-banner">
+                    <span>&#9733;</span>
+                    <span>OWNED UPGRADES</span>
+                </div>
+
+                <div
+                    id="upgradeOwnedCategories"
+                    class="upgrade-categories upgrade-owned-categories"
+                ></div>
+
+            </div>
+
+        </div>
+
+        <!--
+            Death Tracker panel - same sliding-overlay pattern as the
+            Upgrade panel above (see .death-panel in DeathTracker.css
+            and setDeathPanelOpen in DeathTracker.js). Toggled by the
+            deathToggleButton fixed button below.
+        -->
+        <div id="deathPanel" class="death-panel">
+
+            <div class="death-panel-inner">
+
+                <div class="death-panel-header">
+
+                    <div class="death-panel-heading animated-header-text">
+                        DEATH TRACKER
+                    </div>
+
+                    <div class="death-panel-total roll-pill death-panel-current-level">
+                        <span class="death-panel-total-label">CURRENT LEVEL</span>
+                        <span id="deathCurrentLevelValue" class="death-panel-total-value">1</span>
+                    </div>
+
+                    <div class="death-panel-total roll-pill">
+                        <span class="death-panel-total-label">TOTAL DEATHS</span>
+                        <span id="deathTotalValue" class="death-panel-total-value">0</span>
+                    </div>
+
+                    <div class="death-header-buttons">
+
+                        <button
+                            id="deathResetButton"
+                            class="death-reset-button"
+                            type="button"
+                        >
+                            <span class="btn-label">RESET</span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="death-panel-body">
+
+                    <div class="death-panel-main">
+
+                        <div class="death-level-controls">
+                            <div class="death-level-block">
+                                <label class="death-control-label" for="deathStartLevelInput">START LEVEL</label>
+                                <input type="number" id="deathStartLevelInput" min="1" value="1" inputmode="numeric">
+                            </div>
+
+                            <button id="deathNextLevelButton" class="death-next-level-button" type="button">
+                                NEXT LEVEL &rarr;
+                            </button>
+
+                            <!--
+                                Lets a level's death count climb past
+                                the normal 3-per-player cap - and, in
+                                turn, removes any need to click Next
+                                Level just to reset that cap. Same
+                                track+thumb switch shape as the
+                                Nothing Curse / Progressive Mode
+                                toggles in the Upgrade panel.
+                            -->
+                            <div class="death-toggle-block">
+
+                                <span class="death-control-label death-toggle-block-label">Unlimited Deaths</span>
+
+                                <button
+                                    type="button"
+                                    id="deathUnlimitedToggle"
+                                    class="death-switch"
+                                    role="switch"
+                                    aria-checked="false"
+                                >
+                                    <span class="death-switch-track"><span class="death-switch-thumb"></span></span>
+                                    <span class="death-switch-label">OFF</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <div class="death-player-controls">
+                            <div class="death-player-count-block">
+                                <span class="death-control-label">PLAYERS</span>
+                                <div class="death-player-count-row">
+                                    <button id="deathPlayerCountMinus" class="death-count-button death-count-button--minus" type="button" aria-label="Remove player">&minus;</button>
+                                    <input type="number" id="deathPlayerCountInput" min="1" max="50" value="1" aria-label="Player count">
+                                    <button id="deathPlayerCountPlus" class="death-count-button" type="button" aria-label="Add player">+</button>
+                                </div>
+                            </div>
+
+                            <div class="death-player-hint" id="deathPlayerHint">
+                                Add a player, type their name, then use <strong>+</strong> when they die.
+                                Max 3 deaths per player per level.
+                            </div>
+                        </div>
+
+                        <div id="deathPlayerList" class="death-player-list"></div>
+
+                    </div>
+
+                    <div class="death-panel-log-side">
+
+                        <div class="death-log-heading">
+                            <span>RUN DEATH LOG</span>
+                        </div>
+
+                        <div id="deathLogList" class="death-log-list"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!--
+            Altars panel - same sliding-overlay pattern as the
+            Upgrade and Death Tracker panels above (see .altars-panel
+            in Altars.css and setAltarsPanelOpen in Altars.js).
+            Toggled by the altarsToggleButton fixed button below.
+        -->
+        <div id="altarsPanel" class="altars-panel">
+
+            <div class="altars-panel-inner">
+
+                <div class="altars-panel-header">
+
+                    <div class="altars-panel-heading animated-header-text">
+                        ALTARS
+                    </div>
+
+                </div>
+
+                <div class="altars-panel-body">
+
+                    <div class="altars-placeholder">
+                        Coming soon...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <header class="pool-header">
+
+            <div>
+                <div class="pool-title animated-header-text">
+                    CURSE POOLS
+                </div>
+
+                <div class="pool-subtitle">
+                    this system will help you prepare for future curses and manage curse selection efficiently. select your current level, difficulty, and active enemies to see the curses that will be available to you.
+                </div>
+            </div>
+
+            <div class="pool-controls">
+<button
+    type="button"
+    id="hideMedalCursesToggle"
+    class="curse-visibility-toggle"
+    role="switch"
+    aria-checked="false"
+    title="Hide the dedicated Medal Curses section - medal curses still show up right where they'd normally sit in Global/Enemy Curses, highlighted with their reward value"
+>
+    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+    <span class="curse-visibility-label">HIDE MEDAL CURSES</span>
+</button>  
+                <button
+                    type="button"
+                    id="showAllCursesToggle"
+                    class="curse-visibility-toggle"
+                    role="switch"
+                    aria-checked="false"
+                    title="Show every curse in every pool, even ones you don't currently meet the requirements for"
+                >
+                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                    <span class="curse-visibility-label">SHOW ALL CURSES</span>
+                </button>
+
+                <button
+                    type="button"
+                    id="unlockAllCursesToggle"
+                    class="curse-visibility-toggle"
+                    role="switch"
+                    aria-checked="false"
+                    title="Let any shown curse be selected with no level, enemy, or other dependency required"
+                >
+                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                    <span class="curse-visibility-label">UNLOCK ALL CURSES</span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <section class="result-section">
+
+            <div class="result-heading">
+
+                <h2 id="medalHeading" class="animated-header-text">• MEDAL CURSES</h2>
+
+            </div>
+
+            <div
+                id="medalCurseContainer"
+                class="result-grid"
+            ></div>
+
+        </section>
+
+
+        <section class="result-section">
+
+            <div class="result-heading">
+
+                <h2 id="globalHeading" class="animated-header-text">• GLOBAL CURSES</h2>
+
+            </div>
+
+            <div
+                id="globalCurseContainer"
+                class="result-grid"
+            ></div>
+
+        </section>
+
+
+        <section class="result-section">
+
+            <div class="result-heading">
+
+                <h2 id="enemyHeading" class="animated-header-text">• ENEMY CURSES</h2>
+
+            </div>
+
+            <div
+                id="enemyCurseContainer"
+                class="result-grid"
+            ></div>
+
+        </section>
+
+
+        <section class="result-section">
+
+            <div class="result-heading">
+
+                <h2 id="greaterHeading" class="animated-header-text">• GREATER CURSES</h2>
+
+            </div>
+
+            <div
+                id="greaterCurseContainer"
+                class="result-grid"
+            ></div>
+
+        </section>
+
+    </main>
+
+    <!--
+        Both floating toggle buttons now share this single fixed-
+        position wrapper (see .floating-toggle-buttons in style.css)
+        instead of each carrying its own position: fixed - that's
+        what keeps them pinned together in the bottom-right corner
+        instead of drifting into normal document flow.
+    -->
+    <div class="floating-toggle-buttons">
+
+        <button
+            id="upgradeToggleButton"
+            class="upgrade-toggle-button"
+            type="button"
+            aria-label="Toggle upgrade calculator"
+            aria-expanded="false"
+            aria-keyshortcuts="b"
+        >
+            <span class="upgrade-toggle-icon">+</span>
+            <span class="btn-label">UPGRADES</span>
+            <span class="upgrade-toggle-key">B</span>
+        </button>
+
+        <button
+            id="deathToggleButton"
+            class="death-toggle-button"
+            type="button"
+            aria-label="Toggle death tracker"
+            aria-expanded="false"
+            aria-keyshortcuts="x"
+        >
+            <span class="death-toggle-icon">&#9760;</span>
+            <span class="btn-label">DEATHS</span>
+            <span class="death-toggle-key">X</span>
+        </button>
+
+        <button
+            id="altarsToggleButton"
+            class="altars-toggle-button"
+            type="button"
+            aria-label="Toggle altars tracker"
+            aria-expanded="false"
+            aria-keyshortcuts="n"
+        >
+            <span class="altars-toggle-icon">&#43612;</span>
+            <span class="btn-label">ALTARS</span>
+            <span class="altars-toggle-key">N</span>
+        </button>
+
+    </div>
+
+</div>
+
+
+<script type="module" src="Presence.js"></script>
+<script src="script.js"></script>
+<script src="Upgrades.js"></script>
+<script src="DeathTracker.js"></script>
+<script src="Altars.js"></script>
+<script src="Particles.js"></script>
+<script src="DeathTracker.js"></script>
+
+</body>
+</html>
