@@ -42,6 +42,56 @@ const curseVisibilityState = {
 
 };
 
+/*
+ * Independent of curseVisibilityState - this just controls whether
+ * the dedicated "Medal Curses" section at the top of the pools is
+ * shown at all. When hidden, medal curses don't disappear - they
+ * still render in their normal Global/Enemy Curses spot, just with
+ * the same cyan/pink highlight + reward badge the dedicated section
+ * gives them, so the "this is worth a medal" signal isn't lost.
+ */
+const medalDisplayState = {
+    hideSection: false
+};
+
+const MEDAL_DISPLAY_STORAGE_KEY = "nullscapeMedalDisplayState";
+
+function saveMedalDisplayState() {
+
+    try {
+
+        localStorage.setItem(MEDAL_DISPLAY_STORAGE_KEY, JSON.stringify(medalDisplayState));
+
+    } catch (error) {
+
+        console.warn("couldn't save medal display state:", error);
+
+    }
+
+}
+
+function loadMedalDisplayState() {
+
+    try {
+
+        const raw = localStorage.getItem(MEDAL_DISPLAY_STORAGE_KEY);
+
+        if (!raw) {
+            return;
+        }
+
+        const saved = JSON.parse(raw);
+
+        medalDisplayState.hideSection = Boolean(saved.hideSection);
+
+    } catch (error) {
+
+        console.warn("couldn't load medal display state, starting fresh:", error);
+
+    }
+
+}
+
 
 const CURSE_VISIBILITY_STORAGE_KEY = "nullscapeCurseVisibilityState";
 
@@ -2304,7 +2354,7 @@ function renderActiveCurses() {
 }
 
 
-function renderPool(containerId, curses, medal = false) {
+function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
     const container = document.getElementById(containerId);
 
@@ -2325,7 +2375,16 @@ function renderPool(containerId, curses, medal = false) {
 
     curses.forEach(curse => {
 
-        const card = createCurseCard(curse, medal);
+        // Every card in the dedicated Medal Curses container gets
+        // the medal highlight, same as before. Elsewhere (Global/
+        // Enemy Curses), a medal curse only picks up that same
+        // highlight once Hide Medal Curses is on - otherwise it
+        // stays a plain card like today, since it's already shown
+        // highlighted in the dedicated section.
+        const showMedalHighlight = isDedicatedMedalContainer
+            || (Boolean(curse.medal) && medalDisplayState.hideSection);
+
+        const card = createCurseCard(curse, showMedalHighlight);
 
         container.appendChild(card);
 
@@ -2444,7 +2503,26 @@ function render() {
 
     renderActiveCurses();
 
-    renderPool("medalCurseContainer", getMedalPool(), true);
+        const medalCurseContainerEl = document.getElementById("medalCurseContainer");
+    const medalSectionEl = medalCurseContainerEl ? medalCurseContainerEl.closest(".result-section") : null;
+
+    if (medalDisplayState.hideSection) {
+
+        if (medalCurseContainerEl) {
+            medalCurseContainerEl.innerHTML = "";
+        }
+
+    } else {
+
+        renderPool("medalCurseContainer", getMedalPool(), true);
+
+    }
+
+    if (medalSectionEl) {
+
+        medalSectionEl.classList.toggle("result-section--hidden", medalDisplayState.hideSection);
+
+    }
     renderPool("globalCurseContainer", getGlobalPool());
     renderPool("enemyCurseContainer", getEnemyPool());
     renderPool("greaterCurseContainer", getGreaterPool());
@@ -2655,6 +2733,35 @@ if (muteToggleButton) {
 
 updateMuteToggleUI();
 
+const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
+
+function updateMedalDisplayToggleUI() {
+
+    if (hideMedalCursesToggle) {
+
+        hideMedalCursesToggle.classList.toggle("active", medalDisplayState.hideSection);
+        hideMedalCursesToggle.setAttribute("aria-checked", medalDisplayState.hideSection ? "true" : "false");
+
+    }
+
+}
+
+if (hideMedalCursesToggle) {
+
+    attachClickAction(hideMedalCursesToggle, () => {
+
+        medalDisplayState.hideSection = !medalDisplayState.hideSection;
+
+        saveMedalDisplayState();
+        updateMedalDisplayToggleUI();
+        render();
+
+    }, playUtilitySound);
+
+}
+
+loadMedalDisplayState();
+updateMedalDisplayToggleUI();
 
 const showAllCursesToggle = document.getElementById("showAllCursesToggle");
 const unlockAllCursesToggle = document.getElementById("unlockAllCursesToggle");

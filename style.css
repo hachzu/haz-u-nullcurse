@@ -2167,3 +2167,37 @@ body {
     }
 
 }
+
+.result-section--hidden {
+    display: none;
+}
+
+
+/* .curse-card.medal already gives the dedicated Medal Curses
+   section its cyan/pink highlight. These extra rules make sure a
+   medal curse picks up that exact same look wherever else it might
+   render (Global/Enemy Curses, once Hide Medal Curses promotes it
+   there - see renderPool in script.js), instead of losing to that
+   container's own border theming or reverting to it on hover.
+   #enemyCurseContainer needs the ID-scoped override specifically -
+   its own border-color rules are ID+class specificity, which beats
+   the plain .curse-card.medal rule on its own. */
+.curse-card.medal:hover {
+    background: linear-gradient(160deg, #002738 0%, #380726 100%);
+
+    border-color: #00c8ff;
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3), 0 0 14px rgba(255, 92, 200, 0.28);
+}
+
+
+#enemyCurseContainer .curse-card.medal,
+#enemyCurseContainer .curse-card.medal:hover {
+    border-color: #00c8ff;
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(255, 92, 200, 0.22);
+}
+
+
+#globalCurseContainer .curse-card.medal .curse-name-label,
+#enemyCurseContainer .curse-card.medal .curse-name-label {
+    color: #8fd9ff;
+}
