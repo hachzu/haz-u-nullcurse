@@ -11,21 +11,22 @@
 
 
 .death-toggle-button {
-    position: fixed;
-    right: 190px;
-    bottom: 26px;
-
-    z-index: 30;
-
     flex-shrink: 0;
 
     display: flex;
 
     align-items: center;
-    gap: 8px;
+    gap: 0;
 
-    padding: 12px 18px;
+    padding: 12px 14px;
+    overflow: hidden;
 
+    /* Last stop now matches the first (#3d0000) instead of ending on
+       #ae1313 - matching endpoints mean the strip of gradient
+       visible right before the animation loops back to 0% matches
+       the strip visible right after, so the loop reads as
+       continuous motion instead of visibly popping at the seam
+       every 5s. */
     background: linear-gradient(
         90deg,
         #3d0000 0%,
@@ -33,7 +34,7 @@
         #ff2d2d 45%,
         #ff6b6b 60%,
         #3d0000 85%,
-        #ae1313 100%
+        #3d0000 100%
     );
     background-size: 260% auto;
 
@@ -61,6 +62,7 @@
     animation: death-toggle-hue-shift 5s linear infinite;
 
     transition:
+        padding 0.35s ease,
         transform 0.18s,
         box-shadow 0.18s;
 }
@@ -104,7 +106,50 @@
 }
 
 
-.death-toggle-button:hover {
+/* Collapsed by default down to just the icon (min visual clutter
+   sitting over the curse pools) - label and key both start at zero
+   width/opacity and only expand once the button is hovered or
+   focused, mirroring .upgrade-toggle-button's behavior in
+   Upgrades.css. max-width (rather than width) is what's animated
+   since width: auto can't be transitioned, but a generous max-width
+   can - overflow: hidden on the button clips anything still
+   mid-transition so nothing spills out early. */
+.death-toggle-button .btn-label,
+.death-toggle-button .death-toggle-key {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.death-toggle-button:hover .btn-label,
+.death-toggle-button:focus-visible .btn-label {
+    max-width: 140px;
+    margin-left: 8px;
+    opacity: 1;
+}
+
+
+.death-toggle-button:hover .death-toggle-key,
+.death-toggle-button:focus-visible .death-toggle-key {
+    max-width: 30px;
+    margin-left: 6px;
+    opacity: 1;
+}
+
+
+.death-toggle-button:hover,
+.death-toggle-button:focus-visible {
+    padding: 12px 18px;
+
     transform: translateY(-2px) scale(1.03);
 
     box-shadow:
@@ -883,9 +928,6 @@
 @media (max-width: 500px) {
 
     .death-toggle-button {
-        right: 16px;
-        bottom: 76px;
-
         padding: 10px 14px;
     }
 

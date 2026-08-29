@@ -5,8 +5,10 @@
  * calculator panel. Loaded after style.css so it can sit alongside
  * the base theme without needing to duplicate any of it.
  * Depends on .right-panel { position: relative; }, defined in
- * style.css. The toggle button is positioned fixed to the viewport
- * so it stays reachable while the page scrolls.
+ * style.css. Positioning for the toggle button itself now comes
+ * from the shared .floating-toggle-buttons wrapper in style.css
+ * (which both this button and the Death Tracker's share), not from
+ * this file - see the note on .upgrade-toggle-button below.
  */
 
 
@@ -36,37 +38,43 @@
 }
 
 
+/*
+ * No more position: fixed / right / bottom / z-index here - this
+ * button now sits inside the shared .floating-toggle-buttons flex
+ * row (see style.css), which owns the fixed placement for both it
+ * and the Death Tracker's toggle button. Keeping positioning in one
+ * place is what keeps the two buttons pinned together instead of
+ * one drifting into normal document flow.
+ */
 .upgrade-toggle-button {
-    position: fixed;
-    right: 26px;
-    bottom: 26px;
-
-    z-index: 30;
-
     flex-shrink: 0;
 
     display: flex;
 
     align-items: center;
-    gap: 8px;
+    gap: 0;
 
-    padding: 12px 18px;
+    padding: 12px 14px;
+    overflow: hidden;
 
+    /* Mirrored stops (white -> light blue -> white -> light blue ->
+       white) so the first and last stops match - combined with the
+       200%+-wide background and animating position from 0% to 100%,
+       the hue-shift loop has no visible seam or jump. */
     background: linear-gradient(
         90deg,
-        #7a2fc4 0%,
-        #b866ff 20%,
-        #00c8ff 45%,
-        #8fd9ff 60%,
-        #7a2fc4 85%,
-        #b866ff 100%
+        #ffffff 0%,
+        #8fd9ff 25%,
+        #ffffff 50%,
+        #8fd9ff 75%,
+        #ffffff 100%
     );
     background-size: 260% auto;
 
-    border: 1px solid rgba(216, 230, 255, 0.8);
+    border: 1px solid rgba(143, 217, 255, 0.8);
     border-radius: 999px;
 
-    color: #ffffff;
+    color: #073349;
 
     font-family: var(--font-modern);
     font-size: 11px;
@@ -76,19 +84,59 @@
     cursor: pointer;
     user-select: none;
 
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
 
     box-shadow:
-        0 8px 26px rgba(0, 0, 0, 0.55),
-        0 0 10px rgba(184, 102, 255, 0.35),
-        0 0 18px rgba(0, 200, 255, 0.22),
-        0 0 26px rgba(184, 102, 255, 0.14);
+        0 8px 26px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(143, 217, 255, 0.45),
+        0 0 18px rgba(255, 255, 255, 0.3),
+        0 0 26px rgba(143, 217, 255, 0.2);
 
     animation: upgrade-toggle-hue-shift 5s linear infinite;
 
     transition:
+        padding 0.35s ease,
         transform 0.18s,
         box-shadow 0.18s;
+}
+
+
+/* Collapsed by default down to just the icon, same as the Death
+   Tracker button (see .death-toggle-button in DeathTracker.css) -
+   label and key both start at zero width/opacity and only expand
+   once the button is hovered or focused. max-width (rather than
+   width) is what's animated since width: auto can't be transitioned,
+   but a generous max-width can - overflow: hidden on the button
+   clips anything still mid-transition so nothing spills out early. */
+.upgrade-toggle-button .btn-label,
+.upgrade-toggle-button .upgrade-toggle-key {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.upgrade-toggle-button:hover .btn-label,
+.upgrade-toggle-button:focus-visible .btn-label {
+    max-width: 140px;
+    margin-left: 8px;
+    opacity: 1;
+}
+
+
+.upgrade-toggle-button:hover .upgrade-toggle-key,
+.upgrade-toggle-button:focus-visible .upgrade-toggle-key {
+    max-width: 30px;
+    margin-left: 6px;
+    opacity: 1;
 }
 
 
@@ -130,14 +178,17 @@
 }
 
 
-.upgrade-toggle-button:hover {
+.upgrade-toggle-button:hover,
+.upgrade-toggle-button:focus-visible {
+    padding: 12px 18px;
+
     transform: translateY(-2px) scale(1.03);
 
     box-shadow:
-        0 10px 32px rgba(0, 0, 0, 0.6),
-        0 0 14px rgba(184, 102, 255, 0.5),
-        0 0 24px rgba(0, 200, 255, 0.35),
-        0 0 34px rgba(184, 102, 255, 0.2);
+        0 10px 32px rgba(0, 0, 0, 0.45),
+        0 0 14px rgba(143, 217, 255, 0.6),
+        0 0 24px rgba(255, 255, 255, 0.4),
+        0 0 34px rgba(143, 217, 255, 0.3);
 }
 
 
@@ -148,10 +199,10 @@
 
 .upgrade-toggle-button.active {
     box-shadow:
-        0 10px 32px rgba(0, 0, 0, 0.6),
-        0 0 12px rgba(184, 102, 255, 0.55),
-        0 0 22px rgba(0, 200, 255, 0.4),
-        0 0 32px rgba(184, 102, 255, 0.25);
+        0 10px 32px rgba(0, 0, 0, 0.45),
+        0 0 12px rgba(143, 217, 255, 0.65),
+        0 0 22px rgba(255, 255, 255, 0.45),
+        0 0 32px rgba(143, 217, 255, 0.3);
 }
 
 
@@ -600,28 +651,6 @@
     flex-shrink: 0;
 }
 
-/* Label above, switch below, for both toggle blocks - saves
-   horizontal room in .upgrade-toggle-group. Using gap instead of
-   the label's own margin-bottom for spacing, since the Progressive
-   label's margin-bottom is zeroed out via inline style in
-   Upgrades.js - relying on gap here means that inline override
-   doesn't matter either way. */
-.upgrade-toggle-block,
-.upgrade-progressive-header-slot {
-    display: flex;
-
-    flex-direction: column;
-    align-items: flex-start;
-
-    gap: 4px;
-
-    flex-shrink: 0;
-}
-
-
-.upgrade-toggle-block-label {
-    margin-bottom: 0;
-}
 
 /* Small live-level badge shown next to the Progressive toggle only
    while it's on, since the run level only moves in that mode. */
@@ -1854,6 +1883,12 @@
 }
 
 
+/*
+ * No more right/bottom overrides here at small widths - those now
+ * live in .floating-toggle-buttons's own media query in style.css,
+ * which repositions the whole wrapper (and both buttons inside it)
+ * together instead of just this one.
+ */
 @media (max-width: 500px) {
 
     .upgrade-mode-grid {
@@ -1862,9 +1897,6 @@
 
 
     .upgrade-toggle-button {
-        right: 16px;
-        bottom: 16px;
-
         padding: 10px 14px;
     }
 

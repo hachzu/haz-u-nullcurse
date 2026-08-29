@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Nullscape Upgrade & Curse Tracker
+    <title>Nullscape Toolkits
     </title>
 
     <!--
         Link preview metadata (Discord, Slack, iMessage, Twitter/X,
         etc all read these).
     -->
-    <meta property="og:title" content="Nullscape Upgrade & Curse Tracker">
+    <meta property="og:title" content="Nullscape Toolkits">
     <meta property="og:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
     <meta property="og:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
     <meta property="og:url" content="https://hachzu.github.io/haz-u-nullcurse/">
     <meta property="og:type" content="website">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Nullscape Upgrade & Curse Tracker">
+    <meta name="twitter:title" content="Nullscape Toolkits">
     <meta name="twitter:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
     <meta name="twitter:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
 
@@ -65,9 +65,12 @@
 
                 </div>
             </div>
-            <div class="subtitle">UPGRADE &amp; CURSE TRACKER</div>
+            <div class="subtitle">TOOLKITS</div>
             <div class="credit">
                 Made by <span class="credit-handle">@sxfthazu.html</span>
+            </div>
+            <div class="data-source-note">
+                Values are sourced from the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a> and may contain errors!
             </div>
         </header>
 
@@ -603,31 +606,42 @@
 
     </main>
 
-    <button
-        id="upgradeToggleButton"
-        class="upgrade-toggle-button"
-        type="button"
-        aria-label="Toggle upgrade calculator"
-        aria-expanded="false"
-        aria-keyshortcuts="b"
-    >
-        <span class="upgrade-toggle-icon">&#9650;</span>
-        <span class="btn-label">UPGRADES</span>
-        <span class="upgrade-toggle-key">B</span>
-    </button>
+    <!--
+        Both floating toggle buttons now share this single fixed-
+        position wrapper (see .floating-toggle-buttons in style.css)
+        instead of each carrying its own position: fixed - that's
+        what keeps them pinned together in the bottom-right corner
+        instead of drifting into normal document flow.
+    -->
+    <div class="floating-toggle-buttons">
 
-    <button
-        id="deathToggleButton"
-        class="death-toggle-button"
-        type="button"
-        aria-label="Toggle death tracker"
-        aria-expanded="false"
-        aria-keyshortcuts="n"
-    >
-        <span class="death-toggle-icon">&#9760;</span>
-        <span class="btn-label">DEATHS</span>
-        <span class="death-toggle-key">N</span>
-    </button>
+        <button
+            id="upgradeToggleButton"
+            class="upgrade-toggle-button"
+            type="button"
+            aria-label="Toggle upgrade calculator"
+            aria-expanded="false"
+            aria-keyshortcuts="b"
+        >
+            <span class="upgrade-toggle-icon">&#9650;</span>
+            <span class="btn-label">UPGRADES</span>
+            <span class="upgrade-toggle-key">B</span>
+        </button>
+
+        <button
+            id="deathToggleButton"
+            class="death-toggle-button"
+            type="button"
+            aria-label="Toggle death tracker"
+            aria-expanded="false"
+            aria-keyshortcuts="n"
+        >
+            <span class="death-toggle-icon">&#9760;</span>
+            <span class="btn-label">DEATHS</span>
+            <span class="death-toggle-key">N</span>
+        </button>
+
+    </div>
 
 </div>
 

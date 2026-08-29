@@ -1455,6 +1455,32 @@ body {
 }
 
 
+.data-source-note {
+    margin-top: 4px;
+
+    color: #3a3050;
+
+    font-size: 9px;
+    line-height: 1.4;
+    letter-spacing: 0.3px;
+}
+
+
+.data-source-note a {
+    color: var(--lp-text, #6d5a94);
+
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    transition: color 0.15s;
+}
+
+
+.data-source-note a:hover {
+    color: var(--lp-bright, #d59bff);
+}
+
+
 @keyframes credit-glow-pulse {
 
     0%,
@@ -2200,4 +2226,45 @@ body {
 #globalCurseContainer .curse-card.medal .curse-name-label,
 #enemyCurseContainer .curse-card.medal .curse-name-label {
     color: #8fd9ff;
+}
+
+
+/*
+ * Floating toggle-button group
+ * --------------------------
+ * Wraps the Death Tracker and Upgrade Shop toggle buttons (styled
+ * separately in DeathTracker.css / Upgrades.css) in a single fixed-
+ * position flex row, instead of each button carrying its own
+ * position: fixed + a hardcoded `right` offset. Those buttons now
+ * collapse down to icon-only and expand on hover - with each one
+ * positioned independently, the offset between them had to assume a
+ * fixed width for its neighbor, so collapsing one left a stretch of
+ * empty space (or, if both were sized for the collapsed state,
+ * would have caused them to overlap once expanded). Flexbox's own
+ * `gap` keeps a constant, correct space between them no matter which
+ * one (if either) is currently expanded.
+ */
+.floating-toggle-buttons {
+    position: fixed;
+    right: 26px;
+    bottom: 26px;
+
+    z-index: 30;
+
+    display: flex;
+
+    align-items: center;
+    gap: 12px;
+}
+
+
+@media (max-width: 500px) {
+
+    .floating-toggle-buttons {
+        right: 16px;
+        bottom: 16px;
+
+        gap: 8px;
+    }
+
 }
