@@ -600,6 +600,28 @@
     flex-shrink: 0;
 }
 
+/* Label above, switch below, for both toggle blocks - saves
+   horizontal room in .upgrade-toggle-group. Using gap instead of
+   the label's own margin-bottom for spacing, since the Progressive
+   label's margin-bottom is zeroed out via inline style in
+   Upgrades.js - relying on gap here means that inline override
+   doesn't matter either way. */
+.upgrade-toggle-block,
+.upgrade-progressive-header-slot {
+    display: flex;
+
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 4px;
+
+    flex-shrink: 0;
+}
+
+
+.upgrade-toggle-block-label {
+    margin-bottom: 0;
+}
 
 /* Small live-level badge shown next to the Progressive toggle only
    while it's on, since the run level only moves in that mode. */

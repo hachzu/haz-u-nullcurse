@@ -1,0 +1,290 @@
+/*
+ * Ambient Particle Field styles
+ * --------------------------
+ * Styling for #particleCanvas (the drifting-particle layer, sitting
+ * at the same z-index tier as #bgLayer so it stays behind the
+ * opaque left/upgrade/death panels but shows through the right
+ * panel's transparent background) and the small settings popover
+ * that lets Lance tune it live from the header.
+ * Depends on the --lp-* custom properties defined in style.css so
+ * the popover automatically re-themes with whichever panel is open.
+ */
+
+
+/* Puts the controls row (badge + particle button + mute button)
+   above the logo instead of beside it. column-reverse rather than
+   reordering the HTML - .logo comes first in index.html and
+   .site-header-controls second, so reversing the column's paint
+   order puts the second child on top without touching markup.
+   !important on the alignment properties because style.css's base
+   .site-header-top rule sets align-items: center for the old
+   side-by-side row layout - without it, whichever of the two same-
+   specificity rules the browser happens to apply last wins, which
+   isn't guaranteed to be this one depending on link order/caching. */
+.site-header-top {
+    flex-direction: column-reverse !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+
+    row-gap: 10px;
+}
+
+
+.site-header-top .logo {
+    align-self: flex-start;
+
+    width: auto;
+    margin: 0;
+
+    text-align: left;
+}
+
+
+.site-header-top .site-header-controls {
+    width: 100%;
+}
+
+
+.particle-canvas {
+    position: fixed;
+    inset: 0;
+
+    z-index: -1;
+    pointer-events: none;
+}
+
+
+/* .site-header-controls (wrapping the live-viewer badge + mute
+   button in index.html) was never actually given a layout of its
+   own in style.css - its children were just stacking as plain
+   blocks. That went unnoticed with only two items in there; adding
+   the particle settings button made the crowding obvious. This
+   gives the row real alignment and even spacing, and groups the two
+   icon-only circular buttons (particle settings + mute) together
+   after the badge instead of interleaving them. */
+.site-header-controls {
+    display: flex;
+
+    align-items: center;
+    flex-shrink: 0;
+
+    gap: 10px;
+}
+
+
+.live-viewer-badge,
+.particle-settings-button,
+#muteToggleButton {
+    flex-shrink: 0;
+}
+
+
+.particle-settings-button {
+    position: relative;
+}
+
+
+.particle-settings-button.active {
+    background: var(--lp-hover-bg, #2a1145);
+
+    border-color: var(--lp-bright, #d59bff);
+
+    color: #ffffff;
+}
+
+
+.particle-settings-icon {
+    display: inline-block;
+    line-height: 1;
+}
+
+
+.particle-settings-panel {
+    position: fixed;
+    z-index: 50;
+
+    width: 240px;
+
+    display: flex;
+
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 16px;
+
+    background: linear-gradient(160deg, #150826 0%, #0d0416 100%);
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 10px;
+
+    box-shadow:
+        0 12px 34px rgba(0, 0, 0, 0.55),
+        0 0 20px color-mix(in srgb, var(--lp-mid, #9147d6) 25%, transparent);
+}
+
+
+/* The base rule above sets display: flex unconditionally, which
+   otherwise overrides the browser's own default [hidden] { display:
+   none } rule - since both come from an author-priority stylesheet
+   at the same specificity, ours wins the tie and the panel stayed
+   visible even after JS set panel.hidden = true. This rule forces
+   it closed for real. */
+.particle-settings-panel[hidden] {
+    display: none !important;
+}
+
+
+.particle-settings-header-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.particle-settings-heading {
+    color: var(--lp-text, #9a7cc9);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+
+.particle-close-button {
+    flex-shrink: 0;
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 50%;
+
+    color: var(--lp-text, #9a7cc9);
+
+    font-size: 13px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.particle-close-button:hover {
+    background: var(--lp-hover-bg, #2a1145);
+
+    border-color: var(--lp-bright, #d59bff);
+
+    color: #ffffff;
+}
+
+
+.particle-enabled-switch {
+    align-self: flex-start;
+}
+
+
+.particle-settings-row {
+    display: grid;
+
+    grid-template-columns: 66px 1fr 34px;
+    align-items: center;
+
+    gap: 8px;
+
+    color: #d0bfef;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+.particle-settings-row input[type="range"] {
+    width: 100%;
+
+    accent-color: var(--lp-bright, #d59bff);
+}
+
+
+.particle-settings-value {
+    text-align: right;
+
+    color: var(--lp-text-dim, #5c4880);
+
+    font-size: 9px;
+}
+
+
+.particle-settings-row--color {
+    grid-template-columns: 66px 1fr 24px;
+}
+
+
+.particle-settings-row--color select {
+    padding: 4px 6px;
+
+    background: #14061f;
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 6px;
+
+    color: #f0e4ff;
+
+    font-size: 9px;
+}
+
+
+.particle-settings-row--color input[type="color"] {
+    width: 24px;
+    height: 24px;
+
+    padding: 0;
+
+    background: none;
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+
+.particle-settings-row--checkbox {
+    grid-template-columns: 1fr auto;
+}
+
+
+.particle-settings-row--checkbox input[type="checkbox"] {
+    accent-color: var(--lp-bright, #d59bff);
+}
+
+
+.particle-reset-button {
+    align-self: flex-end;
+}
+
+
+@media (max-width: 500px) {
+
+    .particle-settings-panel {
+        width: 200px;
+
+        right: 8px !important;
+        left: 8px;
+
+        width: auto;
+    }
+
+}
