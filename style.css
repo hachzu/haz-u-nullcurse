@@ -2268,3 +2268,45 @@ body {
     }
 
 }
+
+
+/*
+ * The three floating toggle buttons (Upgrades/Deaths/Altars) center
+ * their icon glyph while collapsed - without this, the icon sits
+ * flush against the button's flex-start edge and reads as pushed
+ * to the left instead of centered in the pill.
+ */
+.upgrade-toggle-button,
+.death-toggle-button,
+.altars-toggle-button {
+    justify-content: center;
+}
+
+
+.upgrade-toggle-icon,
+.death-toggle-icon,
+.altars-toggle-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 1em;
+
+    text-align: center;
+}
+
+
+/*
+ * Keep the Upgrade toggle's keybind badge visible even while the
+ * button is collapsed to just its icon, matching the Death Tracker
+ * and Altars toggles (see the equivalent rule in their own CSS
+ * files). Declared here with !important since Upgrades.css loads
+ * after this file and would otherwise win the cascade with its own
+ * (collapsed-by-default) rule for the same class.
+ */
+.upgrade-toggle-button .upgrade-toggle-key {
+    max-width: 30px !important;
+    margin-left: 6px !important;
+    opacity: 1 !important;
+}

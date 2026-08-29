@@ -553,7 +553,8 @@ const greaterCurses = [
         name: "Run",
         type: "Global",
         level: 15,
-        casualDisabled: true
+        casualDisabled: true,
+        requiresCurses: ["Barotrauma"]
     },
 
     {

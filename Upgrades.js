@@ -2188,6 +2188,13 @@ function setUpgradePanelOpen(isOpen) {
 
     }
 
+    // Same rule against the Altars panel, once Altars.js has loaded.
+    if (isOpen && typeof setAltarsPanelOpen === "function") {
+
+        setAltarsPanelOpen(false);
+
+    }
+
     upgradePanel.classList.toggle("open", isOpen);
     upgradeToggleButton.classList.toggle("active", isOpen);
     upgradeToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");

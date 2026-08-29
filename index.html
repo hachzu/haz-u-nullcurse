@@ -12,14 +12,14 @@
         etc all read these).
     -->
     <meta property="og:title" content="Nullscape Toolkits">
-    <meta property="og:description" content="The Ultimate Nullscape run companion! Explore and plan curse pools, upgrades, deaths and many more! Website is still in development, so please report any bugs or issues you find. ^^">
+    <meta property="og:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
     <meta property="og:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
     <meta property="og:url" content="https://hachzu.github.io/haz-u-nullcurse/">
     <meta property="og:type" content="website">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Nullscape Toolkits">
-    <meta name="twitter:description" content="The Ultimate Nullscape run companion! Explore and plan curse pools, upgrades, deaths and many more! Website is still in development, so please report any bugs or issues you find. ^^">
+    <meta name="twitter:description" content="Track deaths and plan upgrade purchases for Nullscape runs!! cool curse pools, enemy pools, and a full shop calculator.">
     <meta name="twitter:image" content="https://hachzu.github.io/haz-u-nullcurse/assets/background/image.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="Particles.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Upgrades.css">
+    <link rel="stylesheet" href="Altars.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 </head>
 
@@ -342,7 +343,14 @@
                             </span>
                         </div>
 
-
+                        <!--
+                            Nothing Curse and Progressive Mode now
+                            share one look: a small label next to a
+                            track+thumb switch showing ON/OFF (see
+                            .upgrade-toggle-block in Upgrades.css).
+                            The Progressive block is injected right
+                            after this one by Upgrades.js.
+                        -->
                         <div id="upgradeToggleGroup" class="upgrade-toggle-group">
 
                             <div class="upgrade-toggle-block">
@@ -395,7 +403,12 @@
 
         </div>
 
-
+        <!--
+            Death Tracker panel - same sliding-overlay pattern as the
+            Upgrade panel above (see .death-panel in DeathTracker.css
+            and setDeathPanelOpen in DeathTracker.js). Toggled by the
+            deathToggleButton fixed button below.
+        -->
         <div id="deathPanel" class="death-panel">
 
             <div class="death-panel-inner">
@@ -404,6 +417,11 @@
 
                     <div class="death-panel-heading animated-header-text">
                         DEATH TRACKER
+                    </div>
+
+                    <div class="death-panel-total roll-pill death-panel-current-level">
+                        <span class="death-panel-total-label">CURRENT LEVEL</span>
+                        <span id="deathCurrentLevelValue" class="death-panel-total-value">1</span>
                     </div>
 
                     <div class="death-panel-total roll-pill">
@@ -438,6 +456,32 @@
                             <button id="deathNextLevelButton" class="death-next-level-button" type="button">
                                 NEXT LEVEL &rarr;
                             </button>
+
+                            <!--
+                                Lets a level's death count climb past
+                                the normal 3-per-player cap - and, in
+                                turn, removes any need to click Next
+                                Level just to reset that cap. Same
+                                track+thumb switch shape as the
+                                Nothing Curse / Progressive Mode
+                                toggles in the Upgrade panel.
+                            -->
+                            <div class="death-toggle-block">
+
+                                <span class="death-control-label death-toggle-block-label">Unlimited Deaths</span>
+
+                                <button
+                                    type="button"
+                                    id="deathUnlimitedToggle"
+                                    class="death-switch"
+                                    role="switch"
+                                    aria-checked="false"
+                                >
+                                    <span class="death-switch-track"><span class="death-switch-thumb"></span></span>
+                                    <span class="death-switch-label">OFF</span>
+                                </button>
+
+                            </div>
                         </div>
 
                         <div class="death-player-controls">
@@ -450,7 +494,7 @@
                                 </div>
                             </div>
 
-                            <div class="death-player-hint">
+                            <div class="death-player-hint" id="deathPlayerHint">
                                 Add a player, type their name, then use <strong>+</strong> when they die.
                                 Max 3 deaths per player per level.
                             </div>
@@ -468,6 +512,36 @@
 
                         <div id="deathLogList" class="death-log-list"></div>
 
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!--
+            Altars panel - same sliding-overlay pattern as the
+            Upgrade and Death Tracker panels above (see .altars-panel
+            in Altars.css and setAltarsPanelOpen in Altars.js).
+            Toggled by the altarsToggleButton fixed button below.
+        -->
+        <div id="altarsPanel" class="altars-panel">
+
+            <div class="altars-panel-inner">
+
+                <div class="altars-panel-header">
+
+                    <div class="altars-panel-heading animated-header-text">
+                        ALTARS
+                    </div>
+
+                </div>
+
+                <div class="altars-panel-body">
+
+                    <div class="altars-placeholder">
+                        Coming soon...
                     </div>
 
                 </div>
@@ -594,7 +668,13 @@
 
     </main>
 
-
+    <!--
+        Both floating toggle buttons now share this single fixed-
+        position wrapper (see .floating-toggle-buttons in style.css)
+        instead of each carrying its own position: fixed - that's
+        what keeps them pinned together in the bottom-right corner
+        instead of drifting into normal document flow.
+    -->
     <div class="floating-toggle-buttons">
 
         <button
@@ -605,7 +685,7 @@
             aria-expanded="false"
             aria-keyshortcuts="b"
         >
-            <span class="upgrade-toggle-icon">&#9650;</span>
+            <span class="upgrade-toggle-icon">+</span>
             <span class="btn-label">UPGRADES</span>
             <span class="upgrade-toggle-key">B</span>
         </button>
@@ -616,11 +696,24 @@
             type="button"
             aria-label="Toggle death tracker"
             aria-expanded="false"
-            aria-keyshortcuts="n"
+            aria-keyshortcuts="x"
         >
             <span class="death-toggle-icon">&#9760;</span>
             <span class="btn-label">DEATHS</span>
-            <span class="death-toggle-key">N</span>
+            <span class="death-toggle-key">X</span>
+        </button>
+
+        <button
+            id="altarsToggleButton"
+            class="altars-toggle-button"
+            type="button"
+            aria-label="Toggle altars tracker"
+            aria-expanded="false"
+            aria-keyshortcuts="n"
+        >
+            <span class="altars-toggle-icon">&#43612;</span>
+            <span class="btn-label">ALTARS</span>
+            <span class="altars-toggle-key">N</span>
         </button>
 
     </div>
@@ -632,6 +725,7 @@
 <script src="script.js"></script>
 <script src="Upgrades.js"></script>
 <script src="DeathTracker.js"></script>
+<script src="Altars.js"></script>
 <script src="Particles.js"></script>
 <script src="DeathTracker.js"></script>
 

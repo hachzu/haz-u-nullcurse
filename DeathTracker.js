@@ -5,7 +5,8 @@ const deathState = {
     startLevel: 1,
     currentLevel: 1,
     players: [],
-    log: []
+    log: [],
+    unlimitedDeaths: false
 };
 
 function makeId() {
@@ -35,6 +36,7 @@ function loadDeathState() {
             player.levelDeaths = player.levelDeaths || {};
         });
         deathState.log = Array.isArray(saved.log) ? saved.log : [];
+        deathState.unlimitedDeaths = Boolean(saved.unlimitedDeaths);
 
     } catch (error) {
         console.warn("couldn't load saved death state:", error);
@@ -84,17 +86,42 @@ function renderDeathLog() {
     });
 }
 
+function updateDeathHint() {
+    const hintEl = document.getElementById("deathPlayerHint");
+    if (!hintEl) return;
+
+    hintEl.innerHTML = deathState.unlimitedDeaths
+        ? `Add a player, type their name, then use <strong>+</strong> when they die. No death cap right now.`
+        : `Add a player, type their name, then use <strong>+</strong> when they die. Max ${MAX_DEATHS_PER_LEVEL} deaths per player per level.`;
+}
+
+function updateDeathUnlimitedToggleUI() {
+    const toggle = document.getElementById("deathUnlimitedToggle");
+    if (!toggle) return;
+
+    toggle.classList.toggle("active", deathState.unlimitedDeaths);
+    toggle.setAttribute("aria-checked", deathState.unlimitedDeaths ? "true" : "false");
+
+    const label = toggle.querySelector(".death-switch-label");
+    if (label) label.textContent = deathState.unlimitedDeaths ? "ON" : "OFF";
+}
+
 function renderDeathTracker() {
     const totalEl = document.getElementById("deathTotalValue");
+    const currentLevelEl = document.getElementById("deathCurrentLevelValue");
     const listEl = document.getElementById("deathPlayerList");
     const startEl = document.getElementById("deathStartLevelInput");
     const countEl = document.getElementById("deathPlayerCountInput");
     const nextButton = document.getElementById("deathNextLevelButton");
 
     if (totalEl) tweenNumberText(totalEl, deathState.players.reduce((sum, p) => sum + p.deaths, 0));
+    if (currentLevelEl) tweenNumberText(currentLevelEl, deathState.currentLevel);
     if (startEl && Number(startEl.value) !== deathState.startLevel) startEl.value = deathState.startLevel;
     if (countEl && Number(countEl.value) !== deathState.players.length) countEl.value = deathState.players.length;
     if (nextButton) nextButton.textContent = `NEXT LEVEL \u2192 Lv${deathState.currentLevel + 1}`;
+
+    updateDeathUnlimitedToggleUI();
+    updateDeathHint();
 
     if (listEl) {
 
@@ -149,11 +176,13 @@ function renderDeathTracker() {
                 plus.className = "death-count-button";
                 plus.textContent = "+";
 
-                // Deaths are capped at MAX_DEATHS_PER_LEVEL per
-                // player per level - once a player hits that cap
+                // Deaths are normally capped at MAX_DEATHS_PER_LEVEL
+                // per player per level - once a player hits that cap
                 // on the currently-recording level, the + button
                 // disables until the run advances to the next level.
-                const atLevelCap = getPlayerLevelDeaths(player, deathState.currentLevel) >= MAX_DEATHS_PER_LEVEL;
+                // The Unlimited Deaths toggle skips this entirely.
+                const atLevelCap = !deathState.unlimitedDeaths
+                    && getPlayerLevelDeaths(player, deathState.currentLevel) >= MAX_DEATHS_PER_LEVEL;
 
                 plus.disabled = atLevelCap;
                 plus.title = atLevelCap
@@ -186,7 +215,7 @@ function recordDeath(playerId) {
     const level = deathState.currentLevel;
     const currentLevelDeaths = getPlayerLevelDeaths(player, level);
 
-    if (currentLevelDeaths >= MAX_DEATHS_PER_LEVEL) {
+    if (!deathState.unlimitedDeaths && currentLevelDeaths >= MAX_DEATHS_PER_LEVEL) {
 
         if (typeof playRemoveSound === "function") playRemoveSound();
 
@@ -279,6 +308,12 @@ function nextDeathLevel() {
     renderDeathTracker();
 }
 
+function setUnlimitedDeaths(enabled) {
+    deathState.unlimitedDeaths = Boolean(enabled);
+    saveDeathState();
+    renderDeathTracker();
+}
+
 function resetDeaths() {
     deathState.startLevel = 1;
     deathState.currentLevel = 1;
@@ -304,6 +339,13 @@ function setDeathPanelOpen(isOpen) {
 
     }
 
+    // Same rule against the Altars panel, once Altars.js has loaded.
+    if (isOpen && typeof setAltarsPanelOpen === "function") {
+
+        setAltarsPanelOpen(false);
+
+    }
+
     deathPanel.classList.toggle("open", isOpen);
     deathToggleButton.classList.toggle("active", isOpen);
     deathToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
@@ -316,7 +358,7 @@ if (deathToggleButton && deathPanel) {
     }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
 
     document.addEventListener("keydown", event => {
-        if (event.key?.toLowerCase() !== "n" || event.metaKey || event.ctrlKey || event.altKey) return;
+        if (event.key?.toLowerCase() !== "x" || event.metaKey || event.ctrlKey || event.altKey) return;
         const active = document.activeElement;
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         setDeathPanelOpen(!deathPanel.classList.contains("open"));
@@ -342,6 +384,13 @@ if (playerCountMinus) playerCountMinus.addEventListener("click", () => changePla
 
 const nextLevelButton = document.getElementById("deathNextLevelButton");
 if (nextLevelButton) nextLevelButton.addEventListener("click", nextDeathLevel);
+
+const deathUnlimitedToggle = document.getElementById("deathUnlimitedToggle");
+if (deathUnlimitedToggle) {
+    attachClickAction(deathUnlimitedToggle, () => {
+        setUnlimitedDeaths(!deathState.unlimitedDeaths);
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
+}
 
 loadDeathState();
 renderDeathTracker();

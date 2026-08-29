@@ -1,0 +1,380 @@
+/*
+ * Altars styles
+ * --------------------------
+ * Third floating toggle button + sliding panel, following the exact
+ * same shell pattern as the Upgrade and Death Tracker toggles
+ * (collapse-to-icon until hover/focus, live inside the shared
+ * .floating-toggle-buttons wrapper in style.css) and the same
+ * sliding-overlay panel pattern (see .upgrade-panel / .death-panel).
+ * Themed yellow/white. Depends on .right-panel { position: relative; },
+ * defined in style.css.
+ */
+
+
+.altars-toggle-button {
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+
+    padding: 12px 14px;
+    overflow: hidden;
+
+    /* Mirrored stops (yellow -> white -> pale yellow -> white ->
+       yellow) so the first and last stops match - combined with the
+       wide background and animating position from 0% to 100%, the
+       hue-shift loop has no visible seam or jump. */
+    background: linear-gradient(
+        90deg,
+        #ffd166 0%,
+        #ffffff 25%,
+        #fff3c4 50%,
+        #ffffff 75%,
+        #ffd166 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid rgba(255, 243, 196, 0.85);
+    border-radius: 999px;
+
+    color: #2a1f00;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+    user-select: none;
+
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+
+    box-shadow:
+        0 8px 26px rgba(0, 0, 0, 0.55),
+        0 0 10px rgba(255, 209, 102, 0.4),
+        0 0 18px rgba(255, 255, 255, 0.3),
+        0 0 26px rgba(255, 209, 102, 0.25);
+
+    animation: altars-toggle-hue-shift 5s linear infinite;
+
+    transition:
+        padding 0.35s ease,
+        transform 0.18s,
+        box-shadow 0.18s;
+}
+
+
+@keyframes altars-toggle-hue-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.altars-toggle-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 1em;
+
+    font-size: 13px;
+    line-height: 1;
+    text-align: center;
+
+    transition: transform 0.25s ease;
+}
+
+
+.altars-toggle-key {
+    padding: 1px 6px;
+
+    background: rgba(0, 0, 0, 0.25);
+
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    color: #2a1f00;
+}
+
+
+/* Collapsed by default down to just the icon, same as the Upgrade
+   and Death Tracker buttons - the text label starts at zero
+   width/opacity and only expands once the button is hovered or
+   focused. The keybind badge, however, stays visible even while
+   collapsed. max-width (rather than width) is what's animated since
+   width: auto can't be transitioned, but a generous max-width can -
+   overflow: hidden on the button clips anything still mid-transition
+   so nothing spills out early. */
+.altars-toggle-button .btn-label {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.altars-toggle-button .altars-toggle-key {
+    max-width: 30px;
+    margin-left: 6px;
+    opacity: 1;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.altars-toggle-button:hover .btn-label,
+.altars-toggle-button:focus-visible .btn-label {
+    max-width: 140px;
+    margin-left: 8px;
+    opacity: 1;
+}
+
+
+.altars-toggle-button:hover,
+.altars-toggle-button:focus-visible {
+    padding: 12px 18px;
+
+    transform: translateY(-2px) scale(1.03);
+
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 14px rgba(255, 209, 102, 0.55),
+        0 0 24px rgba(255, 255, 255, 0.4),
+        0 0 34px rgba(255, 209, 102, 0.3);
+}
+
+
+.altars-toggle-button:hover .altars-toggle-icon {
+    transform: translateY(-2px) rotate(25deg);
+}
+
+
+.altars-toggle-button.active {
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.6),
+        0 0 12px rgba(255, 209, 102, 0.55),
+        0 0 22px rgba(255, 255, 255, 0.4),
+        0 0 32px rgba(255, 209, 102, 0.3);
+}
+
+
+.altars-toggle-button.active .altars-toggle-icon {
+    transform: rotate(180deg);
+}
+
+
+/* ---- Sliding panel ---- */
+
+.altars-panel {
+    position: absolute;
+    inset: 0;
+
+    z-index: 12;
+
+    display: flex;
+
+    align-items: stretch;
+    justify-content: stretch;
+
+    padding: 32px;
+
+    background: linear-gradient(160deg, #1f1a05 0%, #221f0a 100%);
+
+    border-left: 1px solid rgba(255, 243, 196, 0.35);
+    box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(255, 209, 102, 0.06);
+
+    transform: translateX(100%);
+    opacity: 0;
+
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.4s ease-out;
+
+    pointer-events: none;
+}
+
+
+.altars-panel.open {
+    transform: translateX(0);
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+.altars-panel-inner {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 243, 196, 0.35) transparent;
+}
+
+
+.altars-panel-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.altars-panel-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.altars-panel-inner::-webkit-scrollbar-thumb {
+    background: rgba(255, 243, 196, 0.3);
+    border-radius: 999px;
+}
+
+
+.altars-panel-inner::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 243, 196, 0.55);
+}
+
+
+.altars-panel-header {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+
+    border-bottom: 1px solid rgba(255, 243, 196, 0.22);
+}
+
+
+.altars-panel-heading {
+    margin-right: auto;
+
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    background: linear-gradient(
+        90deg,
+        #ffffff 0%,
+        #ffd166 25%,
+        #fff3c4 50%,
+        #ffd166 75%,
+        #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow: 0 0 20px rgba(255, 209, 102, 0.55);
+}
+
+
+/* ---- Body: just a placeholder for now ---- */
+
+.altars-panel-body {
+    flex: 1 1 auto;
+
+    display: flex;
+}
+
+
+.altars-placeholder {
+    flex: 1 1 auto;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 60px 20px;
+
+    border: 1px dashed rgba(255, 243, 196, 0.3);
+    border-radius: 10px;
+
+    color: #fff3c4;
+
+    font-family: var(--font-modern);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+
+    text-shadow: 0 0 20px rgba(255, 243, 196, 0.35);
+}
+
+
+/* ---- Left panel accent while this panel is open ----
+   Same idea as .left-panel--upgrades / .left-panel--death in
+   style.css, just declared here since the CSS custom properties
+   themselves are defined globally on .left-panel there (via the
+   @property rules), and any file can set their values on this
+   class. Toggled by Altars.js watching #altarsPanel's own "open"
+   class - see updateAltarsLeftPanelAccent in that file. */
+.left-panel.left-panel--altars {
+    --left-panel-grad-a: #1f1a05;
+    --left-panel-grad-b: #221f0a;
+
+    --lp-dim: #5c5220;
+    --lp-soft: #8a7a30;
+    --lp-mid: #d4b83a;
+    --lp-bright: #fff3c4;
+    --lp-text: #f0e6b0;
+    --lp-text-dim: #99904f;
+    --lp-hover-bg: #3a3210;
+
+    border-right-color: rgba(255, 243, 196, 0.5);
+    box-shadow: inset -1px 0 26px rgba(255, 243, 196, 0.18);
+}
+
+
+@media (max-width: 900px) {
+
+    .altars-panel-header {
+        gap: 12px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .altars-toggle-button {
+        padding: 10px 14px;
+    }
+
+}

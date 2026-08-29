@@ -114,11 +114,28 @@
    since width: auto can't be transitioned, but a generous max-width
    can - overflow: hidden on the button clips anything still
    mid-transition so nothing spills out early. */
-.death-toggle-button .btn-label,
-.death-toggle-button .death-toggle-key {
+.death-toggle-button .btn-label {
     max-width: 0;
     margin-left: 0;
     opacity: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+/* The keybind badge stays visible even while the button is
+   collapsed to just its icon - only the text label expands on
+   hover/focus. */
+.death-toggle-button .death-toggle-key {
+    max-width: 30px;
+    margin-left: 6px;
+    opacity: 1;
 
     overflow: hidden;
     white-space: nowrap;
@@ -134,14 +151,6 @@
 .death-toggle-button:focus-visible .btn-label {
     max-width: 140px;
     margin-left: 8px;
-    opacity: 1;
-}
-
-
-.death-toggle-button:hover .death-toggle-key,
-.death-toggle-button:focus-visible .death-toggle-key {
-    max-width: 30px;
-    margin-left: 6px;
     opacity: 1;
 }
 
@@ -579,6 +588,127 @@
 .death-next-level-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 18px rgba(255, 45, 45, 0.55);
+}
+
+
+/* ---- Unlimited Deaths toggle ----
+   Small label + track/thumb switch, matching the shape of the
+   Nothing Curse / Progressive Mode toggles in the Upgrade panel but
+   themed to this panel's red palette. Lives in the same
+   .death-level-controls row as the Next Level button, since turning
+   it on is what removes the need to keep clicking that button just
+   to reset a player's per-level cap. */
+.death-toggle-block {
+    flex-shrink: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.death-toggle-block-label {
+    margin-bottom: 0;
+
+    white-space: nowrap;
+}
+
+
+.death-switch {
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 6px 10px 6px 6px;
+
+    background: rgba(255, 109, 109, 0.06);
+
+    border: 1px solid rgba(255, 109, 109, 0.35);
+    border-radius: 999px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.death-switch:hover {
+    border-color: rgba(255, 109, 109, 0.65);
+}
+
+
+.death-switch.active {
+    background: rgba(255, 109, 109, 0.16);
+
+    border-color: #ff9d9d;
+    box-shadow: 0 0 14px rgba(255, 109, 109, 0.35);
+}
+
+
+.death-switch-track {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 17px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(255, 109, 109, 0.4);
+    border-radius: 999px;
+
+    transition: background 0.18s, border-color 0.18s;
+}
+
+
+.death-switch.active .death-switch-track {
+    background: linear-gradient(90deg, #7a0e0e, #ff9d9d);
+
+    border-color: #ff9d9d;
+}
+
+
+.death-switch-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 13px;
+    height: 13px;
+
+    background: #ffe0e0;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    transition: transform 0.18s ease;
+}
+
+
+.death-switch.active .death-switch-thumb {
+    transform: translateX(13px);
+}
+
+
+.death-switch-label {
+    color: #ff9d9d;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+
+
+.death-switch.active .death-switch-label {
+    color: #ffe0e0;
 }
 
 
