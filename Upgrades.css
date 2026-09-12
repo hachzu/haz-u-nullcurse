@@ -639,9 +639,14 @@
 }
 
 
-/* Progressive Mode's own slot within the toggle group - just a
-   shrink-to-fit flex item holding its label + switch, sitting
-   beside the Nothing Curse toggle. */
+/* Both the Nothing Curse toggle's block (hardcoded in toolkits.html
+   as .upgrade-toggle-block) and Progressive Mode's own slot (built
+   here in JS) now share this exact "label beside switch" layout, so
+   the two toggles read as one consistent row instead of one
+   stacking its label above the switch while the other sits it
+   beside - .upgrade-control-label defaults to display: block, which
+   is what caused that mismatch before this rule existed. */
+.upgrade-toggle-block,
 .upgrade-progressive-header-slot {
     display: flex;
 
@@ -649,6 +654,12 @@
     gap: 8px;
 
     flex-shrink: 0;
+}
+
+
+.upgrade-toggle-block-label {
+    margin-bottom: 0;
+    white-space: nowrap;
 }
 
 
@@ -731,6 +742,78 @@
 .upgrade-progressive-advance-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 18px rgba(255, 157, 61, 0.55);
+}
+
+
+/* Revert control - mirrors the Advance button's shape but in a
+   cooler, less saturated blue gradient so it reads as "undo" rather
+   than "forward," and sits to the left of the level badge instead
+   of the right (see renderProgressiveLevelBadge in Upgrades.js).
+   Disabled once the run's already at the first shop level (Lv 3) -
+   nothing earlier to revert back to. */
+.upgrade-progressive-revert-button {
+    flex-shrink: 0;
+
+    padding: 5px 12px;
+
+    background: linear-gradient(
+        90deg,
+        #8fd9ff 0%,
+        #4a7a91 25%,
+        #c7ecff 50%,
+        #4a7a91 75%,
+        #8fd9ff 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid #c7ecff;
+    border-radius: 999px;
+
+    color: #041824;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 12px rgba(143, 217, 255, 0.35);
+
+    animation: upgrade-revert-gradient-shift 3.5s linear infinite;
+
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+
+@keyframes upgrade-revert-gradient-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.upgrade-progressive-revert-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(143, 217, 255, 0.55);
+}
+
+
+.upgrade-progressive-revert-button:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+
+    animation-play-state: paused;
+    transform: none;
+    box-shadow: none;
 }
 
 
@@ -1416,6 +1499,21 @@
     border-color: rgba(123, 230, 168, 0.7);
 
     color: #06210f;
+}
+
+
+/* Distinct from both the normal gold price and the green "OWNED"
+   badge - a lime/yellow-green combo so a free stack (e.g. Paycheck's
+   first stack in Solo/Duo) reads as its own kind of good news rather
+   than being confused with something already purchased. */
+.upgrade-row-price--free {
+    background: linear-gradient(135deg, #e4ff7a, #8fbf2f);
+
+    border-color: rgba(228, 255, 122, 0.75);
+
+    color: #1c2400;
+
+    box-shadow: 0 0 10px rgba(228, 255, 122, 0.35);
 }
 
 

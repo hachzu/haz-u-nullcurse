@@ -2254,7 +2254,12 @@ body {
     display: flex;
 
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
     gap: 12px;
+
+    max-width: calc(100vw - 52px);
 }
 
 
@@ -2265,6 +2270,8 @@ body {
         bottom: 16px;
 
         gap: 8px;
+
+        max-width: calc(100vw - 32px);
     }
 
 }
@@ -2278,14 +2285,16 @@ body {
  */
 .upgrade-toggle-button,
 .death-toggle-button,
-.altars-toggle-button {
+.altars-toggle-button,
+.zoom-toggle-button {
     justify-content: center;
 }
 
 
 .upgrade-toggle-icon,
 .death-toggle-icon,
-.altars-toggle-icon {
+.altars-toggle-icon,
+.zoom-toggle-icon {
     display: inline-flex;
 
     align-items: center;

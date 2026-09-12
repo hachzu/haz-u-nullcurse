@@ -14,6 +14,15 @@
  */
 
 
+/*
+ * Names of upgrades that give their very first stack away for free
+ * when playing Solo or Duo - Party and Party+ don't get this break,
+ * since those modes already scale up the group's total buying power.
+ * Checked in computeBaseForStack below.
+ */
+const SOLO_DUO_FREE_FIRST_STACK = new Set(["Paycheck"]);
+
+
 const CASUAL_OVERRIDES = {
 
     "Grace Wings": { hidden: true },
@@ -440,6 +449,20 @@ function computeBaseForStack(item, stack) {
 
     const unit = (isSolo && effective.soloPrice !== undefined) ? effective.soloPrice : effective.price;
 
+    // First stack is free in Solo/Duo for eligible upgrades (see
+    // SOLO_DUO_FREE_FIRST_STACK) - shift the stack count down by one
+    // before pricing so stack 1 costs nothing and every stack after
+    // it costs the normal unit price, same as any other flat-priced
+    // upgrade.
+    if (
+        SOLO_DUO_FREE_FIRST_STACK.has(item.name)
+        && (upgradeState.mode === "solo" || upgradeState.mode === "duo")
+    ) {
+
+        return unit * Math.max(0, stack - 1);
+
+    }
+
     return unit * stack;
 
 }
@@ -553,6 +576,27 @@ function getNextShopLevel(currentLevel) {
     }
 
     return level;
+
+}
+
+
+/*
+ * Mirror of getNextShopLevel - walks backward to the nearest shop
+ * level strictly below currentLevel, floored at 3 (the first shop
+ * level). Powers Progressive mode's revert control, stepping back
+ * down through shop tiers one at a time, same as Advance steps up.
+ */
+function getPrevShopLevel(currentLevel) {
+
+    let level = Math.max(0, Math.floor(currentLevel) || 0) - 1;
+
+    while (level > 3 && ![0, 3, 5, 8].includes(level % 10)) {
+
+        level--;
+
+    }
+
+    return Math.max(3, level);
 
 }
 
@@ -942,6 +986,55 @@ function advanceProgressiveLevel() {
 }
 
 
+/*
+ * Steps the run back down to the previous shop level - the mirror
+ * of advanceProgressiveLevel(). Only does anything in Progressive
+ * mode, and clamps at level 3 (the first shop tier) so it can never
+ * revert past where shops actually start appearing.
+ */
+function revertProgressiveLevel() {
+
+    if (!upgradeState.progressive) {
+
+        return;
+
+    }
+
+    if (!runState || typeof runState.level !== "number") {
+
+        return;
+
+    }
+
+    const prevLevel = getPrevShopLevel(runState.level);
+
+    if (prevLevel >= runState.level) {
+
+        return;
+
+    }
+
+    runState.level = prevLevel;
+
+    const levelInput = document.getElementById("levelInput");
+
+    if (levelInput) {
+
+        levelInput.value = runState.level;
+
+    }
+
+    if (typeof render === "function") {
+
+        render();
+
+    }
+
+    refreshUpgradePanel();
+
+}
+
+
 function isNothingCurseSelectable(nothingCurse) {
 
     if (typeof isCurseSelectable === "function") {
@@ -1274,7 +1367,12 @@ function createUpgradeCard(item) {
         ? computeStackPrice(item, priceTargetStack) - computeStackPrice(item, owned)
         : 0;
 
-    const canAffordNext = !locked && !isFullyOwned && nextTierCost <= remaining;
+    // A free stack (nextTierCost <= 0, e.g. Paycheck's first stack in
+    // Solo/Duo) is always affordable - it doesn't draw on the Golden
+    // Gifts balance at all, so it shouldn't read as unaffordable just
+    // because "Left" happens to already be negative from other
+    // pending selections.
+    const canAffordNext = !locked && !isFullyOwned && (nextTierCost <= 0 || nextTierCost <= remaining);
 
     // Icon Mode hides the name/level/price text visually, so this
     // tooltip (and the matching aria-label below) is how that same
@@ -1291,7 +1389,7 @@ function createUpgradeCard(item) {
 
     } else {
 
-        titleParts.push(`${nextTierCost.toLocaleString()} Golden Gifts`);
+        titleParts.push(nextTierCost <= 0 ? "Free" : `${nextTierCost.toLocaleString()} Golden Gifts`);
 
     }
 
@@ -1413,6 +1511,20 @@ function createUpgradeCard(item) {
 
         badge.classList.add("upgrade-row-price--owned");
         badge.textContent = "OWNED";
+
+    } else if (nextTierCost <= 0) {
+
+        // Free stack (e.g. Paycheck's first stack in Solo/Duo) -
+        // its own badge treatment instead of a Golden Gift icon
+        // sitting next to "0", which read like a pricing glitch.
+        badge.classList.add("upgrade-row-price--free");
+
+        const freeLabel = document.createElement("span");
+
+        freeLabel.className = "upgrade-row-price-amount";
+        freeLabel.textContent = "FREE";
+
+        badge.appendChild(freeLabel);
 
     } else {
 
@@ -1876,6 +1988,29 @@ function createProgressiveToggle() {
  */
 function renderProgressiveLevelBadge(wrapper) {
 
+    // Revert sits to the left of the level badge (built first so it
+    // lands there in DOM order), mirroring Advance's spot on the
+    // right - "back" reads left, "forward" reads right.
+    let revertButton = document.getElementById("upgradeProgressiveRevertButton");
+
+    if (!revertButton) {
+
+        revertButton = document.createElement("button");
+
+        revertButton.type = "button";
+        revertButton.id = "upgradeProgressiveRevertButton";
+        revertButton.className = "upgrade-progressive-revert-button";
+
+        wrapper.appendChild(revertButton);
+
+        attachClickAction(revertButton, () => {
+
+            revertProgressiveLevel();
+
+        }, playDifficultySound);
+
+    }
+
     let levelEl = document.getElementById("upgradeProgressiveLevel");
 
     if (!levelEl) {
@@ -1913,6 +2048,7 @@ function renderProgressiveLevelBadge(wrapper) {
         && typeof runState !== "undefined" && runState
         && typeof runState.level === "number";
 
+    revertButton.style.display = showControls ? "" : "none";
     levelEl.style.display = showControls ? "" : "none";
     advanceButton.style.display = showControls ? "" : "none";
 
@@ -1921,9 +2057,17 @@ function renderProgressiveLevelBadge(wrapper) {
         levelEl.textContent = "LVL " + runState.level;
 
         const nextLevel = getNextShopLevel(runState.level);
+        const prevLevel = getPrevShopLevel(runState.level);
+        const canRevert = prevLevel < runState.level;
 
         advanceButton.textContent = "\u2192 Lv " + nextLevel;
         advanceButton.title = "Advance the run to level " + nextLevel;
+
+        revertButton.textContent = "Lv " + prevLevel + " \u2190";
+        revertButton.disabled = !canRevert;
+        revertButton.title = canRevert
+            ? "Revert the run back to level " + prevLevel
+            : "Already at the first shop level";
 
     }
 
