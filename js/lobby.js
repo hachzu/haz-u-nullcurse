@@ -1,223 +1,911 @@
 /*
- * Lobby Maker panel logic
+ * Lobby Maker panel logic — v2 (rich text title editor)
  * --------------------------
- * Fourth sliding panel, following the same toggle-button + overlay +
- * mutual-exclusion pattern as Upgrades.js / DeathTracker.js /
- * Altars.js. Generates a random two-word lobby name (with an
- * optional numeric suffix) from a small fixed word list - no server,
- * no game data, just a fun throwaway name generator for starting a
- * run.
+ * Same fourth-panel shell as before (toggle button + sliding overlay,
+ * mutual exclusion with Upgrades/Death/Altars, keyboard shortcut "L",
+ * left-panel accent sync) but the body is now a full per-letter title
+ * editor instead of a random-name button: free-text input, font /
+ * color / style sub-panels, solid + gradient coloring, outline
+ * support, and a compiler that turns the styled text into Roblox
+ * rich-text tags ready to paste into a lobby name field.
  *
  * Depends on globals defined in script.js: attachClickAction,
- * playUtilitySound, playPurifySound (button feedback sounds only -
- * the generator logic itself has no other dependency).
+ * playUtilitySound, playPurifySound (button feedback sounds only).
  */
 
 
-const LOBBY_ADJECTIVES = [
-    "Cursed", "Shattered", "Hollow", "Forsaken", "Twilight", "Withering",
-    "Silent", "Ashen", "Nullbound", "Ghostly", "Fractured", "Sunken"
-];
+const LOBBY_TITLE_MAX_LENGTH = 35;
+const LOBBY_TAG_HISTORY_LIMIT = 5;
 
-const LOBBY_NOUNS = [
-    "Sanctuary", "Abyss", "Ruins", "Wasteland", "Asylum", "Bastion",
-    "Threshold", "Requiem", "Nullscape", "Catacombs", "Rift", "Grove"
-];
+/*
+ * Per-letter style record shape:
+ * {
+ *   bold, italic, underline, strikethrough: boolean
+ *   font: { label, face } | null
+ *   color: "#rrggbb" | null
+ *   fade: 0..1               (0 = fully opaque)
+ *   ring: boolean            (has an outline)
+ *   ringColor: "#rrggbb"
+ *   ringFade: 0..1
+ *   ringJoin: "round" | "miter" | "bevel"
+ * }
+ */
 
-const LOBBY_HISTORY_LIMIT = 5;
-const LOBBY_STORAGE_KEY = "nullscapeLobbyState";
+const lobbyEditor = {
 
-const lobbyState = {
+    letters: [],           // one entry per character in the input, index-aligned
+    selection: [],          // sorted array of selected character indices
+    selectionActive: false,
+    caret: 0,
+    caretShown: false,
+    editingOutline: false,
 
-    addNumber: true,
-
-    // Recent generations for this visit only - deliberately not
-    // persisted to localStorage, since a lobby name is a one-time-
-    // use throwaway, not something worth remembering across reloads.
-    history: []
+    history: [],
+    historyAt: -1,
+    restoring: false
 
 };
 
-function saveLobbyState() {
+const lobbyTagLog = [];
 
-    try {
+function blankLetterStyle() {
 
-        localStorage.setItem(LOBBY_STORAGE_KEY, JSON.stringify({ addNumber: lobbyState.addNumber }));
-
-    } catch (error) {
-
-        console.warn("couldn't save lobby state:", error);
-
-    }
+    return {};
 
 }
 
-function loadLobbyState() {
+function cloneLetterStyles(list) {
 
-    try {
-
-        const raw = localStorage.getItem(LOBBY_STORAGE_KEY);
-
-        if (!raw) {
-
-            return;
-
-        }
-
-        const saved = JSON.parse(raw);
-
-        lobbyState.addNumber = saved.addNumber !== false;
-
-    } catch (error) {
-
-        console.warn("couldn't load saved lobby state, starting fresh:", error);
-
-    }
+    return list.map(entry => (entry ? { ...entry } : null));
 
 }
 
-function pickRandom(list) {
+function lobbySnapshot() {
 
-    return list[Math.floor(Math.random() * list.length)];
+    return {
 
-}
+        text: lobbyEditorInput.value,
+        letters: cloneLetterStyles(lobbyEditor.letters)
 
-function generateLobbyName() {
-
-    let name = `${pickRandom(LOBBY_ADJECTIVES)} ${pickRandom(LOBBY_NOUNS)}`;
-
-    if (lobbyState.addNumber) {
-
-        const suffix = Math.floor(10 + Math.random() * 90);
-
-        name += ` #${suffix}`;
-
-    }
-
-    return name;
+    };
 
 }
 
-function renderLobbyHistory() {
+function pushLobbySnapshot() {
 
-    const listEl = document.getElementById("lobbyHistoryList");
-
-    if (!listEl) {
+    if (lobbyEditor.restoring) {
 
         return;
 
     }
 
-    listEl.innerHTML = "";
+    const snap = lobbySnapshot();
+    const prior = lobbyEditor.history[lobbyEditor.historyAt];
 
-    if (!lobbyState.history.length) {
+    if (
+        prior &&
+        prior.text === snap.text &&
+        JSON.stringify(prior.letters) === JSON.stringify(snap.letters)
+    ) {
+
+        return;
+
+    }
+
+    lobbyEditor.history = lobbyEditor.history.slice(0, lobbyEditor.historyAt + 1);
+    lobbyEditor.history.push(snap);
+
+    const cap = 150;
+
+    if (lobbyEditor.history.length > cap) {
+
+        lobbyEditor.history.shift();
+
+    }
+
+    lobbyEditor.historyAt = lobbyEditor.history.length - 1;
+
+}
+
+function restoreLobbySnapshot(snap) {
+
+    lobbyEditor.restoring = true;
+
+    lobbyEditorInput.value = snap.text;
+    lobbyEditor.letters = cloneLetterStyles(snap.letters);
+
+    lobbyEditor.restoring = false;
+
+    lobbyEditor.selection = lobbyEditor.selection.filter(i => i < snap.text.length);
+    lobbyEditor.selectionActive = lobbyEditor.selection.length > 0;
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+    syncLobbyToolbar();
+
+}
+
+function lobbyUndo() {
+
+    if (lobbyEditor.historyAt <= 0) {
+
+        return;
+
+    }
+
+    lobbyEditor.historyAt--;
+    restoreLobbySnapshot(lobbyEditor.history[lobbyEditor.historyAt]);
+
+}
+
+function lobbyRedo() {
+
+    if (lobbyEditor.historyAt >= lobbyEditor.history.length - 1) {
+
+        return;
+
+    }
+
+    lobbyEditor.historyAt++;
+    restoreLobbySnapshot(lobbyEditor.history[lobbyEditor.historyAt]);
+
+}
+
+function letterStyleAt(index) {
+
+    return lobbyEditor.letters[index] || null;
+
+}
+
+function letterStyleForWrite(index) {
+
+    if (!lobbyEditor.letters[index]) {
+
+        lobbyEditor.letters[index] = blankLetterStyle();
+
+    }
+
+    return lobbyEditor.letters[index];
+
+}
+
+/*
+ * Keeps the per-letter style array lined up with the textarea after a
+ * native edit (typing, pasting, deleting). Finds the untouched prefix
+ * and suffix around the edit and only rebuilds the middle chunk, so
+ * styling on unrelated letters survives.
+ */
+function reconcileLettersAfterEdit(nextText, previousText) {
+
+    let head = 0;
+
+    const shortest = Math.min(previousText.length, nextText.length);
+
+    while (head < shortest && previousText[head] === nextText[head]) {
+
+        head++;
+
+    }
+
+    let oldTail = previousText.length;
+    let newTail = nextText.length;
+
+    while (
+        oldTail > head &&
+        newTail > head &&
+        previousText[oldTail - 1] === nextText[newTail - 1]
+    ) {
+
+        oldTail--;
+        newTail--;
+
+    }
+
+    const rebuilt = lobbyEditor.letters.slice(0, head);
+
+    for (let i = 0; i < newTail - head; i++) {
+
+        rebuilt.push(null);
+
+    }
+
+    rebuilt.push(...lobbyEditor.letters.slice(oldTail));
+
+    lobbyEditor.letters = rebuilt;
+
+}
+
+function clearLobbySelection() {
+
+    lobbyEditor.selection = [];
+    lobbyEditor.selectionActive = false;
+    lobbyEditor.caretShown = false;
+
+}
+
+function toggleIndexInSelection(index) {
+
+    if (lobbyEditor.selection.includes(index)) {
+
+        lobbyEditor.selection = lobbyEditor.selection.filter(i => i !== index);
+
+    } else {
+
+        lobbyEditor.selection.push(index);
+        lobbyEditor.selection.sort((a, b) => a - b);
+
+    }
+
+    lobbyEditor.selectionActive = lobbyEditor.selection.length > 0;
+
+}
+
+function setSelectionRange(start, end) {
+
+    const from = Math.max(0, Math.min(start, end));
+    const to = Math.min(lobbyEditorInput.value.length, Math.max(start, end));
+
+    const next = [];
+
+    for (let i = from; i < to; i++) {
+
+        next.push(i);
+
+    }
+
+    lobbyEditor.selection = next;
+    lobbyEditor.selectionActive = next.length > 0;
+
+}
+
+/* ---- rendering: overlay + preview ---- */
+
+function escapeForMarkup(str) {
+
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+}
+
+function letterVisualClasses(style) {
+
+    if (!style) {
+
+        return "";
+
+    }
+
+    const classes = ["lobby-letter"];
+
+    if (style.bold) classes.push("lobby-letter--bold");
+    if (style.italic) classes.push("lobby-letter--italic");
+    if (style.underline) classes.push("lobby-letter--underline");
+    if (style.strikethrough) classes.push("lobby-letter--strike");
+
+    return classes.join(" ");
+
+}
+
+function hexToRgbaString(hex, alpha) {
+
+    const clean = (hex || "#000000").replace("#", "");
+
+    const r = parseInt(clean.slice(0, 2), 16) || 0;
+    const g = parseInt(clean.slice(2, 4), 16) || 0;
+    const b = parseInt(clean.slice(4, 6), 16) || 0;
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+
+}
+
+function letterOutlineCss(style) {
+
+    if (!style || !style.ring) {
+
+        return "";
+
+    }
+
+    const rgba = hexToRgbaString(style.ringColor || "#000000", typeof style.ringFade === "number" ? 1 - style.ringFade : 1);
+
+    const w = 1.2;
+    const offsets = [[w, 0], [-w, 0], [0, w], [0, -w]];
+
+    if (style.ringJoin === "miter") {
+
+        offsets.push([w, w], [w, -w], [-w, w], [-w, -w]);
+
+    } else if (style.ringJoin === "bevel") {
+
+        const d = w * 0.6;
+
+        offsets.push([d, d], [d, -d], [-d, d], [-d, -d]);
+
+    }
+
+    const shadow = offsets.map(([x, y]) => `${x}px ${y}px 0 ${rgba}`).join(", ");
+
+    return `text-shadow:${shadow};-webkit-text-stroke:0.4px ${rgba};`;
+
+}
+
+function letterInlineCss(style) {
+
+    if (!style) {
+
+        return "";
+
+    }
+
+    const rules = [];
+
+    if (style.color) {
+
+        rules.push(`color:${style.color}`);
+
+    }
+
+    if (style.font) {
+
+        rules.push(`font-family:${style.font.previewFamily}`);
+
+    }
+
+    if (typeof style.fade === "number" && style.fade > 0) {
+
+        rules.push(`opacity:${1 - style.fade}`);
+
+    }
+
+    return rules.join(";");
+
+}
+
+function renderLetterMarkup(char, style) {
+
+    const escaped = escapeForMarkup(char);
+    const classes = letterVisualClasses(style);
+    const inlineCss = letterInlineCss(style);
+    const outlineCss = letterOutlineCss(style);
+
+    if (!classes && !inlineCss && !outlineCss) {
+
+        return escaped;
+
+    }
+
+    const content = outlineCss
+        ? `<i class="lobby-letter-ring" style="${outlineCss}">${escaped}</i>`
+        : escaped;
+
+    return `<span${classes ? ` class="${classes}"` : ""}${inlineCss ? ` style="${inlineCss}"` : ""}>${content}</span>`;
+
+}
+
+function redrawLobbyOverlay() {
+
+    const text = lobbyEditorInput.value;
+    const selectedSet = new Set(lobbyEditor.selection);
+
+    let html = "";
+
+    for (let i = 0; i < text.length; i++) {
+
+        const style = letterStyleAt(i);
+        const selected = selectedSet.has(i);
+        const isCaret = lobbyEditor.caretShown && i === lobbyEditor.caret && !selected;
+
+        const inner = renderLetterMarkup(text[i], style);
+
+        const cellClasses = "lobby-letter-cell" +
+            (selected ? " lobby-letter-cell--selected" : "") +
+            (isCaret ? " lobby-letter-cell--caret" : "");
+
+        html += `<span class="${cellClasses}" data-letter-index="${i}">${inner}</span>`;
+
+    }
+
+    lobbyEditorOverlay.innerHTML = html;
+    lobbyEditorOverlay.scrollLeft = lobbyEditorInput.scrollLeft;
+
+    const empty = text.length === 0;
+
+    lobbyEditorWrap.classList.toggle("lobby-editor-wrap--empty", empty);
+
+}
+
+function refreshLobbyPreview() {
+
+    const text = lobbyEditorInput.value;
+
+    if (!text) {
+
+        lobbyPreviewValue.textContent = "Type something to see the tag output";
+        lobbyPreviewValue.classList.remove("lobby-preview-value--filled");
+
+        return;
+
+    }
+
+    lobbyPreviewValue.textContent = compileLobbyRichText(text, lobbyEditor.letters);
+    lobbyPreviewValue.classList.add("lobby-preview-value--filled");
+
+}
+
+/* ---- rich text compiling ---- */
+
+function roundedFade(n) {
+
+    return Math.round(n * 1000) / 1000;
+
+}
+
+function escapeForTag(str) {
+
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+
+}
+
+/*
+ * Returns the ordered tag "slots" a letter needs (outermost first):
+ * font wrapper, stroke wrapper, then b/i/u/s. Each slot carries a key
+ * so the compiler can tell when two neighbouring letters share the
+ * exact same open tag and merge them into one run instead of
+ * re-opening/closing every single character.
+ */
+function tagSlotsForLetter(style) {
+
+    const slots = [null, null, null, null, null, null];
+
+    if (!style) {
+
+        return slots;
+
+    }
+
+    const face = style.font ? style.font.face : null;
+    const color = style.color || null;
+    const fade = typeof style.fade === "number" && style.fade > 0 ? roundedFade(style.fade) : null;
+
+    if (face || color || fade !== null) {
+
+        const attrs = [];
+
+        if (face) attrs.push(`face="${escapeForTag(face)}"`);
+        if (color) attrs.push(`color="${escapeForTag(color)}"`);
+        if (fade !== null) attrs.push(`transparency="${fade}"`);
+
+        slots[0] = {
+            key: `font|${face || ""}|${color || ""}|${fade === null ? "" : fade}`,
+            open: `<font ${attrs.join(" ")}>`,
+            close: "</font>"
+        };
+
+    }
+
+    if (style.ring) {
+
+        const ringColor = style.ringColor || "#000000";
+        const ringFade = typeof style.ringFade === "number" && style.ringFade > 0 ? roundedFade(style.ringFade) : null;
+        const join = style.ringJoin && style.ringJoin !== "round" ? style.ringJoin : null;
+
+        const attrs = [`color="${escapeForTag(ringColor)}"`];
+
+        if (ringFade !== null) attrs.push(`transparency="${ringFade}"`);
+        if (join) attrs.push(`joins="${join}"`);
+
+        slots[1] = {
+            key: `stroke|${ringColor}|${ringFade === null ? "" : ringFade}|${join || ""}`,
+            open: `<stroke ${attrs.join(" ")}>`,
+            close: "</stroke>"
+        };
+
+    }
+
+    if (style.bold) slots[2] = { key: "b", open: "<b>", close: "</b>" };
+    if (style.italic) slots[3] = { key: "i", open: "<i>", close: "</i>" };
+    if (style.underline) slots[4] = { key: "u", open: "<u>", close: "</u>" };
+    if (style.strikethrough) slots[5] = { key: "s", open: "<s>", close: "</s>" };
+
+    return slots;
+
+}
+
+function compileLobbyRichText(text, letters) {
+
+    let out = "";
+    let open = [null, null, null, null, null, null];
+
+    for (let i = 0; i < text.length; i++) {
+
+        const desired = tagSlotsForLetter(letters[i] || null);
+
+        let splitAt = open.length;
+
+        for (let s = 0; s < open.length; s++) {
+
+            const a = open[s] ? open[s].key : null;
+            const b = desired[s] ? desired[s].key : null;
+
+            if (a !== b) {
+
+                splitAt = s;
+                break;
+
+            }
+
+        }
+
+        if (splitAt < open.length) {
+
+            for (let s = open.length - 1; s >= splitAt; s--) {
+
+                if (open[s]) out += open[s].close;
+
+            }
+
+            for (let s = splitAt; s < desired.length; s++) {
+
+                if (desired[s]) out += desired[s].open;
+
+            }
+
+            open = desired;
+
+        }
+
+        out += escapeForTag(text[i]);
+
+    }
+
+    for (let s = open.length - 1; s >= 0; s--) {
+
+        if (open[s]) out += open[s].close;
+
+    }
+
+    return out;
+
+}
+
+/* ---- applying styles to the current selection ---- */
+
+function patchSelection(patch, commit = true) {
+
+    if (!lobbyEditor.selection.length) {
+
+        return false;
+
+    }
+
+    lobbyEditor.selection.forEach(i => {
+
+        Object.assign(letterStyleForWrite(i), patch);
+
+    });
+
+    if (commit) {
+
+        pushLobbySnapshot();
+
+    }
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+
+    return true;
+
+}
+
+function selectionHasStyle(prop) {
+
+    if (!lobbyEditor.selection.length) {
+
+        return "off";
+
+    }
+
+    let sawOn = false;
+    let sawOff = false;
+
+    for (const i of lobbyEditor.selection) {
+
+        const style = letterStyleAt(i);
+        const on = !!(style && style[prop]);
+
+        if (on) sawOn = true; else sawOff = true;
+
+        if (sawOn && sawOff) return "mixed";
+
+    }
+
+    return sawOn ? "on" : "off";
+
+}
+
+/* ---- gradient math (shared by the rainbow / stop-based presets) ---- */
+
+const LOBBY_GRADIENT_KINDS = Object.freeze({
+    RAINBOW: "rainbow",
+    TWO_STOP: "two-stop",
+    THREE_STOP: "three-stop",
+    BOOKEND: "bookend"
+});
+
+function hexToTuple(hex) {
+
+    const v = (hex || "#000000").replace("#", "");
+
+    return [
+        parseInt(v.slice(0, 2), 16) || 0,
+        parseInt(v.slice(2, 4), 16) || 0,
+        parseInt(v.slice(4, 6), 16) || 0
+    ];
+
+}
+
+function tupleToHex(rgb) {
+
+    return "#" + rgb.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+
+}
+
+function lerpTuple(a, b, t) {
+
+    return a.map((v, i) => v + (b[i] - v) * t);
+
+}
+
+function sampleAcrossStops(stops, t, wraps) {
+
+    const value = wraps ? ((t % 1) + 1) % 1 : Math.max(0, Math.min(1, t));
+
+    for (let i = 0; i < stops.length - 1; i++) {
+
+        if (value <= stops[i + 1].at) {
+
+            const span = stops[i + 1].at - stops[i].at || 1;
+
+            return lerpTuple(stops[i].rgb, stops[i + 1].rgb, (value - stops[i].at) / span);
+
+        }
+
+    }
+
+    return stops[stops.length - 1].rgb;
+
+}
+
+function hueToTuple(hue) {
+
+    const h = ((hue % 360) + 360) % 360;
+    const x = 1 - Math.abs((h / 60) % 2 - 1);
+    const sector = Math.floor(h / 60);
+
+    const table = [
+        [1, x, 0], [x, 1, 0], [0, 1, x],
+        [0, x, 1], [x, 0, 1], [1, 0, x]
+    ];
+
+    return table[sector].map(v => v * 255);
+
+}
+
+function remapThroughDividers(t, dividers) {
+
+    const from = [0, ...dividers, 1];
+    const segments = from.length - 1;
+    const to = Array.from({ length: segments + 1 }, (_, i) => i / segments);
+
+    for (let i = 0; i < from.length - 1; i++) {
+
+        if (t >= from[i] && t <= from[i + 1]) {
+
+            const span = from[i + 1] - from[i] || 1;
+            const localT = (t - from[i]) / span;
+
+            return to[i] + (to[i + 1] - to[i]) * localT;
+
+        }
+
+    }
+
+    return t;
+
+}
+
+function sampleStopGradient(colors, dividers, t) {
+
+    const stops = colors.map((hex, i) => ({ at: i / (colors.length - 1), rgb: hexToTuple(hex) }));
+
+    return sampleAcrossStops(stops, remapThroughDividers(t, dividers), false);
+
+}
+
+function sampleRainbowGradient(t, spin) {
+
+    const stops = [];
+
+    for (let i = 0; i <= 12; i++) {
+
+        stops.push({ at: i / 12, rgb: hueToTuple((i / 12) * 360) });
+
+    }
+
+    return sampleAcrossStops(stops, t + spin, true);
+
+}
+
+function sampleBookendGradient(edgeHex, midHex, t, midPos) {
+
+    const mid = Math.max(0.08, Math.min(0.92, midPos));
+
+    return sampleAcrossStops([
+        { at: 0, rgb: hexToTuple(edgeHex) },
+        { at: mid, rgb: hexToTuple(midHex) },
+        { at: 1, rgb: hexToTuple(edgeHex) }
+    ], t, false);
+
+}
+
+function applyGradientToSelection(config) {
+
+    if (!lobbyEditor.selection.length) {
+
+        return false;
+
+    }
+
+    const n = lobbyEditor.selection.length;
+
+    lobbyEditor.selection.forEach((letterIndex, k) => {
+
+        const t = n <= 1 ? 0 : k / (n - 1);
+        let rgb;
+
+        switch (config.kind) {
+
+            case LOBBY_GRADIENT_KINDS.RAINBOW:
+                rgb = sampleRainbowGradient(t, config.dividers[0]);
+                break;
+
+            case LOBBY_GRADIENT_KINDS.TWO_STOP:
+            case LOBBY_GRADIENT_KINDS.THREE_STOP:
+                rgb = sampleStopGradient(config.colors, config.dividers, t);
+                break;
+
+            case LOBBY_GRADIENT_KINDS.BOOKEND:
+                rgb = sampleBookendGradient(config.colors[0], config.colors[1], t, config.dividers[0]);
+                break;
+
+            default:
+                return;
+
+        }
+
+        const style = letterStyleForWrite(letterIndex);
+        const hex = tupleToHex(rgb);
+
+        if (lobbyEditor.editingOutline) {
+
+            style.ring = true;
+            style.ringColor = hex;
+
+        } else {
+
+            style.color = hex;
+
+        }
+
+    });
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+
+    return true;
+
+}
+
+/* ---- character index lookup from a pointer position (single row) ---- */
+
+function letterIndexAtClientX(clientX) {
+
+    const cells = lobbyEditorOverlay.querySelectorAll("[data-letter-index]");
+
+    if (!cells.length) {
+
+        return 0;
+
+    }
+
+    for (const cell of cells) {
+
+        const rect = cell.getBoundingClientRect();
+        const mid = rect.left + rect.width / 2;
+
+        if (clientX <= mid) {
+
+            return Number(cell.getAttribute("data-letter-index"));
+
+        }
+
+        if (clientX <= rect.right) {
+
+            return Number(cell.getAttribute("data-letter-index")) + 1;
+
+        }
+
+    }
+
+    return lobbyEditorInput.value.length;
+
+}
+
+/* ---- history-of-generated-tags panel ---- */
+
+function renderLobbyTagLog() {
+
+    if (!lobbyHistoryList) {
+
+        return;
+
+    }
+
+    lobbyHistoryList.innerHTML = "";
+
+    if (!lobbyTagLog.length) {
 
         const empty = document.createElement("div");
 
         empty.className = "lobby-empty-row";
-        empty.textContent = "no names generated yet this visit";
+        empty.textContent = "nothing copied yet this visit";
 
-        listEl.appendChild(empty);
+        lobbyHistoryList.appendChild(empty);
 
         return;
 
     }
 
-    lobbyState.history.forEach(name => {
+    lobbyTagLog.forEach(entry => {
 
         const row = document.createElement("div");
 
         row.className = "lobby-history-entry";
-        row.textContent = name;
+        row.textContent = entry;
 
-        listEl.appendChild(row);
+        lobbyHistoryList.appendChild(row);
 
     });
 
 }
 
-function updateLobbyNumberToggleUI() {
+function logCopiedTag(tagString) {
 
-    const toggle = document.getElementById("lobbyNumberToggle");
+    lobbyTagLog.unshift(tagString);
 
-    if (!toggle) {
+    if (lobbyTagLog.length > LOBBY_TAG_HISTORY_LIMIT) {
 
-        return;
-
-    }
-
-    toggle.classList.toggle("active", lobbyState.addNumber);
-    toggle.setAttribute("aria-checked", lobbyState.addNumber ? "true" : "false");
-
-    const label = toggle.querySelector(".lobby-switch-label");
-
-    if (label) {
-
-        label.textContent = lobbyState.addNumber ? "ON" : "OFF";
+        lobbyTagLog.length = LOBBY_TAG_HISTORY_LIMIT;
 
     }
 
-}
-
-function setLobbyNumberSuffix(enabled) {
-
-    lobbyState.addNumber = Boolean(enabled);
-
-    saveLobbyState();
-    updateLobbyNumberToggleUI();
-
-}
-
-function generateAndShowLobbyName() {
-
-    const name = generateLobbyName();
-
-    const resultEl = document.getElementById("lobbyResultValue");
-
-    if (resultEl) {
-
-        resultEl.textContent = name;
-        resultEl.classList.remove("lobby-result-value--placeholder");
-        resultEl.classList.add("lobby-result-value--filled");
-
-    }
-
-    lobbyState.history.unshift(name);
-
-    if (lobbyState.history.length > LOBBY_HISTORY_LIMIT) {
-
-        lobbyState.history.length = LOBBY_HISTORY_LIMIT;
-
-    }
-
-    renderLobbyHistory();
+    renderLobbyTagLog();
 
 }
 
 /*
- * Same click-to-copy pattern as the Discord tag on the landing page
- * (see index.html) - swaps the button label to a quick "Copied!"
- * confirmation, then reverts a moment later.
+ * Same click-to-copy confirmation flash used elsewhere on the site.
  */
-function copyLobbyName() {
+function copyLobbyTags() {
 
-    const resultEl = document.getElementById("lobbyResultValue");
-    const copyButton = document.getElementById("lobbyCopyButton");
-    const copyButtonText = document.getElementById("lobbyCopyButtonText");
-
-    if (!resultEl || !copyButton || !copyButtonText) {
-
-        return;
-
-    }
-
-    if (resultEl.classList.contains("lobby-result-value--placeholder")) {
-
-        return;
-
-    }
-
-    const text = resultEl.textContent.trim();
+    const text = lobbyEditorInput.value;
 
     if (!text) {
 
@@ -225,15 +913,19 @@ function copyLobbyName() {
 
     }
 
+    const compiled = compileLobbyRichText(text, lobbyEditor.letters);
+
     const finish = () => {
 
-        copyButtonText.textContent = "Copied!";
-        copyButton.classList.add("lobby-copy-button--copied");
+        lobbyCopyButtonText.textContent = "Copied!";
+        lobbyCopyButton.classList.add("lobby-copy-button--copied");
+
+        logCopiedTag(compiled);
 
         setTimeout(() => {
 
-            copyButtonText.textContent = "Copy";
-            copyButton.classList.remove("lobby-copy-button--copied");
+            lobbyCopyButtonText.textContent = "Copy";
+            lobbyCopyButton.classList.remove("lobby-copy-button--copied");
 
         }, 1400);
 
@@ -241,7 +933,7 @@ function copyLobbyName() {
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
 
-        navigator.clipboard.writeText(text).then(finish).catch(finish);
+        navigator.clipboard.writeText(compiled).then(finish).catch(finish);
 
     } else {
 
@@ -251,38 +943,1293 @@ function copyLobbyName() {
 
 }
 
-const lobbyGenerateButton = document.getElementById("lobbyGenerateButton");
+/* ================================================================
+ * Wiring — element lookups
+ * ================================================================ */
 
-if (lobbyGenerateButton) {
+const lobbyEditorInput = document.getElementById("lobbyEditorInput");
+const lobbyEditorOverlay = document.getElementById("lobbyEditorOverlay");
+const lobbyEditorWrap = document.getElementById("lobbyEditorWrap");
+const lobbyPreviewValue = document.getElementById("lobbyPreviewValue");
+const lobbyCopyButton = document.getElementById("lobbyCopyButton");
+const lobbyCopyButtonText = document.getElementById("lobbyCopyButtonText");
+const lobbyHistoryList = document.getElementById("lobbyHistoryList");
 
-    attachClickAction(
-        lobbyGenerateButton,
-        generateAndShowLobbyName,
-        typeof playPurifySound === "function" ? playPurifySound : undefined
-    );
+const lobbyFontToggle = document.getElementById("lobbyFontToggle");
+const lobbyColorToggle = document.getElementById("lobbyColorToggle");
+const lobbyStyleToggle = document.getElementById("lobbyStyleToggle");
+
+const lobbyFontPanel = document.getElementById("lobbyFontPanel");
+const lobbyColorPanel = document.getElementById("lobbyColorPanel");
+const lobbyStylePanel = document.getElementById("lobbyStylePanel");
+
+let previousLobbyText = lobbyEditorInput ? lobbyEditorInput.value : "";
+
+if (lobbyEditorInput) {
+
+    lobbyEditor.history = [lobbySnapshot()];
+    lobbyEditor.historyAt = 0;
 
 }
 
-const lobbyCopyButton = document.getElementById("lobbyCopyButton");
+/* ---- sub-panel open/close (Font / Color / Style), mutually exclusive ---- */
+
+const lobbySubPanels = [
+    { button: lobbyFontToggle, panel: lobbyFontPanel },
+    { button: lobbyColorToggle, panel: lobbyColorPanel },
+    { button: lobbyStyleToggle, panel: lobbyStylePanel }
+].filter(entry => entry.button && entry.panel);
+
+function setLobbySubPanelOpen(target, isOpen) {
+
+    lobbySubPanels.forEach(({ button, panel }) => {
+
+        const shouldOpen = panel === target ? isOpen : false;
+
+        panel.classList.toggle("lobby-subpanel--open", shouldOpen);
+        button.classList.toggle("active", shouldOpen);
+
+    });
+
+}
+
+lobbySubPanels.forEach(({ button, panel }) => {
+
+    button.addEventListener("click", () => {
+
+        const isOpen = panel.classList.contains("lobby-subpanel--open");
+
+        setLobbySubPanelOpen(panel, !isOpen);
+
+    });
+
+});
+
+/* ---- toolbar sync (bold/italic/underline/strike + outline) ---- */
+
+function setTriState(button, state) {
+
+    if (!button) {
+
+        return;
+
+    }
+
+    button.setAttribute("aria-pressed", state === "on" ? "true" : state === "mixed" ? "mixed" : "false");
+    button.classList.toggle("is-mixed", state === "mixed");
+
+}
+
+const lobbySelectionSyncCallbacks = [];
+
+function onLobbySelectionSync(fn) {
+
+    lobbySelectionSyncCallbacks.push(fn);
+
+}
+
+function syncLobbyToolbar() {
+
+    setTriState(document.getElementById("lobbyStyleBold"), selectionHasStyle("bold"));
+    setTriState(document.getElementById("lobbyStyleItalic"), selectionHasStyle("italic"));
+    setTriState(document.getElementById("lobbyStyleUnderline"), selectionHasStyle("underline"));
+    setTriState(document.getElementById("lobbyStyleStrike"), selectionHasStyle("strikethrough"));
+
+    lobbySelectionSyncCallbacks.forEach(fn => fn());
+
+}
+
+["lobbyStyleBold", "bold", "lobbyStyleItalic", "italic", "lobbyStyleUnderline", "underline", "lobbyStyleStrike", "strikethrough"]
+    .reduce((pairs, value, index, arr) => {
+
+        if (index % 2 === 0) pairs.push([value, arr[index + 1]]);
+
+        return pairs;
+
+    }, [])
+    .forEach(([id, prop]) => {
+
+        const btn = document.getElementById(id);
+
+        if (!btn) {
+
+            return;
+
+        }
+
+        btn.addEventListener("click", () => {
+
+            const nowOn = selectionHasStyle(prop) !== "on";
+
+            patchSelection({ [prop]: nowOn });
+            syncLobbyToolbar();
+
+        });
+
+    });
+
+/* ---- font list ---- */
+
+const LOBBY_FONT_CATALOG = [
+    { label: "Sans", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "Arial, Helvetica, sans-serif" },
+    { label: "Sans Bold", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "Arial Black, sans-serif" },
+    { label: "Condensed", face: "rbxasset://fonts/families/RobotoCondensed.json", previewFamily: "'Arial Narrow', sans-serif" },
+    { label: "Mono", face: "rbxasset://fonts/families/RobotoMono.json", previewFamily: "'Courier New', monospace" },
+    { label: "Serif", face: "rbxasset://fonts/families/Merriweather.json", previewFamily: "Georgia, serif" },
+    { label: "Rounded", face: "rbxasset://fonts/families/FredokaOne.json", previewFamily: "'Trebuchet MS', sans-serif" },
+    { label: "Marker", face: "rbxasset://fonts/families/PermanentMarker.json", previewFamily: "'Comic Sans MS', cursive" },
+    { label: "Handwritten", face: "rbxasset://fonts/families/IndieFlower.json", previewFamily: "'Segoe Script', cursive" },
+    { label: "Display", face: "rbxasset://fonts/families/LuckiestGuy.json", previewFamily: "Impact, sans-serif" },
+    { label: "Blocky", face: "rbxasset://fonts/families/Bangers.json", previewFamily: "'Arial Black', sans-serif" },
+    { label: "Gothic", face: "rbxasset://fonts/families/GrenzeGotisch.json", previewFamily: "'Times New Roman', serif" },
+    { label: "Typewriter", face: "rbxasset://fonts/families/SpecialElite.json", previewFamily: "'Courier New', monospace" },
+    { label: "Techno", face: "rbxasset://fonts/families/Michroma.json", previewFamily: "'Trebuchet MS', sans-serif" },
+    { label: "Spooky", face: "rbxasset://fonts/families/Creepster.json", previewFamily: "'Papyrus', fantasy" }
+];
+
+const lobbyFontList = document.getElementById("lobbyFontList");
+const lobbyFontButtonsByFace = new Map();
+
+if (lobbyFontList) {
+
+    LOBBY_FONT_CATALOG.forEach(font => {
+
+        const btn = document.createElement("button");
+
+        btn.type = "button";
+        btn.className = "lobby-font-option";
+        btn.setAttribute("aria-pressed", "false");
+        btn.title = font.label;
+
+        const name = document.createElement("span");
+
+        name.className = "lobby-font-option-name";
+        name.textContent = font.label;
+
+        const preview = document.createElement("span");
+
+        preview.className = "lobby-font-option-preview";
+        preview.style.fontFamily = font.previewFamily;
+        preview.textContent = "AaBbCc";
+
+        btn.appendChild(name);
+        btn.appendChild(preview);
+
+        btn.addEventListener("click", () => {
+
+            const alreadyThisFont = lobbyEditor.selection.length > 0 &&
+                lobbyEditor.selection.every(i => {
+
+                    const s = letterStyleAt(i);
+
+                    return s && s.font && s.font.face === font.face;
+
+                });
+
+            patchSelection({ font: alreadyThisFont ? null : font });
+            syncLobbyFontList();
+
+        });
+
+        lobbyFontButtonsByFace.set(font.face, btn);
+        lobbyFontList.appendChild(btn);
+
+    });
+
+}
+
+function syncLobbyFontList() {
+
+    if (!lobbyEditor.selection.length) {
+
+        lobbyFontButtonsByFace.forEach(btn => setTriState(btn, "off"));
+
+        return;
+
+    }
+
+    const facesUsed = new Set(lobbyEditor.selection.map(i => {
+
+        const s = letterStyleAt(i);
+
+        return (s && s.font && s.font.face) || null;
+
+    }));
+
+    if (facesUsed.size > 1) {
+
+        lobbyFontButtonsByFace.forEach(btn => setTriState(btn, "mixed"));
+
+        return;
+
+    }
+
+    const uniform = facesUsed.values().next().value;
+
+    lobbyFontButtonsByFace.forEach((btn, face) => setTriState(btn, face === uniform ? "on" : "off"));
+
+}
+
+onLobbySelectionSync(syncLobbyFontList);
+
+/* ---- color picker: mode toggle, SV square, hue strip, hex, opacity, gradients ---- */
+
+(function initLobbyColorPicker() {
+
+    const modeButtons = document.querySelectorAll("[data-lobby-color-mode]");
+    const sv = document.getElementById("lobbySv");
+    const svCursor = document.getElementById("lobbySvCursor");
+    const hue = document.getElementById("lobbyHue");
+    const hueCursor = document.getElementById("lobbyHueCursor");
+    const hexInput = document.getElementById("lobbyHexInput");
+    const swatchCircle = document.getElementById("lobbyColorSwatch");
+    const opacityInput = document.getElementById("lobbyOpacityInput");
+    const opacityValue = document.getElementById("lobbyOpacityValue");
+    const opacityLabel = document.getElementById("lobbyOpacityLabel");
+    const outlineToggle = document.getElementById("lobbyOutlineToggle");
+    const outlineJoinRow = document.getElementById("lobbyOutlineJoinRow");
+    const gradientPresetRow = document.getElementById("lobbyGradientPresets");
+    const gradientStopRow = document.getElementById("lobbyGradientStops");
+    const gradientPill = document.getElementById("lobbyGradientPill");
+
+    if (!sv || !hue || !hexInput) {
+
+        return;
+
+    }
+
+    let hue360 = 300;
+    let sat = 0.6;
+    let val = 1;
+    let syncingFromSelection = false;
+
+    let gradient = {
+        kind: LOBBY_GRADIENT_KINDS.RAINBOW,
+        colors: ["#ff5cc8", "#00c8ff", "#ffffff"],
+        dividers: [0.5]
+    };
+
+    let activeStop = 0;
+    let gradientPointerId = null;
+
+    function hsvToRgb(h, s, v) {
+
+        const c = v * s;
+        const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+        const m = v - c;
+
+        let r = 0, g = 0, b = 0;
+
+        if (h < 60) { r = c; g = x; }
+        else if (h < 120) { r = x; g = c; }
+        else if (h < 180) { g = c; b = x; }
+        else if (h < 240) { g = x; b = c; }
+        else if (h < 300) { r = x; b = c; }
+        else { r = c; b = x; }
+
+        return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+
+    }
+
+    function rgbToHsv(r, g, b) {
+
+        r /= 255; g /= 255; b /= 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const d = max - min;
+
+        let h = 0;
+
+        if (d !== 0) {
+
+            if (max === r) h = (60 * ((g - b) / d) + 360) % 360;
+            else if (max === g) h = 60 * ((b - r) / d) + 120;
+            else h = 60 * ((r - g) / d) + 240;
+
+        }
+
+        return [h, max === 0 ? 0 : d / max, max];
+
+    }
+
+    function currentModeIsGradient() {
+
+        return lobbyColorPanel && lobbyColorPanel.dataset.mode === "gradient";
+
+    }
+
+    function applySolidColor(hex, commit) {
+
+        if (lobbyEditor.editingOutline) {
+
+            patchSelection({ ring: true, ringColor: hex }, commit);
+
+        } else {
+
+            patchSelection({ color: hex }, commit);
+
+        }
+
+    }
+
+    function pushFromHsv(commit) {
+
+        const [r, g, b] = hsvToRgb(hue360, sat, val);
+        const hex = tupleToHex([r, g, b]);
+
+        hexInput.value = hex;
+
+        if (swatchCircle) {
+
+            swatchCircle.style.backgroundColor = hex;
+
+            if (!syncingFromSelection) {
+
+                swatchCircle.classList.remove("is-mixed");
+
+            }
+
+        }
+
+        sv.style.setProperty("--lobby-hue", hue360);
+        svCursor.style.left = `${sat * 100}%`;
+        svCursor.style.top = `${(1 - val) * 100}%`;
+        hueCursor.style.top = `${(1 - hue360 / 360) * 100}%`;
+
+        if (syncingFromSelection) {
+
+            return;
+
+        }
+
+        if (currentModeIsGradient()) {
+
+            if (gradient.kind !== LOBBY_GRADIENT_KINDS.RAINBOW) {
+
+                gradient.colors[activeStop] = hex;
+                renderGradientStops();
+                renderGradientPill();
+                applyGradientToSelection(gradient);
+
+            }
+
+            return;
+
+        }
+
+        applySolidColor(hex, commit);
+
+    }
+
+    function pushFromHex(hex, commit) {
+
+        const v = hex.replace("#", "");
+
+        if (v.length !== 6) {
+
+            return;
+
+        }
+
+        const [h, s, val2] = rgbToHsv(
+            parseInt(v.slice(0, 2), 16),
+            parseInt(v.slice(2, 4), 16),
+            parseInt(v.slice(4, 6), 16)
+        );
+
+        hue360 = h;
+        sat = s;
+        val = val2;
+
+        pushFromHsv(commit);
+
+    }
+
+    function gradientVisibleColors() {
+
+        return gradient.kind === LOBBY_GRADIENT_KINDS.RAINBOW ? [] : gradient.colors;
+
+    }
+
+    function renderGradientStops() {
+
+        if (!gradientStopRow) {
+
+            return;
+
+        }
+
+        gradientStopRow.innerHTML = "";
+
+        gradientVisibleColors().forEach((color, index) => {
+
+            const chip = document.createElement("button");
+
+            chip.type = "button";
+            chip.className = "lobby-color-swatch lobby-gradient-stop";
+            chip.style.backgroundColor = color;
+            chip.classList.toggle("is-active", index === activeStop);
+            chip.dataset.stopIndex = index;
+            chip.setAttribute("aria-label", `Edit gradient color ${index + 1}`);
+
+            gradientStopRow.appendChild(chip);
+
+        });
+
+    }
+
+    function renderGradientPill() {
+
+        if (!gradientPill) {
+
+            return;
+
+        }
+
+        const colors = gradientVisibleColors();
+        const slices = 40;
+
+        gradientPill.innerHTML = "";
+
+        for (let i = 0; i < slices; i++) {
+
+            const t = i / (slices - 1);
+            let rgb;
+
+            if (gradient.kind === LOBBY_GRADIENT_KINDS.RAINBOW) {
+
+                rgb = sampleRainbowGradient(t, gradient.dividers[0]);
+
+            } else if (gradient.kind === LOBBY_GRADIENT_KINDS.BOOKEND) {
+
+                rgb = sampleBookendGradient(colors[0], colors[1], t, gradient.dividers[0]);
+
+            } else {
+
+                rgb = sampleStopGradient(colors, gradient.dividers, t);
+
+            }
+
+            const slice = document.createElement("div");
+
+            slice.className = "lobby-gradient-slice";
+            slice.style.backgroundColor = tupleToHex(rgb);
+
+            gradientPill.appendChild(slice);
+
+        }
+
+        gradient.dividers.forEach((pos, index) => {
+
+            const handle = document.createElement("button");
+
+            handle.type = "button";
+            handle.className = "lobby-gradient-handle";
+            handle.style.left = `${pos * 100}%`;
+            handle.dataset.handleIndex = index;
+            handle.setAttribute("aria-label", "Move gradient handle");
+
+            gradientPill.appendChild(handle);
+
+        });
+
+    }
+
+    function setGradientKind(kind) {
+
+        gradient.kind = kind;
+        activeStop = 0;
+
+        if (lobbyColorPanel) {
+
+            lobbyColorPanel.classList.toggle("lobby-color-panel--rainbow", kind === LOBBY_GRADIENT_KINDS.RAINBOW);
+
+        }
+
+        if (kind === LOBBY_GRADIENT_KINDS.TWO_STOP || kind === LOBBY_GRADIENT_KINDS.BOOKEND) {
+
+            gradient.colors = [hexInput.value || "#ff5cc8", "#ffffff"];
+
+        } else if (kind === LOBBY_GRADIENT_KINDS.THREE_STOP) {
+
+            gradient.colors = ["#ff5cc8", hexInput.value || "#ffffff", "#00c8ff"];
+
+        } else {
+
+            gradient.colors = ["#ff5cc8", "#00c8ff", "#ffffff"];
+
+        }
+
+        if (kind === LOBBY_GRADIENT_KINDS.THREE_STOP) {
+
+            gradient.dividers = [0.33, 0.67];
+
+        } else if (kind === LOBBY_GRADIENT_KINDS.BOOKEND) {
+
+            gradient.dividers = [0.3];
+
+        } else {
+
+            gradient.dividers = [0.5];
+
+        }
+
+        renderGradientPill();
+        renderGradientStops();
+        applyGradientToSelection(gradient);
+
+        if (lobbyEditor.selection.length) {
+
+            pushLobbySnapshot();
+
+        }
+
+    }
+
+    function setColorMode(mode) {
+
+        if (!lobbyColorPanel) {
+
+            return;
+
+        }
+
+        lobbyColorPanel.dataset.mode = mode;
+
+        lobbyColorPanel.classList.toggle(
+            "lobby-color-panel--rainbow",
+            mode === "gradient" && gradient.kind === LOBBY_GRADIENT_KINDS.RAINBOW
+        );
+
+        modeButtons.forEach(btn => {
+
+            const active = btn.dataset.lobbyColorMode === mode;
+
+            btn.classList.toggle("is-active", active);
+            btn.setAttribute("aria-selected", active ? "true" : "false");
+
+        });
+
+        if (mode === "gradient") {
+
+            renderGradientPill();
+            renderGradientStops();
+
+        }
+
+    }
+
+    modeButtons.forEach(btn => {
+
+        btn.addEventListener("click", () => setColorMode(btn.dataset.lobbyColorMode));
+
+    });
+
+    if (gradientPresetRow) {
+
+        gradientPresetRow.addEventListener("click", e => {
+
+            const btn = e.target.closest("[data-lobby-gradient-kind]");
+
+            if (!btn) {
+
+                return;
+
+            }
+
+            setGradientKind(btn.dataset.lobbyGradientKind);
+
+        });
+
+    }
+
+    if (gradientStopRow) {
+
+        gradientStopRow.addEventListener("click", e => {
+
+            const chip = e.target.closest("[data-stop-index]");
+
+            if (!chip) {
+
+                return;
+
+            }
+
+            activeStop = Number(chip.dataset.stopIndex);
+            renderGradientStops();
+
+            syncingFromSelection = true;
+            pushFromHex(gradient.colors[activeStop], false);
+            syncingFromSelection = false;
+
+        });
+
+    }
+
+    if (gradientPill) {
+
+        gradientPill.addEventListener("pointerdown", e => {
+
+            const handle = e.target.closest(".lobby-gradient-handle");
+
+            if (!handle) {
+
+                return;
+
+            }
+
+            gradientPointerId = e.pointerId;
+
+            try { gradientPill.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+
+            const handleIndex = Number(handle.dataset.handleIndex);
+
+            const onMove = event => {
+
+                const rect = gradientPill.getBoundingClientRect();
+
+                let pos = (event.clientX - rect.left) / rect.width;
+
+                pos = Math.max(0.04, Math.min(0.96, pos));
+
+                const prev = gradient.dividers[handleIndex - 1];
+                const next = gradient.dividers[handleIndex + 1];
+
+                if (prev !== undefined) pos = Math.max(prev + 0.04, pos);
+                if (next !== undefined) pos = Math.min(next - 0.04, pos);
+
+                gradient.dividers[handleIndex] = pos;
+
+                renderGradientPill();
+                applyGradientToSelection(gradient);
+
+            };
+
+            const onUp = event => {
+
+                if (event.pointerId !== gradientPointerId) return;
+
+                gradientPill.removeEventListener("pointermove", onMove);
+                gradientPill.removeEventListener("pointerup", onUp);
+                gradientPill.removeEventListener("pointercancel", onUp);
+                gradientPointerId = null;
+
+                pushLobbySnapshot();
+
+            };
+
+            gradientPill.addEventListener("pointermove", onMove);
+            gradientPill.addEventListener("pointerup", onUp);
+            gradientPill.addEventListener("pointercancel", onUp);
+
+            e.preventDefault();
+
+        });
+
+    }
+
+    if (gradientPresetRow) {
+
+        const syncPresetDisabled = () => {
+
+            gradientPresetRow.querySelectorAll("[data-lobby-gradient-kind]").forEach(btn => {
+
+                const disabled = lobbyEditor.selection.length === 0;
+
+                btn.setAttribute("aria-disabled", disabled ? "true" : "false");
+                btn.classList.toggle("is-disabled", disabled);
+
+            });
+
+        };
+
+        onLobbySelectionSync(syncPresetDisabled);
+        syncPresetDisabled();
+
+    }
+
+    /* SV square dragging */
+
+    let svDragging = false;
+    let svPointerId = null;
+
+    function updateSvFromPoint(clientX, clientY) {
+
+        const rect = sv.getBoundingClientRect();
+
+        sat = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        val = 1 - Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+
+        pushFromHsv(false);
+
+    }
+
+    sv.addEventListener("pointerdown", e => {
+
+        if (e.button !== 0) return;
+
+        svDragging = true;
+        svPointerId = e.pointerId;
+
+        try { sv.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+
+        updateSvFromPoint(e.clientX, e.clientY);
+
+    });
+
+    sv.addEventListener("pointermove", e => {
+
+        if (!svDragging || e.pointerId !== svPointerId) return;
+
+        updateSvFromPoint(e.clientX, e.clientY);
+
+    });
+
+    ["pointerup", "pointercancel"].forEach(evt => {
+
+        sv.addEventListener(evt, e => {
+
+            if (svPointerId !== null && e.pointerId !== svPointerId) return;
+
+            if (svDragging) {
+
+                svDragging = false;
+                svPointerId = null;
+
+                pushLobbySnapshot();
+
+            }
+
+        });
+
+    });
+
+    /* Hue strip dragging */
+
+    let hueDragging = false;
+
+    function updateHueFromPoint(clientY) {
+
+        const rect = hue.getBoundingClientRect();
+
+        let y = (clientY - rect.top) / rect.height;
+
+        y = Math.max(0, Math.min(1, y));
+        hue360 = (1 - y) * 360;
+
+        pushFromHsv(false);
+
+    }
+
+    hue.addEventListener("pointerdown", e => {
+
+        hueDragging = true;
+
+        try { hue.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+
+        updateHueFromPoint(e.clientY);
+
+    });
+
+    hue.addEventListener("pointermove", e => {
+
+        if (hueDragging) updateHueFromPoint(e.clientY);
+
+    });
+
+    ["pointerup", "pointercancel"].forEach(evt => {
+
+        hue.addEventListener(evt, () => {
+
+            if (hueDragging) {
+
+                hueDragging = false;
+                pushLobbySnapshot();
+
+            }
+
+        });
+
+    });
+
+    /* hex input */
+
+    function normalizeHex(raw) {
+
+        let v = (raw || "").trim();
+
+        if (v && !v.startsWith("#")) v = "#" + v;
+
+        return v;
+
+    }
+
+    function isValidHex(v) {
+
+        return /^#[0-9a-fA-F]{6}$/.test(v);
+
+    }
+
+    hexInput.addEventListener("input", () => {
+
+        const v = normalizeHex(hexInput.value);
+
+        if (isValidHex(v)) pushFromHex(v, false);
+
+    });
+
+    hexInput.addEventListener("change", () => {
+
+        const v = normalizeHex(hexInput.value);
+
+        if (isValidHex(v)) {
+
+            hexInput.value = v;
+            pushFromHex(v, true);
+
+        }
+
+    });
+
+    if (swatchCircle) {
+
+        swatchCircle.addEventListener("click", () => {
+
+            hexInput.focus();
+            hexInput.select();
+
+        });
+
+    }
+
+    /* opacity slider */
+
+    function opacityPropName() {
+
+        return lobbyEditor.editingOutline ? "ringFade" : "fade";
+
+    }
+
+    function setOpacityUi(fade) {
+
+        if (opacityLabel) {
+
+            opacityLabel.textContent = lobbyEditor.editingOutline ? "Outline opacity" : "Opacity";
+
+        }
+
+        const pct = Math.round((1 - fade) * 100);
+
+        if (opacityInput) opacityInput.value = pct;
+        if (opacityValue) opacityValue.textContent = `${pct}%`;
+
+    }
+
+    if (opacityInput) {
+
+        opacityInput.addEventListener("input", () => {
+
+            const fade = 1 - Number(opacityInput.value) / 100;
+
+            setOpacityUi(fade);
+
+            const patch = { [opacityPropName()]: fade };
+
+            if (lobbyEditor.editingOutline) patch.ring = true;
+
+            patchSelection(patch, false);
+
+        });
+
+        opacityInput.addEventListener("change", () => {
+
+            pushLobbySnapshot();
+
+        });
+
+    }
+
+    /* outline toggle + join popup */
+
+    if (outlineToggle) {
+
+        outlineToggle.setAttribute("aria-pressed", "false");
+
+        outlineToggle.addEventListener("click", () => {
+
+            lobbyEditor.editingOutline = !lobbyEditor.editingOutline;
+
+            outlineToggle.setAttribute("aria-pressed", lobbyEditor.editingOutline ? "true" : "false");
+            outlineToggle.classList.toggle("active", lobbyEditor.editingOutline);
+
+            if (outlineJoinRow) {
+
+                outlineJoinRow.classList.toggle("lobby-outline-joins--open", lobbyEditor.editingOutline);
+
+            }
+
+            syncColorPickerFromSelection();
+            syncLobbyToolbar();
+
+        });
+
+    }
+
+    if (outlineJoinRow) {
+
+        outlineJoinRow.querySelectorAll("[data-lobby-join]").forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                patchSelection({ ringJoin: btn.dataset.lobbyJoin });
+                syncOutlineJoinButtons();
+
+            });
+
+        });
+
+    }
+
+    function syncOutlineJoinButtons() {
+
+        if (!outlineJoinRow) {
+
+            return;
+
+        }
+
+        const joins = lobbyEditor.selection.map(i => {
+
+            const s = letterStyleAt(i);
+
+            return (s && s.ringJoin) || "round";
+
+        });
+
+        const uniform = joins.length && joins.every(j => j === joins[0]) ? joins[0] : null;
+
+        outlineJoinRow.querySelectorAll("[data-lobby-join]").forEach(btn => {
+
+            btn.setAttribute("aria-pressed", uniform !== null && btn.dataset.lobbyJoin === uniform ? "true" : "false");
+
+        });
+
+    }
+
+    onLobbySelectionSync(syncOutlineJoinButtons);
+
+    /* keep the picker's displayed color/opacity matched to selection */
+
+    function syncColorPickerFromSelection() {
+
+        if (!lobbyEditor.selection.length) {
+
+            if (swatchCircle) swatchCircle.classList.remove("is-mixed");
+
+            setOpacityUi(0);
+
+            return;
+
+        }
+
+        const colorProp = lobbyEditor.editingOutline ? "ringColor" : "color";
+        const fadeProp = lobbyEditor.editingOutline ? "ringFade" : "fade";
+
+        const fades = lobbyEditor.selection.map(i => {
+
+            const s = letterStyleAt(i);
+
+            return s && typeof s[fadeProp] === "number" ? s[fadeProp] : 0;
+
+        });
+
+        setOpacityUi(fades.every(f => f === fades[0]) ? fades[0] : 0);
+
+        const colors = lobbyEditor.selection.map(i => {
+
+            const s = letterStyleAt(i);
+
+            return (s && s[colorProp]) || null;
+
+        });
+
+        const uniform = colors.every(c => c === colors[0]);
+
+        if (swatchCircle) {
+
+            swatchCircle.classList.toggle("is-mixed", !uniform);
+
+        }
+
+        if (uniform && colors[0]) {
+
+            syncingFromSelection = true;
+            pushFromHex(colors[0], false);
+            syncingFromSelection = false;
+
+        }
+
+    }
+
+    onLobbySelectionSync(syncColorPickerFromSelection);
+
+    setColorMode("solid");
+    renderGradientPill();
+    pushFromHsv(false);
+
+})();
+
+/* ---- text input wiring: edits, selection, keyboard, undo/redo ---- */
+
+if (lobbyEditorInput) {
+
+    lobbyEditorInput.addEventListener("input", () => {
+
+        if (lobbyEditor.restoring) {
+
+            return;
+
+        }
+
+        reconcileLettersAfterEdit(lobbyEditorInput.value, previousLobbyText);
+        previousLobbyText = lobbyEditorInput.value;
+
+        pushLobbySnapshot();
+        clearLobbySelection();
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    });
+
+    lobbyEditorInput.addEventListener("scroll", () => {
+
+        lobbyEditorOverlay.scrollLeft = lobbyEditorInput.scrollLeft;
+
+    });
+
+    lobbyEditorInput.addEventListener("beforeinput", e => {
+
+        if (e.inputType === "historyUndo" || e.inputType === "historyRedo") {
+
+            e.preventDefault();
+
+        }
+
+    });
+
+    function captureNativeSelection() {
+
+        const start = lobbyEditorInput.selectionStart;
+        const end = lobbyEditorInput.selectionEnd;
+
+        if (start === end) {
+
+            return;
+
+        }
+
+        setSelectionRange(start, end);
+        lobbyEditor.caretShown = false;
+
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    }
+
+    lobbyEditorInput.addEventListener("select", captureNativeSelection);
+    lobbyEditorInput.addEventListener("mouseup", captureNativeSelection);
+
+    lobbyEditorInput.addEventListener("click", e => {
+
+        if (lobbyEditorInput.selectionStart !== lobbyEditorInput.selectionEnd) {
+
+            return;
+
+        }
+
+        const index = letterIndexAtClientX(e.clientX);
+
+        if (index >= lobbyEditorInput.value.length) {
+
+            clearLobbySelection();
+            redrawLobbyOverlay();
+            refreshLobbyPreview();
+            syncLobbyToolbar();
+
+            return;
+
+        }
+
+        lobbyEditorInput.setSelectionRange(index, index);
+
+        lobbyEditor.selection = [index];
+        lobbyEditor.selectionActive = true;
+        lobbyEditor.caretShown = false;
+
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    });
+
+    lobbyEditorInput.addEventListener("keydown", e => {
+
+        const isArrow = e.key === "ArrowLeft" || e.key === "ArrowRight";
+
+        if (!isArrow || e.ctrlKey || e.metaKey || e.altKey) {
+
+            return;
+
+        }
+
+        const len = lobbyEditorInput.value.length;
+
+        if (!len) {
+
+            return;
+
+        }
+
+        e.preventDefault();
+
+        const dir = e.key === "ArrowLeft" ? -1 : 1;
+        const target = Math.max(0, Math.min(len - 1, lobbyEditor.caret + dir));
+
+        lobbyEditor.caret = target;
+        lobbyEditor.caretShown = true;
+
+        if (e.shiftKey) {
+
+            const next = new Set(lobbyEditor.selection);
+
+            next.add(target);
+
+            lobbyEditor.selection = [...next].sort((a, b) => a - b);
+
+        } else {
+
+            lobbyEditor.selection = [target];
+
+        }
+
+        lobbyEditor.selectionActive = lobbyEditor.selection.length > 0;
+
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    });
+
+    lobbyEditorInput.addEventListener("blur", () => {
+
+        lobbyEditor.caretShown = false;
+        redrawLobbyOverlay();
+
+    });
+
+}
+
+document.addEventListener("mousedown", e => {
+
+    if (!lobbyEditorInput || !lobbyEditorWrap) {
+
+        return;
+
+    }
+
+    if (!(e.ctrlKey || e.metaKey)) {
+
+        return;
+
+    }
+
+    if (!lobbyEditorWrap.contains(e.target)) {
+
+        return;
+
+    }
+
+    e.preventDefault();
+
+    const index = letterIndexAtClientX(e.clientX);
+
+    if (index >= lobbyEditorInput.value.length) {
+
+        return;
+
+    }
+
+    lobbyEditorInput.focus();
+    lobbyEditorInput.setSelectionRange(index, index);
+
+    toggleIndexInSelection(index);
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+    syncLobbyToolbar();
+
+});
+
+document.addEventListener("keydown", e => {
+
+    if (!lobbyEditorInput) {
+
+        return;
+
+    }
+
+    const withinLobbyPanel = document.activeElement === lobbyEditorInput ||
+        (lobbyPanel && lobbyPanel.contains(document.activeElement));
+
+    if (!withinLobbyPanel) {
+
+        return;
+
+    }
+
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    if (ctrlOrCmd && (e.key === "z" || e.key === "Z")) {
+
+        e.preventDefault();
+
+        if (e.shiftKey) lobbyRedo(); else lobbyUndo();
+
+        return;
+
+    }
+
+    if (ctrlOrCmd && (e.key === "y" || e.key === "Y")) {
+
+        e.preventDefault();
+        lobbyRedo();
+        return;
+
+    }
+
+    if (ctrlOrCmd && (e.key === "q" || e.key === "Q")) {
+
+        e.preventDefault();
+
+        clearLobbySelection();
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    }
+
+});
 
 if (lobbyCopyButton) {
 
-    lobbyCopyButton.addEventListener("click", copyLobbyName);
+    lobbyCopyButton.addEventListener("click", copyLobbyTags);
 
 }
 
-const lobbyNumberToggle = document.getElementById("lobbyNumberToggle");
-
-if (lobbyNumberToggle) {
-
-    attachClickAction(
-        lobbyNumberToggle,
-        () => setLobbyNumberSuffix(!lobbyState.addNumber),
-        typeof playUtilitySound === "function" ? playUtilitySound : undefined
-    );
-
-}
-
+/* ---- panel shell: toggle button, sliding panel, mutual exclusion ---- */
 
 const lobbyToggleButton = document.getElementById("lobbyToggleButton");
 const lobbyPanel = document.getElementById("lobbyPanel");
@@ -295,30 +2242,11 @@ function setLobbyPanelOpen(isOpen) {
 
     }
 
-    // Mutually exclusive with the other three panels - opening this
-    // one closes all of them instead of letting panels overlay each
-    // other. Each of those panels' own open functions has a matching
-    // guarded call back to this one, so it works regardless of which
-    // panel the person opens first.
     if (isOpen) {
 
-        if (typeof setUpgradePanelOpen === "function") {
-
-            setUpgradePanelOpen(false);
-
-        }
-
-        if (typeof setDeathPanelOpen === "function") {
-
-            setDeathPanelOpen(false);
-
-        }
-
-        if (typeof setAltarsPanelOpen === "function") {
-
-            setAltarsPanelOpen(false);
-
-        }
+        if (typeof setUpgradePanelOpen === "function") setUpgradePanelOpen(false);
+        if (typeof setDeathPanelOpen === "function") setDeathPanelOpen(false);
+        if (typeof setAltarsPanelOpen === "function") setAltarsPanelOpen(false);
 
     }
 
@@ -365,13 +2293,6 @@ if (lobbyToggleButton && lobbyPanel) {
 
 }
 
-
-/*
- * Left panel accent sync, scoped just to this panel's own
- * .left-panel--lobby class - same self-contained approach Altars.js
- * uses (its own small observer) rather than touching script.js's
- * shared one.
- */
 const leftPanelElForLobby = document.querySelector(".left-panel");
 
 function updateLobbyLeftPanelAccent() {
@@ -382,9 +2303,7 @@ function updateLobbyLeftPanelAccent() {
 
     }
 
-    const lobbyOpen = lobbyPanel.classList.contains("open");
-
-    leftPanelElForLobby.classList.toggle("left-panel--lobby", lobbyOpen);
+    leftPanelElForLobby.classList.toggle("left-panel--lobby", lobbyPanel.classList.contains("open"));
 
 }
 
@@ -398,6 +2317,12 @@ if (lobbyPanel) {
 
 updateLobbyLeftPanelAccent();
 
-loadLobbyState();
-updateLobbyNumberToggleUI();
-renderLobbyHistory();
+if (lobbyEditorInput) {
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+    syncLobbyToolbar();
+
+}
+
+renderLobbyTagLog();

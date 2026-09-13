@@ -1,13 +1,13 @@
 /*
- * Lobby Maker styles
+ * Lobby Maker styles — v2 (rich text title editor)
  * --------------------------
- * Fourth floating toggle button + sliding panel, following the exact
- * same shell pattern as the Upgrade/Death Tracker/Altars toggles
- * (collapse-to-icon until hover/focus, live inside the shared
- * .floating-toggle-buttons wrapper in style.css) and the same
- * sliding-overlay panel pattern. Themed beige/white, distinct from
- * Altars' black/white noir look. Depends on .right-panel { position:
- * relative; }, defined in style.css.
+ * The toggle button, sliding panel shell, header, and left-panel
+ * accent are unchanged from the original Lobby Maker (still beige/
+ * white, still following the Upgrade/Death/Altars toggle pattern).
+ * Everything below the panel header is new: a free-text title input
+ * with a per-letter highlight overlay, a small toolbar that opens
+ * Font / Color / Style sub-panels, and a live "tag output" preview
+ * with its own copy button + session history.
  */
 
 
@@ -23,10 +23,6 @@
     padding: 12px 14px;
     overflow: hidden;
 
-    /* Mirrored stops (beige -> white -> pale beige -> white -> beige)
-       so the first and last stops match - combined with the wide
-       background and animating position from 0% to 100%, the
-       hue-shift loop has no visible seam or jump. */
     background: linear-gradient(
         90deg,
         #d8c3a5 0%,
@@ -111,10 +107,6 @@
 }
 
 
-/* Collapsed by default down to just the icon, same as the other
-   floating toggles - text label starts at zero width/opacity and
-   only expands on hover/focus. The keybind badge stays visible even
-   while collapsed. */
 .lobby-toggle-button .btn-label {
     max-width: 0;
     margin-left: 0;
@@ -186,7 +178,7 @@
 }
 
 
-/* ---- Sliding panel ---- */
+/* ---- Sliding panel shell ---- */
 
 .lobby-panel {
     position: absolute;
@@ -301,83 +293,39 @@
 }
 
 
-/* ---- Body: generator + history ---- */
-
 .lobby-panel-body {
     flex: 1 1 auto;
 
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 
-.lobby-result-row {
+/* ---- Toolbar: Font / Color / Style / Copy ---- */
+
+.lobby-editor-toolbar {
     display: flex;
 
-    align-items: stretch;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 
-.lobby-result-value {
-    flex: 1 1 auto;
-    min-width: 0;
+.lobby-editor-tool {
+    padding: 9px 16px;
 
-    display: flex;
+    background: rgba(216, 195, 165, 0.08);
 
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px 18px;
-
-    background: rgba(216, 195, 165, 0.06);
-
-    border: 1px dashed rgba(216, 195, 165, 0.4);
-    border-radius: 10px;
-
-    color: #a8977d;
-
-    font-family: var(--font-modern);
-    font-size: 14px;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.3px;
-
-    transition: border-style 0.15s, border-color 0.15s, background 0.15s, color 0.15s;
-}
-
-
-.lobby-result-value--filled {
-    border-style: solid;
-    border-color: rgba(216, 195, 165, 0.6);
-
-    background: rgba(216, 195, 165, 0.1);
-
-    color: #f5efe3;
-
-    font-size: 20px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-}
-
-
-.lobby-copy-button {
-    flex-shrink: 0;
-
-    padding: 0 20px;
-
-    background: rgba(216, 195, 165, 0.1);
-
-    border: 1px solid rgba(216, 195, 165, 0.45);
-    border-radius: 10px;
+    border: 1px solid rgba(216, 195, 165, 0.4);
+    border-radius: 999px;
 
     color: #d8c3a5;
 
     font-family: var(--font-modern);
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.8px;
 
     cursor: pointer;
 
@@ -385,18 +333,43 @@
 }
 
 
-.lobby-copy-button:hover {
-    background: rgba(216, 195, 165, 0.2);
+.lobby-editor-tool:hover {
+    background: rgba(216, 195, 165, 0.18);
+
+    border-color: #d8c3a5;
+
+    color: #ffffff;
+}
+
+
+.lobby-editor-tool.active {
+    background: rgba(216, 195, 165, 0.22);
 
     border-color: #f0e6d2;
 
     color: #ffffff;
 
-    box-shadow: 0 0 16px rgba(216, 195, 165, 0.35);
+    box-shadow: 0 0 14px rgba(216, 195, 165, 0.35);
 }
 
 
-.lobby-copy-button--copied {
+.lobby-editor-tool--copy {
+    margin-left: auto;
+
+    background: linear-gradient(90deg, #d8c3a5 0%, #8a7050 50%, #d8c3a5 100%);
+
+    border-color: #f0e6d2;
+
+    color: #241a0d;
+}
+
+
+.lobby-editor-tool--copy:hover {
+    box-shadow: 0 0 16px rgba(216, 195, 165, 0.45);
+}
+
+
+.lobby-editor-tool--copy.lobby-copy-button--copied {
     background: rgba(123, 230, 168, 0.16);
 
     border-color: #7be6a8;
@@ -405,189 +378,178 @@
 }
 
 
-.lobby-controls-row {
-    display: flex;
+/* ---- Title input + highlight overlay ----
+   Same "transparent textarea over a rendered overlay" trick used
+   for letter-accurate click targets: the textarea's own text is
+   invisible (only its caret shows), and the overlay div underneath
+   renders the styled characters in the exact same box/font so
+   clicks line up with the letters people can see. */
 
-    flex-wrap: wrap;
+.lobby-editor-wrap {
+    position: relative;
+
+    min-height: 58px;
+
+    padding: 0 16px;
+
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: center;
-
-    gap: 12px;
-}
-
-
-.lobby-generate-button {
-    flex: 1 1 220px;
-
-    padding: 16px 20px;
-    min-height: 52px;
-
-    background: linear-gradient(
-        90deg,
-        #d8c3a5 0%,
-        #8a7050 25%,
-        #f0e6d2 50%,
-        #8a7050 75%,
-        #d8c3a5 100%
-    );
-    background-size: 260% auto;
-
-    border: 1px solid #f0e6d2;
-    border-radius: 10px;
-
-    color: #241a0d;
-
-    font-family: var(--font-modern);
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 1px;
-
-    cursor: pointer;
-
-    box-shadow: 0 0 18px rgba(216, 195, 165, 0.35);
-
-    animation: lobby-generate-gradient-shift 3.5s linear infinite;
-
-    transition: transform 0.15s, box-shadow 0.15s;
-}
-
-
-@keyframes lobby-generate-gradient-shift {
-
-    0% {
-        background-position: 0% 50%;
-    }
-
-    100% {
-        background-position: 100% 50%;
-    }
-
-}
-
-
-.lobby-generate-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0 24px rgba(216, 195, 165, 0.5);
-}
-
-
-.lobby-control-label {
-    display: block;
-
-    margin-bottom: 0;
-
-    color: #d8c3a5;
-
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    white-space: nowrap;
-}
-
-
-/* Track+thumb switch, same shape as .upgrade-switch/.death-switch,
-   themed beige for this panel. */
-.lobby-toggle-block {
-    display: flex;
-
-    align-items: center;
-    gap: 8px;
-
-    flex-shrink: 0;
-}
-
-
-.lobby-switch {
-    display: flex;
-
-    align-items: center;
-    gap: 8px;
-
-    padding: 7px 12px;
 
     background: rgba(216, 195, 165, 0.06);
 
-    border: 1px solid rgba(216, 195, 165, 0.35);
-    border-radius: 999px;
-
-    cursor: pointer;
-    user-select: none;
-
-    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
-}
-
-
-.lobby-switch:hover {
-    border-color: rgba(216, 195, 165, 0.6);
-}
-
-
-.lobby-switch.active {
-    background: rgba(216, 195, 165, 0.16);
-
-    border-color: #d8c3a5;
-    box-shadow: 0 0 16px rgba(216, 195, 165, 0.35);
-}
-
-
-.lobby-switch-track {
-    position: relative;
-
-    flex-shrink: 0;
-
-    width: 32px;
-    height: 18px;
-
-    background: rgba(0, 0, 0, 0.35);
-
     border: 1px solid rgba(216, 195, 165, 0.4);
-    border-radius: 999px;
+    border-radius: 12px;
 
-    transition: background 0.18s, border-color 0.18s;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 
-.lobby-switch.active .lobby-switch-track {
-    background: linear-gradient(90deg, #6f5a3a, #d8c3a5);
-
+.lobby-editor-wrap:focus-within {
     border-color: #d8c3a5;
+    box-shadow: 0 0 0 3px rgba(216, 195, 165, 0.18);
 }
 
 
-.lobby-switch-thumb {
-    position: absolute;
-    top: 1px;
-    left: 1px;
+.lobby-editor-input,
+.lobby-editor-overlay {
+    grid-area: 1 / 1;
 
-    width: 14px;
-    height: 14px;
+    width: 100%;
 
-    background: #f5efe3;
-    border-radius: 50%;
+    padding: 0;
+    border: 0;
 
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    font-family: var(--font-modern);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+    white-space: pre;
 
-    transition: transform 0.18s ease;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 
-.lobby-switch.active .lobby-switch-thumb {
-    transform: translateX(14px);
+.lobby-editor-input {
+    background: transparent;
+
+    color: transparent;
+    caret-color: #f0e6d2;
+
+    outline: none;
+    resize: none;
+
+    height: 34px;
+
+    scrollbar-width: none;
 }
 
 
-.lobby-switch-label {
-    color: #d8c3a5;
+.lobby-editor-input::-webkit-scrollbar {
+    display: none;
+}
+
+
+.lobby-editor-input::placeholder {
+    color: #7a6753;
+}
+
+
+.lobby-editor-overlay {
+    pointer-events: none;
+
+    color: #f5efe3;
+}
+
+
+.lobby-editor-wrap--empty .lobby-editor-overlay {
+    opacity: 0;
+}
+
+
+.lobby-letter-cell {
+    display: inline-block;
+}
+
+
+.lobby-letter-cell--selected {
+    background: rgba(216, 195, 165, 0.35);
+    border-radius: 3px;
+}
+
+
+.lobby-letter-cell--caret {
+    box-shadow: inset 2px 0 0 #f0e6d2;
+}
+
+
+.lobby-letter--bold {
+    font-weight: 900;
+}
+
+
+.lobby-letter--italic {
+    font-style: italic;
+}
+
+
+.lobby-letter--underline {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+
+.lobby-letter--strike {
+    text-decoration: line-through;
+}
+
+
+.lobby-letter--underline.lobby-letter--strike {
+    text-decoration: underline line-through;
+}
+
+
+/* ---- Tag output preview + copy history ---- */
+
+.lobby-preview-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding: 14px 16px;
+
+    background: rgba(216, 195, 165, 0.04);
+
+    border: 1px dashed rgba(216, 195, 165, 0.35);
+    border-radius: 10px;
+}
+
+
+.lobby-preview-label {
+    color: #a8977d;
 
     font-family: var(--font-modern);
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 1px;
-    white-space: nowrap;
+    text-transform: uppercase;
 }
 
 
-.lobby-switch.active .lobby-switch-label {
-    color: #f5efe3;
+.lobby-preview-value {
+    color: #7a6a54;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+
+.lobby-preview-value--filled {
+    color: #f0e6d2;
 }
 
 
@@ -619,7 +581,11 @@
     color: #f0e6d2;
 
     font-family: var(--font-modern);
-    font-size: 12px;
+    font-size: 11px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
@@ -637,12 +603,601 @@
 }
 
 
+/* ---- Sub-panels shared shell (Font / Color / Style) ---- */
+
+.lobby-subpanel {
+    max-height: 0;
+    overflow: hidden;
+
+    opacity: 0;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, padding 0.35s ease, border-color 0.2s;
+}
+
+
+.lobby-subpanel--open {
+    max-height: 420px;
+    opacity: 1;
+
+    padding: 16px;
+
+    background: rgba(216, 195, 165, 0.05);
+    border-color: rgba(216, 195, 165, 0.25);
+
+    overflow: visible;
+}
+
+
+.lobby-subpanel-heading {
+    margin-bottom: 10px;
+
+    color: #a8977d;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+
+/* ---- Font sub-panel ---- */
+
+.lobby-font-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+
+.lobby-font-option {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    padding: 10px 12px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.25);
+    border-radius: 8px;
+
+    color: #d8c3a5;
+
+    cursor: pointer;
+    text-align: left;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.lobby-font-option:hover {
+    background: rgba(216, 195, 165, 0.14);
+    border-color: rgba(216, 195, 165, 0.5);
+}
+
+
+.lobby-font-option[aria-pressed="true"] {
+    background: rgba(216, 195, 165, 0.22);
+    border-color: #f0e6d2;
+    color: #ffffff;
+}
+
+
+.lobby-font-option.is-mixed {
+    border-color: rgba(216, 195, 165, 0.6);
+    border-style: dashed;
+}
+
+
+.lobby-font-option-name {
+    font-family: var(--font-modern);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+
+    color: #a8977d;
+}
+
+
+.lobby-font-option-preview {
+    font-size: 15px;
+}
+
+
+/* ---- Color sub-panel ---- */
+
+.lobby-color-mode-row {
+    display: flex;
+    gap: 6px;
+
+    margin-bottom: 14px;
+}
+
+
+.lobby-color-mode-button {
+    flex: 1;
+
+    padding: 8px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.3);
+    border-radius: 8px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.lobby-color-mode-button.is-active {
+    background: rgba(216, 195, 165, 0.22);
+    border-color: #f0e6d2;
+    color: #ffffff;
+}
+
+
+.lobby-color-picker-main {
+    display: flex;
+    gap: 10px;
+
+    margin-bottom: 12px;
+}
+
+
+.lobby-sv {
+    position: relative;
+
+    flex: 1;
+    height: 130px;
+
+    border-radius: 8px;
+    overflow: hidden;
+
+    background:
+        linear-gradient(to top, #000000, transparent),
+        linear-gradient(to right, #ffffff, hsl(var(--lobby-hue, 300), 100%, 50%));
+
+    cursor: crosshair;
+}
+
+
+.lobby-sv-cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 12px;
+    height: 12px;
+
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+
+    transform: translate(-50%, -50%);
+
+    pointer-events: none;
+}
+
+
+.lobby-hue {
+    position: relative;
+
+    width: 20px;
+    height: 130px;
+
+    border-radius: 8px;
+    overflow: hidden;
+
+    background: linear-gradient(
+        to bottom,
+        #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000
+    );
+
+    cursor: pointer;
+}
+
+
+.lobby-hue-cursor {
+    position: absolute;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background: rgba(255, 255, 255, 0.9);
+
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+
+    transform: translateY(-50%);
+
+    pointer-events: none;
+}
+
+
+.lobby-color-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 12px;
+}
+
+
+.lobby-color-swatch {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    border: 1px solid rgba(216, 195, 165, 0.5);
+    border-radius: 50%;
+
+    cursor: pointer;
+}
+
+
+.lobby-color-swatch.is-mixed {
+    background:
+        conic-gradient(#d8c3a5 0turn, #ffffff 0.25turn, #8a7050 0.5turn, #ffffff 0.75turn, #d8c3a5 1turn);
+}
+
+
+.lobby-hex-input {
+    flex: 1;
+
+    padding: 8px 10px;
+
+    background: #14100a;
+
+    border: 1px solid rgba(216, 195, 165, 0.35);
+    border-radius: 8px;
+
+    color: #f0e6d2;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+
+    outline: none;
+}
+
+
+.lobby-hex-input:focus {
+    border-color: #d8c3a5;
+}
+
+
+.lobby-opacity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+
+.lobby-opacity-row label {
+    flex-shrink: 0;
+
+    width: 92px;
+
+    color: #a8977d;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+
+.lobby-opacity-row input[type="range"] {
+    flex: 1;
+
+    accent-color: #d8c3a5;
+}
+
+
+.lobby-opacity-row span {
+    flex-shrink: 0;
+
+    width: 36px;
+
+    text-align: right;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.lobby-outline-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-bottom: 4px;
+}
+
+
+.lobby-outline-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 12px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.3);
+    border-radius: 999px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+
+    cursor: pointer;
+
+    align-self: flex-start;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.lobby-outline-toggle.active {
+    background: rgba(216, 195, 165, 0.22);
+    border-color: #f0e6d2;
+    color: #ffffff;
+}
+
+
+.lobby-outline-joins {
+    display: flex;
+    gap: 6px;
+
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+
+.lobby-outline-joins--open {
+    max-height: 60px;
+    opacity: 1;
+}
+
+
+.lobby-outline-join-option {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.3);
+    border-radius: 8px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+
+.lobby-outline-join-option[aria-pressed="true"] {
+    background: rgba(216, 195, 165, 0.22);
+    border-color: #f0e6d2;
+    color: #ffffff;
+}
+
+
+/* ---- Gradient presets + pill (only visible in gradient mode) ---- */
+
+.lobby-color-panel[data-mode="solid"] .lobby-gradient-only {
+    display: none;
+}
+
+
+.lobby-color-panel[data-mode="gradient"] .lobby-solid-only {
+    display: none;
+}
+
+
+.lobby-gradient-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    margin-bottom: 10px;
+}
+
+
+.lobby-gradient-presets button {
+    padding: 7px 12px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.3);
+    border-radius: 999px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.lobby-gradient-presets button:hover {
+    background: rgba(216, 195, 165, 0.16);
+}
+
+
+.lobby-gradient-presets button.is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+.lobby-gradient-stops {
+    display: flex;
+    gap: 6px;
+
+    margin-bottom: 10px;
+}
+
+
+.lobby-gradient-stop {
+    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+}
+
+
+.lobby-gradient-stop.is-active {
+    outline: 2px solid #f0e6d2;
+    outline-offset: 2px;
+}
+
+
+.lobby-color-panel--rainbow .lobby-gradient-stops {
+    display: none;
+}
+
+
+.lobby-gradient-pill {
+    position: relative;
+
+    height: 22px;
+
+    display: flex;
+
+    border-radius: 999px;
+    overflow: visible;
+}
+
+
+.lobby-gradient-slice {
+    flex: 1;
+
+    height: 100%;
+}
+
+
+.lobby-gradient-pill .lobby-gradient-slice:first-child {
+    border-top-left-radius: 999px;
+    border-bottom-left-radius: 999px;
+}
+
+
+.lobby-gradient-pill .lobby-gradient-slice:last-child {
+    border-top-right-radius: 999px;
+    border-bottom-right-radius: 999px;
+}
+
+
+.lobby-gradient-handle {
+    position: absolute;
+    top: 50%;
+
+    width: 14px;
+    height: 14px;
+
+    background: #ffffff;
+    border: 2px solid #241a0d;
+    border-radius: 50%;
+
+    transform: translate(-50%, -50%);
+
+    cursor: ew-resize;
+}
+
+
+/* ---- Style sub-panel ---- */
+
+.lobby-style-options {
+    display: flex;
+    gap: 8px;
+}
+
+
+.lobby-style-option {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.3);
+    border-radius: 10px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 15px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.lobby-style-option:hover {
+    background: rgba(216, 195, 165, 0.16);
+}
+
+
+.lobby-style-option[aria-pressed="true"] {
+    background: rgba(216, 195, 165, 0.24);
+    border-color: #f0e6d2;
+    color: #ffffff;
+}
+
+
+.lobby-style-option.is-mixed {
+    border-style: dashed;
+    border-color: rgba(216, 195, 165, 0.6);
+}
+
+
 /* ---- Left panel accent while this panel is open ----
-   Same idea as .left-panel--upgrades / .left-panel--death /
-   .left-panel--altars in style.css/altars.css - declared here since
-   the CSS custom properties are defined globally on .left-panel via
-   the @property rules in style.css. Toggled by lobby.js watching
-   #lobbyPanel's own "open" class. */
+   Declared here since the custom properties are defined globally on
+   .left-panel via the @property rules in style.css. Toggled by
+   lobby.js watching #lobbyPanel's own "open" class. */
 .left-panel.left-panel--lobby {
     --left-panel-grad-a: #1a140d;
     --left-panel-grad-b: #221c12;
@@ -671,13 +1226,13 @@
 
 @media (max-width: 700px) {
 
-    .lobby-controls-row {
+    .lobby-editor-toolbar {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .lobby-toggle-block {
-        justify-content: space-between;
+    .lobby-editor-tool--copy {
+        margin-left: 0;
     }
 
 }
@@ -689,8 +1244,27 @@
         padding: 10px 14px;
     }
 
-    .lobby-result-row {
+    .lobby-color-picker-main {
         flex-direction: column;
+    }
+
+    .lobby-hue {
+        width: 100%;
+        height: 16px;
+    }
+
+    .lobby-hue-cursor {
+        top: 0;
+        left: 0;
+
+        width: 4px;
+        height: 100%;
+
+        transform: translateX(-50%);
+    }
+
+    .lobby-font-list {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
 
 }
