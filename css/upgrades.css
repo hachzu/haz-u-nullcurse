@@ -300,9 +300,22 @@
 }
 
 
-.upgrade-panel-heading {
+/* Wraps the heading and the zoom note underneath it so the note
+   reads as a subtitle attached to the title, not a stray line
+   floating in the header row. margin-right: auto (moved here from
+   .upgrade-panel-heading itself) pushes the whole group away from
+   the Own All/Reset buttons, same as before. */
+.upgrade-panel-heading-group {
     margin-right: auto;
+    min-width: 0;
 
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.upgrade-panel-heading {
     font-size: 24px;
     font-weight: 900;
     letter-spacing: 0.5px;
@@ -321,6 +334,38 @@
     color: transparent;
 
     text-shadow: 0 0 20px rgba(143, 217, 255, 0.55);
+}
+
+
+/* Small hint under the title for anyone whose window/monitor can't
+   fit the panel comfortably - points at the browser's own Ctrl +/-
+   zoom rather than any in-app control, since there isn't one. */
+.upgrade-panel-zoom-note {
+    color: #6faccf;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.5;
+}
+
+
+.upgrade-zoom-key {
+    display: inline-block;
+
+    padding: 1px 6px;
+    margin: 0 1px;
+
+    background: rgba(143, 217, 255, 0.12);
+
+    border: 1px solid rgba(143, 217, 255, 0.4);
+    border-radius: 4px;
+
+    color: #dff5ff;
+
+    font-size: 9px;
+    font-weight: 800;
 }
 
 
@@ -882,10 +927,16 @@
 }
 
 
-/* Golden Gifts input, Pending/Left totals, the Nothing/Progressive
-   toggle group, and the Purchase button all sit together in one row
-   so the whole "how much / can I afford it / buy" flow reads left
-   to right in one glance. */
+/* Golden Gifts input, Pending/Left totals, and the Nothing/
+   Progressive toggle group sit together in this row so the whole
+   "how much do I have / can I afford it" readout stays in one
+   glance. Purchase Upgrade used to share this row too, but
+   Progressive mode adds a level badge + advance/revert buttons into
+   the toggle group once it's on, which kept shoving the button
+   sideways or onto a new line as the row's content changed size -
+   it now lives in its own dedicated row below instead (see
+   .upgrade-purchase-row-bottom), which never grows or shrinks based
+   on anything in this row. */
 .upgrade-purchase-row {
     display: flex;
 
@@ -1014,13 +1065,28 @@
 }
 
 
-/* Bigger, easier to hit, and reads as the primary action of the
-   row - noticeably taller than the surrounding controls. */
-.purchase-upgrade-button {
-    flex: 1 1 200px;
+/* Its own dedicated row, always full width - it no longer needs to
+   negotiate space with .upgrade-purchase-row above (see that rule's
+   comment), so it always sits in exactly the same place regardless
+   of whether Progressive mode's extra badge/buttons are showing. The
+   top border + spacing reads as a clear break between "here's your
+   info" and "here's the button that does something." */
+.upgrade-purchase-row-bottom {
+    margin-top: 16px;
+    padding-top: 16px;
 
-    padding: 18px 24px;
-    min-height: 54px;
+    border-top: 1px solid rgba(143, 217, 255, 0.15);
+}
+
+
+/* Bigger, easier to hit, and reads as the primary action of the
+   panel - noticeably taller than the surrounding controls, and now
+   spans the full width of its own row instead of sharing space. */
+.purchase-upgrade-button {
+    width: 100%;
+
+    padding: 20px 24px;
+    min-height: 58px;
 
     background: linear-gradient(135deg, #ffd074, #ff9d3d);
 
@@ -1030,9 +1096,9 @@
     color: #241100;
 
     font-family: var(--font-modern);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
 
     cursor: pointer;
 
@@ -1970,12 +2036,6 @@
 
         flex-wrap: wrap;
         justify-content: space-between;
-    }
-
-
-    .purchase-upgrade-button {
-        width: 100%;
-        margin-left: 0;
     }
 
 }

@@ -31,7 +31,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/upgrades.css">
     <link rel="stylesheet" href="css/altars.css">
-    <link rel="stylesheet" href="css/zoom.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 </head>
 
@@ -75,25 +74,6 @@
                 Values are sourced from the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a> and may contain errors!
             </div>
         </header>
-
-
-        <section class="control-section zoom-section">
-
-            <label class="section-label">ZOOM <span class="label-note">(ctrl +/-)</span></label>
-
-            <div class="zoom-control-row">
-
-                <button type="button" id="zoomOutButton" class="zoom-step-button" aria-label="Zoom out">&minus;</button>
-
-                <span class="zoom-value" id="zoomValueDisplay">100%</span>
-
-                <button type="button" id="zoomInButton" class="zoom-step-button" aria-label="Zoom in">+</button>
-
-                <button type="button" id="zoomResetButton" class="zoom-reset-button" aria-label="Reset zoom" title="Reset to 100%">Reset</button>
-
-            </div>
-
-        </section>
 
 
         <section class="control-section level-section">
@@ -299,8 +279,18 @@
 
                 <div class="upgrade-panel-header">
 
-                    <div class="upgrade-panel-heading animated-header-text">
-                        SHOP UPGRADE CALCULATOR
+                    <div class="upgrade-panel-heading-group">
+
+                        <div class="upgrade-panel-heading animated-header-text">
+                            SHOP UPGRADE CALCULATOR
+                        </div>
+
+                        <div class="upgrade-panel-zoom-note">
+                            Panel not fitting your screen? Zoom out with
+                            <span class="upgrade-zoom-key">Ctrl</span> + <span class="upgrade-zoom-key">&minus;</span>
+                            (or <span class="upgrade-zoom-key">Ctrl</span> + <span class="upgrade-zoom-key">+</span> to zoom back in).
+                        </div>
+
                     </div>
 
                     <div class="upgrade-header-buttons">
@@ -391,6 +381,25 @@
                             </div>
 
                         </div>
+
+                        <!--
+                            Purchase Upgrade now lives in its own row
+                            below (see .upgrade-purchase-row-bottom in
+                            upgrades.css) instead of sharing this flex
+                            row with Golden Gifts/Total/Left/the
+                            toggles. Those grow (Progressive adds a
+                            level badge + advance/revert buttons here
+                            once it's on), which used to shove the
+                            button sideways or onto a new line every
+                            time. Giving it a dedicated full-width
+                            spot means it always sits in the same
+                            place regardless of what this row is
+                            doing.
+                        -->
+
+                    </div>
+
+                    <div class="upgrade-purchase-row-bottom">
 
                         <button
                             id="purchaseUpgradeButton"
@@ -743,7 +752,6 @@
 
 <script type="module" src="js/presence.js"></script>
 <script src="js/script.js"></script>
-<script src="js/zoom.js"></script>
 <script src="js/upgrades.js"></script>
 <script src="js/death-tracker.js"></script>
 <script src="js/altars.js"></script>
