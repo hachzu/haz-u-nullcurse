@@ -15,12 +15,14 @@
 
 
 /*
- * Names of upgrades that give their very first stack away for free
- * when playing Solo or Duo - Party and Party+ don't get this break,
- * since those modes already scale up the group's total buying power.
- * Checked in computeBaseForStack below.
+ * Names of upgrades that come automatically owned at 1 stack when
+ * playing Solo or Duo - no purchase needed, no Golden Gifts spent.
+ * Party and Party+ don't get this break, since those modes already
+ * scale up the group's total buying power. Applied directly in
+ * getOwnedStack below, so it flows through every price/lock/render
+ * calculation that already reads owned stack counts.
  */
-const SOLO_DUO_FREE_FIRST_STACK = new Set(["Paycheck"]);
+const SOLO_DUO_AUTO_OWNED = new Set(["Paycheck"]);
 
 
 const CASUAL_OVERRIDES = {
@@ -449,20 +451,6 @@ function computeBaseForStack(item, stack) {
 
     const unit = (isSolo && effective.soloPrice !== undefined) ? effective.soloPrice : effective.price;
 
-    // First stack is free in Solo/Duo for eligible upgrades (see
-    // SOLO_DUO_FREE_FIRST_STACK) - shift the stack count down by one
-    // before pricing so stack 1 costs nothing and every stack after
-    // it costs the normal unit price, same as any other flat-priced
-    // upgrade.
-    if (
-        SOLO_DUO_FREE_FIRST_STACK.has(item.name)
-        && (upgradeState.mode === "solo" || upgradeState.mode === "duo")
-    ) {
-
-        return unit * Math.max(0, stack - 1);
-
-    }
-
     return unit * stack;
 
 }
@@ -617,9 +605,32 @@ function isUpgradeUnavailable(item) {
 }
 
 
+/*
+ * Owned stack count for an upgrade - normally just whatever's stored
+ * in upgradeState.owned. For upgrades in SOLO_DUO_AUTO_OWNED, Solo
+ * and Duo modes get a floor of 1 stack "for free" with nothing ever
+ * actually purchased or charged - it just always reads as owned
+ * while in one of those two modes, and reverts back to whatever's
+ * genuinely stored the moment the mode changes to Party/Party+.
+ * Because every other function in this file (pricing, locking,
+ * rendering, the stepper's down-limit) already reads owned stacks
+ * through this one function, the floor applies everywhere at once
+ * with no other changes needed.
+ */
 function getOwnedStack(name) {
 
-    return upgradeState.owned.get(name) || 0;
+    const stored = upgradeState.owned.get(name) || 0;
+
+    if (
+        SOLO_DUO_AUTO_OWNED.has(name)
+        && (upgradeState.mode === "solo" || upgradeState.mode === "duo")
+    ) {
+
+        return Math.max(stored, 1);
+
+    }
+
+    return stored;
 
 }
 

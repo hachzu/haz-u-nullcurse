@@ -26,12 +26,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="DeathTracker.css">
-    <link rel="stylesheet" href="Particles.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="Upgrades.css">
-    <link rel="stylesheet" href="Altars.css">
-    <link rel="stylesheet" href="Zoom.css">
+    <link rel="stylesheet" href="css/death-tracker.css">
+    <link rel="stylesheet" href="css/particles.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/upgrades.css">
+    <link rel="stylesheet" href="css/altars.css">
+    <link rel="stylesheet" href="css/zoom.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 </head>
 
@@ -77,6 +77,25 @@
         </header>
 
 
+        <section class="control-section zoom-section">
+
+            <label class="section-label">ZOOM <span class="label-note">(ctrl +/-)</span></label>
+
+            <div class="zoom-control-row">
+
+                <button type="button" id="zoomOutButton" class="zoom-step-button" aria-label="Zoom out">&minus;</button>
+
+                <span class="zoom-value" id="zoomValueDisplay">100%</span>
+
+                <button type="button" id="zoomInButton" class="zoom-step-button" aria-label="Zoom in">+</button>
+
+                <button type="button" id="zoomResetButton" class="zoom-reset-button" aria-label="Reset zoom" title="Reset to 100%">Reset</button>
+
+            </div>
+
+        </section>
+
+
         <section class="control-section level-section">
 
             <label for="levelInput">CURRENT LEVEL</label>
@@ -98,8 +117,8 @@
             Upgrade Shop Calculator is open, so it stays hidden on
             the curse tracker and is revealed/removed in step with
             the upgrade panel's own open state (see
-            setUpgradePanelOpen in Upgrades.js, and
-            .upgrade-panel-only-section in Upgrades.css).
+            setUpgradePanelOpen in upgrades.js, and
+            .upgrade-panel-only-section in upgrades.css).
         -->
         <section class="control-section level-section">
 
@@ -348,9 +367,9 @@
                             Nothing Curse and Progressive Mode now
                             share one look: a small label next to a
                             track+thumb switch showing ON/OFF (see
-                            .upgrade-toggle-block in Upgrades.css).
+                            .upgrade-toggle-block in upgrades.css).
                             The Progressive block is injected right
-                            after this one by Upgrades.js.
+                            after this one by upgrades.js.
                         -->
                         <div id="upgradeToggleGroup" class="upgrade-toggle-group">
 
@@ -406,8 +425,8 @@
 
         <!--
             Death Tracker panel - same sliding-overlay pattern as the
-            Upgrade panel above (see .death-panel in DeathTracker.css
-            and setDeathPanelOpen in DeathTracker.js). Toggled by the
+            Upgrade panel above (see .death-panel in death-tracker.css
+            and setDeathPanelOpen in death-tracker.js). Toggled by the
             deathToggleButton fixed button below.
         -->
         <div id="deathPanel" class="death-panel">
@@ -524,7 +543,7 @@
         <!--
             Altars panel - same sliding-overlay pattern as the
             Upgrade and Death Tracker panels above (see .altars-panel
-            in Altars.css and setAltarsPanelOpen in Altars.js).
+            in altars.css and setAltarsPanelOpen in altars.js).
             Toggled by the altarsToggleButton fixed button below.
         -->
         <div id="altarsPanel" class="altars-panel">
@@ -722,13 +741,13 @@
 </div>
 
 
-<script type="module" src="Presence.js"></script>
-<script src="script.js"></script>
-<script src="Upgrades.js"></script>
-<script src="DeathTracker.js"></script>
-<script src="Altars.js"></script>
-<script src="Zoom.js"></script>
-<script src="Particles.js"></script>
+<script type="module" src="js/presence.js"></script>
+<script src="js/script.js"></script>
+<script src="js/zoom.js"></script>
+<script src="js/upgrades.js"></script>
+<script src="js/death-tracker.js"></script>
+<script src="js/altars.js"></script>
+<script src="js/particles.js"></script>
 
 </body>
 </html>

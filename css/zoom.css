@@ -1,0 +1,105 @@
+/*
+ * UI Zoom control styles
+ * --------------------------
+ * A plain row in the left sidebar (see .zoom-section in
+ * toolkits.html) - a minus button, a live percentage readout, a
+ * plus button, and a small reset button. Uses the same --lp-*
+ * custom properties as the rest of the sidebar (defined in
+ * style.css) so it re-themes automatically alongside everything
+ * else when the Upgrade or Death Tracker panel is open.
+ */
+
+
+.zoom-control-row {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+}
+
+
+.zoom-step-button {
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(184, 102, 255, 0.08);
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 50%;
+
+    color: var(--lp-text, #9a7cc9);
+
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+
+.zoom-step-button:hover {
+    background: var(--lp-hover-bg, #2a1145);
+
+    border-color: var(--lp-bright, #d59bff);
+
+    color: #ffffff;
+
+    transform: scale(1.06);
+}
+
+
+.zoom-value {
+    flex: 1 1 auto;
+
+    text-align: center;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+
+.zoom-reset-button {
+    flex-shrink: 0;
+
+    padding: 8px 12px;
+
+    background: transparent;
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 8px;
+
+    color: var(--lp-text, #9a7cc9);
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.zoom-reset-button:hover {
+    background: var(--lp-hover-bg, #2a1145);
+
+    border-color: var(--lp-bright, #d59bff);
+
+    color: #ffffff;
+}

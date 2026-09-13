@@ -38,7 +38,7 @@ body {
     pointer-events: none;
 
     background-image:
-        url("assets/background/Background.png"),
+        url("../assets/background/Background.png"),
         radial-gradient(circle at 20% 10%, #1b0733 0%, transparent 45%),
         radial-gradient(circle at 85% 80%, #2a0a4a 0%, transparent 50%),
         linear-gradient(160deg, #05010c 0%, #0b0116 40%, #170025 100%);
