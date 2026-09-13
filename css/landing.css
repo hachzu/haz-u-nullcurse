@@ -436,8 +436,6 @@ body {
     box-shadow:
         0 8px 22px rgba(0, 0, 0, 0.4),
         0 0 10px rgba(216, 195, 165, 0.3);
-
-    opacity: 0.75;
 }
 
 /* An opaque dark chip regardless of which pill it sits on top of -

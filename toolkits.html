@@ -31,9 +31,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/upgrades.css">
     <link rel="stylesheet" href="css/altars.css">
+    <link rel="stylesheet" href="css/lobby.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
-    <link rel="stylesheet" href="css/altars.css">
     <link rel="stylesheet" href="css/spotlight.css">
 </head>
 
@@ -582,6 +582,86 @@
 
         </div>
 
+        <!--
+            Lobby Maker panel - same sliding-overlay pattern as the
+            Upgrade/Death/Altars panels above (see .lobby-panel in
+            lobby.css and setLobbyPanelOpen in lobby.js). Toggled by
+            the lobbyToggleButton fixed button below.
+        -->
+        <div id="lobbyPanel" class="lobby-panel">
+
+            <div class="lobby-panel-inner">
+
+                <div class="lobby-panel-header">
+
+                    <div class="lobby-panel-heading animated-header-text">
+                        LOBBY MAKER
+                    </div>
+
+                </div>
+
+                <div class="lobby-panel-body">
+
+                    <div class="lobby-result-row">
+
+                        <div
+                            id="lobbyResultValue"
+                            class="lobby-result-value lobby-result-value--placeholder"
+                        >
+                            click generate to get a lobby name
+                        </div>
+
+                        <button
+                            id="lobbyCopyButton"
+                            class="lobby-copy-button"
+                            type="button"
+                        >
+                            <span id="lobbyCopyButtonText">Copy</span>
+                        </button>
+
+                    </div>
+
+                    <div class="lobby-controls-row">
+
+                        <button
+                            id="lobbyGenerateButton"
+                            class="lobby-generate-button"
+                            type="button"
+                        >
+                            GENERATE NAME
+                        </button>
+
+                        <div class="lobby-toggle-block">
+
+                            <span class="lobby-control-label">Add Number</span>
+
+                            <button
+                                type="button"
+                                id="lobbyNumberToggle"
+                                class="lobby-switch"
+                                role="switch"
+                                aria-checked="true"
+                            >
+                                <span class="lobby-switch-track"><span class="lobby-switch-thumb"></span></span>
+                                <span class="lobby-switch-label">ON</span>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="lobby-history-heading">
+                        RECENT NAMES (THIS VISIT)
+                    </div>
+
+                    <div id="lobbyHistoryList" class="lobby-history-list"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
         <header class="pool-header">
 
             <div>
@@ -748,6 +828,19 @@
             <span class="altars-toggle-key">N</span>
         </button>
 
+        <button
+            id="lobbyToggleButton"
+            class="lobby-toggle-button"
+            type="button"
+            aria-label="Toggle lobby maker"
+            aria-expanded="false"
+            aria-keyshortcuts="l"
+        >
+            <span class="lobby-toggle-icon">&#127922;</span>
+            <span class="btn-label">LOBBY</span>
+            <span class="lobby-toggle-key">L</span>
+        </button>
+
     </div>
 
 </div>
@@ -758,8 +851,8 @@
 <script src="js/upgrades.js"></script>
 <script src="js/death-tracker.js"></script>
 <script src="js/altars.js"></script>
+<script src="js/lobby.js"></script>
 <script src="js/particles.js"></script>
-<script src="js/altars.js"></script>
 <script src="js/spotlight.js"></script>
 
 </body>

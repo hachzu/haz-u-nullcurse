@@ -46,6 +46,12 @@ function setAltarsPanelOpen(isOpen) {
 
         }
 
+        if (typeof setLobbyPanelOpen === "function") {
+
+            setLobbyPanelOpen(false);
+
+        }
+
     }
 
     altarsPanel.classList.toggle("open", isOpen);

@@ -2350,6 +2350,14 @@ function setUpgradePanelOpen(isOpen) {
 
     }
 
+    // Same rule against the Lobby Maker panel, once Lobby.js has
+    // loaded.
+    if (isOpen && typeof setLobbyPanelOpen === "function") {
+
+        setLobbyPanelOpen(false);
+
+    }
+
     upgradePanel.classList.toggle("open", isOpen);
     upgradeToggleButton.classList.toggle("active", isOpen);
     upgradeToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");

@@ -346,6 +346,14 @@ function setDeathPanelOpen(isOpen) {
 
     }
 
+    // Same rule against the Lobby Maker panel, once Lobby.js has
+    // loaded.
+    if (isOpen && typeof setLobbyPanelOpen === "function") {
+
+        setLobbyPanelOpen(false);
+
+    }
+
     deathPanel.classList.toggle("open", isOpen);
     deathToggleButton.classList.toggle("active", isOpen);
     deathToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
