@@ -1,0 +1,269 @@
+/*
+ * Tools Spotlight styles
+ * --------------------------
+ * Four dimming panels (top/bottom/left/right) that frame the
+ * floating toggle buttons without covering them, a pulsing highlight
+ * ring drawn exactly around that same rectangle, and a callout
+ * bubble explaining what's being pointed at. See Spotlight.js for
+ * how the panels get positioned.
+ */
+
+
+.tools-spotlight-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 200;
+
+    pointer-events: none;
+}
+
+
+.tools-spotlight-panel {
+    position: fixed;
+
+    pointer-events: auto;
+    cursor: pointer;
+
+    background: rgba(5, 1, 12, 0);
+
+    transition: background 0.3s ease;
+}
+
+
+.tools-spotlight-overlay--visible .tools-spotlight-panel {
+    background: rgba(5, 1, 12, 0.82);
+}
+
+
+.tools-spotlight-panel--top {
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+
+.tools-spotlight-panel--bottom {
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+
+.tools-spotlight-panel--left {
+    left: 0;
+}
+
+
+.tools-spotlight-panel--right {
+    right: 0;
+}
+
+
+/* Purely decorative ring drawn around the clear window - pointer-
+   events: none so it never blocks clicks on the real buttons sitting
+   right underneath it. */
+.tools-spotlight-ring {
+    position: fixed;
+
+    pointer-events: none;
+
+    border: 2px solid rgba(216, 155, 255, 0.9);
+    border-radius: 999px;
+
+    box-shadow:
+        0 0 0 6px rgba(184, 102, 255, 0.22),
+        0 0 30px rgba(184, 102, 255, 0.45);
+
+    opacity: 0;
+
+    animation: tools-spotlight-pulse 1.8s ease-in-out infinite;
+
+    transition: opacity 0.3s ease;
+}
+
+
+.tools-spotlight-overlay--visible .tools-spotlight-ring {
+    opacity: 1;
+}
+
+
+@keyframes tools-spotlight-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.035);
+    }
+
+}
+
+
+.tools-spotlight-callout {
+    position: fixed;
+
+    width: 280px;
+    max-width: calc(100vw - 24px);
+
+    padding: 16px 18px;
+
+    pointer-events: auto;
+
+    background: linear-gradient(160deg, #1f0f38 0%, #12061f 100%);
+
+    border: 1px solid rgba(216, 155, 255, 0.5);
+    border-radius: 12px;
+
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(184, 102, 255, 0.25);
+
+    color: #f0e4ff;
+
+    opacity: 0;
+    transform: translateY(8px);
+
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+
+.tools-spotlight-overlay--visible .tools-spotlight-callout {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+.tools-spotlight-callout-arrow {
+    position: absolute;
+    right: 28px;
+    bottom: -8px;
+
+    width: 16px;
+    height: 16px;
+
+    background: #170a28;
+
+    border-right: 1px solid rgba(216, 155, 255, 0.5);
+    border-bottom: 1px solid rgba(216, 155, 255, 0.5);
+
+    transform: rotate(45deg);
+}
+
+
+/* Flipped when the callout has to drop below the target instead of
+   sitting above it (not enough vertical room - see position() in
+   Spotlight.js). */
+.tools-spotlight-callout--below .tools-spotlight-callout-arrow {
+    top: -8px;
+    bottom: auto;
+
+    border-right: none;
+    border-bottom: none;
+    border-top: 1px solid rgba(216, 155, 255, 0.5);
+    border-left: 1px solid rgba(216, 155, 255, 0.5);
+}
+
+
+.tools-spotlight-callout-title {
+    margin-bottom: 6px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+
+.tools-spotlight-callout-body {
+    margin-bottom: 14px;
+
+    color: #d0bfef;
+
+    font-family: var(--font-modern);
+    font-size: 11.5px;
+    line-height: 1.55;
+}
+
+
+.tools-spotlight-callout-actions {
+    display: flex;
+
+    gap: 8px;
+}
+
+
+.tools-spotlight-dismiss-button {
+    flex: 1 1 auto;
+
+    padding: 9px 12px;
+
+    background: linear-gradient(135deg, #b866ff, #7a2fc4);
+
+    border: 1px solid #d59bff;
+    border-radius: 8px;
+
+    color: #ffffff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+
+    cursor: pointer;
+
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+
+.tools-spotlight-dismiss-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.5);
+}
+
+
+.tools-spotlight-neveragain-button {
+    flex: 1 1 auto;
+
+    padding: 9px 12px;
+
+    background: transparent;
+
+    border: 1px solid rgba(216, 155, 255, 0.4);
+    border-radius: 8px;
+
+    color: #b6a3dd;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.tools-spotlight-neveragain-button:hover {
+    background: rgba(184, 102, 255, 0.12);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+}
+
+
+@media (max-width: 500px) {
+
+    .tools-spotlight-callout {
+        width: 240px;
+
+        padding: 14px 16px;
+    }
+
+}

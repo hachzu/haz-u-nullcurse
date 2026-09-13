@@ -404,30 +404,12 @@ body {
         0 0 10px rgba(174, 19, 19, 0.4);
 }
 
+/* Black/white, matching the Altars panel's own noir theme in the
+   app (see Altars.css). */
 .landing-feature-tag--altars {
-    background: linear-gradient(90deg, #ffd166 0%, #ffffff 25%, #fff3c4 50%, #ffffff 75%, #ffd166 100%);
+    background: linear-gradient(90deg, #050505 0%, #ffffff 25%, #bfbfbf 50%, #ffffff 75%, #050505 100%);
 
-    border: 1px solid rgba(255, 243, 196, 0.85);
-
-    color: #2a1f00;
-
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(255, 209, 102, 0.3);
-
-    opacity: 0.75;
-}
-
-/* Upcoming, grayscale in-and-out gradient (mirrored black -> white
-   -> black stops, same "matching endpoints" trick the app's own
-   animated buttons use, just held still here) since this one has no
-   in-game panel theme of its own to borrow from. */
-.landing-feature-tag--lobby {
-    background: linear-gradient(90deg, #050505 0%, #3a3a3a 25%, #f5f5f5 50%, #3a3a3a 75%, #050505 100%);
-
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.85);
 
     color: #ffffff;
 
@@ -435,7 +417,25 @@ body {
 
     box-shadow:
         0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(255, 255, 255, 0.2);
+        0 0 10px rgba(255, 255, 255, 0.25);
+
+    opacity: 0.75;
+}
+
+/* Beige/white, matching the Lobby Maker panel's own theme in the
+   app (see lobby.css). */
+.landing-feature-tag--lobby {
+    background: linear-gradient(90deg, #d8c3a5 0%, #ffffff 25%, #f0e6d2 50%, #ffffff 75%, #d8c3a5 100%);
+
+    border: 1px solid rgba(216, 195, 165, 0.85);
+
+    color: #3a2f1f;
+
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(216, 195, 165, 0.3);
 
     opacity: 0.75;
 }

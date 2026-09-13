@@ -1,0 +1,696 @@
+/*
+ * Lobby Maker styles
+ * --------------------------
+ * Fourth floating toggle button + sliding panel, following the exact
+ * same shell pattern as the Upgrade/Death Tracker/Altars toggles
+ * (collapse-to-icon until hover/focus, live inside the shared
+ * .floating-toggle-buttons wrapper in style.css) and the same
+ * sliding-overlay panel pattern. Themed beige/white, distinct from
+ * Altars' black/white noir look. Depends on .right-panel { position:
+ * relative; }, defined in style.css.
+ */
+
+
+.lobby-toggle-button {
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+
+    padding: 12px 14px;
+    overflow: hidden;
+
+    /* Mirrored stops (beige -> white -> pale beige -> white -> beige)
+       so the first and last stops match - combined with the wide
+       background and animating position from 0% to 100%, the
+       hue-shift loop has no visible seam or jump. */
+    background: linear-gradient(
+        90deg,
+        #d8c3a5 0%,
+        #ffffff 25%,
+        #f0e6d2 50%,
+        #ffffff 75%,
+        #d8c3a5 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid rgba(216, 195, 165, 0.85);
+    border-radius: 999px;
+
+    color: #3a2f1f;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+    user-select: none;
+
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+
+    box-shadow:
+        0 8px 26px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(216, 195, 165, 0.4),
+        0 0 18px rgba(255, 255, 255, 0.3),
+        0 0 26px rgba(216, 195, 165, 0.25);
+
+    animation: lobby-toggle-hue-shift 5s linear infinite;
+
+    transition:
+        padding 0.35s ease,
+        transform 0.18s,
+        box-shadow 0.18s;
+}
+
+
+@keyframes lobby-toggle-hue-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.lobby-toggle-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 1em;
+
+    font-size: 13px;
+    line-height: 1;
+    text-align: center;
+
+    transition: transform 0.25s ease;
+}
+
+
+.lobby-toggle-key {
+    padding: 1px 6px;
+
+    background: rgba(0, 0, 0, 0.25);
+
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    color: #ffffff;
+}
+
+
+/* Collapsed by default down to just the icon, same as the other
+   floating toggles - text label starts at zero width/opacity and
+   only expands on hover/focus. The keybind badge stays visible even
+   while collapsed. */
+.lobby-toggle-button .btn-label {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.lobby-toggle-button .lobby-toggle-key {
+    max-width: 30px;
+    margin-left: 6px;
+    opacity: 1;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    transition:
+        max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+}
+
+
+.lobby-toggle-button:hover .btn-label,
+.lobby-toggle-button:focus-visible .btn-label {
+    max-width: 140px;
+    margin-left: 8px;
+    opacity: 1;
+}
+
+
+.lobby-toggle-button:hover,
+.lobby-toggle-button:focus-visible {
+    padding: 12px 18px;
+
+    transform: translateY(-2px) scale(1.03);
+
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.45),
+        0 0 14px rgba(216, 195, 165, 0.55),
+        0 0 24px rgba(255, 255, 255, 0.4),
+        0 0 34px rgba(216, 195, 165, 0.3);
+}
+
+
+.lobby-toggle-button:hover .lobby-toggle-icon {
+    transform: translateY(-2px) rotate(-15deg);
+}
+
+
+.lobby-toggle-button.active {
+    box-shadow:
+        0 10px 32px rgba(0, 0, 0, 0.45),
+        0 0 12px rgba(216, 195, 165, 0.55),
+        0 0 22px rgba(255, 255, 255, 0.4),
+        0 0 32px rgba(216, 195, 165, 0.3);
+}
+
+
+.lobby-toggle-button.active .lobby-toggle-icon {
+    transform: rotate(180deg);
+}
+
+
+/* ---- Sliding panel ---- */
+
+.lobby-panel {
+    position: absolute;
+    inset: 0;
+
+    z-index: 13;
+
+    display: flex;
+
+    align-items: stretch;
+    justify-content: stretch;
+
+    padding: 32px;
+
+    background: linear-gradient(160deg, #1a140d 0%, #221c12 100%);
+
+    border-left: 1px solid rgba(216, 195, 165, 0.35);
+    box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(216, 195, 165, 0.08);
+
+    transform: translateX(100%);
+    opacity: 0;
+
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.4s ease-out;
+
+    pointer-events: none;
+}
+
+
+.lobby-panel.open {
+    transform: translateX(0);
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+.lobby-panel-inner {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 195, 165, 0.35) transparent;
+}
+
+
+.lobby-panel-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.lobby-panel-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.lobby-panel-inner::-webkit-scrollbar-thumb {
+    background: rgba(216, 195, 165, 0.3);
+    border-radius: 999px;
+}
+
+
+.lobby-panel-inner::-webkit-scrollbar-thumb:hover {
+    background: rgba(216, 195, 165, 0.55);
+}
+
+
+.lobby-panel-header {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+
+    border-bottom: 1px solid rgba(216, 195, 165, 0.22);
+}
+
+
+.lobby-panel-heading {
+    margin-right: auto;
+
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    background: linear-gradient(
+        90deg,
+        #ffffff 0%,
+        #d8c3a5 25%,
+        #f0e6d2 50%,
+        #d8c3a5 75%,
+        #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow: 0 0 20px rgba(216, 195, 165, 0.55);
+}
+
+
+/* ---- Body: generator + history ---- */
+
+.lobby-panel-body {
+    flex: 1 1 auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+.lobby-result-row {
+    display: flex;
+
+    align-items: stretch;
+    gap: 10px;
+}
+
+
+.lobby-result-value {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px 18px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px dashed rgba(216, 195, 165, 0.4);
+    border-radius: 10px;
+
+    color: #a8977d;
+
+    font-family: var(--font-modern);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.3px;
+
+    transition: border-style 0.15s, border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+
+.lobby-result-value--filled {
+    border-style: solid;
+    border-color: rgba(216, 195, 165, 0.6);
+
+    background: rgba(216, 195, 165, 0.1);
+
+    color: #f5efe3;
+
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+
+.lobby-copy-button {
+    flex-shrink: 0;
+
+    padding: 0 20px;
+
+    background: rgba(216, 195, 165, 0.1);
+
+    border: 1px solid rgba(216, 195, 165, 0.45);
+    border-radius: 10px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+
+.lobby-copy-button:hover {
+    background: rgba(216, 195, 165, 0.2);
+
+    border-color: #f0e6d2;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 16px rgba(216, 195, 165, 0.35);
+}
+
+
+.lobby-copy-button--copied {
+    background: rgba(123, 230, 168, 0.16);
+
+    border-color: #7be6a8;
+
+    color: #eafff2;
+}
+
+
+.lobby-controls-row {
+    display: flex;
+
+    flex-wrap: wrap;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.lobby-generate-button {
+    flex: 1 1 220px;
+
+    padding: 16px 20px;
+    min-height: 52px;
+
+    background: linear-gradient(
+        90deg,
+        #d8c3a5 0%,
+        #8a7050 25%,
+        #f0e6d2 50%,
+        #8a7050 75%,
+        #d8c3a5 100%
+    );
+    background-size: 260% auto;
+
+    border: 1px solid #f0e6d2;
+    border-radius: 10px;
+
+    color: #241a0d;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 18px rgba(216, 195, 165, 0.35);
+
+    animation: lobby-generate-gradient-shift 3.5s linear infinite;
+
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+
+@keyframes lobby-generate-gradient-shift {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+
+}
+
+
+.lobby-generate-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(216, 195, 165, 0.5);
+}
+
+
+.lobby-control-label {
+    display: block;
+
+    margin-bottom: 0;
+
+    color: #d8c3a5;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+
+/* Track+thumb switch, same shape as .upgrade-switch/.death-switch,
+   themed beige for this panel. */
+.lobby-toggle-block {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+
+.lobby-switch {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    padding: 7px 12px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.35);
+    border-radius: 999px;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.lobby-switch:hover {
+    border-color: rgba(216, 195, 165, 0.6);
+}
+
+
+.lobby-switch.active {
+    background: rgba(216, 195, 165, 0.16);
+
+    border-color: #d8c3a5;
+    box-shadow: 0 0 16px rgba(216, 195, 165, 0.35);
+}
+
+
+.lobby-switch-track {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 18px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border: 1px solid rgba(216, 195, 165, 0.4);
+    border-radius: 999px;
+
+    transition: background 0.18s, border-color 0.18s;
+}
+
+
+.lobby-switch.active .lobby-switch-track {
+    background: linear-gradient(90deg, #6f5a3a, #d8c3a5);
+
+    border-color: #d8c3a5;
+}
+
+
+.lobby-switch-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 14px;
+    height: 14px;
+
+    background: #f5efe3;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    transition: transform 0.18s ease;
+}
+
+
+.lobby-switch.active .lobby-switch-thumb {
+    transform: translateX(14px);
+}
+
+
+.lobby-switch-label {
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+
+.lobby-switch.active .lobby-switch-label {
+    color: #f5efe3;
+}
+
+
+.lobby-history-heading {
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+
+.lobby-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+.lobby-history-entry {
+    padding: 9px 12px;
+
+    background: rgba(216, 195, 165, 0.06);
+
+    border: 1px solid rgba(216, 195, 165, 0.18);
+    border-radius: 8px;
+
+    color: #f0e6d2;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+}
+
+
+.lobby-empty-row {
+    padding: 18px;
+
+    border: 1px dashed rgba(216, 195, 165, 0.3);
+    border-radius: 8px;
+
+    color: #a8977d;
+
+    text-align: center;
+
+    font-size: 11px;
+}
+
+
+/* ---- Left panel accent while this panel is open ----
+   Same idea as .left-panel--upgrades / .left-panel--death /
+   .left-panel--altars in style.css/altars.css - declared here since
+   the CSS custom properties are defined globally on .left-panel via
+   the @property rules in style.css. Toggled by lobby.js watching
+   #lobbyPanel's own "open" class. */
+.left-panel.left-panel--lobby {
+    --left-panel-grad-a: #1a140d;
+    --left-panel-grad-b: #221c12;
+
+    --lp-dim: #5c4a30;
+    --lp-soft: #8a7050;
+    --lp-mid: #c9ab7d;
+    --lp-bright: #f0e6d2;
+    --lp-text: #d8c3a5;
+    --lp-text-dim: #8a7a63;
+    --lp-hover-bg: #3a2f1f;
+
+    border-right-color: rgba(216, 195, 165, 0.5);
+    box-shadow: inset -1px 0 26px rgba(216, 195, 165, 0.18);
+}
+
+
+@media (max-width: 900px) {
+
+    .lobby-panel-header {
+        gap: 12px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .lobby-controls-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lobby-toggle-block {
+        justify-content: space-between;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .lobby-toggle-button {
+        padding: 10px 14px;
+    }
+
+    .lobby-result-row {
+        flex-direction: column;
+    }
+
+}
