@@ -1,13 +1,22 @@
 /*
- * Lobby Maker styles — v2 (rich text title editor)
+ * Lobby Maker styles — v3 (shared inline tool workspace)
  * --------------------------
  * The toggle button, sliding panel shell, header, and left-panel
- * accent are unchanged from the original Lobby Maker (still beige/
- * white, still following the Upgrade/Death/Altars toggle pattern).
- * Everything below the panel header is new: a free-text title input
- * with a per-letter highlight overlay, a small toolbar that opens
- * Font / Color / Style sub-panels, and a live "tag output" preview
- * with its own copy button + session history.
+ * accent are unchanged from earlier versions (still beige/white,
+ * still following the Upgrade/Death/Altars toggle pattern).
+ *
+ * The toolbar's Font/Color/Style panels used to each float
+ * independently as their own absolutely-positioned popover, anchored
+ * directly under their own button. That's what let Color's popover
+ * overlap Font's neighboring button, and let an open popover cover
+ * the title input sitting just below the toolbar. They now share one
+ * .lobby-tool-workspace box that sits in normal document flow right
+ * under the toolbar - opening a tool pushes the title input down
+ * instead of covering it, and only one tool shows at a time (see
+ * setLobbySubPanelOpen in lobby.js) so nothing can overlap anything
+ * else. The title input itself moved below that workspace and picked
+ * up its own heading + more generous sizing so it still reads as the
+ * panel's main focus.
  */
 
 
@@ -302,17 +311,11 @@
 }
 
 
-/* ---- Toolbar: Font / Color / Style / Copy ---- */
+/* ---- Reset button (panel header) ---- */
 
-.lobby-editor-toolbar {
-    display: flex;
+.lobby-reset-button {
+    flex-shrink: 0;
 
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-
-.lobby-editor-tool {
     padding: 9px 16px;
 
     background: rgba(216, 195, 165, 0.08);
@@ -329,7 +332,78 @@
 
     cursor: pointer;
 
-    transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.lobby-reset-button:hover {
+    background: rgba(216, 195, 165, 0.18);
+
+    border-color: #d8c3a5;
+
+    color: #ffffff;
+}
+
+
+/* ---- Toolbar hint (explains the preselect-then-type workflow) ---- */
+
+.lobby-toolbar-hint {
+    color: #8a7a63;
+
+    font-family: var(--font-modern);
+    font-size: 10.5px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+
+/* ---- Toolbar: Font / Color / Style / Copy ----
+   A 3-column grid (spacer | tools | copy) is what actually centers
+   the Font/Color/Style group in the middle of the row while still
+   pinning Copy to the right - a plain flex row with margin-left:auto
+   on Copy alone can't center the other group at the same time, since
+   that margin eats all the row's remaining space. */
+.lobby-editor-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.lobby-toolbar-tools {
+    grid-column: 2;
+
+    display: flex;
+
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+
+/* Bigger, more generously spaced buttons than before - these are the
+   main controls of the whole panel, so they read as substantial
+   rather than a cramped row of pills. */
+.lobby-editor-tool {
+    padding: 14px 30px;
+
+    background: rgba(216, 195, 165, 0.08);
+
+    border: 1px solid rgba(216, 195, 165, 0.4);
+    border-radius: 999px;
+
+    color: #d8c3a5;
+
+    font-family: var(--font-modern);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s, transform 0.12s;
 }
 
 
@@ -339,22 +413,25 @@
     border-color: #d8c3a5;
 
     color: #ffffff;
+
+    transform: translateY(-1px);
 }
 
 
 .lobby-editor-tool.active {
-    background: rgba(216, 195, 165, 0.22);
+    background: rgba(216, 195, 165, 0.24);
 
     border-color: #f0e6d2;
 
     color: #ffffff;
 
-    box-shadow: 0 0 14px rgba(216, 195, 165, 0.35);
+    box-shadow: 0 0 16px rgba(216, 195, 165, 0.4);
 }
 
 
 .lobby-editor-tool--copy {
-    margin-left: auto;
+    grid-column: 3;
+    justify-self: end;
 
     background: linear-gradient(90deg, #d8c3a5 0%, #8a7050 50%, #d8c3a5 100%);
 
@@ -378,8 +455,51 @@
 }
 
 
-/* ---- Title input + highlight overlay ----
-   Same "transparent textarea over a rendered overlay" trick used
+/* ---- Shared tool workspace (Font / Color / Style) ----
+   Sits in normal document flow directly under the toolbar, instead
+   of floating above the page - opening a tool grows this box and
+   pushes everything below it (the title input, tag output, history)
+   down, rather than covering it. Collapsed to nothing when no tool
+   is selected. */
+.lobby-tool-workspace {
+    display: none;
+
+    padding: 24px 28px;
+
+    background: linear-gradient(165deg, #201810 0%, #241d13 100%);
+
+    border: 1px solid rgba(216, 195, 165, 0.28);
+    border-radius: 14px;
+
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+
+.lobby-tool-workspace--open {
+    display: block;
+}
+
+
+/* ---- Title heading + input ----
+   The title input is the thing people are actually here to use, so
+   it now carries a small label above it (matching the sidebar's own
+   input-label convention) and sits noticeably larger than before -
+   it stays the visual center of the panel even though the toolbar
+   and workspace now sit above it instead of on top of it. */
+.lobby-editor-heading {
+    text-align: center;
+
+    color: #a8977d;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+}
+
+
+/* Same "transparent textarea over a rendered overlay" trick used
    for letter-accurate click targets: the textarea's own text is
    invisible (only its caret shows), and the overlay div underneath
    renders the styled characters in the exact same box/font so
@@ -388,9 +508,9 @@
 .lobby-editor-wrap {
     position: relative;
 
-    min-height: 58px;
+    min-height: 84px;
 
-    padding: 0 16px;
+    padding: 0 28px;
 
     display: grid;
     grid-template-columns: 1fr;
@@ -399,7 +519,7 @@
     background: rgba(216, 195, 165, 0.06);
 
     border: 1px solid rgba(216, 195, 165, 0.4);
-    border-radius: 12px;
+    border-radius: 16px;
 
     transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -407,7 +527,7 @@
 
 .lobby-editor-wrap:focus-within {
     border-color: #d8c3a5;
-    box-shadow: 0 0 0 3px rgba(216, 195, 165, 0.18);
+    box-shadow: 0 0 0 4px rgba(216, 195, 165, 0.2);
 }
 
 
@@ -421,7 +541,7 @@
     border: 0;
 
     font-family: var(--font-modern);
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
     letter-spacing: 0.3px;
     line-height: 1.3;
@@ -441,7 +561,7 @@
     outline: none;
     resize: none;
 
-    height: 34px;
+    height: 42px;
 
     scrollbar-width: none;
 }
@@ -603,36 +723,26 @@
 }
 
 
-/* ---- Sub-panels shared shell (Font / Color / Style) ---- */
+/* ---- Sub-panels (Font / Color / Style) ----
+   These now render inline inside the shared .lobby-tool-workspace
+   above, in normal document flow - no absolute positioning, no
+   floating box of their own, no independent border/shadow (the
+   workspace already provides that). Only one is ever visible at a
+   time (see setLobbySubPanelOpen in lobby.js), so there's nothing
+   left to overlap. */
 
 .lobby-subpanel {
-    max-height: 0;
-    overflow: hidden;
-
-    opacity: 0;
-
-    border: 1px solid transparent;
-    border-radius: 12px;
-
-    transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, padding 0.35s ease, border-color 0.2s;
+    display: none;
 }
 
 
 .lobby-subpanel--open {
-    max-height: 420px;
-    opacity: 1;
-
-    padding: 16px;
-
-    background: rgba(216, 195, 165, 0.05);
-    border-color: rgba(216, 195, 165, 0.25);
-
-    overflow: visible;
+    display: block;
 }
 
 
 .lobby-subpanel-heading {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 
     color: #a8977d;
 
@@ -648,10 +758,10 @@
 
 .lobby-font-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
 
-    max-height: 260px;
+    max-height: 320px;
     overflow-y: auto;
 }
 
@@ -659,14 +769,14 @@
 .lobby-font-option {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 
-    padding: 10px 12px;
+    padding: 12px 14px;
 
     background: rgba(216, 195, 165, 0.06);
 
     border: 1px solid rgba(216, 195, 165, 0.25);
-    border-radius: 8px;
+    border-radius: 10px;
 
     color: #d8c3a5;
 
@@ -698,7 +808,7 @@
 
 .lobby-font-option-name {
     font-family: var(--font-modern);
-    font-size: 9px;
+    font-size: 9.5px;
     font-weight: 800;
     letter-spacing: 0.6px;
     text-transform: uppercase;
@@ -708,7 +818,7 @@
 
 
 .lobby-font-option-preview {
-    font-size: 15px;
+    font-size: 16px;
 }
 
 
@@ -716,16 +826,16 @@
 
 .lobby-color-mode-row {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 
 .lobby-color-mode-button {
     flex: 1;
 
-    padding: 8px;
+    padding: 11px;
 
     background: rgba(216, 195, 165, 0.06);
 
@@ -735,7 +845,7 @@
     color: #d8c3a5;
 
     font-family: var(--font-modern);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.8px;
 
@@ -752,11 +862,25 @@
 }
 
 
+/* Solid and gradient controls are mutually exclusive, driven by
+   data-mode on this element (set in lobby.js) - this selector needs
+   the .lobby-color-panel class present on the element itself (added
+   in toolkits.html) to actually match. */
+.lobby-color-panel[data-mode="solid"] .lobby-gradient-only {
+    display: none;
+}
+
+
+.lobby-color-panel[data-mode="gradient"] .lobby-solid-only {
+    display: none;
+}
+
+
 .lobby-color-picker-main {
     display: flex;
-    gap: 10px;
+    gap: 16px;
 
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 
@@ -764,9 +888,9 @@
     position: relative;
 
     flex: 1;
-    height: 130px;
+    height: 160px;
 
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
 
     background:
@@ -782,8 +906,8 @@
     top: 0;
     left: 0;
 
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
 
     border: 2px solid #ffffff;
     border-radius: 50%;
@@ -799,10 +923,10 @@
 .lobby-hue {
     position: relative;
 
-    width: 20px;
-    height: 130px;
+    width: 26px;
+    height: 160px;
 
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
 
     background: linear-gradient(
@@ -834,17 +958,17 @@
 .lobby-color-footer {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 
 .lobby-color-swatch {
     flex-shrink: 0;
 
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
 
     border: 1px solid rgba(216, 195, 165, 0.5);
     border-radius: 50%;
@@ -862,7 +986,7 @@
 .lobby-hex-input {
     flex: 1;
 
-    padding: 8px 10px;
+    padding: 10px 12px;
 
     background: #14100a;
 
@@ -872,7 +996,7 @@
     color: #f0e6d2;
 
     font-family: var(--font-modern);
-    font-size: 12px;
+    font-size: 13px;
 
     outline: none;
 }
@@ -886,21 +1010,21 @@
 .lobby-opacity-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 
 .lobby-opacity-row label {
     flex-shrink: 0;
 
-    width: 92px;
+    width: 110px;
 
     color: #a8977d;
 
     font-family: var(--font-modern);
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -932,8 +1056,6 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    margin-bottom: 4px;
 }
 
 
@@ -942,7 +1064,7 @@
     align-items: center;
     gap: 8px;
 
-    padding: 8px 12px;
+    padding: 10px 14px;
 
     background: rgba(216, 195, 165, 0.06);
 
@@ -952,7 +1074,7 @@
     color: #d8c3a5;
 
     font-family: var(--font-modern);
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 800;
     letter-spacing: 0.6px;
 
@@ -973,7 +1095,7 @@
 
 .lobby-outline-joins {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 
     max-height: 0;
     overflow: hidden;
@@ -990,8 +1112,8 @@
 
 
 .lobby-outline-join-option {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
 
     display: flex;
     align-items: center;
@@ -1005,7 +1127,7 @@
     color: #d8c3a5;
 
     font-family: var(--font-modern);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
 
     cursor: pointer;
@@ -1021,27 +1143,17 @@
 
 /* ---- Gradient presets + pill (only visible in gradient mode) ---- */
 
-.lobby-color-panel[data-mode="solid"] .lobby-gradient-only {
-    display: none;
-}
-
-
-.lobby-color-panel[data-mode="gradient"] .lobby-solid-only {
-    display: none;
-}
-
-
 .lobby-gradient-presets {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
 
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 
 .lobby-gradient-presets button {
-    padding: 7px 12px;
+    padding: 9px 14px;
 
     background: rgba(216, 195, 165, 0.06);
 
@@ -1051,7 +1163,7 @@
     color: #d8c3a5;
 
     font-family: var(--font-modern);
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 700;
 
     cursor: pointer;
@@ -1071,16 +1183,16 @@
 
 .lobby-gradient-stops {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 
 .lobby-gradient-stop {
-    border-radius: 8px;
-    width: 26px;
-    height: 26px;
+    border-radius: 9px;
+    width: 32px;
+    height: 32px;
 }
 
 
@@ -1098,7 +1210,7 @@
 .lobby-gradient-pill {
     position: relative;
 
-    height: 22px;
+    height: 26px;
 
     display: flex;
 
@@ -1130,8 +1242,8 @@
     position: absolute;
     top: 50%;
 
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 
     background: #ffffff;
     border: 2px solid #241a0d;
@@ -1147,13 +1259,15 @@
 
 .lobby-style-options {
     display: flex;
-    gap: 8px;
+
+    justify-content: center;
+    gap: 14px;
 }
 
 
 .lobby-style-option {
-    width: 42px;
-    height: 42px;
+    width: 54px;
+    height: 54px;
 
     display: flex;
     align-items: center;
@@ -1162,12 +1276,12 @@
     background: rgba(216, 195, 165, 0.06);
 
     border: 1px solid rgba(216, 195, 165, 0.3);
-    border-radius: 10px;
+    border-radius: 14px;
 
     color: #d8c3a5;
 
     font-family: var(--font-modern);
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 800;
 
     cursor: pointer;
@@ -1227,12 +1341,21 @@
 @media (max-width: 700px) {
 
     .lobby-editor-toolbar {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .lobby-toolbar-tools {
+        grid-column: 1;
     }
 
     .lobby-editor-tool--copy {
-        margin-left: 0;
+        grid-column: 1;
+        justify-self: stretch;
+    }
+
+    .lobby-tool-workspace {
+        padding: 18px;
     }
 
 }
@@ -1244,13 +1367,27 @@
         padding: 10px 14px;
     }
 
+    .lobby-editor-tool {
+        padding: 12px 20px;
+    }
+
+    .lobby-editor-input,
+    .lobby-editor-overlay {
+        font-size: 20px;
+    }
+
+    .lobby-editor-wrap {
+        min-height: 68px;
+        padding: 0 18px;
+    }
+
     .lobby-color-picker-main {
         flex-direction: column;
     }
 
     .lobby-hue {
         width: 100%;
-        height: 16px;
+        height: 18px;
     }
 
     .lobby-hue-cursor {
@@ -1264,7 +1401,7 @@
     }
 
     .lobby-font-list {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
 
 }

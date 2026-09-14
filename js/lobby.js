@@ -1,13 +1,24 @@
 /*
- * Lobby Maker panel logic — v2 (rich text title editor)
+ * Lobby Maker panel logic — v3 (preselect-then-type title editor)
  * --------------------------
  * Same fourth-panel shell as before (toggle button + sliding overlay,
  * mutual exclusion with Upgrades/Death/Altars, keyboard shortcut "L",
  * left-panel accent sync) but the body is now a full per-letter title
- * editor instead of a random-name button: free-text input, font /
- * color / style sub-panels, solid + gradient coloring, outline
- * support, and a compiler that turns the styled text into Roblox
- * rich-text tags ready to paste into a lobby name field.
+ * editor: free-text input, font / color / style sub-panels, solid +
+ * gradient coloring, outline support, and a compiler that turns the
+ * styled text into Roblox rich-text tags ready to paste into a lobby
+ * name field.
+ *
+ * v3 workflow change: the toolbar/sub-panels no longer require the
+ * person to highlight text first. Whatever font/color/style is
+ * "armed" (lobbyEditor.typingStyle) is what new characters get as
+ * they're typed. Highlighting existing letters (click, shift+arrow,
+ * ctrl+click, drag-select) is still supported and now exists purely
+ * as an optional touch-up path for restyling specific letters after
+ * the fact - it patches the highlighted letters directly instead of
+ * the "armed" style. A Reset button clears the whole panel (text,
+ * per-letter styles, the armed style, undo history, and the copied-
+ * tag log) back to its starting state.
  *
  * Depends on globals defined in script.js: attachClickAction,
  * playUtilitySound, playPurifySound (button feedback sounds only).
@@ -16,6 +27,7 @@
 
 const LOBBY_TITLE_MAX_LENGTH = 35;
 const LOBBY_TAG_HISTORY_LIMIT = 5;
+const LOBBY_DEFAULT_STROKE_THICKNESS = 2;
 
 /*
  * Per-letter style record shape:
@@ -31,6 +43,26 @@ const LOBBY_TAG_HISTORY_LIMIT = 5;
  * }
  */
 
+function blankTypingStyle() {
+
+    return {
+
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+        font: null,
+        color: null,
+        fade: 0,
+        ring: false,
+        ringColor: "#000000",
+        ringFade: 0,
+        ringJoin: "round"
+
+    };
+
+}
+
 const lobbyEditor = {
 
     letters: [],           // one entry per character in the input, index-aligned
@@ -39,6 +71,10 @@ const lobbyEditor = {
     caret: 0,
     caretShown: false,
     editingOutline: false,
+
+    // The "armed" style: whatever font/color/style is picked while
+    // nothing is highlighted gets stamped onto newly typed letters.
+    typingStyle: blankTypingStyle(),
 
     history: [],
     historyAt: -1,
@@ -51,6 +87,27 @@ const lobbyTagLog = [];
 function blankLetterStyle() {
 
     return {};
+
+}
+
+/*
+ * The letter style that should be stamped onto a freshly typed
+ * character right now, or null if nothing is armed (plain text).
+ */
+function currentTypingStyleSnapshot() {
+
+    const t = lobbyEditor.typingStyle;
+
+    const hasAnything = t.bold || t.italic || t.underline || t.strikethrough ||
+        t.font || t.color || (typeof t.fade === "number" && t.fade > 0) || t.ring;
+
+    if (!hasAnything) {
+
+        return null;
+
+    }
+
+    return { ...t };
 
 }
 
@@ -202,10 +259,11 @@ function reconcileLettersAfterEdit(nextText, previousText) {
     }
 
     const rebuilt = lobbyEditor.letters.slice(0, head);
+    const insertedStyle = currentTypingStyleSnapshot();
 
     for (let i = 0; i < newTail - head; i++) {
 
-        rebuilt.push(null);
+        rebuilt.push(insertedStyle ? { ...insertedStyle } : null);
 
     }
 
@@ -478,7 +536,7 @@ function tagSlotsForLetter(style) {
 
         const attrs = [];
 
-        if (face) attrs.push(`face="${escapeForTag(face)}"`);
+        if (face) attrs.push(`family="${escapeForTag(face)}"`);
         if (color) attrs.push(`color="${escapeForTag(color)}"`);
         if (fade !== null) attrs.push(`transparency="${fade}"`);
 
@@ -495,14 +553,15 @@ function tagSlotsForLetter(style) {
         const ringColor = style.ringColor || "#000000";
         const ringFade = typeof style.ringFade === "number" && style.ringFade > 0 ? roundedFade(style.ringFade) : null;
         const join = style.ringJoin && style.ringJoin !== "round" ? style.ringJoin : null;
+        const thickness = typeof style.ringThickness === "number" && style.ringThickness > 0 ? style.ringThickness : LOBBY_DEFAULT_STROKE_THICKNESS;
 
-        const attrs = [`color="${escapeForTag(ringColor)}"`];
+        const attrs = [`color="${escapeForTag(ringColor)}"`, `thickness="${thickness}"`];
 
         if (ringFade !== null) attrs.push(`transparency="${ringFade}"`);
         if (join) attrs.push(`joins="${join}"`);
 
         slots[1] = {
-            key: `stroke|${ringColor}|${ringFade === null ? "" : ringFade}|${join || ""}`,
+            key: `stroke|${ringColor}|${ringFade === null ? "" : ringFade}|${join || ""}|${thickness}`,
             open: `<stroke ${attrs.join(" ")}>`,
             close: "</stroke>"
         };
@@ -972,7 +1031,18 @@ if (lobbyEditorInput) {
 
 }
 
-/* ---- sub-panel open/close (Font / Color / Style), mutually exclusive ---- */
+/* ---- tool workspace open/close (Font / Color / Style) ----
+   The three now share one inline workspace box that sits in normal
+   document flow right under the toolbar (see .lobby-tool-workspace
+   in lobby.css) instead of each floating independently in its own
+   absolutely-positioned popover under its own button. That's what
+   used to let Color's popover overlap Font's neighboring button, and
+   let an open popover cover the title input sitting just below it.
+   Only one tool panel is shown at a time now - opening one closes
+   whichever other was open - since there's no floating position left
+   to keep them visually apart. */
+
+const lobbyToolWorkspace = document.getElementById("lobbyToolWorkspace");
 
 const lobbySubPanels = [
     { button: lobbyFontToggle, panel: lobbyFontPanel },
@@ -980,16 +1050,62 @@ const lobbySubPanels = [
     { button: lobbyStyleToggle, panel: lobbyStylePanel }
 ].filter(entry => entry.button && entry.panel);
 
-function setLobbySubPanelOpen(target, isOpen) {
+function updateLobbyWorkspaceState() {
+
+    if (!lobbyToolWorkspace) {
+
+        return;
+
+    }
+
+    const anyOpen = lobbySubPanels.some(({ panel }) => panel.classList.contains("lobby-subpanel--open"));
+
+    lobbyToolWorkspace.classList.toggle("lobby-tool-workspace--open", anyOpen);
+
+}
+
+function setLobbySubPanelOpen(panel, isOpen) {
+
+    const entry = lobbySubPanels.find(e => e.panel === panel);
+
+    if (!entry) {
+
+        return;
+
+    }
+
+    if (isOpen) {
+
+        lobbySubPanels.forEach(({ button: otherButton, panel: otherPanel }) => {
+
+            if (otherPanel !== panel) {
+
+                otherPanel.classList.remove("lobby-subpanel--open");
+                otherButton.classList.remove("active");
+
+            }
+
+        });
+
+    }
+
+    entry.panel.classList.toggle("lobby-subpanel--open", isOpen);
+    entry.button.classList.toggle("active", isOpen);
+
+    updateLobbyWorkspaceState();
+
+}
+
+function closeAllLobbySubPanels() {
 
     lobbySubPanels.forEach(({ button, panel }) => {
 
-        const shouldOpen = panel === target ? isOpen : false;
-
-        panel.classList.toggle("lobby-subpanel--open", shouldOpen);
-        button.classList.toggle("active", shouldOpen);
+        panel.classList.remove("lobby-subpanel--open");
+        button.classList.remove("active");
 
     });
+
+    updateLobbyWorkspaceState();
 
 }
 
@@ -1002,6 +1118,25 @@ lobbySubPanels.forEach(({ button, panel }) => {
         setLobbySubPanelOpen(panel, !isOpen);
 
     });
+
+});
+
+/*
+ * Clicking anywhere outside the toolbar buttons and the workspace
+ * itself closes whichever tool panel is open.
+ */
+document.addEventListener("mousedown", e => {
+
+    const stillWorkingInToolbar = lobbySubPanels.some(({ button }) => button.contains(e.target))
+        || (lobbyToolWorkspace && lobbyToolWorkspace.contains(e.target));
+
+    if (stillWorkingInToolbar) {
+
+        return;
+
+    }
+
+    closeAllLobbySubPanels();
 
 });
 
@@ -1028,12 +1163,37 @@ function onLobbySelectionSync(fn) {
 
 }
 
+const lobbyResetCallbacks = [];
+
+function onLobbyReset(fn) {
+
+    lobbyResetCallbacks.push(fn);
+
+}
+
+/*
+ * "on"/"off"/"mixed" for a given style property, sourced from the
+ * current highlight if one exists, or from the armed typing style
+ * (what the next character typed will get) otherwise.
+ */
+function activeStyleState(prop) {
+
+    if (lobbyEditor.selection.length) {
+
+        return selectionHasStyle(prop);
+
+    }
+
+    return lobbyEditor.typingStyle[prop] ? "on" : "off";
+
+}
+
 function syncLobbyToolbar() {
 
-    setTriState(document.getElementById("lobbyStyleBold"), selectionHasStyle("bold"));
-    setTriState(document.getElementById("lobbyStyleItalic"), selectionHasStyle("italic"));
-    setTriState(document.getElementById("lobbyStyleUnderline"), selectionHasStyle("underline"));
-    setTriState(document.getElementById("lobbyStyleStrike"), selectionHasStyle("strikethrough"));
+    setTriState(document.getElementById("lobbyStyleBold"), activeStyleState("bold"));
+    setTriState(document.getElementById("lobbyStyleItalic"), activeStyleState("italic"));
+    setTriState(document.getElementById("lobbyStyleUnderline"), activeStyleState("underline"));
+    setTriState(document.getElementById("lobbyStyleStrike"), activeStyleState("strikethrough"));
 
     lobbySelectionSyncCallbacks.forEach(fn => fn());
 
@@ -1059,9 +1219,18 @@ function syncLobbyToolbar() {
 
         btn.addEventListener("click", () => {
 
-            const nowOn = selectionHasStyle(prop) !== "on";
+            const nowOn = activeStyleState(prop) !== "on";
 
-            patchSelection({ [prop]: nowOn });
+            if (lobbyEditor.selection.length) {
+
+                patchSelection({ [prop]: nowOn });
+
+            } else {
+
+                lobbyEditor.typingStyle[prop] = nowOn;
+
+            }
+
             syncLobbyToolbar();
 
         });
@@ -1070,9 +1239,19 @@ function syncLobbyToolbar() {
 
 /* ---- font list ---- */
 
+/*
+ * All 15 of these are confirmed entries in Roblox's Font enum
+ * (https://create.roblox.com/docs/reference/engine/enums/Font), picked
+ * to span a wide range of looks (clean sans, condensed, mono, serif,
+ * rounded/casual, marker, handwritten, heavy display, comic, gothic,
+ * typewriter, techno, horror, quirky script, friendly sans) rather
+ * than several near-duplicates. "face" is the rbxasset family path
+ * Roblox's rich-text <font family="..."> tag expects; "previewFamily"
+ * is just a close-enough web font stand-in so the in-browser editor
+ * looks roughly right (Roblox's real fonts aren't available here).
+ */
 const LOBBY_FONT_CATALOG = [
     { label: "Sans", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "Arial, Helvetica, sans-serif" },
-    { label: "Sans Bold", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "Arial Black, sans-serif" },
     { label: "Condensed", face: "rbxasset://fonts/families/RobotoCondensed.json", previewFamily: "'Arial Narrow', sans-serif" },
     { label: "Mono", face: "rbxasset://fonts/families/RobotoMono.json", previewFamily: "'Courier New', monospace" },
     { label: "Serif", face: "rbxasset://fonts/families/Merriweather.json", previewFamily: "Georgia, serif" },
@@ -1080,11 +1259,13 @@ const LOBBY_FONT_CATALOG = [
     { label: "Marker", face: "rbxasset://fonts/families/PermanentMarker.json", previewFamily: "'Comic Sans MS', cursive" },
     { label: "Handwritten", face: "rbxasset://fonts/families/IndieFlower.json", previewFamily: "'Segoe Script', cursive" },
     { label: "Display", face: "rbxasset://fonts/families/LuckiestGuy.json", previewFamily: "Impact, sans-serif" },
-    { label: "Blocky", face: "rbxasset://fonts/families/Bangers.json", previewFamily: "'Arial Black', sans-serif" },
+    { label: "Comic", face: "rbxasset://fonts/families/Bangers.json", previewFamily: "'Arial Black', sans-serif" },
     { label: "Gothic", face: "rbxasset://fonts/families/GrenzeGotisch.json", previewFamily: "'Times New Roman', serif" },
     { label: "Typewriter", face: "rbxasset://fonts/families/SpecialElite.json", previewFamily: "'Courier New', monospace" },
     { label: "Techno", face: "rbxasset://fonts/families/Michroma.json", previewFamily: "'Trebuchet MS', sans-serif" },
-    { label: "Spooky", face: "rbxasset://fonts/families/Creepster.json", previewFamily: "'Papyrus', fantasy" }
+    { label: "Spooky", face: "rbxasset://fonts/families/Creepster.json", previewFamily: "'Papyrus', fantasy" },
+    { label: "Quirky", face: "rbxasset://fonts/families/AmaticSC.json", previewFamily: "'Segoe Script', cursive" },
+    { label: "Friendly", face: "rbxasset://fonts/families/Nunito.json", previewFamily: "'Trebuchet MS', sans-serif" }
 ];
 
 const lobbyFontList = document.getElementById("lobbyFontList");
@@ -1117,8 +1298,9 @@ if (lobbyFontList) {
 
         btn.addEventListener("click", () => {
 
-            const alreadyThisFont = lobbyEditor.selection.length > 0 &&
-                lobbyEditor.selection.every(i => {
+            if (lobbyEditor.selection.length) {
+
+                const alreadyThisFont = lobbyEditor.selection.every(i => {
 
                     const s = letterStyleAt(i);
 
@@ -1126,7 +1308,16 @@ if (lobbyFontList) {
 
                 });
 
-            patchSelection({ font: alreadyThisFont ? null : font });
+                patchSelection({ font: alreadyThisFont ? null : font });
+
+            } else {
+
+                const alreadyThisFont = lobbyEditor.typingStyle.font && lobbyEditor.typingStyle.font.face === font.face;
+
+                lobbyEditor.typingStyle.font = alreadyThisFont ? null : font;
+
+            }
+
             syncLobbyFontList();
 
         });
@@ -1142,7 +1333,9 @@ function syncLobbyFontList() {
 
     if (!lobbyEditor.selection.length) {
 
-        lobbyFontButtonsByFace.forEach(btn => setTriState(btn, "off"));
+        const armedFace = lobbyEditor.typingStyle.font ? lobbyEditor.typingStyle.font.face : null;
+
+        lobbyFontButtonsByFace.forEach((btn, face) => setTriState(btn, face === armedFace ? "on" : "off"));
 
         return;
 
@@ -1260,6 +1453,23 @@ onLobbySelectionSync(syncLobbyFontList);
     }
 
     function applySolidColor(hex, commit) {
+
+        if (!lobbyEditor.selection.length) {
+
+            if (lobbyEditor.editingOutline) {
+
+                lobbyEditor.typingStyle.ring = true;
+                lobbyEditor.typingStyle.ringColor = hex;
+
+            } else {
+
+                lobbyEditor.typingStyle.color = hex;
+
+            }
+
+            return;
+
+        }
 
         if (lobbyEditor.editingOutline) {
 
@@ -1477,6 +1687,15 @@ onLobbySelectionSync(syncLobbyFontList);
 
         renderGradientPill();
         renderGradientStops();
+
+        if (!lobbyEditor.selection.length && lobbyEditorInput.value.length) {
+
+            setSelectionRange(0, lobbyEditorInput.value.length);
+            redrawLobbyOverlay();
+            syncLobbyToolbar();
+
+        }
+
         applyGradientToSelection(gradient);
 
         if (lobbyEditor.selection.length) {
@@ -1834,6 +2053,16 @@ onLobbySelectionSync(syncLobbyFontList);
 
             setOpacityUi(fade);
 
+            if (!lobbyEditor.selection.length) {
+
+                lobbyEditor.typingStyle[opacityPropName()] = fade;
+
+                if (lobbyEditor.editingOutline) lobbyEditor.typingStyle.ring = true;
+
+                return;
+
+            }
+
             const patch = { [opacityPropName()]: fade };
 
             if (lobbyEditor.editingOutline) patch.ring = true;
@@ -1844,7 +2073,11 @@ onLobbySelectionSync(syncLobbyFontList);
 
         opacityInput.addEventListener("change", () => {
 
-            pushLobbySnapshot();
+            if (lobbyEditor.selection.length) {
+
+                pushLobbySnapshot();
+
+            }
 
         });
 
@@ -1882,7 +2115,17 @@ onLobbySelectionSync(syncLobbyFontList);
 
             btn.addEventListener("click", () => {
 
-                patchSelection({ ringJoin: btn.dataset.lobbyJoin });
+                if (lobbyEditor.selection.length) {
+
+                    patchSelection({ ringJoin: btn.dataset.lobbyJoin });
+
+                } else {
+
+                    lobbyEditor.typingStyle.ring = true;
+                    lobbyEditor.typingStyle.ringJoin = btn.dataset.lobbyJoin;
+
+                }
+
                 syncOutlineJoinButtons();
 
             });
@@ -1894,6 +2137,20 @@ onLobbySelectionSync(syncLobbyFontList);
     function syncOutlineJoinButtons() {
 
         if (!outlineJoinRow) {
+
+            return;
+
+        }
+
+        if (!lobbyEditor.selection.length) {
+
+            const armed = lobbyEditor.typingStyle.ring ? (lobbyEditor.typingStyle.ringJoin || "round") : null;
+
+            outlineJoinRow.querySelectorAll("[data-lobby-join]").forEach(btn => {
+
+                btn.setAttribute("aria-pressed", armed !== null && btn.dataset.lobbyJoin === armed ? "true" : "false");
+
+            });
 
             return;
 
@@ -1925,9 +2182,24 @@ onLobbySelectionSync(syncLobbyFontList);
 
         if (!lobbyEditor.selection.length) {
 
+            const colorProp = lobbyEditor.editingOutline ? "ringColor" : "color";
+            const fadeProp = lobbyEditor.editingOutline ? "ringFade" : "fade";
+
+            const fade = typeof lobbyEditor.typingStyle[fadeProp] === "number" ? lobbyEditor.typingStyle[fadeProp] : 0;
+
+            setOpacityUi(fade);
+
             if (swatchCircle) swatchCircle.classList.remove("is-mixed");
 
-            setOpacityUi(0);
+            const armedHex = lobbyEditor.typingStyle[colorProp];
+
+            if (armedHex) {
+
+                syncingFromSelection = true;
+                pushFromHex(armedHex, false);
+                syncingFromSelection = false;
+
+            }
 
             return;
 
@@ -1973,6 +2245,42 @@ onLobbySelectionSync(syncLobbyFontList);
     }
 
     onLobbySelectionSync(syncColorPickerFromSelection);
+
+    onLobbyReset(() => {
+
+        hue360 = 300;
+        sat = 0.6;
+        val = 1;
+        activeStop = 0;
+
+        gradient = {
+            kind: LOBBY_GRADIENT_KINDS.RAINBOW,
+            colors: ["#ff5cc8", "#00c8ff", "#ffffff"],
+            dividers: [0.5]
+        };
+
+        if (outlineToggle) {
+
+            outlineToggle.setAttribute("aria-pressed", "false");
+            outlineToggle.classList.remove("active");
+
+        }
+
+        if (outlineJoinRow) {
+
+            outlineJoinRow.classList.remove("lobby-outline-joins--open");
+
+        }
+
+        setColorMode("solid");
+        renderGradientPill();
+        renderGradientStops();
+
+        syncingFromSelection = true;
+        pushFromHex("#ff5cc8", false);
+        syncingFromSelection = false;
+
+    });
 
     setColorMode("solid");
     renderGradientPill();
@@ -2226,6 +2534,49 @@ document.addEventListener("keydown", e => {
 if (lobbyCopyButton) {
 
     lobbyCopyButton.addEventListener("click", copyLobbyTags);
+
+}
+
+/* ---- reset: wipes the whole panel back to its starting state ---- */
+
+function resetLobbyMaker() {
+
+    lobbyEditorInput.value = "";
+    previousLobbyText = "";
+
+    lobbyEditor.letters = [];
+    lobbyEditor.selection = [];
+    lobbyEditor.selectionActive = false;
+    lobbyEditor.caret = 0;
+    lobbyEditor.caretShown = false;
+    lobbyEditor.editingOutline = false;
+    lobbyEditor.typingStyle = blankTypingStyle();
+
+    lobbyEditor.history = [lobbySnapshot()];
+    lobbyEditor.historyAt = 0;
+
+    lobbyTagLog.length = 0;
+
+    closeAllLobbySubPanels();
+
+    lobbyResetCallbacks.forEach(fn => fn());
+
+    redrawLobbyOverlay();
+    refreshLobbyPreview();
+    syncLobbyToolbar();
+    renderLobbyTagLog();
+
+}
+
+const lobbyResetButton = document.getElementById("lobbyResetButton");
+
+if (lobbyResetButton) {
+
+    attachClickAction(
+        lobbyResetButton,
+        resetLobbyMaker,
+        typeof playPurifySound === "function" ? playPurifySound : (typeof playUtilitySound === "function" ? playUtilitySound : undefined)
+    );
 
 }
 
