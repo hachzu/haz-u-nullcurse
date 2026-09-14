@@ -200,6 +200,8 @@ body {
 }
 
 .live-viewer-badge {
+    position: relative;
+
     display: flex;
     align-items: center;
     gap: 6px;
@@ -213,6 +215,232 @@ body {
     color: #b6a3dd;
     font-size: 10px;
     font-weight: 700;
+}
+
+
+/*
+ * Hover dropdown listing everyone currently present, by username
+ * (see presence.js). Sits absolutely positioned against the badge
+ * itself (.live-viewer-badge is the position: relative anchor
+ * above), hidden until the badge is hovered.
+ */
+.live-viewer-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+
+    min-width: 140px;
+    max-width: 220px;
+    max-height: 220px;
+    overflow-y: auto;
+
+    padding: 8px;
+
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+
+    background: #14061f;
+
+    border: 1px solid var(--lp-soft, #4a2270);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    z-index: 50;
+}
+
+
+.live-viewer-badge:hover .live-viewer-list {
+    display: flex;
+}
+
+
+.live-viewer-list-item {
+    padding: 4px 6px;
+
+    background: rgba(184, 102, 255, 0.08);
+    border-radius: 4px;
+
+    color: #e8dcff;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.live-viewer-list-empty {
+    padding: 4px 6px;
+
+    color: #5c4880;
+
+    font-size: 10px;
+}
+
+
+/*
+ * First-visit username prompt (see ensureUsername in presence.js).
+ * Fixed full-screen overlay that fades in/out via the --visible
+ * modifier class, which presence.js toggles on the next animation
+ * frame after insertion (and again right before removal on submit).
+ */
+.username-gate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(5, 1, 12, 0.55);
+    backdrop-filter: blur(10px);
+
+    opacity: 0;
+
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+.username-gate-overlay.username-gate-overlay--visible {
+    opacity: 1;
+}
+
+
+.username-gate-box {
+    width: min(90vw, 480px);
+
+    padding: 0 20px;
+
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    text-align: center;
+}
+
+
+.username-gate-title {
+    margin-bottom: 10px;
+
+    font-family: var(--font-modern);
+    font-weight: 700;
+    letter-spacing: 6px;
+
+    color: #d59bff;
+    text-shadow: 0 0 18px rgba(184, 102, 255, 0.4);
+
+    text-align: center;
+
+    font-size: clamp(24px, 6vw, 38px);
+}
+
+
+.username-gate-subtitle {
+    margin-bottom: 22px;
+
+    color: #c9b7eb;
+
+    font-family: var(--font-modern);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: 0.2px;
+}
+
+
+/*
+ * Staggered pop-in for the gate's title/subtitle/input/button. Each
+ * element carries its own inline animation-delay (see presence.js)
+ * so they land one after another instead of all at once; the
+ * keyframe itself just handles the scale+fade shared by all of them.
+ */
+.username-gate-pop {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+
+    animation: username-gate-pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+@keyframes username-gate-pop-in {
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+}
+
+
+#usernameGateInput {
+    width: 100%;
+    margin-bottom: 18px;
+
+    padding: 10px 4px;
+
+    background: transparent;
+
+    border: none;
+    border-bottom: 1px solid rgba(184, 102, 255, 0.4);
+    border-radius: 0;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    text-align: center;
+
+    outline: none;
+
+    transition: border-color 0.2s ease;
+}
+
+
+#usernameGateInput::placeholder {
+    color: #6d5a94;
+}
+
+
+#usernameGateInput:focus {
+    border-bottom-color: #d59bff;
+    box-shadow: none;
+}
+
+
+#usernameGateSubmit {
+    width: auto;
+
+    padding: 6px 4px;
+
+    background: transparent;
+
+    border: none;
+    border-radius: 0;
+
+    color: #d59bff;
+
+    font-family: var(--font-modern);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+
+    cursor: pointer;
+
+    transition: color 0.25s ease, text-shadow 0.25s ease, transform 0.2s ease;
+}
+
+
+#usernameGateSubmit:hover {
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(184, 102, 255, 0.6);
+    transform: translateY(-1px);
+
+    box-shadow: none;
 }
 
 .live-viewer-dot {
