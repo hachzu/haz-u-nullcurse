@@ -85,7 +85,7 @@ const upgradesList = [
 
     {
         name: "Pocket Bell", price: 300, soloPrice: 300, level: 8, category: "movement",
-        requires: { type: "upgrade", name: "Double Jump", stack: 1 }
+        requires: { type: "enemy", name: "Bell" }
     },
 
     { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 5, category: "survival" },
@@ -342,8 +342,7 @@ function isUpgradeContextHidden(item) {
 
     if (item.name === "Last Robloxian Standing") {
 
-        const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
-        const eligible = isPartyLikeMode() || (upgradeState.mode === "duo" && playerCount >= 2);
+        const eligible = isPartyLikeMode();
 
         if (!eligible) {
 
@@ -1868,6 +1867,12 @@ function createUpgradeModeButton(mode) {
 
         saveUpgradeState();
         refreshUpgradePanel();
+
+        if (typeof render === "function") {
+
+            render();
+
+        }
 
     }, playDifficultySound);
 

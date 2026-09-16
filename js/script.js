@@ -469,6 +469,7 @@ const enemyCurses = [
         name: "Mart Infection",
         enemy: "Mart",
         level: 8,
+        disabledModes: ["solo"],
         exclusiveGroup: "mart-infection-slide"
     },
 
@@ -535,7 +536,7 @@ const enemyCurses = [
 
     { name: "Blade Carousel", enemy: "Voidbreaker", medal: true, value: 290 },
 
-    { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280 }
+    { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280, disabledModes: ["solo"] }
 
 ];
 
@@ -982,6 +983,50 @@ function createCurseEnemyBadge(enemyName, count = 1) {
 }
 
 
+function createCurseRequirementBadge(curseName) {
+
+    const badge = document.createElement("div");
+
+    badge.className = "curse-requirement-badge";
+    badge.title = `Requires ${curseName}`;
+
+    const inner = document.createElement("div");
+
+    inner.className = "curse-enemy-badge-inner";
+
+    const placeholder = document.createElement("span");
+
+    placeholder.className = "curse-enemy-badge-placeholder";
+    placeholder.textContent = curseName;
+
+    inner.appendChild(placeholder);
+    badge.appendChild(inner);
+
+    resolveAsset("curses", curseName, path => {
+
+        if (!path) {
+
+            return;
+
+        }
+
+        inner.innerHTML = "";
+
+        const img = document.createElement("img");
+
+        img.className = "curse-enemy-badge-image";
+        img.src = path;
+        img.alt = curseName;
+
+        inner.appendChild(img);
+
+    });
+
+    return badge;
+
+}
+
+
 /*
  * Same badge, scaled down and repositioned to sit inside an enemy
  * button's own small corner (rather than protruding above it, which
@@ -1062,6 +1107,21 @@ function requirementsMet(curse) {
 }
 
 
+function isCurseModeAllowed(curse) {
+
+    if (!curse.disabledModes || !curse.disabledModes.length) {
+
+        return true;
+
+    }
+
+    const currentMode = typeof upgradeState !== "undefined" ? upgradeState.mode : "solo";
+
+    return !curse.disabledModes.includes(currentMode);
+
+}
+
+
 function exclusiveGroupAvailable(curse) {
 
     if (!curse.exclusiveGroup) {
@@ -1127,6 +1187,12 @@ function isCurseDependencyMet(curse, ignoreLevel) {
     }
 
     if (runState.difficulty === "Casual" && curse.casualDisabled) {
+
+        return false;
+
+    }
+
+    if (!isCurseModeAllowed(curse)) {
 
         return false;
 
@@ -1198,6 +1264,14 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
 function isCurseSelectable(curse, ignoreLevel = false) {
 
     if (isCurseAtCap(curse)) {
+
+        return false;
+
+    }
+
+    // Mode restrictions are game rules, not a planning dependency:
+    // Unlock All must not make Solo-only exclusions selectable.
+    if (!isCurseModeAllowed(curse)) {
 
         return false;
 
@@ -2093,6 +2167,16 @@ function createCurseCard(curse, isMedal = false) {
     if (dependentEnemy) {
 
         card.appendChild(createCurseEnemyBadge(dependentEnemy, dependentEnemyCount));
+
+    }
+
+    if (curse.requiresCurses && curse.requiresCurses.length) {
+
+        curse.requiresCurses.forEach(requiredCurse => {
+
+            card.appendChild(createCurseRequirementBadge(requiredCurse));
+
+        });
 
     }
 

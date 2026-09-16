@@ -1809,6 +1809,28 @@ body {
 }
 
 
+/* A violet dependency icon for curses that need another curse, such
+   as Burning Bouquet requiring Razorbloom. It sits beside the enemy
+   badge instead of replacing it, so both requirements are visible. */
+.curse-requirement-badge {
+    position: absolute;
+    top: -13px;
+    left: 72%;
+
+    z-index: 2;
+
+    width: 26px;
+    height: 26px;
+
+    background: linear-gradient(160deg, #321042 0%, #150826 100%);
+
+    border: 1px solid #d59bff;
+    border-radius: 50%;
+
+    box-shadow: 0 3px 8px rgba(106, 31, 208, 0.45);
+}
+
+
 /* Holds the icon/placeholder and does the actual circular
    cropping - kept separate from .curse-enemy-badge itself so that
    badge's overflow doesn't also clip the count label, which is

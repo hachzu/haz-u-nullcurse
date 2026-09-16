@@ -95,16 +95,8 @@
         </section>
 
 
-        <!--
-            Player Count now stays visible in the left panel at all
-            times (it's used by the medal payout calc too, not just
-            the upgrade shop). Game Mode still only matters while the
-            Upgrade Shop Calculator is open, so it stays hidden on
-            the curse tracker and is revealed/removed in step with
-            the upgrade panel's own open state (see
-            setUpgradePanelOpen in upgrades.js, and
-            .upgrade-panel-only-section in upgrades.css).
-        -->
+        <!-- Player count and game mode both affect tracker rules as
+             well as shop prices, so they stay available at all times. -->
         <section class="control-section level-section">
 
             <label for="playerCountInput">PLAYER COUNT <span class="label-note"></span></label>
@@ -120,10 +112,10 @@
         </section>
 
 
-        <section class="control-section upgrade-panel-only-section">
+        <section class="control-section">
 
             <div class="section-label">
-                GAME MODE <span class="label-note">(for upgrade shop calculator)</span>
+                GAME MODE
             </div>
 
             <div
