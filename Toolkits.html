@@ -620,116 +620,146 @@
 
                 <div class="lobby-panel-body">
 
-                    <div class="lobby-editor-toolbar">
+                    <!--
+                        Two-column layout: the title editor + preview +
+                        history live in the (narrower) left column, and
+                        all the Font/Color/Style formatting controls live
+                        in the (wider) right column, side by side instead
+                        of stacked full-width. Collapses back to a single
+                        stacked column under 800px (see lobby.css).
+                    -->
+                    <div class="lobby-panel-columns">
 
-                        <div class="lobby-toolbar-tools">
+                        <div class="lobby-col-left">
 
-                            <button type="button" class="lobby-editor-tool" id="lobbyFontToggle">Font</button>
+                            <div class="lobby-editor-sticky">
 
-                            <button type="button" class="lobby-editor-tool" id="lobbyColorToggle">Color</button>
+                            <div class="lobby-editor-heading">Your Lobby Name</div>
 
-                            <button type="button" class="lobby-editor-tool" id="lobbyStyleToggle">Style</button>
-
-                        </div>
-
-                        <button type="button" class="lobby-editor-tool lobby-editor-tool--copy" id="lobbyCopyButton">
-                            <span id="lobbyCopyButtonText">Copy</span>
-                        </button>
-
-                    </div>
-
-                    <div class="lobby-tool-workspace" id="lobbyToolWorkspace">
-
-                        <div class="lobby-subpanel" id="lobbyFontPanel">
-                            <div class="lobby-subpanel-heading">Font</div>
-                            <div class="lobby-font-list" id="lobbyFontList"></div>
-                        </div>
-
-                        <div class="lobby-subpanel lobby-color-panel" id="lobbyColorPanel" data-mode="solid">
-                            <div class="lobby-color-mode-row">
-                                <button type="button" class="lobby-color-mode-button is-active" data-lobby-color-mode="solid">Solid</button>
-                                <button type="button" class="lobby-color-mode-button" data-lobby-color-mode="gradient">Gradient</button>
+                            <div class="lobby-editor-wrap" id="lobbyEditorWrap">
+                                <div id="lobbyEditorOverlay" class="lobby-editor-overlay" aria-hidden="true"></div>
+                                <textarea id="lobbyEditorInput" class="lobby-editor-input" maxlength="35" rows="1"
+                                    placeholder="Type your lobby name..." spellcheck="false" autocomplete="off"
+                                    autocorrect="off" autocapitalize="off" wrap="off"></textarea>
+                                <button type="button" class="lobby-editor-tool lobby-editor-tool--highlight-all" id="lobbyHighlightAllButton" aria-pressed="false" title="Highlight every character in the lobby name">Highlight all</button>
                             </div>
 
-                            <div class="lobby-solid-only">
-                                <div class="lobby-color-picker-main">
-                                    <div class="lobby-sv" id="lobbySv">
-                                        <div class="lobby-sv-cursor" id="lobbySvCursor"></div>
+                            <button type="button" class="lobby-editor-tool lobby-editor-tool--copy" id="lobbyCopyButton">
+                                <span id="lobbyCopyButtonText">Copy</span>
+                            </button>
+
+                            <div class="lobby-visual-output">
+                                <span class="lobby-preview-label">In-game preview</span>
+                                <div id="lobbyVisualPreview" class="lobby-visual-preview">Your styled lobby name will appear here</div>
+                            </div>
+
+                            <div class="lobby-preview-row">
+                                <span class="lobby-preview-label">Tag output</span>
+                                <div id="lobbyPreviewValue" class="lobby-preview-value">Type something to see the tag output</div>
+                            </div>
+
+                            </div>
+
+                            <div class="lobby-history-heading">
+                                RECENTLY COPIED <span class="count">(session only)</span>
+                            </div>
+
+                            <div id="lobbyHistoryList" class="lobby-history-list"></div>
+
+                        </div>
+
+                        <div class="lobby-col-right">
+
+                            <div class="lobby-editor-toolbar">
+
+                                <div class="lobby-toolbar-tools">
+
+                                    <button type="button" class="lobby-editor-tool" id="lobbyFontToggle">Font</button>
+
+                                    <button type="button" class="lobby-editor-tool" id="lobbyColorToggle">Color</button>
+
+                                    <button type="button" class="lobby-editor-tool" id="lobbyStyleToggle">Style</button>
+
+                                </div>
+
+                            </div>
+
+                            <div class="lobby-tool-workspace" id="lobbyToolWorkspace">
+
+                                <div class="lobby-subpanel" id="lobbyFontPanel">
+                                    <div class="lobby-subpanel-heading">Font</div>
+                                    <div class="lobby-font-list" id="lobbyFontList"></div>
+                                </div>
+
+                                <div class="lobby-subpanel lobby-color-panel" id="lobbyColorPanel" data-mode="solid">
+                                    <div class="lobby-color-mode-row">
+                                        <button type="button" class="lobby-color-mode-button is-active" data-lobby-color-mode="solid">Solid</button>
+                                        <button type="button" class="lobby-color-mode-button" data-lobby-color-mode="gradient">Gradient</button>
                                     </div>
-                                    <div class="lobby-hue" id="lobbyHue">
-                                        <div class="lobby-hue-cursor" id="lobbyHueCursor"></div>
+
+                                    <div class="lobby-solid-only">
+                                        <div class="lobby-color-picker-main">
+                                            <div class="lobby-sv" id="lobbySv">
+                                                <div class="lobby-sv-cursor" id="lobbySvCursor"></div>
+                                            </div>
+                                            <div class="lobby-hue" id="lobbyHue">
+                                                <div class="lobby-hue-cursor" id="lobbyHueCursor"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="lobby-color-footer">
+                                            <button type="button" class="lobby-color-swatch" id="lobbyColorSwatch" aria-label="Current color"></button>
+                                            <input type="text" class="lobby-hex-input" id="lobbyHexInput" maxlength="7" value="#ff5cc8"
+                                                spellcheck="false" autocomplete="off" aria-label="Hex color">
+                                        </div>
+                                    </div>
+
+                                    <div class="lobby-gradient-only">
+                                        <div class="lobby-gradient-presets" id="lobbyGradientPresets">
+                                            <button type="button" data-lobby-gradient-kind="rainbow">Rainbow</button>
+                                            <button type="button" data-lobby-gradient-kind="two-stop">2 Color</button>
+                                            <button type="button" data-lobby-gradient-kind="three-stop">3 Color</button>
+                                            <button type="button" data-lobby-gradient-kind="bookend">Outer</button>
+                                        </div>
+                                        <div class="lobby-gradient-stops" id="lobbyGradientStops"></div>
+                                        <div class="lobby-gradient-pill" id="lobbyGradientPill" aria-label="Gradient controls"></div>
+                                    </div>
+
+                                    <div class="lobby-opacity-row">
+                                        <label for="lobbyOpacityInput" id="lobbyOpacityLabel">Opacity</label>
+                                        <input type="range" id="lobbyOpacityInput" min="0" max="100" step="1" value="100">
+                                        <span id="lobbyOpacityValue">100%</span>
+                                    </div>
+
+                                    <div class="lobby-outline-row">
+                                        <button type="button" class="lobby-outline-toggle" id="lobbyOutlineToggle">Edit outline instead</button>
+                                        <div class="lobby-outline-joins" id="lobbyOutlineJoinRow">
+                                            <button type="button" class="lobby-outline-join-option" data-lobby-join="round" title="Round join">R</button>
+                                            <button type="button" class="lobby-outline-join-option" data-lobby-join="miter" title="Miter join">M</button>
+                                            <button type="button" class="lobby-outline-join-option" data-lobby-join="bevel" title="Bevel join">B</button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="lobby-color-footer">
-                                    <button type="button" class="lobby-color-swatch" id="lobbyColorSwatch" aria-label="Current color"></button>
-                                    <input type="text" class="lobby-hex-input" id="lobbyHexInput" maxlength="7" value="#ff5cc8"
-                                        spellcheck="false" autocomplete="off" aria-label="Hex color">
+                                <div class="lobby-subpanel" id="lobbyStylePanel">
+                                    <div class="lobby-subpanel-heading">Style</div>
+                                    <div class="lobby-style-options">
+                                        <button type="button" class="lobby-style-option" id="lobbyStyleBold" title="Bold">B</button>
+                                        <button type="button" class="lobby-style-option" id="lobbyStyleItalic" title="Italic"><i>I</i></button>
+                                        <button type="button" class="lobby-style-option" id="lobbyStyleUnderline" title="Underline"><u>U</u></button>
+                                        <button type="button" class="lobby-style-option" id="lobbyStyleStrike" title="Strikethrough"><s>S</s></button>
+                                    </div>
                                 </div>
+
                             </div>
 
-                            <div class="lobby-gradient-only">
-                                <div class="lobby-gradient-presets" id="lobbyGradientPresets">
-                                    <button type="button" data-lobby-gradient-kind="rainbow">Rainbow</button>
-                                    <button type="button" data-lobby-gradient-kind="two-stop">2 Color</button>
-                                    <button type="button" data-lobby-gradient-kind="three-stop">3 Color</button>
-                                    <button type="button" data-lobby-gradient-kind="bookend">Outer</button>
-                                </div>
-                                <div class="lobby-gradient-stops" id="lobbyGradientStops"></div>
-                                <div class="lobby-gradient-pill" id="lobbyGradientPill" aria-label="Gradient controls"></div>
+                            <div class="lobby-toolbar-hint">
+                                Pick a font, color, or style, then type &mdash; it applies as you go. Highlight letters (click, drag, or shift/ctrl+click) only if you want to touch up specific ones afterward.
                             </div>
 
-                            <div class="lobby-opacity-row">
-                                <label for="lobbyOpacityInput" id="lobbyOpacityLabel">Opacity</label>
-                                <input type="range" id="lobbyOpacityInput" min="0" max="100" step="1" value="100">
-                                <span id="lobbyOpacityValue">100%</span>
-                            </div>
-
-                            <div class="lobby-outline-row">
-                                <button type="button" class="lobby-outline-toggle" id="lobbyOutlineToggle">Edit outline instead</button>
-                                <div class="lobby-outline-joins" id="lobbyOutlineJoinRow">
-                                    <button type="button" class="lobby-outline-join-option" data-lobby-join="round" title="Round join">R</button>
-                                    <button type="button" class="lobby-outline-join-option" data-lobby-join="miter" title="Miter join">M</button>
-                                    <button type="button" class="lobby-outline-join-option" data-lobby-join="bevel" title="Bevel join">B</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="lobby-subpanel" id="lobbyStylePanel">
-                            <div class="lobby-subpanel-heading">Style</div>
-                            <div class="lobby-style-options">
-                                <button type="button" class="lobby-style-option" id="lobbyStyleBold" title="Bold">B</button>
-                                <button type="button" class="lobby-style-option" id="lobbyStyleItalic" title="Italic"><i>I</i></button>
-                                <button type="button" class="lobby-style-option" id="lobbyStyleUnderline" title="Underline"><u>U</u></button>
-                                <button type="button" class="lobby-style-option" id="lobbyStyleStrike" title="Strikethrough"><s>S</s></button>
-                            </div>
                         </div>
 
                     </div>
-
-                    <div class="lobby-toolbar-hint">
-                        Pick a font, color, or style above, then type &mdash; it applies as you go. Highlight letters (click, drag, or shift/ctrl+click) only if you want to touch up specific ones afterward.
-                    </div>
-
-                    <div class="lobby-editor-heading">Your Lobby Name</div>
-
-                    <div class="lobby-editor-wrap" id="lobbyEditorWrap">
-                        <div id="lobbyEditorOverlay" class="lobby-editor-overlay" aria-hidden="true"></div>
-                        <textarea id="lobbyEditorInput" class="lobby-editor-input" maxlength="35" rows="1"
-                            placeholder="Type your lobby name..." spellcheck="false" autocomplete="off"
-                            autocorrect="off" autocapitalize="off" wrap="off"></textarea>
-                    </div>
-
-                    <div class="lobby-preview-row">
-                        <span class="lobby-preview-label">Tag output</span>
-                        <div id="lobbyPreviewValue" class="lobby-preview-value">Type something to see the tag output</div>
-                    </div>
-
-                    <div class="lobby-history-heading">
-                        RECENTLY COPIED <span class="count">(session only)</span>
-                    </div>
-
-                    <div id="lobbyHistoryList" class="lobby-history-list"></div>
 
                 </div>
 

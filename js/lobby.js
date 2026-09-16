@@ -483,12 +483,34 @@ function refreshLobbyPreview() {
         lobbyPreviewValue.textContent = "Type something to see the tag output";
         lobbyPreviewValue.classList.remove("lobby-preview-value--filled");
 
+        if (lobbyVisualPreview) {
+
+            lobbyVisualPreview.textContent = "Your styled lobby name will appear here";
+            lobbyVisualPreview.classList.remove("lobby-visual-preview--filled");
+
+        }
+
         return;
 
     }
 
     lobbyPreviewValue.textContent = compileLobbyRichText(text, lobbyEditor.letters);
     lobbyPreviewValue.classList.add("lobby-preview-value--filled");
+
+    if (lobbyVisualPreview) {
+
+        let previewMarkup = "";
+
+        for (let i = 0; i < text.length; i++) {
+
+            previewMarkup += renderLetterMarkup(text[i], letterStyleAt(i));
+
+        }
+
+        lobbyVisualPreview.innerHTML = previewMarkup;
+        lobbyVisualPreview.classList.add("lobby-visual-preview--filled");
+
+    }
 
 }
 
@@ -1010,6 +1032,7 @@ const lobbyEditorInput = document.getElementById("lobbyEditorInput");
 const lobbyEditorOverlay = document.getElementById("lobbyEditorOverlay");
 const lobbyEditorWrap = document.getElementById("lobbyEditorWrap");
 const lobbyPreviewValue = document.getElementById("lobbyPreviewValue");
+const lobbyVisualPreview = document.getElementById("lobbyVisualPreview");
 const lobbyCopyButton = document.getElementById("lobbyCopyButton");
 const lobbyCopyButtonText = document.getElementById("lobbyCopyButtonText");
 const lobbyHistoryList = document.getElementById("lobbyHistoryList");
@@ -1017,6 +1040,7 @@ const lobbyHistoryList = document.getElementById("lobbyHistoryList");
 const lobbyFontToggle = document.getElementById("lobbyFontToggle");
 const lobbyColorToggle = document.getElementById("lobbyColorToggle");
 const lobbyStyleToggle = document.getElementById("lobbyStyleToggle");
+const lobbyHighlightAllButton = document.getElementById("lobbyHighlightAllButton");
 
 const lobbyFontPanel = document.getElementById("lobbyFontPanel");
 const lobbyColorPanel = document.getElementById("lobbyColorPanel");
@@ -1038,9 +1062,8 @@ if (lobbyEditorInput) {
    absolutely-positioned popover under its own button. That's what
    used to let Color's popover overlap Font's neighboring button, and
    let an open popover cover the title input sitting just below it.
-   Only one tool panel is shown at a time now - opening one closes
-   whichever other was open - since there's no floating position left
-   to keep them visually apart. */
+   Each inline panel can now remain open independently, so Font,
+   Color, and Style can be used together in one persistent stack. */
 
 const lobbyToolWorkspace = document.getElementById("lobbyToolWorkspace");
 
@@ -1071,21 +1094,6 @@ function setLobbySubPanelOpen(panel, isOpen) {
     if (!entry) {
 
         return;
-
-    }
-
-    if (isOpen) {
-
-        lobbySubPanels.forEach(({ button: otherButton, panel: otherPanel }) => {
-
-            if (otherPanel !== panel) {
-
-                otherPanel.classList.remove("lobby-subpanel--open");
-                otherButton.classList.remove("active");
-
-            }
-
-        });
 
     }
 
@@ -1122,23 +1130,12 @@ lobbySubPanels.forEach(({ button, panel }) => {
 });
 
 /*
- * Clicking anywhere outside the toolbar buttons and the workspace
- * itself closes whichever tool panel is open.
+ * Tool panels deliberately remain open while the person works
+ * elsewhere in the Lobby Maker. That keeps a chosen font, color, or
+ * style handy while typing, selecting letters, or using its controls.
+ * A panel only closes when its own toolbar button is pressed again,
+ * the Lobby Maker closes, or Reset is used.
  */
-document.addEventListener("mousedown", e => {
-
-    const stillWorkingInToolbar = lobbySubPanels.some(({ button }) => button.contains(e.target))
-        || (lobbyToolWorkspace && lobbyToolWorkspace.contains(e.target));
-
-    if (stillWorkingInToolbar) {
-
-        return;
-
-    }
-
-    closeAllLobbySubPanels();
-
-});
 
 /* ---- toolbar sync (bold/italic/underline/strike + outline) ---- */
 
@@ -1195,7 +1192,43 @@ function syncLobbyToolbar() {
     setTriState(document.getElementById("lobbyStyleUnderline"), activeStyleState("underline"));
     setTriState(document.getElementById("lobbyStyleStrike"), activeStyleState("strikethrough"));
 
+    if (lobbyHighlightAllButton && lobbyEditorInput) {
+
+        const textLength = lobbyEditorInput.value.length;
+        const allHighlighted = textLength > 0 && lobbyEditor.selection.length === textLength;
+
+        lobbyHighlightAllButton.disabled = textLength === 0;
+        lobbyHighlightAllButton.setAttribute("aria-pressed", allHighlighted ? "true" : "false");
+        lobbyHighlightAllButton.classList.toggle("active", allHighlighted);
+
+    }
+
     lobbySelectionSyncCallbacks.forEach(fn => fn());
+
+}
+
+if (lobbyHighlightAllButton && lobbyEditorInput) {
+
+    lobbyHighlightAllButton.addEventListener("click", () => {
+
+        const textLength = lobbyEditorInput.value.length;
+
+        if (!textLength) {
+
+            return;
+
+        }
+
+        setSelectionRange(0, textLength);
+        lobbyEditor.caretShown = false;
+        lobbyEditorInput.focus();
+        lobbyEditorInput.setSelectionRange(0, textLength);
+
+        redrawLobbyOverlay();
+        refreshLobbyPreview();
+        syncLobbyToolbar();
+
+    });
 
 }
 
