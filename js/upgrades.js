@@ -105,10 +105,6 @@ const upgradesList = [
         requires: { type: "upgrade", name: "Radar", stack: 1 }
     },
 
-    {
-        name: "Radar Module : Players", price: 150, soloPrice: 150, level: 8, category: "environment",
-        requires: { type: "upgrade", name: "Radar", stack: 1 }
-    },
 
     { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
