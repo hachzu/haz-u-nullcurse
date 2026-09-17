@@ -355,7 +355,7 @@ const enemies = [
     { name: "Mart", level: 1 },
     { name: "Flesh", level: 5 },
     { name: "Operator", level: 5 },
-    { name: "Guardian", level: 8, maxStack: 2 },
+    { name: "Guardian", level: 8 },
     { name: "Telefragger", level: 8 },
     { name: "Kolona", level: 10 },
 
@@ -371,7 +371,7 @@ const enemies = [
     {
         name: "Voidbound Guardian",
         level: 20,
-        requiresEnemies: [{ name: "Guardian", count: 2 }]
+        requiresEnemies: ["Guardian"]
     },
 
     { name: "Scrapmaw", level: 20 },
@@ -435,7 +435,11 @@ const globalCurses = [
 
     { name: "Nothing", level: 8, medal: true, value: 325 },
 
-    { name: "Jackpot", level: 10 },
+    {
+        name: "Jackpot",
+        level: 10,
+        requiresAnyCurses: ["High Roller", "Tweaked Odds"]
+    },
 
     {
         name: "Barotrauma",
@@ -483,11 +487,12 @@ const enemyCurses = [
     },
 
     { name: "Pacifier", enemy: "Baby", medal: true, value: 230 },
-    { name: "Problem Child", enemy: "Baby", medal: true, value: 150 },
+    { name: "Problem Child", enemy: "Baby", level: 5, medal: true, value: 150 },
 
     {
         name: "Bigger Blast",
         enemy: "ICBM",
+        level: 5,
         medal: true,
         value: 200,
         max: 2
@@ -508,18 +513,18 @@ const enemyCurses = [
     },
 
     { name: "Taller Husk", enemy: "Husk" },
-    { name: "Husk Express", enemy: "Husk", enemyCount: 2, medal: true, value: 200 },
-    { name: "Conga Line", enemy: "Husk", medal: true, value: 200 },
+    { name: "Husk Express", enemy: "Husk", enemyCount: 2, level: 5, medal: true, value: 200 },
+    { name: "Conga Line", enemy: "Husk", level: 8, medal: true, value: 200 },
     { name: "Random Husk", enemy: "Husk", level: 15 },
 
-    { name: "Resonating Shockwaves", enemy: "Springer" },
-    { name: "Springloaded", enemy: "Springer", medal: true, value: 200 },
+    { name: "Resonating Shockwaves", enemy: "Springer", level: 5 },
+    { name: "Springloaded", enemy: "Springer", level: 5, medal: true, value: 200 },
 
-    { name: "Bloodier Meat", enemy: "Flesh", medal: true, value: 300 },
-    { name: "Blighted Jump Pads", enemy: "Flesh" },
+    { name: "Bloodier Meat", enemy: "Flesh", level: 5, medal: true, value: 300 },
+    { name: "Blighted Jump Pads", enemy: "Flesh", level: 5 },
 
-    { name: "Camoflauge", enemy: "Guardian" },
-    { name: "Shotgun", enemy: "Guardian", medal: true, value: 200 },
+    { name: "Camoflauge", enemy: "Guardian", level: 8 },
+    { name: "Shotgun", enemy: "Guardian", level: 5, medal: true, value: 200 },
 
     { name: "Ambush", enemy: "Telefragger" },
     { name: "Accurate Telefragger", enemy: "Telefragger", medal: true, value: 150 },
@@ -534,7 +539,7 @@ const enemyCurses = [
         requiresCurses: ["Razorbloom"]
     },
 
-    { name: "Blade Carousel", enemy: "Voidbreaker", medal: true, value: 290 },
+    { name: "Blade Carousel", enemy: "Voidbreaker", level: 5, medal: true, value: 290 },
 
     { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280, disabledModes: ["solo"] }
 
@@ -646,8 +651,8 @@ function getEnemyMaxStack(enemy) {
 /*
  * A dependency entry can be either a plain enemy name (meaning "at
  * least 1 active", the original behavior) or an { name, count }
- * object for the new 2x-style requirements (Husk Express, Voidbound
- * Baby/Guardian). Used both by curses' requiresEnemies/enemy fields
+ * object for the new 2x-style requirements (Husk Express and
+ * Voidbound Baby). Used both by curses' requiresEnemies/enemy fields
  * and by the enemies pool's own requiresEnemies field.
  */
 function meetsEnemyRequirement(entry) {
@@ -983,12 +988,18 @@ function createCurseEnemyBadge(enemyName, count = 1) {
 }
 
 
-function createCurseRequirementBadge(curseName) {
+function createCurseRequirementBadge(curseName, title, position) {
 
     const badge = document.createElement("div");
 
     badge.className = "curse-requirement-badge";
-    badge.title = `Requires ${curseName}`;
+    badge.title = title || `Requires ${curseName}`;
+
+    if (position) {
+
+        badge.classList.add(`curse-requirement-badge--${position}`);
+
+    }
 
     const inner = document.createElement("div");
 
@@ -1099,6 +1110,12 @@ function requirementsMet(curse) {
             }
 
         }
+
+    }
+
+    if (curse.requiresAnyCurses && !curse.requiresAnyCurses.some(hasCurse)) {
+
+        return false;
 
     }
 
@@ -1339,11 +1356,10 @@ function isCurseLockedOnlyByLevel(curse) {
 
 /*
  * Returns what badge (if any) to show on a locked curse card.
- * Capped curses get a purple "OWNED" badge, curses blocked purely
- * by level get a red "Level XX" badge, and anything locked for a
- * different reason (missing enemy, exclusive-group conflict,
- * casual-disabled) gets no badge at all - the dimmed/grayscale card
- * styling alone communicates it's unavailable.
+ * Capped curses get a purple "OWNED" badge. Level-gated curses show
+ * their level whenever Show All Curses reveals them, even if another
+ * dependency is also unmet; otherwise only a pure level lock gets
+ * the level badge.
  */
 function getCurseLockBadgeInfo(curse) {
 
@@ -1353,9 +1369,14 @@ function getCurseLockBadgeInfo(curse) {
 
     }
 
-    if (isCurseLockedOnlyByLevel(curse)) {
+    const requiredLevel = getCurseUnlockLevel(curse);
+    const isBelowRequiredLevel = requiredLevel !== undefined && getLevel() < requiredLevel;
 
-        return { text: `Level ${getCurseUnlockLevel(curse)}`, className: "curse-lock-badge--level" };
+    if (isBelowRequiredLevel && (
+        curseVisibilityState.showAll || isCurseLockedOnlyByLevel(curse)
+    )) {
+
+        return { text: `Level ${requiredLevel}`, className: "curse-lock-badge--level" };
 
     }
 
@@ -1495,9 +1516,9 @@ function findUnmetEnemyRequirement(enemy) {
 
 
 /*
- * Base enemies (Baby, Husk, Guardian) can now be marked active more
- * than once - some dependencies (Husk Express, Voidbound Baby/
- * Guardian) need 2 of them active at the same time. Clicking cycles
+ * Base enemies (Baby and Husk) can now be marked active more than
+ * once - Husk Express and Voidbound Baby need 2 active at the same
+ * time. Clicking cycles
  * the stack up by one until it hits the enemy's maxStack, then
  * resets it back to 0. Enemies with no maxStack behave exactly as
  * before: a plain on/off toggle.
@@ -2170,15 +2191,37 @@ function createCurseCard(curse, isMedal = false) {
 
     }
 
-    if (curse.requiresCurses && curse.requiresCurses.length) {
+    const requiredCurses = curse.requiresCurses || [];
+    const anyRequiredCurses = curse.requiresAnyCurses || [];
+    const curseRequirements = [
+        ...requiredCurses.map(name => ({ name, title: `Requires ${name}` })),
+        ...anyRequiredCurses.map(name => ({
+            name,
+            title: `Requires ${anyRequiredCurses.join(" or ")}`
+        }))
+    ];
 
-        curse.requiresCurses.forEach(requiredCurse => {
+    curseRequirements.forEach((requirement, index) => {
 
-            card.appendChild(createCurseRequirementBadge(requiredCurse));
+        let position = "center";
 
-        });
+        if (dependentEnemy) {
 
-    }
+            position = "right";
+
+        } else if (curseRequirements.length > 1) {
+
+            position = index === 0 ? "left" : "right";
+
+        }
+
+        card.appendChild(createCurseRequirementBadge(
+            requirement.name,
+            requirement.title,
+            position
+        ));
+
+    });
 
     if (curse.max) {
 

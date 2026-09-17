@@ -85,7 +85,10 @@ const upgradesList = [
 
     {
         name: "Pocket Bell", price: 300, soloPrice: 300, level: 8, category: "movement",
-        requires: { type: "enemy", name: "Bell" }
+        requires: [
+            { type: "enemy", name: "Bell" },
+            { type: "upgrade", name: "Double Jump", stack: 1 }
+        ]
     },
 
     { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 5, category: "survival" },
@@ -104,7 +107,10 @@ const upgradesList = [
         name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment",
         requires: { type: "upgrade", name: "Radar", stack: 1 }
     },
-
+  {
+        name: "Radar Module : Players", price: 150, soloPrice: 150, level: 8, category: "environment",
+        requires: { type: "upgrade", name: "Radar", stack: 1 }
+    },
 
     { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
 
@@ -114,7 +120,8 @@ const upgradesList = [
         name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13,
         casualLevel: 15,
         maxStack: 2, category: "survival",
-        requires: { type: "upgrade", name: "Defuse Kit", stack: 3 }
+        requires: { type: "upgrade", name: "Defuse Kit", stack: 3 },
+        casualRequires: null
     },
 
     {
@@ -517,23 +524,52 @@ function isUpgradeLockedByLevel(item) {
 }
 
 
+/* Casual can replace an upgrade prerequisite entirely. Subspacial
+   Barrier is the current case: Defuse Kit is unavailable in Casual,
+   so the Standard/Extreme 3-stack requirement must not apply. */
+function getEffectiveUpgradeRequirement(item) {
+
+    const isCasual = (runState.difficulty || "Standard").toLowerCase() === "casual";
+
+    if (isCasual && Object.prototype.hasOwnProperty.call(item, "casualRequires")) {
+
+        return item.casualRequires;
+
+    }
+
+    return item.requires;
+
+}
+
+
 function isUpgradeRequirementMet(item) {
 
-    if (!item.requires) {
+    const requirements = getEffectiveUpgradeRequirement(item);
+
+    if (!requirements) {
 
         return true;
 
     }
 
-    if (item.requires.type === "upgrade") {
+    const requirementList = Array.isArray(requirements) ? requirements : [requirements];
 
-        return getOwnedStack(item.requires.name) >= (item.requires.stack || 1);
+    return requirementList.every(isSingleUpgradeRequirementMet);
+
+}
+
+
+function isSingleUpgradeRequirementMet(requirement) {
+
+    if (requirement.type === "upgrade") {
+
+        return getOwnedStack(requirement.name) >= (requirement.stack || 1);
 
     }
 
-    if (item.requires.type === "enemy") {
+    if (requirement.type === "enemy") {
 
-        return typeof hasEnemy === "function" && hasEnemy(item.requires.name);
+        return typeof hasEnemy === "function" && hasEnemy(requirement.name);
 
     }
 
@@ -1133,17 +1169,26 @@ function createUpgradeIcon(name) {
 
 function describeRequirement(requires) {
 
-    if (requires.type === "upgrade") {
+    const requirements = Array.isArray(requires) ? requires : [requires];
 
-        return requires.stack > 1
-            ? `Requires ${requires.stack}x ${requires.name}`
-            : `Requires ${requires.name}`;
+    return requirements.map(describeSingleRequirement).join(" and ");
+
+}
+
+
+function describeSingleRequirement(requirement) {
+
+    if (requirement.type === "upgrade") {
+
+        return requirement.stack > 1
+            ? `${requirement.stack}x ${requirement.name}`
+            : requirement.name;
 
     }
 
-    if (requires.type === "enemy") {
+    if (requirement.type === "enemy") {
 
-        return `Requires ${requires.name} active in the enemy pool`;
+        return `${requirement.name} active in the enemy pool`;
 
     }
 
@@ -1154,16 +1199,20 @@ function describeRequirement(requires) {
 
 function createRequirementChip(item) {
 
-    if (!item.requires) {
+    const requirements = getEffectiveUpgradeRequirement(item);
+
+    if (!requirements) {
 
         return null;
 
     }
 
+    const requirementList = Array.isArray(requirements) ? requirements : [requirements];
+
     const chip = document.createElement("div");
 
     chip.className = "upgrade-requirement-chip";
-    chip.title = describeRequirement(item.requires);
+    chip.title = `Requires ${describeRequirement(requirementList)}`;
 
     if (isUpgradeRequirementMet(item)) {
 
@@ -1178,73 +1227,59 @@ function createRequirementChip(item) {
 
     chip.appendChild(arrow);
 
+    const icons = document.createElement("div");
+
+    icons.className = "upgrade-requirement-icons";
+
+    requirementList.forEach(requirement => {
+
+        icons.appendChild(createRequirementIcon(requirement));
+
+    });
+
+    chip.appendChild(icons);
+
+    return chip;
+
+}
+
+
+function createRequirementIcon(requirement) {
+
     const icon = document.createElement("div");
 
     icon.className = "upgrade-requirement-icon";
 
-    if (item.requires.type === "upgrade") {
+    const placeholder = document.createElement("span");
 
-        const placeholder = document.createElement("span");
+    placeholder.className = "upgrade-icon-placeholder";
+    placeholder.textContent = requirement.name;
 
-        placeholder.className = "upgrade-icon-placeholder";
-        placeholder.textContent = item.requires.name;
+    icon.appendChild(placeholder);
 
-        icon.appendChild(placeholder);
+    const assetType = requirement.type === "enemy" ? "enemies" : "upgrades";
 
-        resolveAsset("upgrades", item.requires.name, path => {
+    resolveAsset(assetType, requirement.name, path => {
 
-            if (!path) {
+        if (!path) {
 
-                return;
+            return;
 
-            }
+        }
 
-            icon.innerHTML = "";
+        icon.innerHTML = "";
 
-            const img = document.createElement("img");
+        const img = document.createElement("img");
 
-            img.className = "upgrade-icon-image";
-            img.src = path;
-            img.alt = item.requires.name;
+        img.className = "upgrade-icon-image";
+        img.src = path;
+        img.alt = requirement.name;
 
-            icon.appendChild(img);
+        icon.appendChild(img);
 
-        });
+    });
 
-    } else if (item.requires.type === "enemy") {
-
-        const placeholder = document.createElement("span");
-
-        placeholder.className = "upgrade-icon-placeholder";
-        placeholder.textContent = item.requires.name;
-
-        icon.appendChild(placeholder);
-
-        resolveAsset("enemies", item.requires.name, path => {
-
-            if (!path) {
-
-                return;
-
-            }
-
-            icon.innerHTML = "";
-
-            const img = document.createElement("img");
-
-            img.className = "upgrade-icon-image";
-            img.src = path;
-            img.alt = item.requires.name;
-
-            icon.appendChild(img);
-
-        });
-
-    }
-
-    chip.appendChild(icon);
-
-    return chip;
+    return icon;
 
 }
 
@@ -2322,6 +2357,7 @@ const upgradePanel = document.getElementById("upgradePanel");
 // Upgrades.css). Both sections share that same class, so a single
 // querySelectorAll toggles them together.
 const upgradePanelOnlySections = document.querySelectorAll(".upgrade-panel-only-section");
+const upgradeBackButton = document.getElementById("upgradeBackButton");
 
 // Active Enemies is the inverse case - normally shown in the left
 // panel, but only relevant to the curse tracker, so it hides
@@ -2411,6 +2447,16 @@ if (upgradeToggleButton && upgradePanel) {
         setUpgradePanelOpen(!upgradePanel.classList.contains("open"));
 
     });
+
+}
+
+if (upgradeBackButton) {
+
+    attachClickAction(upgradeBackButton, () => {
+
+        setUpgradePanelOpen(false);
+
+    }, playUtilitySound);
 
 }
 

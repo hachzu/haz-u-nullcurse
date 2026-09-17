@@ -19,6 +19,7 @@
 
 const altarsToggleButton = document.getElementById("altarsToggleButton");
 const altarsPanel = document.getElementById("altarsPanel");
+const altarsBackButton = document.getElementById("altarsBackButton");
 
 
 function setAltarsPanelOpen(isOpen) {
@@ -95,6 +96,16 @@ if (altarsToggleButton && altarsPanel) {
         setAltarsPanelOpen(!altarsPanel.classList.contains("open"));
 
     });
+
+}
+
+if (altarsBackButton) {
+
+    attachClickAction(altarsBackButton, () => {
+
+        setAltarsPanelOpen(false);
+
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
 
 }
 

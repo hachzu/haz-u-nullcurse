@@ -362,6 +362,10 @@
     --lp-text: #cccccc;
     --lp-text-dim: #777777;
     --lp-hover-bg: #262626;
+    --lp-surface: #1c1c1c;
+    --lp-surface-hover: #303030;
+    --lp-selected-a: #333333;
+    --lp-selected-b: #777777;
 
     border-right-color: rgba(255, 255, 255, 0.5);
     box-shadow: inset -1px 0 26px rgba(255, 255, 255, 0.16);

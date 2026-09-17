@@ -2617,6 +2617,7 @@ if (lobbyResetButton) {
 
 const lobbyToggleButton = document.getElementById("lobbyToggleButton");
 const lobbyPanel = document.getElementById("lobbyPanel");
+const lobbyBackButton = document.getElementById("lobbyBackButton");
 
 function setLobbyPanelOpen(isOpen) {
 
@@ -2674,6 +2675,16 @@ if (lobbyToggleButton && lobbyPanel) {
         setLobbyPanelOpen(!lobbyPanel.classList.contains("open"));
 
     });
+
+}
+
+if (lobbyBackButton) {
+
+    attachClickAction(lobbyBackButton, () => {
+
+        setLobbyPanelOpen(false);
+
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
 
 }
 

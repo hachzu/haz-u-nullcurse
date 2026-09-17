@@ -326,6 +326,7 @@ function resetDeaths() {
 
 const deathToggleButton = document.getElementById("deathToggleButton");
 const deathPanel = document.getElementById("deathPanel");
+const deathBackButton = document.getElementById("deathBackButton");
 
 function setDeathPanelOpen(isOpen) {
 
@@ -371,6 +372,12 @@ if (deathToggleButton && deathPanel) {
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
         setDeathPanelOpen(!deathPanel.classList.contains("open"));
     });
+}
+
+if (deathBackButton) {
+    attachClickAction(deathBackButton, () => {
+        setDeathPanelOpen(false);
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
 }
 
 const deathResetButton = document.getElementById("deathResetButton");

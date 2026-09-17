@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contributors · Nullscape Toolkits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="../assets/upgrades/Badge.png">
+    <style>
+        :root {
+            color-scheme: dark;
+            --violet: #d59bff;
+            --violet-deep: #6a1fd0;
+            --ink: #0b0314;
+            --card: rgba(25, 8, 43, 0.78);
+            --line: rgba(213, 155, 255, 0.28);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(135, 53, 203, 0.28), transparent 32rem),
+                radial-gradient(circle at 90% 85%, rgba(209, 102, 255, 0.16), transparent 26rem),
+                var(--ink);
+            color: #f3eaff;
+            font-family: "Space Grotesk", Arial, sans-serif;
+        }
+
+        main {
+            width: min(720px, calc(100% - 32px));
+            padding: 46px 0;
+            animation: page-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            color: #bc9edb;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            transition: color 0.15s, transform 0.15s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+            transform: translateX(-3px);
+        }
+
+        .card {
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(47, 15, 78, 0.88), var(--card));
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.42), 0 0 44px rgba(159, 64, 229, 0.12);
+        }
+
+        .card-header {
+            padding: 38px 38px 30px;
+            border-bottom: 1px solid var(--line);
+            text-align: center;
+            animation: section-enter 0.65s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--violet);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(30px, 7vw, 52px);
+            letter-spacing: -0.045em;
+            line-height: 1;
+        }
+
+        .intro {
+            max-width: 510px;
+            margin: 16px auto 0;
+            color: #c9b6dc;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .list-section {
+            padding: 28px 38px 38px;
+            animation: section-enter 0.65s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        h2 {
+            margin: 0 0 15px;
+            color: #eadcff;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .contributor-list {
+            column-count: 3;
+            column-gap: 28px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .contributor {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            break-inside: avoid;
+            padding: 5px 0;
+            min-width: 0;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: contributor-enter 0.48s 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .contributor::before {
+            content: "•";
+            color: var(--violet);
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .contributor-name {
+            background: linear-gradient(90deg, #f4ddff 0%, #a759dd 25%, #e9c7ff 50%, #8b4fcb 75%, #f4ddff 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            flex: 0 1 auto;
+            min-width: 0;
+            animation: contributor-name-gradient 3.5s linear infinite;
+        }
+
+        .contributor-handle {
+            flex: 0 1 auto;
+            min-width: 0;
+            white-space: nowrap;
+        }
+
+        .contributor-handle {
+            color: #bba1d2;
+            font-size: 11px;
+            font-weight: 500;
+            overflow-wrap: anywhere;
+        }
+
+        .footer-note {
+            margin: 18px 0 0;
+            color: #8e739f;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        @keyframes page-enter {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes section-enter {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes contributor-enter {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes contributor-name-gradient {
+            from { background-position: 0% 50%; }
+            to { background-position: 200% 50%; }
+        }
+
+        @media (max-width: 620px) {
+            .contributor-list { column-count: 2; }
+        }
+
+        @media (max-width: 420px) {
+            .card-header, .list-section { padding-left: 22px; padding-right: 22px; }
+            .contributor-list { column-count: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="back-link" href="../Toolkits.html">&larr; Back to Toolkits</a>
+
+        <article class="card">
+            <header class="card-header">
+                <p class="eyebrow">Nullscape Toolkits</p>
+                <h1>THANK YOU!</h1>
+                <p class="intro">thank you to the people here to gave their own contribution, i love u guys this wouldn&#39;t be so cool without your feedback.</p>
+            </header>
+
+            <section class="list-section" aria-labelledby="contributorHeading">
+                <h2 id="contributorHeading">A huge thank-you to</h2>
+                <ul class="contributor-list">
+                    <li class="contributor" style="--order: 0"><span class="contributor-name">shu</span><span class="contributor-handle">@extrafair</span></li>
+                    <li class="contributor" style="--order: 1"><span class="contributor-name">Cadence_Lylac</span><span class="contributor-handle">@lylaclurker</span></li>
+                    <li class="contributor" style="--order: 2"><span class="contributor-name">BUBBA</span><span class="contributor-handle">@zenbooda1</span></li>
+                    <li class="contributor" style="--order: 3"><span class="contributor-name">Flowers</span><span class="contributor-handle">@restingfields</span></li>
+                    <li class="contributor" style="--order: 4"><span class="contributor-name">Zero</span><span class="contributor-handle">@zerokung</span></li>
+                    <li class="contributor" style="--order: 5"><span class="contributor-name">Rik</span><span class="contributor-handle">@___rik___</span></li>
+                    <li class="contributor" style="--order: 6"><span class="contributor-name">Craft</span><span class="contributor-handle">@xcrxft</span></li>
+                    <li class="contributor" style="--order: 7"><span class="contributor-name">Papyrus</span><span class="contributor-handle">@verycoolskeleton360</span></li>
+                    <li class="contributor" style="--order: 8"><span class="contributor-name">C_C</span><span class="contributor-handle">@TQWESA</span></li>
+                    <li class="contributor" style="--order: 9"><span class="contributor-name">Lazey</span><span class="contributor-handle">@lazeyy</span></li>
+                    <li class="contributor" style="--order: 10"><span class="contributor-name">yinyue</span><span class="contributor-handle">@yinyue_ins</span></li>
+                    <li class="contributor" style="--order: 11"><span class="contributor-name">Posal</span><span class="contributor-handle">@thisposal</span></li>
+                    <li class="contributor" style="--order: 12"><span class="contributor-name">wanwanoh</span><span class="contributor-handle">@inugami0112</span></li>
+                    <li class="contributor" style="--order: 13"><span class="contributor-name">popgana</span><span class="contributor-handle">@popgana</span></li>
+                    <li class="contributor" style="--order: 14"><span class="contributor-name">Tomtoe</span><span class="contributor-handle">@kokoa.milk</span></li>
+                    <li class="contributor" style="--order: 15"><span class="contributor-name">Schwnee</span><span class="contributor-handle">@schwnee</span></li>
+                    <li class="contributor" style="--order: 16"><span class="contributor-name">andrixter1</span><span class="contributor-handle">@andrixter</span></li>
+                    <li class="contributor" style="--order: 17"><span class="contributor-name">Koharu</span><span class="contributor-handle">@how7777.</span></li>
+                    <li class="contributor" style="--order: 18"><span class="contributor-name">empty</span><span class="contributor-handle">@empty69696969</span></li>
+                    <li class="contributor" style="--order: 19"><span class="contributor-name">chocomint</span><span class="contributor-handle">@flmdsfr</span></li>
+                    <li class="contributor" style="--order: 20"><span class="contributor-name">Haz</span><span class="contributor-handle">@hazcazdaz</span></li>
+                    <li class="contributor" style="--order: 21"><span class="contributor-name">doomedmedal93</span><span class="contributor-handle">@doomedmedal93</span></li>
+                    <li class="contributor" style="--order: 22"><span class="contributor-name">flandre</span><span class="contributor-handle">@xailty0</span></li>
+                    <li class="contributor" style="--order: 23"><span class="contributor-name">cris</span><span class="contributor-handle">@crisxd123</span></li>
+                    <li class="contributor" style="--order: 24"><span class="contributor-name">fvneralmoon</span><span class="contributor-handle">@dis_figurement</span></li>
+                    <li class="contributor" style="--order: 25"><span class="contributor-name">Phixl</span><span class="contributor-handle">@realpixelfreze</span></li>
+                </ul>
+                <p class="footer-note">Every test, suggestion, and kind word helped bring this toolkit awesome. Thank you! 💜</p>
+            </section>
+        </article>
+    </main>
+</body>
+</html>

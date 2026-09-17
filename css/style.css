@@ -120,6 +120,30 @@ body {
     initial-value: #2a1145;
 }
 
+@property --lp-surface {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #14061f;
+}
+
+@property --lp-surface-hover {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #20103a;
+}
+
+@property --lp-selected-a {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #4a1c85;
+}
+
+@property --lp-selected-b {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #7a2fc4;
+}
+
 
 .left-panel {
     padding: 26px;
@@ -134,6 +158,10 @@ body {
     --lp-text: #9a7cc9;
     --lp-text-dim: #5c4880;
     --lp-hover-bg: #2a1145;
+    --lp-surface: #14061f;
+    --lp-surface-hover: #20103a;
+    --lp-selected-a: #4a1c85;
+    --lp-selected-b: #7a2fc4;
 
     background: linear-gradient(180deg, var(--left-panel-grad-a) 0%, var(--left-panel-grad-b) 100%);
 
@@ -153,7 +181,11 @@ body {
         --lp-bright 0.45s ease,
         --lp-text 0.45s ease,
         --lp-text-dim 0.45s ease,
-        --lp-hover-bg 0.45s ease;
+        --lp-hover-bg 0.45s ease,
+        --lp-surface 0.45s ease,
+        --lp-surface-hover 0.45s ease,
+        --lp-selected-a 0.45s ease,
+        --lp-selected-b 0.45s ease;
 }
 
 
@@ -170,6 +202,10 @@ body {
     --lp-text: #8fd9ff;
     --lp-text-dim: #4a7a91;
     --lp-hover-bg: #0a2440;
+    --lp-surface: #061a29;
+    --lp-surface-hover: #0b3047;
+    --lp-selected-a: #0d3a52;
+    --lp-selected-b: #2f8fc2;
 
     border-right-color: rgba(143, 217, 255, 0.55);
     box-shadow: inset -1px 0 26px rgba(143, 217, 255, 0.16);
@@ -189,6 +225,10 @@ body {
     --lp-text: #e0a3a3;
     --lp-text-dim: #8a5c5c;
     --lp-hover-bg: #3a0a0a;
+    --lp-surface: #260909;
+    --lp-surface-hover: #461010;
+    --lp-selected-a: #5c0a0a;
+    --lp-selected-b: #c23a3a;
 
     border-right-color: rgba(255, 157, 157, 0.55);
     box-shadow: inset -1px 0 26px rgba(174, 19, 19, 0.18);
@@ -208,11 +248,11 @@ body {
 
     padding: 5px 10px;
 
-    background: rgba(184, 102, 255, 0.08);
+    background: color-mix(in srgb, var(--lp-surface, #14061f) 90%, var(--lp-bright, #d59bff) 10%);
     border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 999px;
 
-    color: #b6a3dd;
+    color: var(--lp-text, #9a7cc9);
     font-size: 10px;
     font-weight: 700;
 }
@@ -240,7 +280,7 @@ body {
     flex-direction: column;
     gap: 4px;
 
-    background: #14061f;
+    background: var(--lp-surface, #14061f);
 
     border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 8px;
@@ -258,7 +298,7 @@ body {
 .live-viewer-list-item {
     padding: 4px 6px;
 
-    background: rgba(184, 102, 255, 0.08);
+    background: color-mix(in srgb, var(--lp-surface, #14061f) 90%, var(--lp-bright, #d59bff) 10%);
     border-radius: 4px;
 
     color: #e8dcff;
@@ -472,12 +512,12 @@ body {
     align-items: center;
     justify-content: center;
 
-    background: rgba(184, 102, 255, 0.08);
+    background: color-mix(in srgb, var(--lp-surface, #14061f) 90%, var(--lp-bright, #d59bff) 10%);
 
     border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 50%;
 
-    color: #b6a3dd;
+    color: var(--lp-text, #9a7cc9);
 
     font-size: 14px;
     line-height: 1;
@@ -581,7 +621,7 @@ body {
 
     padding: 14px 15px;
 
-    background: #14061f;
+    background: var(--lp-surface, #14061f);
 
     border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 8px;
@@ -806,12 +846,12 @@ body {
 
     padding: 10px;
 
-    background: #150826;
+    background: var(--lp-surface, #14061f);
 
     border: 1px solid var(--lp-dim, #3a1a5c);
     border-radius: 8px;
 
-    color: #b6a3dd;
+    color: var(--lp-text, #9a7cc9);
 
     text-align: center;
 
@@ -854,7 +894,7 @@ body {
 
 
 .select-button.enemy-button--locked:hover {
-    background: #150826;
+    background: var(--lp-surface, #14061f);
 
     border-color: rgba(174, 19, 19, 0.4);
     box-shadow: none;
@@ -863,8 +903,8 @@ body {
 }
 
 
-/* Small readout for enemies that can be marked active twice (Baby,
-   Husk, Guardian), showing the current stack against its cap. */
+/* Small readout for enemies that can be marked active twice (Baby
+   and Husk), showing the current stack against its cap. */
 .enemy-stack-badge {
     position: absolute;
     right: 2px;
@@ -928,7 +968,7 @@ body {
 
 
 .select-button:hover {
-    background: #20103a;
+    background: var(--lp-surface-hover, #20103a);
 
     border-color: var(--lp-mid, #9147d6);
 
@@ -940,13 +980,13 @@ body {
 
 
 .select-button.selected {
-    background: linear-gradient(135deg, #4a1c85, #7a2fc4);
+    background: linear-gradient(135deg, var(--lp-selected-a, #4a1c85), var(--lp-selected-b, #7a2fc4));
 
-    border-color: #d59bff;
+    border-color: var(--lp-bright, #d59bff);
 
     color: #ffffff;
 
-    box-shadow: 0 0 18px rgba(180, 90, 255, 0.4);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--lp-mid, #9147d6) 45%, transparent);
 }
 
 
@@ -1022,7 +1062,7 @@ body {
 
     padding: 10px 34px 10px 12px;
 
-    background: #14061f;
+    background: var(--lp-surface, #14061f);
 
     border: 1px solid var(--lp-dim, #3a1a5c);
     border-radius: 8px;
@@ -1809,13 +1849,70 @@ body {
 }
 
 
+.data-source-note .contributors-link {
+    display: block;
+
+    margin-top: 5px;
+}
+
+
+/* Compact close control shared by each sliding toolkit panel. It is
+   first in every panel header, placing it at the top-left while the
+   accessible label makes the arrow's action explicit. */
+.toolkit-panel-back {
+    flex: 0 0 auto;
+
+    width: 28px;
+    height: 28px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 7px;
+
+    color: #ffffff;
+
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+
+.toolkit-panel-back:hover {
+    background: rgba(255, 255, 255, 0.17);
+
+    border-color: rgba(255, 255, 255, 0.75);
+
+    transform: translateX(-2px);
+}
+
+
+.toolkit-panel-back:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+
 /* A violet dependency icon for curses that need another curse, such
-   as Burning Bouquet requiring Razorbloom. It sits beside the enemy
-   badge instead of replacing it, so both requirements are visible. */
+   as Burning Bouquet requiring Razorbloom. It is centered by
+   default, then shifted only when it needs to share space with an
+   enemy or another curse dependency badge. */
 .curse-requirement-badge {
     position: absolute;
     top: -13px;
-    left: 72%;
+    left: 50%;
+
+    transform: translateX(-50%);
 
     z-index: 2;
 
@@ -1828,6 +1925,16 @@ body {
     border-radius: 50%;
 
     box-shadow: 0 3px 8px rgba(106, 31, 208, 0.45);
+}
+
+
+.curse-requirement-badge--left {
+    left: 32%;
+}
+
+
+.curse-requirement-badge--right {
+    left: 72%;
 }
 
 
@@ -1861,8 +1968,8 @@ body {
 
 
 /* Overlay showing how many of that enemy are required, for
-   dependencies asking for more than 1 (Husk Express, Voidbound
-   Baby/Guardian). Sits directly on .curse-enemy-badge (outside the
+   dependencies asking for more than 1 (Husk Express and Voidbound
+   Baby). Sits directly on .curse-enemy-badge (outside the
    .curse-enemy-badge-inner circular mask - see above) so it's never
    clipped off. */
 .curse-enemy-badge-count {
@@ -2159,15 +2266,16 @@ body {
 }
 
 
-/* Blocked purely by level - red palette. */
+/* Level requirement - a light-to-purple palette that remains clear
+   on dimmed, Show All Curses cards. */
 .curse-lock-badge--level {
-    background: linear-gradient(135deg, #ff9d9d, #ae1313);
+    background: linear-gradient(135deg, #f3d7ff, #8b4fcb);
 
-    border: 1px solid rgba(255, 157, 157, 0.7);
+    border: 1px solid rgba(238, 198, 255, 0.9);
 
-    color: #fff0f0;
+    color: #ffffff;
 
-    box-shadow: 0 3px 8px rgba(174, 19, 19, 0.45);
+    box-shadow: 0 3px 8px rgba(146, 80, 207, 0.55);
 }
 
 
@@ -2449,33 +2557,57 @@ body {
 }
 
 
-/* .curse-card.medal already gives the dedicated Medal Curses
-   section its cyan/pink highlight. These extra rules make sure a
-   medal curse picks up that exact same look wherever else it might
-   render (Global/Enemy Curses, once Hide Medal Curses promotes it
-   there - see renderPool in script.js), instead of losing to that
-   container's own border theming or reverting to it on hover.
-   #enemyCurseContainer needs the ID-scoped override specifically -
-   its own border-color rules are ID+class specificity, which beats
-   the plain .curse-card.medal rule on its own. */
-.curse-card.medal:hover {
-    background: linear-gradient(160deg, #002738 0%, #380726 100%);
+/* The dedicated Medal Curses section keeps its cyan/pink treatment.
+   When that section is hidden, medal cards are promoted back into
+   their source pool instead, so their card and reward styling use
+   that pool's theme: purple for Global and red for Enemy. */
+#globalCurseContainer .curse-card.medal {
+    background: linear-gradient(160deg, #25103f 0%, #11051e 100%);
 
-    border-color: #00c8ff;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3), 0 0 14px rgba(255, 92, 200, 0.28);
+    border-color: #d59bff;
+    box-shadow: 0 0 14px rgba(184, 102, 255, 0.36);
 }
 
 
-#enemyCurseContainer .curse-card.medal,
+#globalCurseContainer .curse-card.medal:hover {
+    background: linear-gradient(160deg, #3a1761 0%, #18082a 100%);
+
+    border-color: #efd6ff;
+    box-shadow: 0 0 22px rgba(213, 155, 255, 0.46);
+}
+
+
+#globalCurseContainer .curse-card.medal .curse-reward-badge {
+    background: linear-gradient(135deg, #f0d5ff, #8b4fcb);
+
+    border-color: rgba(238, 198, 255, 0.85);
+
+    box-shadow: 0 3px 8px rgba(146, 80, 207, 0.5);
+}
+
+
+#enemyCurseContainer .curse-card.medal {
+    background: linear-gradient(160deg, #351010 0%, #170606 100%);
+
+    border-color: #ff9d9d;
+    box-shadow: 0 0 14px rgba(255, 92, 92, 0.36);
+}
+
+
 #enemyCurseContainer .curse-card.medal:hover {
-    border-color: #00c8ff;
-    box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(255, 92, 200, 0.22);
+    background: linear-gradient(160deg, #551717 0%, #220707 100%);
+
+    border-color: #ffd0d0;
+    box-shadow: 0 0 22px rgba(255, 157, 157, 0.46);
 }
 
 
-#globalCurseContainer .curse-card.medal .curse-name-label,
-#enemyCurseContainer .curse-card.medal .curse-name-label {
-    color: #8fd9ff;
+#enemyCurseContainer .curse-card.medal .curse-reward-badge {
+    background: linear-gradient(135deg, #ffd0d0, #b52b3e);
+
+    border-color: rgba(255, 208, 208, 0.85);
+
+    box-shadow: 0 3px 8px rgba(190, 39, 57, 0.5);
 }
 
 
