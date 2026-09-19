@@ -671,12 +671,70 @@ function getPendingStack(name) {
 }
 
 
+/*
+ * Cost of moving an upgrade's stack from `fromStack` to `toStack`.
+ *
+ * Linear items (flat "price"/"soloPrice") scale evenly, so a plain
+ * diff of the two cumulative totals is already correct - each stack
+ * costs the same unit price regardless of how many came before it.
+ *
+ * Per-tier table items (Business License, Gift Magnet, Gift Idol,
+ * Subspacial Barrier) are different: computeStackPrice(item, N) for
+ * these already resolves to that one tier's own table entry, scaled -
+ * it was never a running sum (see computeBaseForStack). So the price
+ * of buying up to tier N is just that tier's own price, not "tier N's
+ * price minus tier N-1's price." Subtracting the owned tier's price
+ * here would double-apply the elevator pricing and undercharge every
+ * stack past the first (e.g. Business License's real 2nd-stack price
+ * of ~188 was showing as ~113 because the 1st stack's 75 was being
+ * subtracted off it). Buying/selling several tiers at once sums each
+ * individual tier's own price instead of just diffing the endpoints.
+ */
+function getIncrementalCost(item, fromStack, toStack) {
+
+    if (toStack === fromStack) {
+
+        return 0;
+
+    }
+
+    if (!hasVariablePricing(item)) {
+
+        return computeStackPrice(item, toStack) - computeStackPrice(item, fromStack);
+
+    }
+
+    let total = 0;
+
+    if (toStack > fromStack) {
+
+        for (let stack = fromStack + 1; stack <= toStack; stack++) {
+
+            total += computeStackPrice(item, stack);
+
+        }
+
+    } else {
+
+        for (let stack = toStack + 1; stack <= fromStack; stack++) {
+
+            total -= computeStackPrice(item, stack);
+
+        }
+
+    }
+
+    return total;
+
+}
+
+
 function getUpgradePendingCost(item) {
 
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
 
-    return computeStackPrice(item, pending) - computeStackPrice(item, owned);
+    return getIncrementalCost(item, owned, pending);
 
 }
 
@@ -825,8 +883,8 @@ function setStackTarget(item, targetStack) {
 
     if (upgradeState.progressive) {
 
-        const oldPendingCost = computeStackPrice(item, pending) - computeStackPrice(item, owned);
-        const newTargetCost = computeStackPrice(item, target) - computeStackPrice(item, owned);
+        const oldPendingCost = getIncrementalCost(item, owned, pending);
+        const newTargetCost = getIncrementalCost(item, owned, target);
         const remaining = computeRemainingGifts();
 
         if ((newTargetCost - oldPendingCost) > remaining) {
@@ -1284,11 +1342,14 @@ function createRequirementIcon(requirement) {
 
 /*
  * Up/down stepper shown on rows that aren't fully owned yet - the
- * "unowned" stacks. Up queues one more pending stack (mirrors a row
- * click); down cancels a pending stack back toward what's actually
- * owned. It never un-owns an already-purchased stack itself - that's
- * the single "-" button's job once a row is fully owned and sitting
- * in the OWNED UPGRADES basin. Works the same for linear and
+ * "unowned" stacks still left to buy, whether the row currently owns
+ * 0 of them or is sitting partway through with some already owned
+ * (and already in the OWNED UPGRADES basin - see renderUpgradeGrid's
+ * `owned > 0` routing). Up queues one more pending stack (mirrors a
+ * row click); down cancels a pending stack back toward what's
+ * actually owned. It never un-owns an already-purchased stack itself
+ * - that's the separate "-" button's job, which appears alongside
+ * this stepper any time owned > 0. Works the same for linear and
  * per-tier-priced items alike, since setStackTarget/computeStackPrice
  * already resolve either correctly - each arrow press on a
  * variable-priced item steps one tier "elevator style," pricing off
@@ -1403,7 +1464,7 @@ function createUpgradeCard(item) {
         : owned;
 
     const nextTierCost = (!locked && !isFullyOwned)
-        ? computeStackPrice(item, priceTargetStack) - computeStackPrice(item, owned)
+        ? getIncrementalCost(item, owned, priceTargetStack)
         : 0;
 
     // A free stack (nextTierCost <= 0, e.g. Paycheck's first stack in
@@ -1597,41 +1658,42 @@ function createUpgradeCard(item) {
     // once there were 5 categories sharing the panel instead of 4.
     info.appendChild(badge);
 
-    // Active (not-yet-fully-owned) rows get the up/down stepper, but
-    // only when the upgrade actually stacks (maxStack > 1) - a
-    // one-off upgrade has nothing to step through, so it keeps the
-    // plain row-click buy behavior with no arrows at all. Once a row
-    // is fully owned it moves into the OWNED UPGRADES basin and
-    // switches to the single un-own "-" button instead, for
-    // correcting an already-purchased stack.
-    if (!isFullyOwned) {
+    // Owning even one stack moves the row into the OWNED UPGRADES
+    // basin (see renderUpgradeGrid's `owned > 0` routing) - not just
+    // once every stack up to maxStack is owned. A partially-owned,
+    // still-stackable upgrade (e.g. 2/5 Gift Idol) keeps its up/down
+    // stepper there so more can still be queued, and also gets the
+    // "-" un-own button below so a single owned stack can be peeled
+    // off and put back in the shop without touching what's pending.
+    // Once every stack is owned there's nothing left to buy, so the
+    // stepper drops away and only the "-" button remains.
+    if (!isFullyOwned && maxStack > 1) {
 
-        if (maxStack > 1) {
+        row.appendChild(createStackStepper(item, locked));
 
-            row.appendChild(createStackStepper(item, locked));
+    }
 
-        }
-
-    } else {
+    if (owned > 0) {
 
         const unownButton = document.createElement("button");
 
         unownButton.type = "button";
         unownButton.className = "upgrade-unown-button";
-        unownButton.setAttribute("aria-label", `Un-own ${item.name}`);
-        unownButton.title = `Un-own ${item.name}`;
+        unownButton.setAttribute("aria-label", `Un-own one ${item.name} stack`);
+        unownButton.title = "Put one owned stack back in the shop";
         unownButton.textContent = "\u2212";
 
         unownButton.addEventListener("click", event => {
 
             event.stopPropagation();
 
-            // Removing from the OWNED UPGRADES basin clears the whole
-            // stack back to 0 rather than peeling off one at a time -
-            // the stepper (while it was still active/unowned) is where
-            // stack count gets fine-tuned; this button is just "take
-            // it off the owned board."
-            setStackTarget(item, 0);
+            // Peels off one stack at a time rather than clearing the
+            // whole thing at once - each click puts a single stack
+            // back in the shop. Once owned reaches 0 the row leaves
+            // the OWNED UPGRADES basin entirely, so repeated clicks
+            // naturally unwind a multi-stack upgrade one tier per
+            // click.
+            setStackTarget(item, owned - 1);
 
         });
 
@@ -1776,7 +1838,7 @@ function renderUpgradeGrid() {
 
             }
 
-            if (owned >= maxStack) {
+            if (owned > 0) {
 
                 ownedRows.push(row);
 
