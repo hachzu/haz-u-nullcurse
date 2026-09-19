@@ -548,6 +548,35 @@
 }
 
 
+.upgrade-freeform-sort-button {
+    border-color: rgba(196, 158, 255, 0.45);
+
+    color: #c49eff;
+}
+
+
+.upgrade-freeform-sort-button:hover {
+    background: rgba(196, 158, 255, 0.14);
+
+    border-color: #c49eff;
+
+    color: #ffffff;
+
+    box-shadow: 0 0 18px rgba(196, 158, 255, 0.4);
+}
+
+
+.upgrade-freeform-sort-button.active {
+    background: rgba(196, 158, 255, 0.22);
+
+    border-color: #c49eff;
+
+    color: #1c1330;
+
+    box-shadow: 0 0 18px rgba(196, 158, 255, 0.55);
+}
+
+
 
 /* ---- Golden Gifts + purchase controls ---- */
 
@@ -702,9 +731,84 @@
 }
 
 
+/* Progressive's own slot additionally wraps, so the sub-toggle row
+   (Allow Debt / Hide Locked) can drop onto its own line below the
+   main switch + level badge instead of squeezing the row wider. */
+.upgrade-progressive-header-slot {
+    flex-wrap: wrap;
+}
+
+
 .upgrade-toggle-block-label {
     margin-bottom: 0;
     white-space: nowrap;
+}
+
+
+/* Allow Debt / Hide Locked - the two Progressive sub-toggles. Forced
+   onto their own full-width line under the main Progressive switch
+   via flex-basis: 100% (the parent's flex-wrap is what makes that
+   line break possible), separated by a thin divider so they read as
+   nested under Progressive rather than a third independent control. */
+.upgrade-progressive-subtoggles {
+    display: flex;
+
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+
+    margin-top: 6px;
+    padding-top: 6px;
+
+    border-top: 1px dashed rgba(143, 217, 255, 0.25);
+}
+
+
+.upgrade-progressive-subtoggle-row {
+    display: flex;
+
+    align-items: center;
+    gap: 6px;
+}
+
+
+.upgrade-control-label--sub {
+    margin-bottom: 0;
+
+    opacity: 0.8;
+    font-size: 9px;
+}
+
+
+/* Scaled-down variant of the shared .upgrade-switch shape (see above)
+   for the two Progressive sub-toggles, which sit visually "inside"
+   Progressive rather than standing as their own top-level control. */
+.upgrade-switch--sub {
+    padding: 4px 9px;
+    gap: 6px;
+}
+
+
+.upgrade-switch--sub .upgrade-switch-track {
+    width: 24px;
+    height: 14px;
+}
+
+
+.upgrade-switch--sub .upgrade-switch-thumb {
+    width: 10px;
+    height: 10px;
+}
+
+
+.upgrade-switch--sub.active .upgrade-switch-thumb {
+    transform: translateX(10px);
+}
+
+
+.upgrade-switch--sub .upgrade-switch-label {
+    font-size: 8px;
 }
 
 
@@ -1245,6 +1349,34 @@
 }
 
 
+/* Freeform Sort: category columns collapse into a single flat
+   5-column grid (no per-category headings, no dividers) ordered by
+   level instead - see buildFreeformUpgradeGrid in Upgrades.js.
+   Normal .upgrade-grid rows are subgrid children of a 5-column
+   parent (level|icon|name+price|stack|unown) that spans the full
+   category column width - that only works when there's exactly one
+   card per grid row. Freeform packs 5 cards per row instead, so each
+   .upgrade-row here carries its own 5-column template directly
+   (overriding the subgrid/full-span rules) and occupies a single
+   cell rather than spanning the parent. */
+.upgrade-categories--freeform {
+    display: block;
+}
+
+
+.upgrade-grid--freeform {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    column-gap: 10px;
+}
+
+
+.upgrade-grid--freeform .upgrade-row {
+    grid-column: auto;
+    grid-template-columns: 18px 30px minmax(0, 1fr) 36px 16px;
+}
+
+
 .upgrade-category-heading--owned {
     color: #7be6a8;
 
@@ -1726,6 +1858,22 @@
 }
 
 
+/* Nested placement (see createStackStepper in Upgrades.js) - sits
+   inline between the up/down arrows inside the stepper's own narrow
+   column instead of claiming a grid column of its own, so a
+   partially-owned, still-buyable row never has to grow a second
+   implicit row to fit both controls. Sized down slightly from the
+   standalone version to match the arrows it sits between. */
+.upgrade-unown-button--inline {
+    grid-column: unset;
+
+    width: 14px;
+    height: 12px;
+
+    font-size: 10px;
+}
+
+
 /* Requirement / prerequisite chip - a small badge pinned to the
    card's top-left corner, sitting slightly outside the row's own
    border rather than sharing a grid cell with the level text, so it
@@ -1998,6 +2146,43 @@
     height: 20px;
 
     font-size: 14px;
+}
+
+
+/* Nested placement (see .upgrade-unown-button--inline above) stays
+   sized to the stepper's own (also enlarged) arrows here, rather
+   than inheriting the larger standalone icon-mode size above. */
+.upgrade-panel.icon-mode .upgrade-unown-button--inline {
+    width: 18px;
+    height: 18px;
+
+    font-size: 12px;
+}
+
+
+/* Freeform Sort + Icon Mode together: the base icon-mode rules above
+   assume .upgrade-grid lives inside a narrow ~200px category column,
+   so their 2-column layout and 70%-width icon scale to that. In
+   Freeform the grid instead spans the whole panel, so that same
+   2-column/70% math blows the icons up huge. These overrides (same
+   selectors, just scoped under .upgrade-categories--freeform so they
+   win via source order) pack more, smaller tiles into that width
+   instead. */
+.upgrade-panel.icon-mode .upgrade-categories--freeform .upgrade-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+
+    row-gap: 22px;
+    column-gap: 12px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-categories--freeform .upgrade-row {
+    padding: 10px 6px;
+}
+
+
+.upgrade-panel.icon-mode .upgrade-categories--freeform .upgrade-icon {
+    width: 46px;
 }
 
 

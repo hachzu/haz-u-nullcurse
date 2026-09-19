@@ -194,11 +194,32 @@ const upgradeState = {
     // purchase - see getNextShopLevel().
     progressive: false,
 
+    // Progressive sub-toggles - both only take effect while
+    // Progressive itself is on, and both default off so Progressive
+    // behaves exactly as before unless explicitly opted into further.
+    //
+    // Allow Debt: lets purchases go through in Progressive mode even
+    // without enough Golden Gifts (balance can go negative), same
+    // affordability-free behavior Progressive-off already has -
+    // level/dependency gating still applies as normal.
+    progressiveAllowDebt: false,
+
+    // Hide Locked: upgrades below the current run level disappear
+    // from the grid entirely instead of showing greyed-out/locked.
+    progressiveHideLocked: false,
+
     // Icon Mode: off by default. On strips names/level text from
     // every upgrade row down to just the icon (see .icon-mode in
     // Upgrades.css) for a quicker visual scan - full details move
     // into each row's title tooltip instead of disappearing.
     iconMode: false,
+
+    // Freeform Sort: off by default. Off groups upgrades into their
+    // category columns as usual. On drops the category grouping
+    // entirely and lays every visible upgrade out in one freeform
+    // 4-column grid ordered by level (see renderUpgradeGrid /
+    // buildFreeformUpgradeGrid).
+    freeformSort: false,
 
     pending: new Map(),
     owned: new Map()
@@ -217,7 +238,10 @@ function saveUpgradeState() {
             mode: upgradeState.mode,
             goldenGifts: upgradeState.goldenGifts,
             progressive: upgradeState.progressive,
+            progressiveAllowDebt: upgradeState.progressiveAllowDebt,
+            progressiveHideLocked: upgradeState.progressiveHideLocked,
             iconMode: upgradeState.iconMode,
+            freeformSort: upgradeState.freeformSort,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -252,7 +276,10 @@ function loadUpgradeState() {
         upgradeState.mode = saved.mode || "solo";
         upgradeState.goldenGifts = Math.max(0, Number(saved.goldenGifts) || 0);
         upgradeState.progressive = Boolean(saved.progressive);
+        upgradeState.progressiveAllowDebt = Boolean(saved.progressiveAllowDebt);
+        upgradeState.progressiveHideLocked = Boolean(saved.progressiveHideLocked);
         upgradeState.iconMode = Boolean(saved.iconMode);
+        upgradeState.freeformSort = Boolean(saved.freeformSort);
         upgradeState.pending = new Map(saved.pending || []);
         upgradeState.owned = new Map(saved.owned || []);
 
@@ -518,6 +545,22 @@ function getEffectiveUpgradeLevel(item) {
 function isUpgradeLockedByLevel(item) {
 
     return runState.level < getEffectiveUpgradeLevel(item);
+
+}
+
+
+/*
+ * Progressive's "Hide Locked" sub-toggle - separate from the general
+ * isUpgradeContextHidden (difficulty/mode-based hiding) since this
+ * one only cares about the level gate specifically, only applies
+ * while Progressive is on, and is opt-in via its own switch rather
+ * than always active.
+ */
+function isUpgradeHiddenByLevelFilter(item) {
+
+    return upgradeState.progressive
+        && upgradeState.progressiveHideLocked
+        && isUpgradeLockedByLevel(item);
 
 }
 
@@ -881,7 +924,10 @@ function setStackTarget(item, targetStack) {
 
     }
 
-    if (upgradeState.progressive) {
+    // Allow Debt (a Progressive sub-toggle) opts back out of this
+    // affordability check specifically, same as Progressive being
+    // off entirely - level/dependency gating above still applies.
+    if (upgradeState.progressive && !upgradeState.progressiveAllowDebt) {
 
         const oldPendingCost = getIncrementalCost(item, owned, pending);
         const newTargetCost = getIncrementalCost(item, owned, target);
@@ -997,9 +1043,11 @@ function purchaseSelectedUpgrades() {
     const total = computePendingTotal();
 
     // Same rule as cycleUpgradeSelection: affordability is only a
-    // hard requirement in Progressive mode. With it off, the
-    // purchase always goes through and Golden Gifts can go negative.
-    if (upgradeState.progressive && total > upgradeState.goldenGifts) {
+    // hard requirement in Progressive mode, and only when its Allow
+    // Debt sub-toggle is off. With Progressive off, or Allow Debt on,
+    // the purchase always goes through and Golden Gifts can go
+    // negative.
+    if (upgradeState.progressive && !upgradeState.progressiveAllowDebt && total > upgradeState.goldenGifts) {
 
         playRemoveSound();
 
@@ -1340,24 +1388,56 @@ function createRequirementIcon(requirement) {
 }
 
 
+function createUnownButton(item, owned) {
+
+    const unownButton = document.createElement("button");
+
+    unownButton.type = "button";
+    unownButton.className = "upgrade-unown-button";
+    unownButton.setAttribute("aria-label", `Un-own one ${item.name} stack`);
+    unownButton.title = "Put one owned stack back in the shop";
+    unownButton.textContent = "\u2212";
+
+    unownButton.addEventListener("click", event => {
+
+        event.stopPropagation();
+
+        // Peels off one stack at a time rather than clearing the
+        // whole thing at once - each click puts a single stack back
+        // in the shop. Once owned reaches 0 the row leaves the OWNED
+        // UPGRADES basin entirely, so repeated clicks naturally
+        // unwind a multi-stack upgrade one tier per click.
+        setStackTarget(item, owned - 1);
+
+    });
+
+    return unownButton;
+
+}
+
+
 /*
  * Up/down stepper shown on rows that aren't fully owned yet - the
  * "unowned" stacks still left to buy. A row stays in the shop (not
  * the OWNED UPGRADES basin - see renderUpgradeGrid's `owned >=
  * maxStack` routing) until every stack is bought, even if it already
- * owns some; while it's there it keeps this stepper for queuing more
- * AND, once owned > 0, also shows the separate "-" button alongside
- * it so a single owned stack can be peeled off without leaving the
- * shop. Up queues one more pending stack (mirrors a row click); down
- * cancels a pending stack back toward what's actually owned. Neither
- * arrow un-owns an already-purchased stack itself - that's the "-"
- * button's job. Works the same for linear and per-tier-priced items
- * alike, since setStackTarget/computeStackPrice already resolve
- * either correctly - each arrow press on a variable-priced item
- * steps one tier "elevator style," pricing off that tier's own table
- * entry rather than adding tiers together.
+ * owns some; while it's there it keeps this stepper for queuing more.
+ * Once owned > 0, the "-" un-own button (see createUnownButton above)
+ * is also needed so a single owned stack can be peeled off without
+ * leaving the shop - rather than giving it a second grid column of
+ * its own (which forced the row to expand to fit both controls),
+ * it's nested right here between the two arrows, sharing the
+ * stepper's own narrow column instead. Up queues one more pending
+ * stack (mirrors a row click); down cancels a pending stack back
+ * toward what's actually owned. Neither arrow un-owns an already-
+ * purchased stack itself - that's still the "-" button's job. Works
+ * the same for linear and per-tier-priced items alike, since
+ * setStackTarget/computeStackPrice already resolve either correctly -
+ * each arrow press on a variable-priced item steps one tier
+ * "elevator style," pricing off that tier's own table entry rather
+ * than adding tiers together.
  */
-function createStackStepper(item, locked) {
+function createStackStepper(item, locked, includeUnown) {
 
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
@@ -1414,6 +1494,22 @@ function createStackStepper(item, locked) {
     });
 
     wrapper.appendChild(upButton);
+
+    if (includeUnown) {
+
+        const unownButton = createUnownButton(item, owned);
+
+        // Distinguishes the nested placement (sitting inline between
+        // the two arrows, sharing the stepper's own narrow column)
+        // from the standalone version used once a row is fully owned
+        // and has moved to the OWNED UPGRADES basin - see the CSS
+        // sizing override on this modifier class.
+        unownButton.classList.add("upgrade-unown-button--inline");
+
+        wrapper.appendChild(unownButton);
+
+    }
+
     wrapper.appendChild(downButton);
 
     return wrapper;
@@ -1473,8 +1569,10 @@ function createUpgradeCard(item) {
     // Solo/Duo) is always affordable - it doesn't draw on the Golden
     // Gifts balance at all, so it shouldn't read as unaffordable just
     // because "Left" happens to already be negative from other
-    // pending selections.
-    const canAffordNext = !locked && !isFullyOwned && (nextTierCost <= 0 || nextTierCost <= remaining);
+    // pending selections. Allow Debt (a Progressive sub-toggle) also
+    // always reads as affordable, same as Progressive being off.
+    const canAffordNext = !locked && !isFullyOwned
+        && (nextTierCost <= 0 || nextTierCost <= remaining || upgradeState.progressiveAllowDebt);
 
     // Icon Mode hides the name/level/price text visually, so this
     // tooltip (and the matching aria-label below) is how that same
@@ -1664,44 +1762,23 @@ function createUpgradeCard(item) {
     // it owns some - so it keeps its up/down stepper for queuing
     // more the whole time (a one-off, non-stacking upgrade has
     // nothing to step through, so it keeps the plain row-click buy
-    // behavior with no arrows at all). Once owned > 0, it also gets
-    // the "-" un-own button so a single owned stack can be peeled
-    // off and put back in the shop without touching what's pending.
-    // Only once every stack is owned does the row move down into the
-    // OWNED UPGRADES basin (see renderUpgradeGrid) - at that point
-    // there's nothing left to buy, so the stepper drops away and
-    // only the "-" button remains.
+    // behavior with no arrows at all). Once owned > 0 while still in
+    // the shop, the stepper also gets the "-" un-own button nested
+    // between its arrows (see createStackStepper) so a single owned
+    // stack can be peeled off and put back in the shop without
+    // touching what's pending, and without needing a second grid
+    // column of its own. Only once every stack is owned does the row
+    // move down into the OWNED UPGRADES basin (see renderUpgradeGrid)
+    // - at that point there's nothing left to buy, so the stepper
+    // drops away and the standalone "-" button (below) takes its
+    // place instead.
     if (!isFullyOwned && maxStack > 1) {
 
-        row.appendChild(createStackStepper(item, locked));
+        row.appendChild(createStackStepper(item, locked, owned > 0));
 
-    }
+    } else if (owned > 0) {
 
-    if (owned > 0) {
-
-        const unownButton = document.createElement("button");
-
-        unownButton.type = "button";
-        unownButton.className = "upgrade-unown-button";
-        unownButton.setAttribute("aria-label", `Un-own one ${item.name} stack`);
-        unownButton.title = "Put one owned stack back in the shop";
-        unownButton.textContent = "\u2212";
-
-        unownButton.addEventListener("click", event => {
-
-            event.stopPropagation();
-
-            // Peels off one stack at a time rather than clearing the
-            // whole thing at once - each click puts a single stack
-            // back in the shop. Once owned reaches 0 the row leaves
-            // the OWNED UPGRADES basin entirely, so repeated clicks
-            // naturally unwind a multi-stack upgrade one tier per
-            // click.
-            setStackTarget(item, owned - 1);
-
-        });
-
-        row.appendChild(unownButton);
+        row.appendChild(createUnownButton(item, owned));
 
     }
 
@@ -1790,6 +1867,53 @@ function buildUpgradeCategoryColumn(category, rows, emptyText, headingModifierCl
 
 
 /*
+ * Freeform Sort's single 5-column grid - no category headings, no
+ * per-category columns. Items are handed in already split into
+ * active/owned buckets; this just lays one bucket out ordered by
+ * level (ties broken by name so the order stays stable) across 5
+ * fixed columns instead of grouping by category at all.
+ */
+function buildFreeformUpgradeGrid(rows, emptyText) {
+
+    const grid = document.createElement("div");
+
+    grid.className = "upgrade-grid upgrade-grid--freeform";
+
+    if (rows.length > 0) {
+
+        rows.forEach(entry => grid.appendChild(entry.row));
+
+    } else {
+
+        grid.appendChild(createUpgradeEmptyRow(emptyText));
+
+    }
+
+    return grid;
+
+}
+
+
+function sortUpgradeEntriesByLevel(entries) {
+
+    return entries.slice().sort((a, b) => {
+
+        const levelDiff = (a.item.level || 0) - (b.item.level || 0);
+
+        if (levelDiff !== 0) {
+
+            return levelDiff;
+
+        }
+
+        return a.item.name.localeCompare(b.item.name);
+
+    });
+
+}
+
+
+/*
  * Renders two aligned rows of category columns: buyable/locked
  * upgrades on top, and a separate "Owned" basin below holding
  * anything fully purchased. Every category always gets a column in
@@ -1797,6 +1921,11 @@ function buildUpgradeCategoryColumn(category, rows, emptyText, headingModifierCl
  * directly under its matching category above, instead of drifting
  * out of alignment when one section has fewer categories with items
  * than the other.
+ *
+ * When Freeform Sort is on, the category grouping above is skipped
+ * entirely - both the buyable and owned sections instead render as
+ * one flat 5-column grid ordered by level, with no category
+ * headings at all.
  */
 function renderUpgradeGrid() {
 
@@ -1817,6 +1946,19 @@ function renderUpgradeGrid() {
 
     }
 
+    const freeform = upgradeState.freeformSort;
+
+    activeContainer.classList.toggle("upgrade-categories--freeform", freeform);
+
+    if (ownedContainer) {
+
+        ownedContainer.classList.toggle("upgrade-categories--freeform", freeform);
+
+    }
+
+    const allActiveEntries = [];
+    const allOwnedEntries = [];
+
     upgradeCategories.forEach(category => {
 
         const items = upgradesList.filter(item => item.category === category.key);
@@ -1825,7 +1967,7 @@ function renderUpgradeGrid() {
 
         items.forEach(item => {
 
-            if (isUpgradeContextHidden(item)) {
+            if (isUpgradeContextHidden(item) || isUpgradeHiddenByLevelFilter(item)) {
 
                 return;
 
@@ -1845,14 +1987,22 @@ function renderUpgradeGrid() {
             if (owned >= maxStack) {
 
                 ownedRows.push(row);
+                allOwnedEntries.push({ item, row });
 
             } else {
 
                 activeRows.push(row);
+                allActiveEntries.push({ item, row });
 
             }
 
         });
+
+        if (freeform) {
+
+            return;
+
+        }
 
         activeContainer.appendChild(
             buildUpgradeCategoryColumn(category, activeRows, "All owned")
@@ -1867,6 +2017,22 @@ function renderUpgradeGrid() {
         }
 
     });
+
+    if (freeform) {
+
+        activeContainer.appendChild(
+            buildFreeformUpgradeGrid(sortUpgradeEntriesByLevel(allActiveEntries), "All owned")
+        );
+
+        if (ownedContainer) {
+
+            ownedContainer.appendChild(
+                buildFreeformUpgradeGrid(sortUpgradeEntriesByLevel(allOwnedEntries), "Nothing owned yet")
+            );
+
+        }
+
+    }
 
     updateUpgradeTotals();
 
@@ -1921,12 +2087,13 @@ function updateUpgradeTotals() {
 
     if (purchaseButton) {
 
-        // Same rule as the two functions above: only Progressive
-        // mode locks the button on insufficient Golden Gifts. With
-        // it off, the button stays clickable and the purchase can
+        // Same rule as the two functions above: only Progressive mode,
+        // with its Allow Debt sub-toggle off, locks the button on
+        // insufficient Golden Gifts. With Progressive off, or Allow
+        // Debt on, the button stays clickable and the purchase can
         // push "Left" negative.
         const disabled = upgradeState.pending.size === 0
-            || (upgradeState.progressive && total > upgradeState.goldenGifts);
+            || (upgradeState.progressive && !upgradeState.progressiveAllowDebt && total > upgradeState.goldenGifts);
 
         purchaseButton.disabled = disabled;
         purchaseButton.classList.toggle("purchase-upgrade-button--disabled", disabled);
@@ -2090,6 +2257,143 @@ function createProgressiveToggle() {
 
 
 /*
+ * Generic small switch for the Progressive sub-toggles (Allow Debt,
+ * Hide Locked) - same markup/behavior as createProgressiveToggle but
+ * flipping an arbitrary upgradeState boolean field instead of
+ * Progressive itself, with no special side effects on toggle.
+ */
+function createProgressiveSubToggle(id, stateKey, title) {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.id = id;
+    button.className = "upgrade-switch upgrade-switch--sub";
+    button.setAttribute("role", "switch");
+    button.title = title;
+
+    const track = document.createElement("span");
+
+    track.className = "upgrade-switch-track";
+
+    const thumb = document.createElement("span");
+
+    thumb.className = "upgrade-switch-thumb";
+
+    track.appendChild(thumb);
+    button.appendChild(track);
+
+    const label = document.createElement("span");
+
+    label.className = "upgrade-switch-label";
+
+    button.appendChild(label);
+
+    attachClickAction(button, () => {
+
+        upgradeState[stateKey] = !upgradeState[stateKey];
+
+        saveUpgradeState();
+        renderProgressiveToggle();
+        renderUpgradeGrid();
+
+    }, playUtilitySound);
+
+    return button;
+
+}
+
+
+/*
+ * The two Progressive sub-toggles - Allow Debt and Hide Locked - both
+ * only matter while Progressive itself is on, so they're built once
+ * into their own block and just shown/hidden in lockstep with
+ * Progressive's own controls (see the showControls check in
+ * renderProgressiveToggle below).
+ */
+function createProgressiveSubToggles() {
+
+    const container = document.createElement("div");
+
+    container.id = "upgradeProgressiveSubToggles";
+    container.className = "upgrade-progressive-subtoggles";
+
+    const debtRow = document.createElement("div");
+
+    debtRow.className = "upgrade-progressive-subtoggle-row";
+
+    const debtLabel = document.createElement("span");
+
+    debtLabel.className = "upgrade-control-label upgrade-control-label--sub";
+    debtLabel.textContent = "Allow Debt";
+
+    debtRow.appendChild(debtLabel);
+    debtRow.appendChild(createProgressiveSubToggle(
+        "upgradeProgressiveDebtToggle",
+        "progressiveAllowDebt",
+        "OFF: Purchases in Progressive mode still require enough Golden Gifts. "
+            + "ON: Purchases go through even without enough Golden Gifts - the "
+            + "balance can go negative, same as with Progressive off."
+    ));
+
+    const hideRow = document.createElement("div");
+
+    hideRow.className = "upgrade-progressive-subtoggle-row";
+
+    const hideLabel = document.createElement("span");
+
+    hideLabel.className = "upgrade-control-label upgrade-control-label--sub";
+    hideLabel.textContent = "Hide Locked";
+
+    hideRow.appendChild(hideLabel);
+    hideRow.appendChild(createProgressiveSubToggle(
+        "upgradeProgressiveHideLockedToggle",
+        "progressiveHideLocked",
+        "OFF: Upgrades below your current level still show, greyed out and "
+            + "locked. ON: Upgrades below your current level are hidden from "
+            + "the grid entirely instead."
+    ));
+
+    container.appendChild(debtRow);
+    container.appendChild(hideRow);
+
+    return container;
+
+}
+
+
+/*
+ * Syncs one sub-toggle button's visual on/off state from
+ * upgradeState[stateKey] - shared by both Allow Debt and Hide Locked
+ * in renderProgressiveToggle below.
+ */
+function syncProgressiveSubToggle(id, stateKey) {
+
+    const toggle = document.getElementById(id);
+
+    if (!toggle) {
+
+        return;
+
+    }
+
+    const active = Boolean(upgradeState[stateKey]);
+
+    toggle.classList.toggle("active", active);
+    toggle.setAttribute("aria-checked", active ? "true" : "false");
+
+    const labelEl = toggle.querySelector(".upgrade-switch-label");
+
+    if (labelEl) {
+
+        labelEl.textContent = active ? "ON" : "OFF";
+
+    }
+
+}
+
+
+/*
  * Small badge next to the Progressive toggle showing the current run
  * level, plus a button showing (and letting the player click through
  * to) the next shop level - only shown while Progressive mode is on,
@@ -2219,6 +2523,7 @@ function renderProgressiveToggle() {
 
         wrapper.appendChild(label);
         wrapper.appendChild(createProgressiveToggle());
+        wrapper.appendChild(createProgressiveSubToggles());
 
         toggleGroup.appendChild(wrapper);
 
@@ -2240,6 +2545,20 @@ function renderProgressiveToggle() {
     if (labelEl) {
 
         labelEl.textContent = upgradeState.progressive ? "ON" : "OFF";
+
+    }
+
+    syncProgressiveSubToggle("upgradeProgressiveDebtToggle", "progressiveAllowDebt");
+    syncProgressiveSubToggle("upgradeProgressiveHideLockedToggle", "progressiveHideLocked");
+
+    const subToggles = document.getElementById("upgradeProgressiveSubToggles");
+
+    if (subToggles) {
+
+        // Both sub-toggles only do anything while Progressive itself
+        // is on, so they stay hidden alongside the level badge/
+        // revert/advance controls the rest of the time.
+        subToggles.style.display = upgradeState.progressive ? "" : "none";
 
     }
 
@@ -2340,12 +2659,98 @@ function renderIconModeToggle() {
 }
 
 
+function toggleFreeformSort() {
+
+    upgradeState.freeformSort = !upgradeState.freeformSort;
+
+    saveUpgradeState();
+    renderFreeformSortToggle();
+    renderUpgradeGrid();
+
+}
+
+
+/*
+ * Freeform Sort toggle - a plain button dropped into the header's
+ * button group alongside Icon Mode / Own All / Reset, since like
+ * Icon Mode it's a display preference rather than a purchase-
+ * affecting mechanic like Progressive or Nothing.
+ */
+function renderFreeformSortToggle() {
+
+    let button = document.getElementById("upgradeFreeformSortToggle");
+
+    if (!button) {
+
+        const container = document.querySelector(".upgrade-header-buttons");
+
+        if (!container) {
+
+            return;
+
+        }
+
+        button = document.createElement("button");
+
+        button.type = "button";
+        button.id = "upgradeFreeformSortToggle";
+        button.className = "upgrade-reset-button upgrade-freeform-sort-button";
+        button.setAttribute("aria-pressed", "false");
+        button.title = "OFF: Upgrades stay grouped into their category columns. "
+            + "ON: Category grouping is dropped entirely - every visible upgrade "
+            + "lays out in one freeform 5-column grid ordered by level instead.";
+
+        const label = document.createElement("span");
+
+        label.className = "btn-label";
+        label.textContent = "SORT";
+
+        button.appendChild(label);
+
+        // Placed right after Icon Mode, before Own All / Reset - both
+        // are view preferences, so they sit together ahead of the
+        // destructive/bulk actions.
+        const iconModeButton = document.getElementById("upgradeIconModeToggle");
+
+        if (iconModeButton && iconModeButton.nextSibling) {
+
+            container.insertBefore(button, iconModeButton.nextSibling);
+
+        } else if (iconModeButton) {
+
+            container.appendChild(button);
+
+        } else {
+
+            container.insertBefore(button, container.firstChild);
+
+        }
+
+        attachClickAction(button, toggleFreeformSort, playUtilitySound);
+
+    }
+
+    button.classList.toggle("active", upgradeState.freeformSort);
+    button.setAttribute("aria-pressed", upgradeState.freeformSort ? "true" : "false");
+
+    const labelEl = button.querySelector(".btn-label");
+
+    if (labelEl) {
+
+        labelEl.textContent = upgradeState.freeformSort ? "SORT: FREE" : "SORT";
+
+    }
+
+}
+
+
 function refreshUpgradePanel() {
 
     renderUpgradeModeButtons();
     syncGoldenGiftsInput();
     renderProgressiveToggle();
     renderIconModeToggle();
+    renderFreeformSortToggle();
     renderUpgradeGrid();
 
 }
