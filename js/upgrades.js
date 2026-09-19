@@ -64,7 +64,7 @@ const EXTREME_OVERRIDES = {
 const upgradesList = [
 
     { name: "Adrenaline", price: 50, soloPrice: 50, level: 3, category: "movement" },
-    { name: "Business License", prices: [75, 188], level: 3, maxStack: 2, category: "eco" },
+    { name: "Business License", prices: [75, 187.5], level: 3, maxStack: 2, category: "eco" },
     { name: "Defuse Kit", price: 30, soloPrice: 30, level: 5, maxStack: 3, category: "survival" },
     { name: "Paycheck", price: 55, soloPrice: 55, level: 3, maxStack: 5, category: "eco" },
     { name: "Swiftness Ring", price: 80, soloPrice: 80, level: 3, maxStack: 3, category: "movement" },
