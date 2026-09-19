@@ -1342,18 +1342,20 @@ function createRequirementIcon(requirement) {
 
 /*
  * Up/down stepper shown on rows that aren't fully owned yet - the
- * "unowned" stacks still left to buy, whether the row currently owns
- * 0 of them or is sitting partway through with some already owned
- * (and already in the OWNED UPGRADES basin - see renderUpgradeGrid's
- * `owned > 0` routing). Up queues one more pending stack (mirrors a
- * row click); down cancels a pending stack back toward what's
- * actually owned. It never un-owns an already-purchased stack itself
- * - that's the separate "-" button's job, which appears alongside
- * this stepper any time owned > 0. Works the same for linear and
- * per-tier-priced items alike, since setStackTarget/computeStackPrice
- * already resolve either correctly - each arrow press on a
- * variable-priced item steps one tier "elevator style," pricing off
- * that tier's own table entry rather than adding tiers together.
+ * "unowned" stacks still left to buy. A row stays in the shop (not
+ * the OWNED UPGRADES basin - see renderUpgradeGrid's `owned >=
+ * maxStack` routing) until every stack is bought, even if it already
+ * owns some; while it's there it keeps this stepper for queuing more
+ * AND, once owned > 0, also shows the separate "-" button alongside
+ * it so a single owned stack can be peeled off without leaving the
+ * shop. Up queues one more pending stack (mirrors a row click); down
+ * cancels a pending stack back toward what's actually owned. Neither
+ * arrow un-owns an already-purchased stack itself - that's the "-"
+ * button's job. Works the same for linear and per-tier-priced items
+ * alike, since setStackTarget/computeStackPrice already resolve
+ * either correctly - each arrow press on a variable-priced item
+ * steps one tier "elevator style," pricing off that tier's own table
+ * entry rather than adding tiers together.
  */
 function createStackStepper(item, locked) {
 
@@ -1658,15 +1660,17 @@ function createUpgradeCard(item) {
     // once there were 5 categories sharing the panel instead of 4.
     info.appendChild(badge);
 
-    // Owning even one stack moves the row into the OWNED UPGRADES
-    // basin (see renderUpgradeGrid's `owned > 0` routing) - not just
-    // once every stack up to maxStack is owned. A partially-owned,
-    // still-stackable upgrade (e.g. 2/5 Gift Idol) keeps its up/down
-    // stepper there so more can still be queued, and also gets the
-    // "-" un-own button below so a single owned stack can be peeled
+    // A row stays in the shop until every stack is owned, even once
+    // it owns some - so it keeps its up/down stepper for queuing
+    // more the whole time (a one-off, non-stacking upgrade has
+    // nothing to step through, so it keeps the plain row-click buy
+    // behavior with no arrows at all). Once owned > 0, it also gets
+    // the "-" un-own button so a single owned stack can be peeled
     // off and put back in the shop without touching what's pending.
-    // Once every stack is owned there's nothing left to buy, so the
-    // stepper drops away and only the "-" button remains.
+    // Only once every stack is owned does the row move down into the
+    // OWNED UPGRADES basin (see renderUpgradeGrid) - at that point
+    // there's nothing left to buy, so the stepper drops away and
+    // only the "-" button remains.
     if (!isFullyOwned && maxStack > 1) {
 
         row.appendChild(createStackStepper(item, locked));
@@ -1838,7 +1842,7 @@ function renderUpgradeGrid() {
 
             }
 
-            if (owned > 0) {
+            if (owned >= maxStack) {
 
                 ownedRows.push(row);
 
