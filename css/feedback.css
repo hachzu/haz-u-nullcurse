@@ -1,0 +1,397 @@
+/*
+ * Feedback popover styles
+ * --------------------------
+ * Mirrors the particle settings popover's shape/positioning
+ * (see .particle-settings-panel in particles.css) so it feels like
+ * part of the same header control family, just themed around the
+ * default purple/brand palette instead of following whichever panel
+ * is open.
+ *
+ * The header button is an envelope + "Feedback" pill with a plain
+ * dark fill (same as its neighbors) and a light that races around
+ * its border like a track, with a soft glow trailing it. No fill
+ * gradient - only the outer edge lights up.
+ */
+
+
+/* The angle is registered so the browser can interpolate it - a
+   plain custom property inside a gradient would just snap between
+   its start and end values instead of spinning. Same trick style.css
+   uses for the left panel's animated colors. */
+@property --feedback-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+
+/* Selectors are doubled up (.mute-toggle-button.feedback-button) so
+   they beat .mute-toggle-button and .mute-toggle-button:hover from
+   style.css, which would otherwise repaint this button as a plain
+   30px circle. The fill/border come from that base rule unchanged;
+   only the shape, label, and the racing light are added here.
+   isolation: isolate keeps the pseudo-elements' negative z-index
+   inside the button instead of dropping them behind the sidebar. */
+.mute-toggle-button.feedback-button {
+    position: relative;
+    isolation: isolate;
+
+    width: auto;
+    height: 30px;
+
+    gap: 6px;
+
+    padding: 0 13px 0 11px;
+
+    border-radius: 999px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+
+    box-shadow: 0 0 8px rgba(184, 102, 255, 0.22);
+
+    transition: transform 0.15s, box-shadow 0.15s, background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+
+.mute-toggle-button.feedback-button::before,
+.mute-toggle-button.feedback-button::after {
+    content: "";
+
+    position: absolute;
+
+    border-radius: inherit;
+
+    pointer-events: none;
+}
+
+
+/* The racing light: a comet-shaped conic gradient (transparent tail
+   fading up to a bright head) that spins around the button's center.
+   It fills the whole pill, but the cover below hides everything but
+   a thin band at the edge, so only the border appears to light up.
+   The drop-shadows glow around the visible part of the comet, which
+   is what lets the light bleed outside the button. */
+.mute-toggle-button.feedback-button::before {
+    inset: -1px;
+    z-index: -2;
+
+    background: conic-gradient(
+        from var(--feedback-angle),
+        rgba(184, 102, 255, 0) 0deg,
+        rgba(184, 102, 255, 0) 200deg,
+        #b866ff 275deg,
+        #ff5cc8 325deg,
+        #ffffff 360deg
+    );
+
+    filter:
+        drop-shadow(0 0 3px rgba(255, 92, 200, 0.9))
+        drop-shadow(0 0 9px rgba(184, 102, 255, 0.75));
+
+    animation: feedback-orbit 3.2s linear infinite;
+}
+
+
+/* Cover: repaints the button's own fill (inherited, so hover/open
+   colors carry over) on top of the light, leaving just the ~2px edge
+   band uncovered. */
+.mute-toggle-button.feedback-button::after {
+    inset: 1px;
+    z-index: -1;
+
+    background: inherit;
+}
+
+
+.mute-toggle-button.feedback-button:hover {
+    color: #ffffff;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 0 12px rgba(184, 102, 255, 0.4);
+}
+
+
+.mute-toggle-button.feedback-button:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+
+.mute-toggle-button.feedback-button.active {
+    background: var(--lp-hover-bg, #2a1145);
+
+    border-color: var(--lp-bright, #d59bff);
+
+    color: #ffffff;
+
+    box-shadow: 0 0 12px rgba(184, 102, 255, 0.45);
+}
+
+
+/* 0 -> 360deg is one full lap and both ends are the same picture,
+   so the loop has no seam. */
+@keyframes feedback-orbit {
+
+    from {
+        --feedback-angle: 0deg;
+    }
+
+    to {
+        --feedback-angle: 360deg;
+    }
+
+}
+
+
+.feedback-icon {
+    display: inline-block;
+
+    font-size: 14px;
+    line-height: 1;
+}
+
+
+.feedback-label {
+    line-height: 1;
+}
+
+
+.feedback-panel {
+    position: fixed;
+    z-index: 50;
+
+    width: 280px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 16px;
+
+    background: linear-gradient(160deg, #1f0f38 0%, #12061f 100%);
+
+    border: 1px solid rgba(216, 155, 255, 0.5);
+    border-radius: 12px;
+
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(184, 102, 255, 0.25);
+}
+
+
+.feedback-panel[hidden] {
+    display: none !important;
+}
+
+
+.feedback-header-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.feedback-heading {
+    color: #d0bfef;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+
+/* From: label + single-line input sharing one row. */
+.feedback-from-row {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+}
+
+
+.feedback-from-label {
+    flex-shrink: 0;
+
+    color: #b6a3dd;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.feedback-from-input {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    padding: 8px 10px;
+
+    background: #14061f;
+
+    border: 1px solid rgba(184, 102, 255, 0.35);
+    border-radius: 8px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+    font-weight: 600;
+
+    outline: none;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.feedback-from-input::placeholder {
+    color: #6d5a94;
+    font-weight: 400;
+}
+
+
+.feedback-from-input:focus {
+    border-color: #d59bff;
+    box-shadow: 0 0 0 3px rgba(184, 102, 255, 0.18);
+}
+
+
+/* Taller than before so the longer placeholder message fits
+   without clipping. */
+.feedback-textarea {
+    width: 100%;
+    min-height: 116px;
+
+    padding: 10px 12px;
+
+    background: #14061f;
+
+    border: 1px solid rgba(184, 102, 255, 0.35);
+    border-radius: 8px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 12px;
+    line-height: 1.5;
+
+    resize: vertical;
+
+    outline: none;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+
+.feedback-textarea::placeholder {
+    color: #6d5a94;
+}
+
+
+.feedback-textarea:focus {
+    border-color: #d59bff;
+    box-shadow: 0 0 0 3px rgba(184, 102, 255, 0.18);
+}
+
+
+.feedback-footer-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.feedback-char-count {
+    color: #5c4880;
+
+    font-family: var(--font-modern);
+    font-size: 9px;
+}
+
+
+.feedback-submit-button {
+    padding: 8px 16px;
+
+    background: linear-gradient(135deg, #b866ff, #7a2fc4);
+
+    border: 1px solid #d59bff;
+    border-radius: 999px;
+
+    color: #ffffff;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+
+    cursor: pointer;
+
+    transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+}
+
+
+.feedback-submit-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.5);
+}
+
+
+.feedback-submit-button:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+.feedback-status {
+    min-height: 14px;
+
+    color: #7be6a8;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+.feedback-status--error {
+    color: #ff9d9d;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .mute-toggle-button.feedback-button::before {
+        animation: none;
+    }
+
+    .mute-toggle-button.feedback-button:hover {
+        transform: none;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .feedback-panel {
+        right: 8px !important;
+        left: 8px;
+
+        width: auto;
+    }
+
+}

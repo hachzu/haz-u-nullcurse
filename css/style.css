@@ -2640,6 +2640,105 @@ body {
 }
 
 
+/*
+ * Inner wrapper holding the four panel-toggle buttons, separate from
+ * the hide/show arrow itself - only this slides/fades away when
+ * collapsed, so the arrow button stays put as a fixed anchor the
+ * person can always find in the same spot.
+ */
+.floating-toggle-buttons-inner {
+    display: flex;
+
+    align-items: center;
+    gap: 12px;
+
+    transition:
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.3s ease;
+}
+
+
+/* Collapsed: the four panel buttons slide out to the right and fade,
+   leaving only the arrow toggle visible. translateX (not width/
+   display) so it reads as an actual slide instead of an instant
+   cut, and pointer-events: none keeps them unclickable while
+   offscreen instead of sitting invisibly on top of other content. */
+.floating-toggle-buttons.collapsed .floating-toggle-buttons-inner {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+/*
+ * The "<"/">" hide-show button itself - a small circular pill so it
+ * doesn't compete visually with the four pill-shaped panel buttons
+ * next to it. Same glyph is reused for both states (see the rotate
+ * transform below) rather than swapping the character via JS.
+ */
+.floating-buttons-hide-toggle {
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(20, 6, 31, 0.85);
+
+    border: 1px solid rgba(216, 155, 255, 0.55);
+    border-radius: 50%;
+
+    color: #f0e4ff;
+
+    font-size: 13px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 10px rgba(184, 102, 255, 0.25);
+
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+
+.floating-buttons-hide-toggle:hover {
+    background: rgba(42, 17, 69, 0.95);
+
+    border-color: #d59bff;
+
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(184, 102, 255, 0.4);
+
+    transform: scale(1.06);
+}
+
+
+.floating-buttons-hide-toggle:focus-visible {
+    outline: 2px solid #d59bff;
+    outline-offset: 2px;
+}
+
+
+.floating-buttons-hide-icon {
+    display: inline-block;
+
+    transition: transform 0.35s ease;
+}
+
+
+/* Collapsed state rotates the ">" glyph to read as "<" instead of
+   swapping the character itself. */
+.floating-toggle-buttons.collapsed .floating-buttons-hide-icon {
+    transform: rotate(180deg);
+}
+
+
 @media (max-width: 500px) {
 
     .floating-toggle-buttons {
@@ -2647,6 +2746,19 @@ body {
         bottom: 16px;
 
         gap: 8px;
+    }
+
+
+    .floating-toggle-buttons-inner {
+        gap: 8px;
+    }
+
+
+    .floating-buttons-hide-toggle {
+        width: 30px;
+        height: 30px;
+
+        font-size: 11px;
     }
 
 }

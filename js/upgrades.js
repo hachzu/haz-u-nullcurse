@@ -2401,7 +2401,13 @@ function syncProgressiveSubToggle(id, stateKey) {
  * Advancing is now an explicit click (see advanceProgressiveLevel),
  * not something that happens automatically on purchase.
  */
-function renderProgressiveLevelBadge(wrapper) {
+function renderProgressiveLevelBadge(statusRow) {
+
+    if (!statusRow) {
+
+        return;
+
+    }
 
     // Revert sits to the left of the level badge (built first so it
     // lands there in DOM order), mirroring Advance's spot on the
@@ -2416,7 +2422,7 @@ function renderProgressiveLevelBadge(wrapper) {
         revertButton.id = "upgradeProgressiveRevertButton";
         revertButton.className = "upgrade-progressive-revert-button";
 
-        wrapper.appendChild(revertButton);
+        statusRow.appendChild(revertButton);
 
         attachClickAction(revertButton, () => {
 
@@ -2435,7 +2441,7 @@ function renderProgressiveLevelBadge(wrapper) {
         levelEl.id = "upgradeProgressiveLevel";
         levelEl.className = "upgrade-progressive-level";
 
-        wrapper.appendChild(levelEl);
+        statusRow.appendChild(levelEl);
 
     }
 
@@ -2449,7 +2455,7 @@ function renderProgressiveLevelBadge(wrapper) {
         advanceButton.id = "upgradeProgressiveAdvanceButton";
         advanceButton.className = "upgrade-progressive-advance-button";
 
-        wrapper.appendChild(advanceButton);
+        statusRow.appendChild(advanceButton);
 
         attachClickAction(advanceButton, () => {
 
@@ -2463,9 +2469,13 @@ function renderProgressiveLevelBadge(wrapper) {
         && typeof runState !== "undefined" && runState
         && typeof runState.level === "number";
 
-    revertButton.style.display = showControls ? "" : "none";
-    levelEl.style.display = showControls ? "" : "none";
-    advanceButton.style.display = showControls ? "" : "none";
+    // The three controls stay in the DOM at all times now - the row
+    // itself expands/collapses via CSS (max-height + opacity) so
+    // showing/hiding animates smoothly instead of an instant
+    // display:none swap, and the buttons get a staggered "pop" as
+    // the row opens (see .upgrade-progressive-status-row in
+    // Upgrades.css).
+    statusRow.classList.toggle("upgrade-progressive-status-row--visible", showControls);
 
     if (showControls) {
 
@@ -2510,10 +2520,21 @@ function renderProgressiveToggle() {
 
         }
 
+        // Everything Progressive-related now lives inside one
+        // self-contained box (see .upgrade-progressive-box in
+        // Upgrades.css) instead of being loose siblings in the
+        // toggle-group row. The box itself is just one item in
+        // #upgradeToggleGroup, which already has margin-left: auto,
+        // so it naturally stays anchored to the right next to the
+        // Purchase button - nothing here pins or pushes it left.
         wrapper = document.createElement("div");
 
         wrapper.id = "upgradeProgressiveBlock";
-        wrapper.className = "upgrade-progressive-header-slot";
+        wrapper.className = "upgrade-progressive-box";
+
+        const headerRow = document.createElement("div");
+
+        headerRow.className = "upgrade-progressive-header-row";
 
         const label = document.createElement("span");
 
@@ -2521,8 +2542,16 @@ function renderProgressiveToggle() {
         label.textContent = "Progressive";
         label.style.marginBottom = "0";
 
-        wrapper.appendChild(label);
-        wrapper.appendChild(createProgressiveToggle());
+        headerRow.appendChild(label);
+        headerRow.appendChild(createProgressiveToggle());
+
+        const statusRow = document.createElement("div");
+
+        statusRow.id = "upgradeProgressiveStatusRow";
+        statusRow.className = "upgrade-progressive-status-row";
+
+        wrapper.appendChild(headerRow);
+        wrapper.appendChild(statusRow);
         wrapper.appendChild(createProgressiveSubToggles());
 
         toggleGroup.appendChild(wrapper);
@@ -2540,6 +2569,12 @@ function renderProgressiveToggle() {
     toggle.classList.toggle("active", upgradeState.progressive);
     toggle.setAttribute("aria-checked", upgradeState.progressive ? "true" : "false");
 
+    // The box itself picks up a subtle "live" highlight while
+    // Progressive is on, so the whole card visually reads as active
+    // rather than looking identical whether it's doing anything or
+    // not.
+    wrapper.classList.toggle("upgrade-progressive-box--active", upgradeState.progressive);
+
     const labelEl = toggle.querySelector(".upgrade-switch-label");
 
     if (labelEl) {
@@ -2556,13 +2591,16 @@ function renderProgressiveToggle() {
     if (subToggles) {
 
         // Both sub-toggles only do anything while Progressive itself
-        // is on, so they stay hidden alongside the level badge/
-        // revert/advance controls the rest of the time.
-        subToggles.style.display = upgradeState.progressive ? "" : "none";
+        // is on, so the row stays collapsed alongside the level
+        // badge/revert/advance controls the rest of the time - now
+        // an animated collapse/expand instead of an instant
+        // display:none swap (see .upgrade-progressive-subtoggles in
+        // Upgrades.css).
+        subToggles.classList.toggle("upgrade-progressive-subtoggles--visible", upgradeState.progressive);
 
     }
 
-    renderProgressiveLevelBadge(wrapper);
+    renderProgressiveLevelBadge(document.getElementById("upgradeProgressiveStatusRow"));
 
 }
 

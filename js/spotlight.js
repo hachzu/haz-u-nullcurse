@@ -243,7 +243,9 @@
 
         const target = document.querySelector(".floating-toggle-buttons");
 
-        if (!target) {
+        // Nothing to point at if the person has collapsed the buttons
+        // away with the arrow toggle - the ring would frame empty space.
+        if (!target || target.classList.contains("collapsed")) {
 
             return;
 

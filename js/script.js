@@ -3143,6 +3143,73 @@ function applyHeaderImage(element, label, sizeClass) {
 applyHeaderImage(document.getElementById("logoText"), "Nullscape", "logo-image");
 
 
+/*
+ * Floating toggle buttons hide/show
+ * --------------------------
+ * A small "<"/">" pill sitting next to the Upgrades/Deaths/Altars/
+ * Lobby buttons that slides them offscreen (and fades them out)
+ * instead of removing them, so each panel's own open/closed state
+ * is untouched while they're hidden - only their entry point
+ * disappears. Persists the same way the other UI toggles here do.
+ */
+const FLOATING_BUTTONS_HIDDEN_KEY = "nullscapeFloatingButtonsHidden";
+
+const floatingToggleButtonsEl = document.getElementById("floatingToggleButtons");
+const floatingButtonsHideToggle = document.getElementById("floatingButtonsHideToggle");
+
+function setFloatingButtonsHidden(hidden) {
+
+    if (!floatingToggleButtonsEl || !floatingButtonsHideToggle) {
+
+        return;
+
+    }
+
+    floatingToggleButtonsEl.classList.toggle("collapsed", hidden);
+
+    floatingButtonsHideToggle.setAttribute("aria-expanded", hidden ? "false" : "true");
+    floatingButtonsHideToggle.setAttribute("aria-label", hidden ? "Show toolkit buttons" : "Hide toolkit buttons");
+    floatingButtonsHideToggle.title = hidden ? "Show toolkit buttons" : "Hide toolkit buttons";
+
+    try {
+
+        localStorage.setItem(FLOATING_BUTTONS_HIDDEN_KEY, hidden ? "true" : "false");
+
+    } catch (error) {
+
+        console.warn("couldn't save floating buttons visibility:", error);
+
+    }
+
+}
+
+function loadFloatingButtonsHidden() {
+
+    try {
+
+        return localStorage.getItem(FLOATING_BUTTONS_HIDDEN_KEY) === "true";
+
+    } catch (error) {
+
+        return false;
+
+    }
+
+}
+
+if (floatingButtonsHideToggle && floatingToggleButtonsEl) {
+
+    attachClickAction(floatingButtonsHideToggle, () => {
+
+        setFloatingButtonsHidden(!floatingToggleButtonsEl.classList.contains("collapsed"));
+
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
+
+    setFloatingButtonsHidden(loadFloatingButtonsHidden());
+
+}
+
+
 loadRunState();
 
 document.getElementById("levelInput").value = runState.level;

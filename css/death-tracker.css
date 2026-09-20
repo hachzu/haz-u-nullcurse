@@ -59,7 +59,7 @@
         0 0 18px rgba(255, 45, 45, 0.25),
         0 0 26px rgba(0, 0, 0, 0.3);
 
-    animation: death-toggle-hue-shift 5s linear infinite;
+    animation: death-toggle-hue-shift 8s linear infinite;
 
     transition:
         padding 0.35s ease,
@@ -68,6 +68,14 @@
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes death-toggle-hue-shift {
 
     0% {
@@ -75,7 +83,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }
@@ -566,12 +574,20 @@
 
     box-shadow: 0 0 12px rgba(255, 45, 45, 0.4);
 
-    animation: death-advance-gradient-shift 3.5s linear infinite;
+    animation: death-advance-gradient-shift 5.7s linear infinite;
 
     transition: transform 0.15s, box-shadow 0.15s;
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes death-advance-gradient-shift {
 
     0% {
@@ -579,7 +595,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }

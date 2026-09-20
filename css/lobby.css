@@ -63,7 +63,7 @@
         0 0 18px rgba(255, 255, 255, 0.3),
         0 0 26px rgba(216, 195, 165, 0.25);
 
-    animation: lobby-toggle-hue-shift 5s linear infinite;
+    animation: lobby-toggle-hue-shift 8s linear infinite;
 
     transition:
         padding 0.35s ease,
@@ -72,6 +72,14 @@
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes lobby-toggle-hue-shift {
 
     0% {
@@ -79,7 +87,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }

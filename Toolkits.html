@@ -35,6 +35,7 @@
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
     <link rel="stylesheet" href="css/spotlight.css">
+    <link rel="stylesheet" href="css/feedback.css">
 </head>
 
 <body>
@@ -901,58 +902,81 @@
         what keeps them pinned together in the bottom-right corner
         instead of drifting into normal document flow.
     -->
-    <div class="floating-toggle-buttons">
+    <div class="floating-toggle-buttons" id="floatingToggleButtons">
+
+        <!--
+            Only this inner wrapper slides away when collapsed (see
+            .floating-toggle-buttons.collapsed in style.css) - the
+            arrow button after it stays put as a fixed anchor, so the
+            buttons can always be brought back from the same spot.
+            The show/hide logic lives in script.js
+            (setFloatingButtonsHidden).
+        -->
+        <div class="floating-toggle-buttons-inner">
+
+            <button
+                id="upgradeToggleButton"
+                class="upgrade-toggle-button"
+                type="button"
+                aria-label="Toggle upgrade calculator"
+                aria-expanded="false"
+                aria-keyshortcuts="b"
+            >
+                <span class="upgrade-toggle-icon">+</span>
+                <span class="btn-label">UPGRADES</span>
+                <span class="upgrade-toggle-key">B</span>
+            </button>
+
+            <button
+                id="deathToggleButton"
+                class="death-toggle-button"
+                type="button"
+                aria-label="Toggle death tracker"
+                aria-expanded="false"
+                aria-keyshortcuts="x"
+            >
+                <span class="death-toggle-icon">&#9760;</span>
+                <span class="btn-label">DEATHS</span>
+                <span class="death-toggle-key">X</span>
+            </button>
+
+            <button
+                id="altarsToggleButton"
+                class="altars-toggle-button"
+                type="button"
+                aria-label="Toggle altars tracker"
+                aria-expanded="false"
+                aria-keyshortcuts="n"
+            >
+                <span class="altars-toggle-icon">&#43612;</span>
+                <span class="btn-label">ALTARS</span>
+                <span class="altars-toggle-key">N</span>
+            </button>
+
+            <button
+                id="lobbyToggleButton"
+                class="lobby-toggle-button"
+                type="button"
+                aria-label="Toggle lobby maker"
+                aria-expanded="false"
+                aria-keyshortcuts="l"
+            >
+                <span class="lobby-toggle-icon">&#127922;</span>
+                <span class="btn-label">LOBBY</span>
+                <span class="lobby-toggle-key">L</span>
+            </button>
+
+        </div>
 
         <button
-            id="upgradeToggleButton"
-            class="upgrade-toggle-button"
+            id="floatingButtonsHideToggle"
+            class="floating-buttons-hide-toggle"
             type="button"
-            aria-label="Toggle upgrade calculator"
-            aria-expanded="false"
-            aria-keyshortcuts="b"
+            aria-expanded="true"
+            aria-label="Hide toolkit buttons"
+            title="Hide toolkit buttons"
         >
-            <span class="upgrade-toggle-icon">+</span>
-            <span class="btn-label">UPGRADES</span>
-            <span class="upgrade-toggle-key">B</span>
-        </button>
-
-        <button
-            id="deathToggleButton"
-            class="death-toggle-button"
-            type="button"
-            aria-label="Toggle death tracker"
-            aria-expanded="false"
-            aria-keyshortcuts="x"
-        >
-            <span class="death-toggle-icon">&#9760;</span>
-            <span class="btn-label">DEATHS</span>
-            <span class="death-toggle-key">X</span>
-        </button>
-
-        <button
-            id="altarsToggleButton"
-            class="altars-toggle-button"
-            type="button"
-            aria-label="Toggle altars tracker"
-            aria-expanded="false"
-            aria-keyshortcuts="n"
-        >
-            <span class="altars-toggle-icon">&#43612;</span>
-            <span class="btn-label">ALTARS</span>
-            <span class="altars-toggle-key">N</span>
-        </button>
-
-        <button
-            id="lobbyToggleButton"
-            class="lobby-toggle-button"
-            type="button"
-            aria-label="Toggle lobby maker"
-            aria-expanded="false"
-            aria-keyshortcuts="l"
-        >
-            <span class="lobby-toggle-icon">&#127922;</span>
-            <span class="btn-label">LOBBY</span>
-            <span class="lobby-toggle-key">L</span>
+            <span class="floating-buttons-hide-icon" aria-hidden="true">&gt;</span>
         </button>
 
     </div>
@@ -968,6 +992,7 @@
 <script src="js/lobby.js"></script>
 <script src="js/particles.js"></script>
 <script src="js/spotlight.js"></script>
+<script src="js/feedback.js"></script>
 
 </body>
 </html>

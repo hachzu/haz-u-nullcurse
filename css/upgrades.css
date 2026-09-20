@@ -92,7 +92,7 @@
         0 0 18px rgba(255, 255, 255, 0.3),
         0 0 26px rgba(143, 217, 255, 0.2);
 
-    animation: upgrade-toggle-hue-shift 5s linear infinite;
+    animation: upgrade-toggle-hue-shift 8s linear infinite;
 
     transition:
         padding 0.35s ease,
@@ -140,6 +140,14 @@
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes upgrade-toggle-hue-shift {
 
     0% {
@@ -147,7 +155,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }
@@ -713,15 +721,11 @@
 }
 
 
-/* Both the Nothing Curse toggle's block (hardcoded in toolkits.html
-   as .upgrade-toggle-block) and Progressive Mode's own slot (built
-   here in JS) now share this exact "label beside switch" layout, so
-   the two toggles read as one consistent row instead of one
-   stacking its label above the switch while the other sits it
-   beside - .upgrade-control-label defaults to display: block, which
-   is what caused that mismatch before this rule existed. */
-.upgrade-toggle-block,
-.upgrade-progressive-header-slot {
+/* The Nothing Curse toggle's block (hardcoded in toolkits.html as
+   .upgrade-toggle-block) keeps the plain "label beside switch"
+   layout - .upgrade-control-label defaults to display: block, which
+   is what this rule corrects for it. */
+.upgrade-toggle-block {
     display: flex;
 
     align-items: center;
@@ -731,37 +735,197 @@
 }
 
 
-/* Progressive's own slot additionally wraps, so the sub-toggle row
-   (Allow Debt / Hide Locked) can drop onto its own line below the
-   main switch + level badge instead of squeezing the row wider. */
-.upgrade-progressive-header-slot {
-    flex-wrap: wrap;
-}
-
-
 .upgrade-toggle-block-label {
     margin-bottom: 0;
     white-space: nowrap;
 }
 
 
-/* Allow Debt / Hide Locked - the two Progressive sub-toggles. Forced
-   onto their own full-width line under the main Progressive switch
-   via flex-basis: 100% (the parent's flex-wrap is what makes that
-   line break possible), separated by a thin divider so they read as
-   nested under Progressive rather than a third independent control. */
+/* Progressive Mode's own card. Everything Progressive-related - the
+   main switch, the level/revert/advance controls, and the Allow
+   Debt / Hide Locked sub-toggles - lives stacked inside one
+   self-contained box instead of loosely wrapping across the shared
+   toggle-group row. The box is just one flex item inside
+   #upgradeToggleGroup, which already has margin-left: auto, so it
+   stays anchored to the right beside the Purchase button on its
+   own - nothing in here pins or stretches it left.
+
+   The card chrome itself (border/background/padding/glow) only
+   exists while Progressive is actually on - see the --active
+   modifier below. Off, this is just a transparent wrapper hugging
+   the label + switch with no padding, so there's no empty-looking
+   box sitting around when there's nothing inside it to justify one;
+   turning Progressive on animates the chrome and padding in. */
+.upgrade-progressive-box {
+    display: flex;
+    flex-direction: column;
+
+    flex-shrink: 0;
+    gap: 0;
+
+    padding: 0;
+
+    background: transparent;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    transition: background 0.25s ease, border-color 0.25s ease,
+        box-shadow 0.25s ease, padding 0.25s ease, gap 0.25s ease;
+}
+
+
+/* Once Progressive is on, the card grows its padding and picks up a
+   visible border/background/glow - this is the only state where it
+   reads as a distinct box on the page. */
+.upgrade-progressive-box--active {
+    gap: 2px;
+
+    padding: 8px 12px;
+
+    background: rgba(143, 217, 255, 0.08);
+
+    border-color: rgba(143, 217, 255, 0.32);
+
+    box-shadow: 0 0 14px rgba(143, 217, 255, 0.14);
+}
+
+
+/* Label + main switch - the box's always-visible top row. */
+.upgrade-progressive-header-row {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+}
+
+
+/* Revert / level badge / advance button share one row that collapses
+   to nothing until Progressive is on, instead of three separately
+   hidden elements - the whole row smoothly grows/fades open together
+   (see the --visible modifier below) rather than snapping into view. */
+.upgrade-progressive-status-row {
+    display: flex;
+
+    align-items: center;
+    gap: 8px;
+
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    pointer-events: none;
+
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease;
+}
+
+
+.upgrade-progressive-status-row--visible {
+    max-height: 40px;
+    margin-top: 6px;
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+/* Each control pops in with a little overshoot instead of just
+   fading, staggered slightly left to right (Revert, Level, Advance)
+   so they read as arriving in sequence rather than all at once.
+   Adding the --visible class back re-triggers the animation every
+   time the row opens. */
+.upgrade-progressive-status-row--visible .upgrade-progressive-revert-button,
+.upgrade-progressive-status-row--visible .upgrade-progressive-level,
+.upgrade-progressive-status-row--visible .upgrade-progressive-advance-button {
+    animation: upgrade-progressive-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
+.upgrade-progressive-status-row--visible .upgrade-progressive-revert-button {
+    animation-delay: 0s;
+}
+
+
+.upgrade-progressive-status-row--visible .upgrade-progressive-level {
+    animation-delay: 0.05s;
+}
+
+
+.upgrade-progressive-status-row--visible .upgrade-progressive-advance-button {
+    animation-delay: 0.1s;
+}
+
+
+@keyframes upgrade-progressive-pop-in {
+
+    from {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}
+
+
+/* Allow Debt / Hide Locked - the two Progressive sub-toggles. Same
+   collapse/expand treatment as the status row above: the row stays
+   in the DOM and animates open/shut via max-height + opacity instead
+   of an instant display:none swap, with a thin divider so it reads
+   as nested under Progressive rather than a third independent
+   control. */
 .upgrade-progressive-subtoggles {
     display: flex;
 
-    flex-basis: 100%;
     flex-wrap: wrap;
     align-items: center;
     gap: 14px;
 
+    max-height: 0;
+    margin-top: 0;
+    padding-top: 0;
+    opacity: 0;
+
+    overflow: hidden;
+    pointer-events: none;
+
+    /* Transparent (not just zero-height) while collapsed - a
+       border-top still paints its 1px line even at max-height: 0,
+       so color has to fade out too or it'd show as a stray hairline
+       above the box's bottom edge while Progressive is off. */
+    border-top: 1px dashed transparent;
+
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease,
+        padding-top 0.25s ease, border-color 0.25s ease;
+}
+
+
+.upgrade-progressive-subtoggles--visible {
+    max-height: 60px;
     margin-top: 6px;
     padding-top: 6px;
+    opacity: 1;
 
-    border-top: 1px dashed rgba(143, 217, 255, 0.25);
+    border-color: rgba(143, 217, 255, 0.25);
+
+    pointer-events: auto;
+}
+
+
+/* The two sub-toggle rows pop in the same way as the status row's
+   controls, staggered slightly so Allow Debt lands just ahead of
+   Hide Locked. */
+.upgrade-progressive-subtoggles--visible .upgrade-progressive-subtoggle-row {
+    animation: upgrade-progressive-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
+.upgrade-progressive-subtoggles--visible .upgrade-progressive-subtoggle-row:nth-child(2) {
+    animation-delay: 0.06s;
 }
 
 
@@ -869,12 +1033,20 @@
 
     box-shadow: 0 0 12px rgba(255, 157, 61, 0.35);
 
-    animation: upgrade-advance-gradient-shift 3.5s linear infinite;
+    animation: upgrade-advance-gradient-shift 5.7s linear infinite;
 
     transition: transform 0.15s, box-shadow 0.15s;
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes upgrade-advance-gradient-shift {
 
     0% {
@@ -882,7 +1054,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }
@@ -930,12 +1102,20 @@
 
     box-shadow: 0 0 12px rgba(143, 217, 255, 0.35);
 
-    animation: upgrade-revert-gradient-shift 3.5s linear infinite;
+    animation: upgrade-revert-gradient-shift 5.7s linear infinite;
 
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
 }
 
 
+/* Loop fix: this button's gradient is 260% of its width, so one full
+   tile is 2.6x the button. With background-position percentages the
+   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
+   only slid it 1.6x - short of a whole tile, which made the colors
+   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
+   tile, so the end frame equals the start frame and the loop is
+   seamless. Durations were stretched by the same 1.625 factor to keep
+   the original pace. */
 @keyframes upgrade-revert-gradient-shift {
 
     0% {
@@ -943,7 +1123,7 @@
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 162.5% 50%;
     }
 
 }
@@ -1040,13 +1220,17 @@
    sideways or onto a new line as the row's content changed size -
    it now lives in its own dedicated row below instead (see
    .upgrade-purchase-row-bottom), which never grows or shrinks based
-   on anything in this row. */
+   on anything in this row. Top-aligned (not flex-end) so that when
+   the Progressive box grows taller as it turns on and its controls
+   expand, it just extends further downward instead of dragging the
+   shorter Golden Gifts / totals blocks down with it and leaving a
+   gap of blank space above them. */
 .upgrade-purchase-row {
     display: flex;
 
     flex-wrap: wrap;
 
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 10px;
 }
 
