@@ -9,7 +9,7 @@
  * the version they're running) and then again every minute, and
  * whenever they switch back to the tab. When the number in the file
  * changes, a toast slides up: "New update available - refreshing in
- * 5:00", with Refresh now / Not yet buttons and a note that their run
+ * 2:00", with Refresh now / Not yet buttons and a note that their run
  * is saved automatically (curses, upgrades and deaths all live in
  * localStorage, so a refresh doesn't lose them).
  *
@@ -35,7 +35,7 @@
     const VERSION_URL = "version.json";
 
     const CHECK_INTERVAL_MS = 60000;
-    const COUNTDOWN_SECONDS = 5 * 60;
+    const COUNTDOWN_SECONDS = 2 * 60;
 
     let loadedVersion = null;
     let updateShown = false;
@@ -263,7 +263,7 @@
     /*
      * Counts down against a fixed deadline instead of subtracting one
      * per tick: browsers slow timers down in background tabs, which
-     * would stretch a tick-counted 5 minutes out far longer.
+     * would stretch a tick-counted 2 minutes out far longer.
      */
     function tickCountdown() {
 

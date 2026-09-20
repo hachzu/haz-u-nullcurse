@@ -795,17 +795,18 @@ body {
     margin-top: 10px;
     padding: 10px 12px;
 
-    background: #0d1720;
+    /* Same themed surface/border as the other left-panel inputs, so it
+       follows whichever panel is open (purple by default). No glow.
+       Only the number itself stays blue - see .medal-payout-value. */
+    background: var(--lp-surface, #14061f);
 
-    border: 1px solid #00c8ff;
+    border: 1px solid var(--lp-soft, #4a2270);
     border-radius: 8px;
-
-    box-shadow: 0 0 14px rgba(0, 200, 255, 0.25), 0 0 10px rgba(143, 217, 255, 0.22);
 }
 
 
 .medal-payout-label {
-    color: #8fd9ff;
+    color: var(--lp-text, #9a7cc9);
 
     font-size: 10px;
     font-weight: 700;
