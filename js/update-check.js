@@ -9,7 +9,9 @@
  * the version they're running) and then again every minute, and
  * whenever they switch back to the tab. When the number in the file
  * changes, a toast slides up: "New update available - refreshing in
- * 15s", with Refresh now / Not yet buttons.
+ * 5:00", with Refresh now / Not yet buttons and a note that their run
+ * is saved automatically (curses, upgrades and deaths all live in
+ * localStorage, so a refresh doesn't lose them).
  *
  * To push an update to everyone who's online: change the "version"
  * value in version.json in the same commit as the code changes (any
@@ -33,7 +35,7 @@
     const VERSION_URL = "version.json";
 
     const CHECK_INTERVAL_MS = 60000;
-    const COUNTDOWN_SECONDS = 15;
+    const COUNTDOWN_SECONDS = 5 * 60;
 
     let loadedVersion = null;
     let updateShown = false;
@@ -44,7 +46,7 @@
     let notYetButton = null;
 
     let countdownTimer = null;
-    let secondsLeft = 0;
+    let deadline = 0;
 
     async function fetchVersion() {
 
@@ -249,11 +251,49 @@
 
     }
 
+    function formatTime(totalSeconds) {
+
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        return minutes + ":" + String(seconds).padStart(2, "0");
+
+    }
+
+    /*
+     * Counts down against a fixed deadline instead of subtracting one
+     * per tick: browsers slow timers down in background tabs, which
+     * would stretch a tick-counted 5 minutes out far longer.
+     */
+    function tickCountdown() {
+
+        const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+
+        if (remaining <= 0) {
+
+            stopCountdown();
+
+            if (hasUnsavedText()) {
+
+                enterManualMode("typing");
+
+            } else {
+
+                refreshNow();
+
+            }
+
+            return;
+
+        }
+
+        textEl.textContent = `Refreshing in ${formatTime(remaining)} to load it.`;
+
+    }
+
     function startCountdown() {
 
-        secondsLeft = COUNTDOWN_SECONDS;
-
-        textEl.textContent = `Refreshing in ${secondsLeft}s to load it.`;
+        deadline = Date.now() + COUNTDOWN_SECONDS * 1000;
 
         // Shrinks the progress bar over the whole countdown.
         barEl.style.transition = "none";
@@ -264,31 +304,9 @@
         barEl.style.transition = `width ${COUNTDOWN_SECONDS}s linear`;
         barEl.style.width = "0%";
 
-        countdownTimer = setInterval(() => {
+        tickCountdown();
 
-            secondsLeft -= 1;
-
-            if (secondsLeft <= 0) {
-
-                stopCountdown();
-
-                if (hasUnsavedText()) {
-
-                    enterManualMode("typing");
-
-                } else {
-
-                    refreshNow();
-
-                }
-
-                return;
-
-            }
-
-            textEl.textContent = `Refreshing in ${secondsLeft}s to load it.`;
-
-        }, 1000);
+        countdownTimer = setInterval(tickCountdown, 1000);
 
     }
 
@@ -310,6 +328,11 @@
                     <div class="update-toast-title">New update available</div>
                     <div class="update-toast-text" id="updateToastText"></div>
                 </div>
+            </div>
+
+            <div class="update-toast-note">
+                <span class="update-toast-note-icon" aria-hidden="true">&#10003;</span>
+                <span>Your run is saved automatically - curses, upgrades, and deaths carry over after the refresh.</span>
             </div>
 
             <div class="update-toast-actions">
@@ -354,6 +377,12 @@
     document.addEventListener("visibilitychange", () => {
 
         if (document.visibilityState === "visible") {
+
+            if (countdownTimer) {
+
+                tickCountdown();
+
+            }
 
             check();
 
