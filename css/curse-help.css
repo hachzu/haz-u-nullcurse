@@ -1,0 +1,658 @@
+/*
+ * Curse Tracker help
+ * --------------------------
+ * A compact "?" trigger that sits right next to the CURSE POOLS
+ * title, and a full-screen overlay dialog it opens - a purple-themed
+ * card holding plain text plus a handful of genuine, non-clickable
+ * copies of real UI pieces (curse cards, badges, buttons, switches)
+ * so people can see exactly what each part of the tracker looks like
+ * instead of only reading about it.
+ *
+ * See curse-help.js for the open/close/backdrop/Escape wiring.
+ */
+
+
+/* Wraps the CURSE POOLS heading and the help trigger on one line so
+   the button reads as attached to the title instead of floating
+   somewhere else on the page. */
+.pool-title-row {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+
+/* ---- Compact trigger button ----
+   Deliberately small and quiet - a round "?" plus a short label,
+   sized to sit comfortably beside the (much larger) CURSE POOLS
+   heading rather than competing with it. */
+.curse-help-toggle {
+    flex-shrink: 0;
+
+    display: inline-flex;
+
+    align-items: center;
+    gap: 6px;
+
+    padding: 5px 12px 5px 6px;
+
+    background: rgba(184, 102, 255, 0.1);
+
+    border: 1px solid rgba(184, 102, 255, 0.45);
+    border-radius: 999px;
+
+    color: #d0bfef;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+
+.curse-help-toggle:hover,
+.curse-help-toggle:focus-visible {
+    background: rgba(184, 102, 255, 0.2);
+
+    border-color: #d59bff;
+    color: #ffffff;
+
+    box-shadow: 0 0 14px rgba(184, 102, 255, 0.35);
+
+    transform: translateY(-1px);
+}
+
+
+.curse-help-toggle.active {
+    background: rgba(184, 102, 255, 0.24);
+
+    border-color: #d59bff;
+    color: #ffffff;
+}
+
+
+.curse-help-toggle-icon {
+    flex-shrink: 0;
+
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(184, 102, 255, 0.28);
+
+    border-radius: 50%;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+
+.curse-help-toggle-label {
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+}
+
+
+/* ---- Overlay shell ----
+   Fixed full-viewport dialog, sitting above the Tools Spotlight
+   (z-index 200 in spotlight.css) and every sliding panel. Hidden by
+   default via opacity/visibility rather than display:none so the
+   open/close transition can actually animate. */
+.curse-help-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 400;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 28px;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: opacity 0.28s ease, visibility 0s linear 0.28s;
+}
+
+
+.curse-help-overlay--open {
+    opacity: 1;
+    visibility: visible;
+
+    transition: opacity 0.28s ease, visibility 0s linear 0s;
+}
+
+
+.curse-help-overlay-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgba(5, 1, 12, 0.78);
+    backdrop-filter: blur(6px);
+
+    cursor: pointer;
+}
+
+
+.curse-help-card {
+    position: relative;
+
+    width: min(920px, 100%);
+    max-height: min(86vh, 900px);
+
+    display: flex;
+    flex-direction: column;
+
+    background: linear-gradient(165deg, #1b0a30 0%, #0d0416 100%);
+
+    border: 1px solid rgba(184, 102, 255, 0.4);
+    border-radius: 18px;
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(150, 60, 220, 0.18),
+        inset 0 0 90px rgba(150, 60, 220, 0.05);
+
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+
+    transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+.curse-help-overlay--open .curse-help-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+
+.curse-help-card-header {
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 22px 26px 18px;
+
+    border-bottom: 1px solid rgba(184, 102, 255, 0.22);
+}
+
+
+.curse-help-card-eyebrow {
+    margin-bottom: 6px;
+
+    color: #9a7cc9;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+
+.curse-help-card-title {
+    font-family: var(--font-modern);
+    font-size: 21px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+
+    background: linear-gradient(90deg, #f0e4ff 0%, #d59bff 50%, #f0e4ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+
+.curse-help-close-button {
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    border: 1px solid rgba(216, 155, 255, 0.4);
+    border-radius: 50%;
+
+    color: #f0e4ff;
+
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+
+.curse-help-close-button:hover,
+.curse-help-close-button:focus-visible {
+    background: rgba(184, 102, 255, 0.22);
+
+    border-color: #d59bff;
+    color: #ffffff;
+
+    transform: scale(1.08);
+}
+
+
+.curse-help-card-body {
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+
+    padding: 22px 26px 28px;
+
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(184, 102, 255, 0.35) transparent;
+}
+
+
+.curse-help-card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.curse-help-card-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.curse-help-card-body::-webkit-scrollbar-thumb {
+    background: rgba(184, 102, 255, 0.3);
+    border-radius: 999px;
+}
+
+
+.curse-help-card-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(184, 102, 255, 0.55);
+}
+
+
+/* ---- Content blocks (unchanged from the original dropdown) ---- */
+
+.curse-help-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.curse-help-heading {
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+
+    padding-bottom: 8px;
+
+    border-bottom: 1px solid rgba(184, 102, 255, 0.22);
+}
+
+
+.curse-help-block p {
+    color: #d0bfef;
+
+    font-size: 12.5px;
+    line-height: 1.7;
+}
+
+
+.curse-help-block p + p {
+    margin-top: 4px;
+}
+
+
+/* ---- Step list ---- */
+
+.curse-help-steps {
+    list-style: none;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+
+.curse-help-steps li {
+    display: flex;
+
+    align-items: center;
+    gap: 18px;
+}
+
+
+.curse-help-step-visual {
+    flex: 0 0 150px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 64px;
+    padding: 10px;
+
+    background: rgba(184, 102, 255, 0.05);
+
+    border: 1px dashed rgba(184, 102, 255, 0.3);
+    border-radius: 10px;
+
+    pointer-events: none;
+}
+
+
+.curse-help-step-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+
+.curse-help-step-number {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+
+    background: rgba(184, 102, 255, 0.22);
+    border-radius: 50%;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+.curse-help-step-title {
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+
+.curse-help-step-desc {
+    margin-top: 5px;
+
+    color: #b6a3dd;
+
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+
+/* ---- Miniature, non-interactive copies of real controls ----
+   pointer-events: none on the demo pieces themselves keeps them
+   from looking clickable (no hover glow, no cursor change) since
+   they only exist to be looked at. */
+
+.curse-help-demo-level {
+    width: 100%;
+}
+
+
+.curse-help-demo-level-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #9a7cc9;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.curse-help-demo-level-box {
+    padding: 8px 10px;
+
+    background: #14061f;
+
+    border: 1px solid #4a2270;
+    border-radius: 6px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 14px;
+    font-weight: 700;
+
+    text-align: center;
+}
+
+
+.curse-help-demo-row {
+    display: flex;
+
+    gap: 6px;
+
+    pointer-events: none;
+}
+
+
+.curse-help-demo-button {
+    padding: 8px 10px;
+
+    background: #14061f;
+
+    border: 1px solid #3a1a5c;
+    border-radius: 7px;
+
+    color: #9a7cc9;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+}
+
+
+.curse-help-demo-enemy {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px;
+
+    background: #14061f;
+
+    border: 1px solid rgba(174, 19, 19, 0.4);
+    border-radius: 8px;
+
+    color: #b6a3dd;
+
+    font-size: 8px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.15;
+}
+
+
+.curse-help-demo-card-mini {
+    width: 84px;
+}
+
+
+.curse-help-demo-active-curse {
+    width: 100%;
+    max-width: 220px;
+}
+
+
+/* ---- Badge legend: real curse cards, shrunk down and made static ---- */
+
+.curse-help-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+
+    column-gap: 14px;
+    row-gap: 30px;
+
+    padding: 18px 6px 8px;
+}
+
+
+.curse-help-card-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 10px;
+
+    pointer-events: none;
+}
+
+
+.curse-help-card-demo .curse-card {
+    width: 100%;
+    max-width: 128px;
+
+    cursor: default;
+}
+
+
+.curse-help-card-caption {
+    color: #b6a3dd;
+
+    font-size: 10.5px;
+    line-height: 1.55;
+    text-align: center;
+}
+
+
+.curse-help-card-caption strong {
+    color: #f0e4ff;
+}
+
+
+.curse-help-card-caption em {
+    color: #f0e4ff;
+    font-style: normal;
+    font-weight: 700;
+}
+
+
+/* ---- Toggle switch samples (Show All / Unlock All / Hide Medal) ---- */
+
+.curse-help-switch-row {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 20px;
+}
+
+
+.curse-help-switch-sample {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    gap: 6px;
+
+    pointer-events: none;
+}
+
+
+.curse-help-switch-sample-label {
+    color: #8a7a9c;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+}
+
+
+@media (max-width: 700px) {
+
+    .curse-help-steps li {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .curse-help-step-visual {
+        flex-basis: auto;
+    }
+
+    .curse-help-card-header {
+        padding: 18px 18px 14px;
+    }
+
+    .curse-help-card-body {
+        padding: 18px 18px 22px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .curse-help-overlay {
+        padding: 12px;
+    }
+
+    .curse-help-toggle-label {
+        display: none;
+    }
+
+    .curse-help-toggle {
+        padding: 6px;
+    }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .curse-help-overlay,
+    .curse-help-card {
+        transition: none;
+    }
+
+}
