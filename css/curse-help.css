@@ -12,6 +12,25 @@
  */
 
 
+/* A gentle brightening pulse for small accent text (the overlay's
+   eyebrow label, the "?" toggle icon, and the info-card icons). Kept
+   local to this file rather than reused from style.css's own
+   keyframes, since it doesn't need to match anything outside the
+   guide. */
+@keyframes curse-help-glow-pulse {
+
+    0%,
+    100% {
+        text-shadow: 0 0 4px rgba(216, 155, 255, 0.25);
+    }
+
+    50% {
+        text-shadow: 0 0 12px rgba(216, 155, 255, 0.7), 0 0 4px rgba(255, 255, 255, 0.4);
+    }
+
+}
+
+
 /* Wraps the CURSE POOLS heading and the help trigger on one line so
    the button reads as attached to the title instead of floating
    somewhere else on the page. */
@@ -95,6 +114,8 @@
     font-size: 11px;
     font-weight: 800;
     line-height: 1;
+
+    animation: curse-help-glow-pulse 2.6s ease-in-out infinite;
 }
 
 
@@ -173,7 +194,34 @@
     opacity: 0;
     transform: translateY(18px) scale(0.97);
 
-    transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), border-color 1.8s ease, box-shadow 1.8s ease;
+
+    animation: curse-help-card-breathe 5s ease-in-out infinite;
+}
+
+
+/* A very slow, very subtle brightening of the card's own border and
+   outer glow - easy to miss if you are reading, but keeps the whole
+   dialog feeling faintly alive instead of static once it is open. */
+@keyframes curse-help-card-breathe {
+
+    0%,
+    100% {
+        border-color: rgba(184, 102, 255, 0.4);
+        box-shadow:
+            0 30px 90px rgba(0, 0, 0, 0.6),
+            0 0 60px rgba(150, 60, 220, 0.18),
+            inset 0 0 90px rgba(150, 60, 220, 0.05);
+    }
+
+    50% {
+        border-color: rgba(216, 155, 255, 0.6);
+        box-shadow:
+            0 30px 90px rgba(0, 0, 0, 0.6),
+            0 0 80px rgba(184, 102, 255, 0.3),
+            inset 0 0 90px rgba(150, 60, 220, 0.08);
+    }
+
 }
 
 
@@ -208,19 +256,30 @@
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
+
+    animation: curse-help-glow-pulse 2.6s ease-in-out infinite;
 }
 
 
+/* Scrolling gradient plus a soft outer glow, the same "this text is
+   alive" treatment the site's own big pool headings use (see
+   .animated-header-text in style.css), just self-contained here so
+   this file doesn't depend on that class being present. */
 .curse-help-card-title {
     font-family: var(--font-modern);
     font-size: 21px;
     font-weight: 900;
     letter-spacing: 0.3px;
 
-    background: linear-gradient(90deg, #f0e4ff 0%, #d59bff 50%, #f0e4ff 100%);
+    background: linear-gradient(90deg, #f0e4ff 0%, #d59bff 35%, #ffffff 50%, #d59bff 65%, #f0e4ff 100%);
+    background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+
+    filter: drop-shadow(0 0 12px rgba(216, 155, 255, 0.45));
+
+    animation: header-gradient-scroll 4s linear infinite;
 }
 
 
@@ -310,6 +369,8 @@
 }
 
 
+/* Section headings: a soft static glow on the text itself plus a
+   plain underline, no moving parts. */
 .curse-help-heading {
     color: #f0e4ff;
 
@@ -317,6 +378,7 @@
     font-size: 15px;
     font-weight: 800;
     letter-spacing: 0.4px;
+    text-shadow: 0 0 16px rgba(216, 155, 255, 0.3);
 
     padding-bottom: 8px;
 
@@ -334,6 +396,26 @@
 
 .curse-help-block p + p {
     margin-top: 4px;
+}
+
+
+/* Button and control names mentioned in the prose (CURRENT LEVEL,
+   RESET RUN, Purify, and so on) get wrapped in <strong> so they pick
+   up a soft glow, the same way a real button glows on hover - it
+   doubles as a visual "this is a UI label, go look for it" cue. */
+.curse-help-block p strong,
+.curse-help-info-card p strong {
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(216, 155, 255, 0.55);
+}
+
+
+.curse-help-block p em,
+.curse-help-info-card p em {
+    color: #f0e4ff;
+    font-style: normal;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(216, 155, 255, 0.4);
 }
 
 
@@ -426,7 +508,21 @@
 /* ---- Miniature, non-interactive copies of real controls ----
    pointer-events: none on the demo pieces themselves keeps them
    from looking clickable (no hover glow, no cursor change) since
-   they only exist to be looked at. */
+   they only exist to be looked at. Each one pairs a text placeholder
+   with a real <img> pointed at the site's actual asset path (see
+   getAssetPath in script.js) laid directly on top of it - if that
+   asset exists the icon just appears, and the onerror on the <img>
+   itself removes it so the placeholder text quietly takes over if it
+   doesn't, matching the same graceful fallback the live curse cards
+   already use. */
+
+.curse-help-intro {
+    color: #d0bfef;
+
+    font-size: 12.5px;
+    line-height: 1.7;
+}
+
 
 .curse-help-demo-level {
     width: 100%;
@@ -491,6 +587,8 @@
 
 
 .curse-help-demo-enemy {
+    position: relative;
+
     width: 44px;
     height: 44px;
 
@@ -500,6 +598,7 @@
     justify-content: center;
 
     padding: 3px;
+    overflow: hidden;
 
     background: #14061f;
 
@@ -515,6 +614,19 @@
 }
 
 
+.curse-help-demo-enemy-image {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    background: #14061f;
+}
+
+
 .curse-help-demo-card-mini {
     width: 84px;
 }
@@ -523,6 +635,33 @@
 .curse-help-demo-active-curse {
     width: 100%;
     max-width: 220px;
+}
+
+
+/* Real .card-media / .curse-enemy-badge-inner already center a text
+   placeholder - stacking the fallback image on top with absolute
+   positioning (rather than swapping the DOM, which needs JS) means a
+   working asset just quietly covers the text, and a broken one
+   (removed by its own onerror) leaves the placeholder exactly as it
+   was. Scoped to the whole overlay body (not just the badge-legend
+   grid) so this also covers the step 5 "Fake Count" mini card, which
+   otherwise let its placeholder text and fallback image sit side by
+   side as two flex children fighting for the same tiny box. */
+.curse-help-card-body .card-media,
+.curse-help-card-body .curse-enemy-badge-inner {
+    position: relative;
+}
+
+
+.curse-help-card-body .card-media-image,
+.curse-help-card-body .curse-enemy-badge-image {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
 }
 
 
@@ -579,33 +718,141 @@
 }
 
 
-/* ---- Toggle switch samples (Show All / Unlock All / Hide Medal) ---- */
+/* ---- "Good To Know" info cards (Greater Curses / exclusive pairs) ---- */
 
-.curse-help-switch-row {
-    display: flex;
-    flex-wrap: wrap;
+.curse-help-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 
-    gap: 20px;
+    gap: 14px;
 }
 
 
-.curse-help-switch-sample {
+.curse-help-info-card {
+    padding: 16px 18px;
+
+    background: rgba(184, 102, 255, 0.05);
+
+    border: 1px solid rgba(184, 102, 255, 0.22);
+    border-radius: 12px;
+}
+
+
+.curse-help-info-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 26px;
+    height: 26px;
+    margin-bottom: 8px;
+
+    background: rgba(184, 102, 255, 0.18);
+    border-radius: 50%;
+
+    color: #d59bff;
+
+    font-size: 12px;
+
+    animation: curse-help-glow-pulse 2.6s ease-in-out infinite;
+}
+
+
+.curse-help-info-title {
+    margin-bottom: 6px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+
+.curse-help-info-card p {
+    color: #b6a3dd;
+
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+
+/* ---- Pool-switch cheat sheet (Show All / Unlock All / Hide Medal) ---- */
+
+.curse-help-switch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+
+    gap: 14px;
+}
+
+
+.curse-help-switch-card {
     display: flex;
     flex-direction: column;
 
-    align-items: center;
-    gap: 6px;
+    gap: 10px;
+
+    padding: 14px;
+
+    background: rgba(184, 102, 255, 0.05);
+
+    border: 1px solid rgba(184, 102, 255, 0.22);
+    border-radius: 12px;
+}
+
+
+.curse-help-switch-card .curse-visibility-toggle {
+    align-self: flex-start;
 
     pointer-events: none;
 }
 
 
-.curse-help-switch-sample-label {
+.curse-help-switch-card p {
+    color: #b6a3dd;
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+/* ---- Purify: active vs purified side-by-side comparison ---- */
+
+.curse-help-purify-compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 14px;
+}
+
+
+.curse-help-purify-sample {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    pointer-events: none;
+}
+
+
+.curse-help-purify-sample-label {
     color: #8a7a9c;
 
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.8px;
+}
+
+
+.curse-help-footnote {
+    color: #b6a3dd;
+
+    font-size: 11px;
+    line-height: 1.65;
 }
 
 
@@ -653,6 +900,14 @@
     .curse-help-overlay,
     .curse-help-card {
         transition: none;
+    }
+
+    .curse-help-card,
+    .curse-help-card-title,
+    .curse-help-card-eyebrow,
+    .curse-help-toggle-icon,
+    .curse-help-info-icon {
+        animation: none;
     }
 
 }

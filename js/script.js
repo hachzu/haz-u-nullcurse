@@ -18,7 +18,16 @@ const runState = {
 
 
 /*
- * Two independent toggles for browsing/planning curse pools.
+ * Three toggles for browsing/planning curse pools.
+ *
+ * showUpcoming: adds the curses that are held back by level alone -
+ * their enemy (and enemy count) is already active, any curse they
+ * depend on is already active, and they aren't disabled for the
+ * current difficulty/mode - so they WILL come up as the run levels,
+ * they just aren't available yet. They render as locked cards with
+ * a "Level X" badge and can't be selected. It's the middle tier
+ * between the default view and showAll (which reveals everything,
+ * so it already covers everything showUpcoming would add).
  *
  * showAll: reveals every curse in every pool regardless of level,
  * casual-disabled, exclusive-group conflicts, missing enemy/curse
@@ -37,6 +46,7 @@ const runState = {
  */
 const curseVisibilityState = {
 
+    showUpcoming: false,
     showAll: false,
     unlockAll: false
 
@@ -127,6 +137,7 @@ function loadCurseVisibilityState() {
 
         const saved = JSON.parse(raw);
 
+        curseVisibilityState.showUpcoming = Boolean(saved.showUpcoming);
         curseVisibilityState.showAll = Boolean(saved.showAll);
         curseVisibilityState.unlockAll = Boolean(saved.unlockAll) && curseVisibilityState.showAll;
 
@@ -1261,6 +1272,14 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
 
     }
 
+    // Show Upcoming: also list curses that only the level is holding
+    // back (they render locked - see createCurseCard).
+    if (curseVisibilityState.showUpcoming && isCurseUpcoming(curse)) {
+
+        return true;
+
+    }
+
     return !isCurseAtCap(curse) && isCurseDependencyMet(curse, ignoreLevel);
 
 }
@@ -1365,6 +1384,71 @@ function isCurseLockedOnlyByLevel(curse) {
 
 
 /*
+ * Whether a curse is "upcoming": the current level is the ONLY thing
+ * standing between it and being selectable. Its enemy (and enemy
+ * count) is already active, any curse it depends on is already
+ * active, it isn't disabled for the current difficulty or game mode,
+ * and its exclusive-group partner isn't taken - so it will come up
+ * as the run levels, it just isn't here yet. Powers Show Upcoming.
+ *
+ * Greater curses are left out on purpose: they already show in their
+ * pool regardless of level (see getGreaterPool), so there's nothing
+ * extra to reveal for them.
+ */
+function isCurseUpcoming(curse) {
+
+    if (isGreaterCurse(curse)) {
+
+        return false;
+
+    }
+
+    // Mode-disabled curses (Mart Infection / Deadly Melody in Solo,
+    // etc.) will never appear in this run no matter how high the
+    // level gets, so they don't count as "coming".
+    if (!isCurseModeAllowed(curse)) {
+
+        return false;
+
+    }
+
+    return isCurseLockedOnlyByLevel(curse);
+
+}
+
+
+/*
+ * With Show Upcoming on, a pool lists what's available right now
+ * first and the upcoming curses after it, soonest unlock first, so
+ * the tail of each pool reads as "what's coming next". Show All
+ * keeps the plain source order it always had, and with Show
+ * Upcoming off this returns the list untouched.
+ */
+function orderPoolWithUpcoming(curses) {
+
+    if (!curseVisibilityState.showUpcoming || curseVisibilityState.showAll) {
+
+        return curses;
+
+    }
+
+    const available = [];
+    const upcoming = [];
+
+    curses.forEach(curse => {
+
+        (isCurseUpcoming(curse) ? upcoming : available).push(curse);
+
+    });
+
+    upcoming.sort((a, b) => (a.level || 0) - (b.level || 0));
+
+    return [...available, ...upcoming];
+
+}
+
+
+/*
  * Returns what badge (if any) to show on a locked curse card.
  * Capped curses get a purple "OWNED" badge. Level-gated curses show
  * their level whenever Show All Curses reveals them, even if another
@@ -1423,14 +1507,18 @@ function isGreaterCurseLevelLocked(curse) {
 
 function getGlobalPool() {
 
-    return globalCurses.filter(curse => isCurseVisibleInPool(curse, false));
+    return orderPoolWithUpcoming(
+        globalCurses.filter(curse => isCurseVisibleInPool(curse, false))
+    );
 
 }
 
 
 function getEnemyPool() {
 
-    return enemyCurses.filter(curse => isCurseVisibleInPool(curse, false));
+    return orderPoolWithUpcoming(
+        enemyCurses.filter(curse => isCurseVisibleInPool(curse, false))
+    );
 
 }
 
@@ -1459,9 +1547,25 @@ function getMedalPool() {
     const global = getGlobalPool();
     const enemy = getEnemyPool();
 
-    return [...global, ...enemy]
-        .filter(curse => curse.medal)
-        .sort((a, b) => (b.value || 0) - (a.value || 0));
+    const medals = [...global, ...enemy].filter(curse => curse.medal);
+
+    const byValue = (a, b) => (b.value || 0) - (a.value || 0);
+
+    if (!curseVisibilityState.showUpcoming || curseVisibilityState.showAll) {
+
+        return medals.sort(byValue);
+
+    }
+
+    // Show Upcoming: available medal curses first (highest value
+    // first, as always), then the upcoming ones soonest-unlock first.
+    const available = medals.filter(curse => !isCurseUpcoming(curse)).sort(byValue);
+
+    const upcoming = medals
+        .filter(curse => isCurseUpcoming(curse))
+        .sort((a, b) => ((a.level || 0) - (b.level || 0)) || byValue(a, b));
+
+    return [...available, ...upcoming];
 
 }
 
@@ -2264,8 +2368,16 @@ function createCurseCard(curse, isMedal = false) {
 
         const reward = document.createElement("div");
 
+        const rewardAmount = getCurseMedalReward(curse.value || 0);
+
         reward.className = "curse-reward-badge";
-        reward.textContent = `+ ${getCurseMedalReward(curse.value || 0)}`;
+        reward.textContent = `+ ${rewardAmount}`;
+
+        // The badge is tiny, so its explanation lives in the tooltip
+        // (and in the How To Use guide): the same number is both the
+        // curse's slice of the Medal Payout and the Golden Gifts you
+        // are rewarded for picking it from a medal curse pool.
+        reward.title = `+${rewardAmount} added to your Medal Payout. It's also how many Golden Gifts you're rewarded for picking this from a medal curse pool.`;
 
         card.appendChild(reward);
 
@@ -2913,10 +3025,29 @@ if (hideMedalCursesToggle) {
 loadMedalDisplayState();
 updateMedalDisplayToggleUI();
 
+const showUpcomingCursesToggle = document.getElementById("showUpcomingCursesToggle");
 const showAllCursesToggle = document.getElementById("showAllCursesToggle");
 const unlockAllCursesToggle = document.getElementById("unlockAllCursesToggle");
 
 function updateCurseVisibilityToggleUI() {
+
+    if (showUpcomingCursesToggle) {
+
+        // Show All already reveals everything Show Upcoming would, so
+        // while it's on this switch is dimmed as "covered" - still
+        // clickable, so its own setting is remembered for when Show
+        // All goes back off.
+        const covered = curseVisibilityState.showAll;
+
+        showUpcomingCursesToggle.classList.toggle("active", curseVisibilityState.showUpcoming);
+        showUpcomingCursesToggle.classList.toggle("curse-visibility-toggle--covered", covered);
+        showUpcomingCursesToggle.setAttribute("aria-checked", curseVisibilityState.showUpcoming ? "true" : "false");
+
+        showUpcomingCursesToggle.title = covered
+            ? "Show All Curses is on, which already reveals everything this would add"
+            : "Also show curses you're only missing the level for - enemy curses appear once their enemy is active. They're dimmed and can't be picked until you reach the level";
+
+    }
 
     if (showAllCursesToggle) {
 
@@ -2937,6 +3068,20 @@ function updateCurseVisibilityToggleUI() {
         unlockAllCursesToggle.disabled = !curseVisibilityState.showAll;
 
     }
+
+}
+
+if (showUpcomingCursesToggle) {
+
+    attachClickAction(showUpcomingCursesToggle, () => {
+
+        curseVisibilityState.showUpcoming = !curseVisibilityState.showUpcoming;
+
+        saveCurseVisibilityState();
+        updateCurseVisibilityToggleUI();
+        render();
+
+    }, playUtilitySound);
 
 }
 

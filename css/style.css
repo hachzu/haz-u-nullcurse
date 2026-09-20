@@ -1566,12 +1566,16 @@ body {
 .pool-header {
     margin-bottom: 30px;
 
+    /* Narrower screens: the title, then the switch box under
+       them (the box comes first in the markup, .pool-controls uses
+       "order" to sit after the text). The wide-screen float layout is
+       further down, next to the box's own styles. */
     display: flex;
 
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: space-between;
 
-    gap: 20px;
+    gap: 16px;
 }
 
 
@@ -1596,24 +1600,127 @@ body {
 }
 
 
-.pool-subtitle {
-    margin-top: 6px;
-
-    color: #c9b7eb;
-
-    font-size: 11px;
-}
-
-
+/* The curse tracker's switches live in one compact box instead of a
+   loose stack of differently sized pills: two labeled groups side by
+   side (Reveal on the left, Display on the right), every switch the
+   same width so the tracks and labels line up. The groups wrap under
+   each other if the box gets too narrow for both. */
 .pool-controls {
-    flex-shrink: 0;
+    order: 2;
+
+    width: min(480px, 100%);
 
     display: flex;
 
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
 
-    gap: 8px;
+    gap: 10px 16px;
+
+    padding: 6px 12px 8px;
+
+    background: rgba(184, 102, 255, 0.04);
+
+    border: 1px solid rgba(184, 102, 255, 0.22);
+    border-radius: 14px;
+}
+
+
+.pool-control-group {
+    flex: 1 1 210px;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.pool-control-group-label {
+    color: #6d5a94;
+
+    font-family: var(--font-modern);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+}
+
+
+.pool-controls .curse-visibility-toggle {
+    width: 100%;
+
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+
+/* Unlock All only works once Show All is on, so it sits indented
+   under Show All with a small elbow connector instead of standing
+   as a peer. The connector lives on this wrapper (not the button) so
+   it stays fully visible even while the button itself is disabled. */
+.pool-control-nested {
+    position: relative;
+
+    margin-left: 20px;
+}
+
+
+.pool-control-nested::before {
+    content: "";
+
+    position: absolute;
+    top: -5px;
+    left: -12px;
+
+    width: 10px;
+    height: calc(50% + 5px);
+
+    border-left: 1px solid rgba(184, 102, 255, 0.45);
+    border-bottom: 1px solid rgba(184, 102, 255, 0.45);
+    border-bottom-left-radius: 8px;
+
+    pointer-events: none;
+}
+
+
+/* Show Upcoming while Show All is on: everything it would add is
+   already showing, so it reads as covered (dimmed) rather than off. */
+.curse-visibility-toggle--covered {
+    opacity: 0.55;
+}
+
+
+.curse-visibility-toggle--covered:hover {
+    opacity: 0.8;
+}
+
+
+/* Wide screens: the box floats to the top-right and takes no space
+   from what's below it. The pool title and the pool
+   sections underneath just wrap around it (a section's cards reflow
+   into the space beside it, then go full width once they're past its
+   bottom edge) instead of being pushed down by it. Below this width
+   there isn't room to leave the text a sensible column beside it, so
+   the box stays in normal flow under the title instead. */
+@media (min-width: 1360px) {
+
+    .pool-header {
+        display: block;
+
+        /* The header text is just the one-line title, so the box is
+           taller than it. This gap is what lets the box end above the
+           first pool's cards instead of running into them. */
+        margin-bottom: 48px;
+    }
+
+    .pool-controls {
+        float: right;
+
+        margin: 0 0 0 24px;
+    }
+
 }
 
 
