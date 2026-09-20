@@ -47,6 +47,76 @@
 
     let closeTimer = null;
     let openingTimer = null;
+    let sessionTimerInterval = null;
+
+    const SESSION_TIMER_TICK_MS = 60000;
+
+    /*
+     * Plain elapsed time since a viewer's joinedAt (a real epoch ms
+     * value written by presence.js's serverTimestamp() - see there
+     * for why it's the server's clock, not this browser's). The math
+     * itself is second-accurate the instant it runs; what's throttled
+     * to once a minute is how often it's recomputed and painted (see
+     * tickSessionTimers below), since "Xm" display granularity has
+     * nothing to gain from checking every second.
+     */
+    function formatElapsed(joinedAt) {
+
+        const elapsedMs = Math.max(0, Date.now() - joinedAt);
+        const totalMinutes = Math.floor(elapsedMs / 60000);
+
+        if (totalMinutes < 1) {
+
+            return "just joined";
+
+        }
+
+        if (totalMinutes < 60) {
+
+            return `${totalMinutes}m`;
+
+        }
+
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+
+    }
+
+    /*
+     * Re-stamps every visible timer span from its own item's
+     * data-joined-at - cheap since it's plain text writes, no DOM
+     * rebuilding. Called right after the list re-renders (new
+     * joins/leaves need their timers seeded immediately) and on a
+     * standing once-a-minute interval so a viewer who's just sitting
+     * there still sees their count climb.
+     */
+    function tickSessionTimers() {
+
+        const items = list.querySelectorAll("[data-joined-at]");
+
+        items.forEach(item => {
+
+            const joinedAt = Number(item.getAttribute("data-joined-at"));
+
+            if (!Number.isFinite(joinedAt)) {
+
+                return;
+
+            }
+
+            const timerEl = item.querySelector(".live-viewer-list-timer");
+
+            if (timerEl) {
+
+                timerEl.textContent = formatElapsed(joinedAt);
+
+            }
+
+        });
+
+    }
 
     list.style.setProperty("--viewer-col-w", COL_WIDTH + "px");
     list.style.setProperty("--viewer-gap", GAP + "px");
@@ -250,6 +320,7 @@
     new MutationObserver(() => {
 
         layout();
+        tickSessionTimers();
 
         if (isOpen) {
 
@@ -258,6 +329,11 @@
         }
 
     }).observe(list, { childList: true });
+
+    // Standing tick so a timer keeps climbing for someone who's just
+    // sitting on the page with nobody joining or leaving - a single
+    // shared interval for the whole list rather than one per viewer.
+    sessionTimerInterval = setInterval(tickSessionTimers, SESSION_TIMER_TICK_MS);
 
     window.addEventListener("resize", () => {
 

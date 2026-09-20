@@ -440,6 +440,11 @@ body {
 .live-viewer-list-item {
     padding: 4px 6px;
 
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+
     background: color-mix(in srgb, var(--lp-surface, #14061f) 90%, var(--lp-bright, #d59bff) 10%);
     border-radius: 4px;
 
@@ -450,7 +455,27 @@ body {
 
     white-space: nowrap;
     overflow: hidden;
+}
+
+
+.live-viewer-list-name {
+    max-width: 100%;
+
+    overflow: hidden;
     text-overflow: ellipsis;
+}
+
+
+/* Session length sits on its own line under the name instead of
+   sharing a row with it - a long username never has to fight the
+   timer for width, and "just joined" (the widest common value) never
+   looks oversized next to a short name either, since it isn't being
+   squeezed into leftover horizontal space at all. */
+.live-viewer-list-timer {
+    color: var(--lp-text-dim, #5c4880);
+
+    font-size: 8.5px;
+    font-weight: 600;
 }
 
 

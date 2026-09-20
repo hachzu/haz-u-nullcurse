@@ -5,7 +5,8 @@ import {
     push,
     set,
     onValue,
-    onDisconnect
+    onDisconnect,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -163,7 +164,13 @@ async function startPresence() {
             // manual cleanup needed on our end.
             onDisconnect(myPresenceRef).remove().then(() => {
 
-                set(myPresenceRef, { username });
+                // serverTimestamp() writes a placeholder that
+                // Firebase swaps for the real server time on commit -
+                // reading it back later always gives an actual epoch
+                // ms number, so every viewer computes session length
+                // off the same clock rather than each other's local
+                // clocks (which can be skewed or wrong).
+                set(myPresenceRef, { username, joinedAt: serverTimestamp() });
 
             });
 
@@ -186,18 +193,34 @@ async function startPresence() {
 
         if (listEl) {
 
-            const names = entries
-                .map((entry) => entry && entry.username)
-                .filter(Boolean);
+            const viewers = entries
+                .filter((entry) => entry && entry.username)
+                .map((entry) => ({
+                    username: entry.username,
+                    // Falls back to "now" for the rare frame where the
+                    // serverTimestamp placeholder hasn't resolved into
+                    // a real number yet, so the timer briefly reads
+                    // "0m" instead of doing bad math on a placeholder
+                    // object.
+                    joinedAt: typeof entry.joinedAt === "number" ? entry.joinedAt : Date.now()
+                }));
 
-            if (names.length === 0) {
+            if (viewers.length === 0) {
 
                 listEl.innerHTML = `<div class="live-viewer-list-empty">No one else here yet</div>`;
 
             } else {
 
-                listEl.innerHTML = names
-                    .map((name) => `<div class="live-viewer-list-item">${escapeHtml(name)}</div>`)
+                // The timer span starts empty - live-viewers.js fills
+                // it in (and keeps it updated) from data-joined-at,
+                // since ticking the display is a presentation concern
+                // that file already owns, not something this data
+                // layer needs to know about.
+                listEl.innerHTML = viewers
+                    .map((viewer) => `<div class="live-viewer-list-item" data-joined-at="${viewer.joinedAt}">`
+                        + `<span class="live-viewer-list-name">${escapeHtml(viewer.username)}</span>`
+                        + `<span class="live-viewer-list-timer"></span>`
+                        + `</div>`)
                     .join("");
 
             }
