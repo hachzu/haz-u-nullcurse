@@ -9,7 +9,7 @@
  * the version they're running) and then again every minute, and
  * whenever they switch back to the tab. When the number in the file
  * changes, a toast slides up: "New update available - refreshing in
- * 2:00", with Refresh now / Not yet buttons and a note that their run
+ * 1:00", with a Refresh now button and a note that their run
  * is saved automatically (curses, upgrades and deaths all live in
  * localStorage, so a refresh doesn't lose them).
  *
@@ -35,7 +35,7 @@
     const VERSION_URL = "version.json";
 
     const CHECK_INTERVAL_MS = 60000;
-    const COUNTDOWN_SECONDS = 2 * 60;
+    const COUNTDOWN_SECONDS = 60;
 
     // A short personal note shown above the update copy, so it reads
     // like a heads-up from a person rather than a generic system
@@ -50,7 +50,6 @@
     let toast = null;
     let textEl = null;
     let barEl = null;
-    let notYetButton = null;
 
     let countdownTimer = null;
     let deadline = 0;
@@ -219,9 +218,8 @@
     }
 
     /*
-     * Leaves the toast up with just a Refresh button - used when the
-     * person picks "Not yet", or when there's unsent text so an
-     * automatic refresh would lose it.
+     * Leaves the toast up with just a Refresh button - used only when
+     * there's unsent text, so an automatic refresh would lose it.
      */
     function enterManualMode(reason) {
 
@@ -247,12 +245,6 @@
 
             barEl.style.transition = "none";
             barEl.style.width = "0%";
-
-        }
-
-        if (notYetButton) {
-
-            notYetButton.hidden = true;
 
         }
 
@@ -358,7 +350,6 @@
             </div>
 
             <div class="update-toast-actions">
-                <button type="button" class="update-toast-button" id="updateToastNotYet">Not yet</button>
                 <button type="button" class="update-toast-button update-toast-button--primary" id="updateToastRefresh">Refresh now</button>
             </div>
 
@@ -369,19 +360,11 @@
 
         textEl = toast.querySelector("#updateToastText");
         barEl = toast.querySelector("#updateToastBar");
-        notYetButton = toast.querySelector("#updateToastNotYet");
 
         toast.querySelector("#updateToastRefresh").addEventListener("click", () => {
 
             playClick();
             refreshNow();
-
-        });
-
-        notYetButton.addEventListener("click", () => {
-
-            playClick();
-            enterManualMode("later");
 
         });
 
