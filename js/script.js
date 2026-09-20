@@ -473,7 +473,7 @@ const enemyCurses = [
         name: "Mart Infection",
         enemy: "Mart",
         level: 8,
-        disabledModes: ["solo"],
+        disabledModes: ["solo", "duo"],
         exclusiveGroup: "mart-infection-slide"
     },
 
@@ -1294,6 +1294,16 @@ function isCurseSelectable(curse, ignoreLevel = false) {
 
     }
 
+    // Same for mutually exclusive curse groups (e.g. High Roller vs
+    // Tweaked Odds) - picking one always closes off the other, even
+    // with Unlock All Curses on. Without this, Unlock All let both
+    // sides of an exclusive pair be active at once.
+    if (!exclusiveGroupAvailable(curse)) {
+
+        return false;
+
+    }
+
     if (curseVisibilityState.unlockAll) {
 
         return true;
@@ -1364,6 +1374,18 @@ function isCurseLockedOnlyByLevel(curse) {
 function getCurseLockBadgeInfo(curse) {
 
     if (isCurseAtCap(curse)) {
+
+        return { text: "OWNED", className: "curse-lock-badge--owned" };
+
+    }
+
+    // A curse whose mutually exclusive sibling is currently active
+    // reads the same way as an owned/maxed curse - selecting either
+    // one closes off the other, so the closed-off side shows the
+    // same "OWNED" badge instead of appearing locked with no
+    // explanation (this used to be especially confusing with Show
+    // All / Unlock All Curses on).
+    if (!exclusiveGroupAvailable(curse)) {
 
         return { text: "OWNED", className: "curse-lock-badge--owned" };
 
