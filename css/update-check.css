@@ -1,0 +1,254 @@
+/*
+ * Update toast styles
+ * --------------------------
+ * The "New update available" toast shown by update-check.js. Same
+ * dark-purple card look as the feedback popover (see feedback.css)
+ * so it feels like part of the site. Sits bottom-center, above the
+ * tools spotlight (z-index 200) but below the first-visit username
+ * prompt (z-index 1000).
+ */
+
+
+.update-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+
+    z-index: 300;
+
+    width: 340px;
+    max-width: calc(100vw - 24px);
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 14px 16px 16px;
+    overflow: hidden;
+
+    background: linear-gradient(160deg, #1f0f38 0%, #12061f 100%);
+
+    border: 1px solid rgba(216, 155, 255, 0.5);
+    border-radius: 12px;
+
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(184, 102, 255, 0.25);
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+
+    opacity: 0;
+    transform: translate(-50%, 18px);
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+.update-toast--visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+
+    pointer-events: auto;
+}
+
+
+.update-toast-main {
+    display: flex;
+
+    align-items: flex-start;
+    gap: 12px;
+}
+
+
+.update-toast-icon {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(184, 102, 255, 0.16);
+
+    border: 1px solid rgba(216, 155, 255, 0.5);
+    border-radius: 50%;
+
+    color: #d59bff;
+
+    font-size: 16px;
+    line-height: 1;
+}
+
+
+.update-toast--busy .update-toast-icon {
+    animation: update-toast-spin 0.9s linear infinite;
+}
+
+
+@keyframes update-toast-spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+.update-toast-copy {
+    min-width: 0;
+}
+
+
+.update-toast-title {
+    color: #f0e4ff;
+
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+
+.update-toast-text {
+    margin-top: 3px;
+
+    color: #c9b7eb;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+.update-toast-actions {
+    display: flex;
+
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+
+.update-toast-actions [hidden] {
+    display: none;
+}
+
+
+.update-toast--busy .update-toast-actions {
+    opacity: 0.4;
+
+    pointer-events: none;
+}
+
+
+.update-toast-button {
+    padding: 8px 14px;
+
+    background: transparent;
+
+    border: 1px solid rgba(216, 155, 255, 0.4);
+    border-radius: 999px;
+
+    color: #b6a3dd;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s, box-shadow 0.12s;
+}
+
+
+.update-toast-button:hover {
+    background: rgba(184, 102, 255, 0.12);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+}
+
+
+.update-toast-button--primary {
+    background: linear-gradient(135deg, #b866ff, #7a2fc4);
+
+    border-color: #d59bff;
+
+    color: #ffffff;
+
+    font-weight: 800;
+}
+
+
+.update-toast-button--primary:hover {
+    background: linear-gradient(135deg, #b866ff, #7a2fc4);
+
+    transform: translateY(-1px);
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.5);
+}
+
+
+/* Countdown progress: a thin line along the bottom edge that
+   shrinks over the whole wait. update-check.js drives its width. */
+.update-toast-bar-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 3px;
+
+    background: rgba(255, 255, 255, 0.06);
+}
+
+
+.update-toast-bar {
+    height: 100%;
+    width: 100%;
+
+    background: linear-gradient(90deg, #7a2fc4, #d59bff);
+}
+
+
+.update-toast--manual .update-toast-bar-track {
+    display: none;
+}
+
+
+@media (max-width: 600px) {
+
+    /* Bottom-right is taken by the floating tool buttons on narrow
+       screens, so drop the toast to the top instead. */
+    .update-toast {
+        top: 12px;
+        bottom: auto;
+
+        transform: translate(-50%, -18px);
+    }
+
+    .update-toast--visible {
+        transform: translate(-50%, 0);
+    }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .update-toast {
+        transition-duration: 0.01ms;
+    }
+
+    .update-toast--busy .update-toast-icon {
+        animation: none;
+    }
+
+}

@@ -1,0 +1,368 @@
+/*
+ * Update check
+ * --------------------------
+ * Lets people who already have the site open pick up a new deploy
+ * without having to know to refresh.
+ *
+ * How it works: the site ships a tiny version.json next to
+ * Toolkits.html. Every visitor's page reads it once on load (that's
+ * the version they're running) and then again every minute, and
+ * whenever they switch back to the tab. When the number in the file
+ * changes, a toast slides up: "New update available - refreshing in
+ * 15s", with Refresh now / Not yet buttons.
+ *
+ * To push an update to everyone who's online: change the "version"
+ * value in version.json in the same commit as the code changes (any
+ * new value works - a date, a counter, whatever). Because the file
+ * deploys together with the code, nobody is told to refresh before
+ * the new code is actually live.
+ *
+ * It never yanks the page out from under someone mid-task: if any
+ * text box has unsent text in it (the lobby name, a feedback
+ * message, ...) it skips the automatic refresh and just leaves the
+ * toast up until they choose to refresh.
+ *
+ * Self-contained: no dependency on the other scripts (only uses
+ * playUtilitySound for the button click if it happens to exist).
+ * Does nothing when the page is opened straight from disk (file://),
+ * since version.json can't be fetched there.
+ */
+
+(function () {
+
+    const VERSION_URL = "version.json";
+
+    const CHECK_INTERVAL_MS = 60000;
+    const COUNTDOWN_SECONDS = 15;
+
+    let loadedVersion = null;
+    let updateShown = false;
+
+    let toast = null;
+    let textEl = null;
+    let barEl = null;
+    let notYetButton = null;
+
+    let countdownTimer = null;
+    let secondsLeft = 0;
+
+    async function fetchVersion() {
+
+        try {
+
+            // no-store + a throwaway query string so neither the browser
+            // cache nor the host's CDN can hand back an old copy.
+            const url = new URL(VERSION_URL, document.baseURI);
+
+            url.searchParams.set("_", Date.now());
+
+            const response = await fetch(url.href, { cache: "no-store" });
+
+            if (!response.ok) {
+
+                return null;
+
+            }
+
+            const data = await response.json();
+
+            return data && data.version !== undefined && data.version !== null
+                ? String(data.version)
+                : null;
+
+        } catch (error) {
+
+            return null;
+
+        }
+
+    }
+
+    async function check() {
+
+        if (updateShown) {
+
+            return;
+
+        }
+
+        const version = await fetchVersion();
+
+        if (version === null) {
+
+            return;
+
+        }
+
+        // First successful read = the version this page is running.
+        if (loadedVersion === null) {
+
+            loadedVersion = version;
+
+            return;
+
+        }
+
+        if (version !== loadedVersion) {
+
+            showUpdate();
+
+        }
+
+    }
+
+    /*
+     * True if a reload would throw something away: any textarea with
+     * text in it (lobby name, feedback message) or a text box the
+     * person is in the middle of typing in.
+     */
+    function hasUnsavedText() {
+
+        const boxes = Array.from(document.querySelectorAll("textarea"));
+
+        if (boxes.some(box => box.value.trim().length > 0)) {
+
+            return true;
+
+        }
+
+        const active = document.activeElement;
+
+        return Boolean(
+            active
+            && active.tagName === "INPUT"
+            && active.type === "text"
+            && active.value.trim().length > 0
+        );
+
+    }
+
+    function playClick() {
+
+        if (typeof playUtilitySound === "function") {
+
+            playUtilitySound();
+
+        }
+
+    }
+
+    /*
+     * Static hosts usually let files sit in the browser cache for
+     * several minutes, and a plain reload only re-checks the page
+     * itself - so without this the reload could still run the old
+     * scripts/styles. Re-download the page's own files first (this
+     * refreshes the cache entries), then reload.
+     */
+    async function refreshNow() {
+
+        stopCountdown();
+
+        if (toast) {
+
+            toast.classList.add("update-toast--busy");
+
+            if (textEl) {
+
+                textEl.textContent = "Refreshing...";
+
+            }
+
+        }
+
+        const urls = new Set([location.href]);
+
+        document.querySelectorAll("script[src], link[rel~='stylesheet'][href]").forEach(element => {
+
+            try {
+
+                const url = new URL(element.src || element.href, document.baseURI);
+
+                if (url.origin === location.origin) {
+
+                    urls.add(url.href);
+
+                }
+
+            } catch (error) {
+
+                // ignore anything that isn't a valid URL
+
+            }
+
+        });
+
+        await Promise.all(Array.from(urls).map(url => fetch(url, { cache: "reload" }).catch(() => {})));
+
+        location.reload();
+
+    }
+
+    function stopCountdown() {
+
+        if (countdownTimer) {
+
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+
+        }
+
+    }
+
+    /*
+     * Leaves the toast up with just a Refresh button - used when the
+     * person picks "Not yet", or when there's unsent text so an
+     * automatic refresh would lose it.
+     */
+    function enterManualMode(reason) {
+
+        stopCountdown();
+
+        if (!toast) {
+
+            return;
+
+        }
+
+        toast.classList.add("update-toast--manual");
+
+        if (textEl) {
+
+            textEl.textContent = reason === "typing"
+                ? "You have unsent text, so it won't refresh on its own. Refresh when you're ready."
+                : "Refresh whenever you're ready.";
+
+        }
+
+        if (barEl) {
+
+            barEl.style.transition = "none";
+            barEl.style.width = "0%";
+
+        }
+
+        if (notYetButton) {
+
+            notYetButton.hidden = true;
+
+        }
+
+    }
+
+    function startCountdown() {
+
+        secondsLeft = COUNTDOWN_SECONDS;
+
+        textEl.textContent = `Refreshing in ${secondsLeft}s to load it.`;
+
+        // Shrinks the progress bar over the whole countdown.
+        barEl.style.transition = "none";
+        barEl.style.width = "100%";
+
+        void barEl.offsetWidth;
+
+        barEl.style.transition = `width ${COUNTDOWN_SECONDS}s linear`;
+        barEl.style.width = "0%";
+
+        countdownTimer = setInterval(() => {
+
+            secondsLeft -= 1;
+
+            if (secondsLeft <= 0) {
+
+                stopCountdown();
+
+                if (hasUnsavedText()) {
+
+                    enterManualMode("typing");
+
+                } else {
+
+                    refreshNow();
+
+                }
+
+                return;
+
+            }
+
+            textEl.textContent = `Refreshing in ${secondsLeft}s to load it.`;
+
+        }, 1000);
+
+    }
+
+    function showUpdate() {
+
+        updateShown = true;
+
+        toast = document.createElement("div");
+
+        toast.className = "update-toast";
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+
+        toast.innerHTML = `
+            <div class="update-toast-main">
+                <span class="update-toast-icon" aria-hidden="true">&#10227;</span>
+
+                <div class="update-toast-copy">
+                    <div class="update-toast-title">New update available</div>
+                    <div class="update-toast-text" id="updateToastText"></div>
+                </div>
+            </div>
+
+            <div class="update-toast-actions">
+                <button type="button" class="update-toast-button" id="updateToastNotYet">Not yet</button>
+                <button type="button" class="update-toast-button update-toast-button--primary" id="updateToastRefresh">Refresh now</button>
+            </div>
+
+            <div class="update-toast-bar-track"><div class="update-toast-bar" id="updateToastBar"></div></div>
+        `;
+
+        document.body.appendChild(toast);
+
+        textEl = toast.querySelector("#updateToastText");
+        barEl = toast.querySelector("#updateToastBar");
+        notYetButton = toast.querySelector("#updateToastNotYet");
+
+        toast.querySelector("#updateToastRefresh").addEventListener("click", () => {
+
+            playClick();
+            refreshNow();
+
+        });
+
+        notYetButton.addEventListener("click", () => {
+
+            playClick();
+            enterManualMode("later");
+
+        });
+
+        // Next frame so the slide-in has a starting state to animate from.
+        requestAnimationFrame(() => {
+
+            toast.classList.add("update-toast--visible");
+
+        });
+
+        startCountdown();
+
+    }
+
+    document.addEventListener("visibilitychange", () => {
+
+        if (document.visibilityState === "visible") {
+
+            check();
+
+        }
+
+    });
+
+    setInterval(check, CHECK_INTERVAL_MS);
+
+    check();
+
+})();
