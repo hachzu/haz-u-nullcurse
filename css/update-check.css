@@ -127,6 +127,21 @@
 }
 
 
+/* A short personal note (see HAZU_NOTE in update-check.js) sitting
+   between the title/countdown and the "your run is saved" reassurance
+   - styled as a quiet aside rather than another headline, in the
+   site's usual muted-purple italic-adjacent voice. */
+.update-toast-hazu-note {
+    padding: 2px 2px 0;
+
+    color: #c9b7eb;
+
+    font-size: 10.5px;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+
 /* Reassurance that a refresh doesn't cost anyone their run. */
 .update-toast-note {
     display: flex;

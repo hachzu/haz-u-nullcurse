@@ -37,6 +37,13 @@
     const CHECK_INTERVAL_MS = 60000;
     const COUNTDOWN_SECONDS = 2 * 60;
 
+    // A short personal note shown above the update copy, so it reads
+    // like a heads-up from a person rather than a generic system
+    // toast. Edit this string whenever you want the note to say
+    // something different for a given update - it's just plain text,
+    // no markup needed.
+    const HAZU_NOTE = "hazu here! i just updated something on this website just now, so this page is about to refresh to grab it.";
+
     let loadedVersion = null;
     let updateShown = false;
 
@@ -251,6 +258,19 @@
 
     }
 
+    // HAZU_NOTE is a hardcoded constant above, not user input, but
+    // this keeps the innerHTML assignment safe even if that string
+    // is ever edited to include something like an apostrophe-heavy
+    // sentence with stray angle brackets.
+    function escapeHtmlForToast(str) {
+
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+    }
+
     function formatTime(totalSeconds) {
 
         const minutes = Math.floor(totalSeconds / 60);
@@ -329,6 +349,8 @@
                     <div class="update-toast-text" id="updateToastText"></div>
                 </div>
             </div>
+
+            <div class="update-toast-hazu-note">${escapeHtmlForToast(HAZU_NOTE)}</div>
 
             <div class="update-toast-note">
                 <span class="update-toast-note-icon" aria-hidden="true">&#10003;</span>
