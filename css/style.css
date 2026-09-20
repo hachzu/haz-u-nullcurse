@@ -259,39 +259,181 @@ body {
 
 
 /*
- * Hover dropdown listing everyone currently present, by username
- * (see presence.js). Sits absolutely positioned against the badge
- * itself (.live-viewer-badge is the position: relative anchor
- * above), hidden until the badge is hovered.
+ * Expandable list of everyone currently present, by username (data
+ * from presence.js; open/close, sizing and placement from
+ * live-viewers.js).
+ *
+ * position: fixed (placed under the badge by live-viewers.js), not
+ * absolute: the sidebar scrolls and would clip anything sticking out
+ * past its own 400px width, and this list needs to grow to the
+ * right over the main area when lots of people are online.
+ *
+ * Names fill column by column (top to bottom, then the next column
+ * to the right). live-viewers.js sets --viewer-cols / --viewer-rows
+ * to fit however many people there are; the width is derived from
+ * --viewer-cols so it transitions smoothly as people join or leave.
+ * Closed, the box is clipped down to its own left edge; opening
+ * sweeps the clip back out to the right.
  */
+.live-viewer-badge {
+    cursor: pointer;
+    user-select: none;
+}
+
+
+.live-viewer-badge:focus-visible {
+    outline: 2px solid var(--lp-bright, #d59bff);
+    outline-offset: 2px;
+}
+
+
+/* Small chevron hinting that the badge expands sideways - points
+   right while closed, flips to point back left while open. */
+.live-viewer-badge::after {
+    content: "\203A";
+
+    margin-left: 1px;
+
+    font-size: 13px;
+    line-height: 1;
+
+    opacity: 0.7;
+
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+}
+
+
+.live-viewer-badge.open::after {
+    transform: rotate(180deg);
+
+    opacity: 1;
+}
+
+
 .live-viewer-list {
-    position: absolute;
-    top: calc(100% + 8px);
+    --viewer-cols: 1;
+    --viewer-rows: 1;
+    --viewer-col-w: 140px;
+    --viewer-gap: 4px;
+    --viewer-pad: 8px;
+
+    position: fixed;
+    top: 0;
     left: 0;
 
-    min-width: 140px;
-    max-width: 220px;
-    max-height: 220px;
+    z-index: 50;
+
+    width: calc(
+        var(--viewer-cols) * var(--viewer-col-w)
+        + (var(--viewer-cols) - 1) * var(--viewer-gap)
+        + 2 * var(--viewer-pad)
+    );
+    max-width: calc(100vw - 16px);
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(var(--viewer-rows), auto);
+    grid-template-columns: repeat(var(--viewer-cols), var(--viewer-col-w));
+    gap: var(--viewer-gap);
+
+    padding: var(--viewer-pad);
+
+    overflow-x: hidden;
     overflow-y: auto;
 
-    padding: 8px;
-
-    display: none;
-    flex-direction: column;
-    gap: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--lp-mid, #9147d6) 55%, transparent) transparent;
 
     background: var(--lp-surface, #14061f);
 
     border: 1px solid var(--lp-soft, #4a2270);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 
-    z-index: 50;
+    /* Closed: clipped away to the left edge. */
+    clip-path: inset(0 100% 0 0 round 10px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        clip-path 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease,
+        width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.45s;
 }
 
 
-.live-viewer-badge:hover .live-viewer-list {
-    display: flex;
+/* Open: the clip sweeps out to the right. The negative inset (rather
+   than 0) leaves room around the box so its shadow isn't cut off by
+   the clip. */
+.live-viewer-list.open {
+    clip-path: inset(-24px -24px -24px -24px round 10px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transition:
+        clip-path 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease,
+        width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s;
+}
+
+
+.live-viewer-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.live-viewer-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.live-viewer-list::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--lp-mid, #9147d6) 55%, transparent);
+    border-radius: 999px;
+}
+
+
+/* Names slide in one after another, following the column-by-column
+   fill order (--i is set per name by live-viewers.js). Only while
+   .opening is on, so it plays as the list opens rather than
+   replaying every time someone joins or leaves. */
+.live-viewer-list.opening .live-viewer-list-item {
+    animation: live-viewer-item-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(60ms + min(var(--i, 0), 24) * 22ms);
+}
+
+
+@keyframes live-viewer-item-in {
+
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .live-viewer-list,
+    .live-viewer-list.open,
+    .live-viewer-badge::after {
+        transition-duration: 0.01ms;
+    }
+
+    .live-viewer-list.opening .live-viewer-list-item {
+        animation: none;
+    }
+
 }
 
 
