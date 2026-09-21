@@ -1739,10 +1739,15 @@ function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
     // A medal curse can also appear in its usual Global/Enemy pool.
     // It only adds its value to the Medal Payout when it was picked
     // from the dedicated Medal Curses pool.
+    if (curse.medal) {
+
+        runState.medalPurified.delete(curse.name);
+
+    }
+
     if (curse.medal && awardsMedalPayout) {
 
         runState.medalCurseValues.set(curse.name, curse.value || 0);
-        runState.medalPurified.delete(curse.name);
 
     }
 
@@ -2516,10 +2521,10 @@ function renderActiveCurses() {
         }
 
         const greater = isGreaterCurse(curse);
-        // Medal treatment belongs to curses chosen from the dedicated
-        // Medal Curses pool, not every curse that happens to have a
-        // medal value in its definition.
-        const isMedalCurse = runState.medalCurseValues.has(curseName);
+        // Medal curses retain their dedicated active-card treatment
+        // (including Purify) no matter which pool they came from.
+        // Only their Medal Payout contribution depends on the source.
+        const isMedalCurse = !!curse.medal;
         const purified = runState.medalPurified.has(curseName);
 
         const item = document.createElement("div");
@@ -2873,6 +2878,23 @@ function render() {
     if (typeof renderUpgradeGrid === "function") {
 
         renderUpgradeGrid();
+
+    }
+
+    // Keep the open Protection Altar calculator aligned with the
+    // shared level/player inputs without touching it while hidden.
+    if (
+        typeof renderProtectionAltarCalculator === "function"
+        && document.getElementById("altarsPanel")?.classList.contains("open")
+    ) {
+
+        renderProtectionAltarCalculator();
+
+        if (typeof renderPurificationAltarCalculator === "function") {
+
+            renderPurificationAltarCalculator();
+
+        }
 
     }
 

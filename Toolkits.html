@@ -582,9 +582,77 @@
 
                 <div class="altars-panel-body">
 
-                    <div class="altars-placeholder">
-                        Coming soon...
-                    </div>
+                    <section class="altar-calculator" aria-labelledby="protectionAltarTitle">
+
+                        <div class="altar-calculator-intro">
+                            <div class="altar-calculator-icon" aria-hidden="true">
+                                <img src="assets/upgrades/MoreAltars.png" alt="">
+                            </div>
+                            <div>
+                                <p class="altar-calculator-kicker">ALTAR COST CALCULATOR</p>
+                                <h2 id="protectionAltarTitle">Protection Altar</h2>
+                                <p>Preview the Golden Gifts required at this altar before you commit.</p>
+                            </div>
+                        </div>
+
+                        <div class="altar-calculator-controls">
+                            <label class="altar-gifts-field" for="protectionAltarGifts">
+                                <span>Golden Gifts before altar</span>
+                                <input id="protectionAltarGifts" type="number" min="0" step="1" inputmode="numeric" value="0">
+                            </label>
+                            <button id="protectionAltarUseBalance" class="altar-balance-button" type="button">
+                                Use shop balance
+                            </button>
+                        </div>
+
+                        <div id="protectionAltarContext" class="altar-context" aria-live="polite"></div>
+
+                        <div class="altar-calculator-section-heading">
+                            <span>Choose altar level</span>
+                            <span id="protectionAltarFormula" class="altar-formula"></span>
+                        </div>
+
+                        <div id="protectionAltarLevels" class="altar-level-grid"></div>
+
+                        <div id="protectionAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
+
+                    </section>
+
+                    <section class="altar-calculator altar-calculator--purification" aria-labelledby="purificationAltarTitle">
+
+                        <div class="altar-calculator-intro">
+                            <div class="altar-calculator-icon" aria-hidden="true">
+                                <img src="assets/upgrades/Medal.png" alt="">
+                            </div>
+                            <div>
+                                <p class="altar-calculator-kicker">ALTAR COST CALCULATOR</p>
+                                <h2 id="purificationAltarTitle">Purification Altar</h2>
+                                <p>Find the Golden Gifts required to cleanse a medal curse.</p>
+                            </div>
+                        </div>
+
+                        <div class="purification-altar-toolbar">
+                            <div>
+                                <span class="purification-altar-toolbar-label">ACTIVE MEDAL CURSES</span>
+                                <p>Sync to choose a curse from your Active Curses tracker.</p>
+                            </div>
+                            <button id="purificationAltarSync" class="altar-balance-button purification-altar-sync" type="button">
+                                Sync active curses
+                            </button>
+                        </div>
+
+                        <div id="purificationAltarTargets" class="purification-altar-targets" aria-live="polite"></div>
+
+                        <div id="purificationAltarContext" class="altar-context altar-context--pink" aria-live="polite"></div>
+
+                        <div class="altar-calculator-section-heading">
+                            <span>Purification cost</span>
+                            <span id="purificationAltarFormula" class="altar-formula"></span>
+                        </div>
+
+                        <div id="purificationAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
+
+                    </section>
 
                 </div>
 
@@ -1359,7 +1427,8 @@
                             difficulty buttons, adds together a base amount plus the value of every
                             medal curse you select from the dedicated Medal Curses pool, scaled up by
                             your player count. Picking that same curse from a Global or Enemy Curses
-                            pool applies its gameplay effect but does not add a medal payout.
+                            pool applies its gameplay effect and can still be purified, but does not
+                            add a medal payout.
                             Each medal curse's own reward badge shows the specific slice of that total
                             it is responsible for, and that same number is also how many Golden Gifts
                             you are rewarded for picking it from a medal curse pool. If you would rather keep a medal curse's payout

@@ -6,7 +6,7 @@
  * (collapse-to-icon until hover/focus, live inside the shared
  * .floating-toggle-buttons wrapper in style.css) and the same
  * sliding-overlay panel pattern (see .upgrade-panel / .death-panel).
- * Themed yellow/white. Depends on .right-panel { position: relative; },
+ * Themed light blue and pink. Depends on .right-panel { position: relative; },
  * defined in style.css.
  */
 
@@ -319,38 +319,380 @@
 }
 
 
-/* ---- Body: just a placeholder for now ---- */
+/* ---- Protection Altar calculator ---- */
 
 .altars-panel-body {
     flex: 1 1 auto;
-
-    display: flex;
 }
 
+.altar-calculator {
+    --altar-accent: #8bdbff;
+    --altar-bright: #e8f9ff;
+    --altar-muted: #a8dff5;
+    --altar-glow: rgba(94, 205, 255, 0.28);
 
-.altars-placeholder {
-    flex: 1 1 auto;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid rgba(139, 219, 255, 0.4);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(74, 183, 234, 0.19), rgba(57, 108, 148, 0.06));
+    box-shadow: inset 0 1px 0 rgba(218, 249, 255, 0.18), 0 18px 40px rgba(0, 0, 0, 0.2);
+}
 
+.altar-calculator + .altar-calculator {
+    margin-top: 18px;
+}
+
+.altar-calculator--purification {
+    --altar-accent: #ff9ccb;
+    --altar-bright: #ffe8f4;
+    --altar-muted: #f7b3d3;
+    --altar-glow: rgba(255, 102, 178, 0.28);
+
+    border-color: rgba(255, 143, 195, 0.42);
+    background: linear-gradient(145deg, rgba(232, 69, 146, 0.18), rgba(129, 47, 94, 0.06));
+    box-shadow: inset 0 1px 0 rgba(255, 223, 241, 0.18), 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+
+.altar-calculator-intro {
     display: flex;
-
     align-items: center;
-    justify-content: center;
-
-    padding: 60px 20px;
-
-    border: 1px dashed rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-
-    color: #ffffff;
-
-    font-family: var(--font-modern);
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 1px;
-
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    gap: 16px;
 }
 
+.altar-calculator-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 auto;
+    border: 1px solid var(--altar-accent);
+    border-radius: 14px;
+    background: linear-gradient(145deg, var(--altar-bright), var(--altar-accent));
+    color: #18242a;
+    font-size: 27px;
+    box-shadow: 0 0 18px var(--altar-glow);
+}
+
+.altar-calculator-icon img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+}
+
+.altar-calculator-kicker {
+    margin: 0 0 3px;
+    color: var(--altar-muted);
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+}
+
+.altar-calculator h2 {
+    margin: 0;
+    color: var(--altar-bright);
+    font-family: var(--font-modern);
+    font-size: 23px;
+    letter-spacing: 0.3px;
+}
+
+.altar-calculator-intro p:not(.altar-calculator-kicker) {
+    margin: 5px 0 0;
+    color: var(--altar-muted);
+    font-size: 13px;
+}
+
+.altar-calculator-controls {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.altar-gifts-field {
+    display: grid;
+    flex: 1 1 180px;
+    gap: 6px;
+    color: var(--altar-muted);
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+}
+
+.altar-gifts-field input {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--altar-accent) 55%, transparent);
+    border-radius: 9px;
+    outline: none;
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--altar-bright);
+    font: inherit;
+    font-size: 16px;
+}
+
+.altar-gifts-field input:focus {
+    border-color: var(--altar-bright);
+    box-shadow: 0 0 0 3px var(--altar-glow);
+}
+
+.altar-balance-button,
+.altar-level-card {
+    border: 1px solid color-mix(in srgb, var(--altar-accent) 55%, transparent);
+    color: var(--altar-bright);
+    font-family: var(--font-modern);
+    cursor: pointer;
+}
+
+.altar-balance-button {
+    padding: 11px 14px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.altar-balance-button:hover,
+.altar-balance-button:focus-visible {
+    border-color: var(--altar-bright);
+    background: color-mix(in srgb, var(--altar-accent) 22%, transparent);
+}
+
+.altar-context {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 16px 0 23px;
+}
+
+.altar-context-chip {
+    padding: 5px 8px;
+    border: 1px solid color-mix(in srgb, var(--altar-accent) 30%, transparent);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--altar-muted);
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.altar-calculator-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 10px;
+    color: var(--altar-bright);
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.altar-formula {
+    color: var(--altar-muted);
+    font-size: 10px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.altar-level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.altar-level-card {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 13px 8px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    text-align: left;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.altar-level-card:hover,
+.altar-level-card:focus-visible {
+    border-color: var(--altar-bright);
+    background: color-mix(in srgb, var(--altar-accent) 18%, transparent);
+    transform: translateY(-2px);
+}
+
+.altar-level-card.selected {
+    border-color: var(--altar-bright);
+    background: linear-gradient(145deg, var(--altar-bright), var(--altar-accent));
+    color: #171717;
+    box-shadow: 0 0 18px var(--altar-glow);
+}
+
+.altar-level-label {
+    overflow: hidden;
+    color: inherit;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.altar-level-card strong {
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.altar-level-card small,
+.altar-cost-summary small {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.altar-cost-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 14px;
+    border-left: 3px solid var(--altar-accent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--altar-accent) 12%, transparent);
+    color: var(--altar-muted);
+    font-family: var(--font-modern);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.altar-cost-summary strong {
+    color: var(--altar-bright);
+    font-size: 20px;
+    white-space: nowrap;
+}
+
+.purification-altar-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.purification-altar-toolbar-label {
+    color: var(--altar-bright);
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+.purification-altar-toolbar p {
+    margin: 4px 0 0;
+    color: var(--altar-muted);
+    font-size: 12px;
+}
+
+.purification-altar-sync {
+    flex: 0 0 auto;
+}
+
+.purification-altar-targets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 13px;
+}
+
+.purification-altar-target {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--altar-accent) 35%, transparent);
+    border-radius: 11px;
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--altar-bright);
+    font-family: var(--font-modern);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.purification-altar-target:hover,
+.purification-altar-target:focus-visible {
+    border-color: var(--altar-bright);
+    background: color-mix(in srgb, var(--altar-accent) 15%, transparent);
+    transform: translateY(-1px);
+}
+
+.purification-altar-target.selected {
+    border-color: var(--altar-bright);
+    background: color-mix(in srgb, var(--altar-accent) 20%, transparent);
+    box-shadow: 0 0 16px var(--altar-glow);
+}
+
+.purification-altar-target img {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 7px var(--altar-glow));
+}
+
+.purification-altar-target-copy {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.purification-altar-target-copy strong {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.purification-altar-target-copy small {
+    color: var(--altar-muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.purification-altar-target-source {
+    margin-left: auto;
+    padding: 4px 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.purification-altar-target-source.payout {
+    background: rgba(132, 231, 255, 0.22);
+    color: #bff4ff;
+}
+
+.purification-altar-target-source.normal {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f0d4e2;
+}
+
+.purification-altar-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 14px;
+    border: 1px dashed color-mix(in srgb, var(--altar-accent) 45%, transparent);
+    border-radius: 10px;
+    color: var(--altar-muted);
+    font-size: 12px;
+    text-align: center;
+}
 
 /* ---- Left panel accent while this panel is open ----
    Same idea as .left-panel--upgrades / .left-panel--death in
@@ -389,10 +731,56 @@
 }
 
 
+@media (max-width: 650px) {
+
+    .altar-calculator {
+        padding: 18px;
+    }
+
+    .altar-calculator-controls,
+    .altar-calculator-section-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .altar-balance-button {
+        flex: 0 0 auto;
+    }
+
+    .altar-formula {
+        text-align: left;
+    }
+
+    .altar-level-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .purification-altar-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .purification-altar-targets {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
 @media (max-width: 500px) {
 
     .altars-toggle-button {
         padding: 10px 14px;
+    }
+
+    .altar-calculator-intro {
+        align-items: flex-start;
+    }
+
+    .altar-cost-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
     }
 
 }
