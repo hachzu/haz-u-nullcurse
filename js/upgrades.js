@@ -485,8 +485,9 @@ function computeBaseForStack(item, stack) {
 
 /*
  * basePrice * sqrt(playerCount), with the Party+ multiplier divided
- * by 1.125 and the Nothing-curse -15% discount (if active) applied
- * on top, then rounded with a single ceil() at the very end -
+ * by 1.125 for actual parties (two or more players), and the
+ * Nothing-curse -15% discount (if active) applied on top, then
+ * rounded with a single ceil() at the very end -
  * rounding more than once along the way can throw the final number
  * off by a Golden Gift or two.
  */
@@ -503,7 +504,11 @@ function computeStackPrice(item, stack) {
 
     let multiplier = Math.sqrt(playerCount);
 
-    if (upgradeState.mode === "partyplus") {
+    // Although Party+ normally discounts upgrade prices, the game
+    // does not apply that discount when it has only one player.
+    // Keep that case on the ordinary non-Solo price path (for
+    // example, a Swiftness Ring remains 80 rather than 72).
+    if (upgradeState.mode === "partyplus" && playerCount > 1) {
 
         multiplier = multiplier / 1.125;
 

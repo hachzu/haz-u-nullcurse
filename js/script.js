@@ -811,6 +811,11 @@ function getDisplayedCurseNames() {
 
 
 const assetCache = new Map();
+// Multiple cards can need the same image in one render (most notably
+// medal curses, which appear in both their normal and medal pools).
+// Keep one probe in flight and fan its result out instead of creating
+// an Image request for every copy of the card.
+const pendingAssetResolvers = new Map();
 
 function slugify(name) {
 
@@ -842,22 +847,40 @@ function resolveAsset(assetType, name, onResolved) {
 
     }
 
+    if (pendingAssetResolvers.has(cacheKey)) {
+
+        pendingAssetResolvers.get(cacheKey).push(onResolved);
+
+        return;
+
+    }
+
+    pendingAssetResolvers.set(cacheKey, [onResolved]);
+
     const path = getAssetPath(assetType, name);
     const probe = new Image();
 
+    const complete = resolvedPath => {
+
+        assetCache.set(cacheKey, resolvedPath);
+
+        const resolvers = pendingAssetResolvers.get(cacheKey) || [];
+
+        pendingAssetResolvers.delete(cacheKey);
+
+        resolvers.forEach(resolve => resolve(resolvedPath));
+
+    };
+
     probe.onload = () => {
 
-        assetCache.set(cacheKey, path);
-
-        onResolved(path);
+        complete(path);
 
     };
 
     probe.onerror = () => {
 
-        assetCache.set(cacheKey, false);
-
-        onResolved(false);
+        complete(false);
 
     };
 
@@ -1698,7 +1721,7 @@ function toggleEnemy(enemy) {
 }
 
 
-function selectCurse(curse, ignoreLevel = false) {
+function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
 
     if (!isCurseSelectable(curse, ignoreLevel)) {
 
@@ -1713,7 +1736,10 @@ function selectCurse(curse, ignoreLevel = false) {
         getCurseStackCount(curse.name) + 1
     );
 
-    if (curse.medal) {
+    // A medal curse can also appear in its usual Global/Enemy pool.
+    // It only adds its value to the Medal Payout when it was picked
+    // from the dedicated Medal Curses pool.
+    if (curse.medal && awardsMedalPayout) {
 
         runState.medalCurseValues.set(curse.name, curse.value || 0);
         runState.medalPurified.delete(curse.name);
@@ -2269,7 +2295,7 @@ function createDifficultyButton(difficulty) {
 }
 
 
-function createCurseCard(curse, isMedal = false) {
+function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
     const card = document.createElement("button");
 
@@ -2413,7 +2439,7 @@ function createCurseCard(curse, isMedal = false) {
 
         }
 
-        selectCurse(curse);
+        selectCurse(curse, false, awardsMedalPayout);
 
     });
 
@@ -2490,7 +2516,10 @@ function renderActiveCurses() {
         }
 
         const greater = isGreaterCurse(curse);
-        const isMedalCurse = !!curse.medal;
+        // Medal treatment belongs to curses chosen from the dedicated
+        // Medal Curses pool, not every curse that happens to have a
+        // medal value in its definition.
+        const isMedalCurse = runState.medalCurseValues.has(curseName);
         const purified = runState.medalPurified.has(curseName);
 
         const item = document.createElement("div");
@@ -2646,7 +2675,11 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
         const showMedalHighlight = isDedicatedMedalContainer
             || (Boolean(curse.medal) && medalDisplayState.hideSection);
 
-        const card = createCurseCard(curse, showMedalHighlight);
+        const card = createCurseCard(
+            curse,
+            showMedalHighlight,
+            isDedicatedMedalContainer
+        );
 
         container.appendChild(card);
 
@@ -2657,7 +2690,9 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
 const STORAGE_KEY = "nullscapeRunState";
 
-function saveRunState() {
+let runStateSaveTimer = null;
+
+function persistRunState() {
 
     try {
 
@@ -2675,6 +2710,9 @@ function saveRunState() {
 
             curseStacks: Array.from(runState.curseStacks.entries()),
 
+            // Older saved states could not distinguish a curse chosen
+            // from a normal pool from one chosen from Medal Curses.
+            medalPayoutSourcesTracked: true,
             medalCurseValues: Array.from(runState.medalCurseValues.entries()),
 
             medalPurified: Array.from(runState.medalPurified)
@@ -2688,6 +2726,42 @@ function saveRunState() {
         console.warn("couldn't save run state:", error);
 
     }
+
+}
+
+
+// Rendering can happen once per animation frame while a number field
+// is being typed. Defer synchronous localStorage writes until input
+// settles, then flush them if the page is about to close.
+function saveRunState() {
+
+    if (runStateSaveTimer !== null) {
+
+        clearTimeout(runStateSaveTimer);
+
+    }
+
+    runStateSaveTimer = setTimeout(() => {
+
+        runStateSaveTimer = null;
+        persistRunState();
+
+    }, 200);
+
+}
+
+
+function flushRunStateSave() {
+
+    if (runStateSaveTimer === null) {
+
+        return;
+
+    }
+
+    clearTimeout(runStateSaveTimer);
+    runStateSaveTimer = null;
+    persistRunState();
 
 }
 
@@ -2713,8 +2787,15 @@ function loadRunState() {
         );
         runState.activeCurses = new Set(saved.activeCurses || []);
         runState.curseStacks = new Map(saved.curseStacks || []);
-        runState.medalCurseValues = new Map(saved.medalCurseValues || []);
-        runState.medalPurified = new Set(saved.medalPurified || []);
+        // The old format awarded payout to every selected medal curse,
+        // so its saved values cannot reliably be carried forward.
+        const tracksMedalPayoutSources = saved.medalPayoutSourcesTracked === true;
+        runState.medalCurseValues = tracksMedalPayoutSources
+            ? new Map(saved.medalCurseValues || [])
+            : new Map();
+        runState.medalPurified = tracksMedalPayoutSources
+            ? new Set(saved.medalPurified || [])
+            : new Set();
 
         if (saved.playerCount) {
 
@@ -2800,6 +2881,29 @@ function render() {
 }
 
 
+let scheduledRenderFrame = null;
+
+// Coalesce rapid text/number input into at most one complete DOM
+// rebuild per displayed frame. Click-driven state changes still call
+// render() immediately, so the interface stays responsive.
+function scheduleRender() {
+
+    if (scheduledRenderFrame !== null) {
+
+        return;
+
+    }
+
+    scheduledRenderFrame = requestAnimationFrame(() => {
+
+        scheduledRenderFrame = null;
+        render();
+
+    });
+
+}
+
+
 function pruneInvalidActiveEnemies() {
 
     for (const enemyName of runState.activeEnemies.keys()) {
@@ -2817,7 +2921,7 @@ function pruneInvalidActiveEnemies() {
 }
 
 
-document.getElementById("levelInput").addEventListener("input", render);
+document.getElementById("levelInput").addEventListener("input", scheduleRender);
 
 document.getElementById("levelInput").addEventListener("change", () => {
 
@@ -2839,11 +2943,7 @@ const playerCountInputEl = document.getElementById("playerCountInput");
 // type "12" produces an empty string for an instant, which clamped
 // straight back to "1" and blocked the rest of the digits from ever
 // being entered.
-playerCountInputEl.addEventListener("input", () => {
-
-    render();
-
-});
+playerCountInputEl.addEventListener("input", scheduleRender);
 
 // Only normalize/clamp the field itself once the user's done editing
 // (on blur, or Enter via the native "change" event) - so an empty or
@@ -3261,15 +3361,34 @@ const BG_DRIFT_RANGE = 18;
 
 if (bgLayer) {
 
+    let backgroundDriftFrame = null;
+    let backgroundDriftX = 0;
+    let backgroundDriftY = 0;
+
     window.addEventListener("mousemove", event => {
 
-        const normalizedX = (event.clientX / window.innerWidth) * 2 - 1;
-        const normalizedY = (event.clientY / window.innerHeight) * 2 - 1;
+        backgroundDriftX = event.clientX;
+        backgroundDriftY = event.clientY;
 
-        const moveX = -normalizedX * BG_DRIFT_RANGE;
-        const moveY = -normalizedY * BG_DRIFT_RANGE;
+        if (backgroundDriftFrame !== null) {
 
-        bgLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            return;
+
+        }
+
+        backgroundDriftFrame = requestAnimationFrame(() => {
+
+            backgroundDriftFrame = null;
+
+            const normalizedX = (backgroundDriftX / window.innerWidth) * 2 - 1;
+            const normalizedY = (backgroundDriftY / window.innerHeight) * 2 - 1;
+
+            const moveX = -normalizedX * BG_DRIFT_RANGE;
+            const moveY = -normalizedY * BG_DRIFT_RANGE;
+
+            bgLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+        });
 
     });
 
@@ -3378,6 +3497,8 @@ if (floatingButtonsHideToggle && floatingToggleButtonsEl) {
 
 
 loadRunState();
+
+window.addEventListener("pagehide", flushRunStateSave);
 
 document.getElementById("levelInput").value = runState.level;
 
