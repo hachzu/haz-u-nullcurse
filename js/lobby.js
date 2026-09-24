@@ -524,12 +524,29 @@ function roundedFade(n) {
 
 function escapeForTag(str) {
 
+    // Used for attribute values (e.g. color="...", family="...").
+    // &quot; and &apos; are required here because the attribute is
+    // wrapped in double quotes in the generated tag string.
     return str
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&apos;");
+
+}
+
+function escapeForTagContent(str) {
+
+    // Used for the visible character content between tags.
+    // &quot; and &apos; are NOT needed outside of attribute contexts
+    // and must not be used here — they count as 6/6 characters toward
+    // the lobby name limit instead of 1, which is the reported bug.
+    // Only &amp;, &lt;, and &gt; are required in text content.
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
 }
 
@@ -642,7 +659,7 @@ function compileLobbyRichText(text, letters) {
 
         }
 
-        out += escapeForTag(text[i]);
+        out += escapeForTagContent(text[i]);
 
     }
 
@@ -1284,21 +1301,23 @@ if (lobbyHighlightAllButton && lobbyEditorInput) {
  * looks roughly right (Roblox's real fonts aren't available here).
  */
 const LOBBY_FONT_CATALOG = [
-    { label: "Sans", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "Arial, Helvetica, sans-serif" },
-    { label: "Condensed", face: "rbxasset://fonts/families/RobotoCondensed.json", previewFamily: "'Arial Narrow', sans-serif" },
-    { label: "Mono", face: "rbxasset://fonts/families/RobotoMono.json", previewFamily: "'Courier New', monospace" },
-    { label: "Serif", face: "rbxasset://fonts/families/Merriweather.json", previewFamily: "Georgia, serif" },
-    { label: "Rounded", face: "rbxasset://fonts/families/FredokaOne.json", previewFamily: "'Trebuchet MS', sans-serif" },
-    { label: "Marker", face: "rbxasset://fonts/families/PermanentMarker.json", previewFamily: "'Comic Sans MS', cursive" },
-    { label: "Handwritten", face: "rbxasset://fonts/families/IndieFlower.json", previewFamily: "'Segoe Script', cursive" },
-    { label: "Display", face: "rbxasset://fonts/families/LuckiestGuy.json", previewFamily: "Impact, sans-serif" },
-    { label: "Comic", face: "rbxasset://fonts/families/Bangers.json", previewFamily: "'Arial Black', sans-serif" },
-    { label: "Gothic", face: "rbxasset://fonts/families/GrenzeGotisch.json", previewFamily: "'Times New Roman', serif" },
-    { label: "Typewriter", face: "rbxasset://fonts/families/SpecialElite.json", previewFamily: "'Courier New', monospace" },
-    { label: "Techno", face: "rbxasset://fonts/families/Michroma.json", previewFamily: "'Trebuchet MS', sans-serif" },
-    { label: "Spooky", face: "rbxasset://fonts/families/Creepster.json", previewFamily: "'Papyrus', fantasy" },
-    { label: "Quirky", face: "rbxasset://fonts/families/AmaticSC.json", previewFamily: "'Segoe Script', cursive" },
-    { label: "Friendly", face: "rbxasset://fonts/families/Nunito.json", previewFamily: "'Trebuchet MS', sans-serif" }
+    // previewFamily uses the same web font family used by the rendered
+    // editor/preview instead of an unrelated browser fallback.
+    { label: "Sans", face: "rbxasset://fonts/families/SourceSansPro.json", previewFamily: "'Source Sans Pro', sans-serif" },
+    { label: "Condensed", face: "rbxasset://fonts/families/RobotoCondensed.json", previewFamily: "'Roboto Condensed', sans-serif" },
+    { label: "Mono", face: "rbxasset://fonts/families/RobotoMono.json", previewFamily: "'Roboto Mono', monospace" },
+    { label: "Serif", face: "rbxasset://fonts/families/Merriweather.json", previewFamily: "Merriweather, serif" },
+    { label: "Rounded", face: "rbxasset://fonts/families/FredokaOne.json", previewFamily: "'Fredoka One', cursive" },
+    { label: "Marker", face: "rbxasset://fonts/families/PermanentMarker.json", previewFamily: "'Permanent Marker', cursive" },
+    { label: "Handwritten", face: "rbxasset://fonts/families/IndieFlower.json", previewFamily: "'Indie Flower', cursive" },
+    { label: "Display", face: "rbxasset://fonts/families/LuckiestGuy.json", previewFamily: "'Luckiest Guy', cursive" },
+    { label: "Comic", face: "rbxasset://fonts/families/Bangers.json", previewFamily: "Bangers, cursive" },
+    { label: "Gothic", face: "rbxasset://fonts/families/GrenzeGotisch.json", previewFamily: "'Grenze Gotisch', serif" },
+    { label: "Typewriter", face: "rbxasset://fonts/families/SpecialElite.json", previewFamily: "'Special Elite', monospace" },
+    { label: "Techno", face: "rbxasset://fonts/families/Michroma.json", previewFamily: "Michroma, sans-serif" },
+    { label: "Spooky", face: "rbxasset://fonts/families/Creepster.json", previewFamily: "Creepster, cursive" },
+    { label: "Quirky", face: "rbxasset://fonts/families/AmaticSC.json", previewFamily: "'Amatic SC', cursive" },
+    { label: "Friendly", face: "rbxasset://fonts/families/Nunito.json", previewFamily: "Nunito, sans-serif" }
 ];
 
 const lobbyFontList = document.getElementById("lobbyFontList");

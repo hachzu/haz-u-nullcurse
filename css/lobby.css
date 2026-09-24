@@ -1,3 +1,10 @@
+/* ---- Actual Roblox font faces via Google Fonts ----
+   These are the same font families Roblox bundles for rich-text.
+   Loading the real faces here makes the in-browser preview
+   one-to-one with how names look inside the game. */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&family=Fredoka+One&family=Permanent+Marker&family=Indie+Flower&family=Luckiest+Guy&family=Bangers&family=Grenze+Gotisch:wght@400;700&family=Special+Elite&family=Michroma&family=Creepster&family=Amatic+SC:wght@400;700&family=Nunito:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+
 /*
  * Lobby Maker styles — v3 (shared inline tool workspace)
  * --------------------------
@@ -1061,7 +1068,13 @@
 
 
 .lobby-font-option-preview {
-    font-size: 16px;
+    /* Keep the picker preview on the same font metrics as the actual
+       rendered title preview. */
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 
