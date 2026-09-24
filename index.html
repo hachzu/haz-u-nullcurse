@@ -28,12 +28,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/low-detail.css">
+    <script>
+        try {
+            if (localStorage.getItem("nullscapeLowDetailMode") === "true") {
+                document.documentElement.classList.add("low-detail-mode");
+            }
+        } catch (error) { /* storage can be unavailable in private contexts */ }
+    </script>
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 </head>
 
 <body>
 
 <div class="landing-bg"></div>
+<button type="button" class="low-detail-toggle-button landing-low-detail-toggle" id="lowDetailToggle" aria-pressed="false"></button>
+<div id="detailLoader" class="detail-loader" aria-live="polite" aria-label="Applying display settings"><span></span><strong>APPLYING DISPLAY SETTINGS</strong></div>
 
 <!--
     Full-screen wipe used for the exit transition when Continue is
@@ -177,6 +187,8 @@
     }
 
 </script>
+
+<script src="js/low-detail.js"></script>
 
 <script>
 

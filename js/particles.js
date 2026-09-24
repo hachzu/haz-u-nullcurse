@@ -34,10 +34,10 @@
 
     const DEFAULT_CONFIG = {
         enabled: true,
-        density: 60,   // particles per ~1,000,000px^2 of viewport
+        density: 150,  // particles per ~1,000,000px^2 of viewport
         speed: 1,      // multiplier on drift speed
-        size: 1,       // multiplier on particle radius
-        opacity: 1,    // multiplier on base opacity
+        size: 2.5,     // multiplier on particle radius
+        opacity: 1.5,  // multiplier on base opacity
         theme: "auto", // "auto" follows the open panel, or a hex color
         twinkle: true,
         connect: false // faint connecting lines between nearby particles
@@ -103,6 +103,13 @@
     let currentThemeKey = "default";
     let mouseX = 0;
     let mouseY = 0;
+    let animationFrame = null;
+
+    function shouldAnimate() {
+        return config.enabled
+            && !prefersReducedMotion
+            && !document.documentElement.classList.contains("low-detail-mode");
+    }
 
     function randomBetween(min, max) {
 
@@ -246,7 +253,7 @@
 
         ctx.clearRect(0, 0, width, height);
 
-        if (config.enabled && !prefersReducedMotion) {
+        if (shouldAnimate()) {
 
             const parallaxX = ((mouseX / width) - 0.5) * 10;
             const parallaxY = ((mouseY / height) - 0.5) * 10;
@@ -296,8 +303,26 @@
 
         }
 
-        requestAnimationFrame(step);
+        if (shouldAnimate()) {
+            animationFrame = requestAnimationFrame(step);
+        } else {
+            animationFrame = null;
+        }
 
+    }
+
+    function refreshAnimationState() {
+        if (animationFrame !== null) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        if (shouldAnimate()) {
+            seedParticles();
+            step();
+        }
     }
 
     window.addEventListener("resize", resize);
@@ -369,6 +394,7 @@
 
             saveConfig();
             seedParticles();
+            refreshAnimationState();
 
             if (typeof window.refreshParticleSettingsUI === "function") {
 
@@ -390,6 +416,7 @@
 
             saveConfig();
             seedParticles();
+            refreshAnimationState();
 
             if (typeof window.refreshParticleSettingsUI === "function") {
 
@@ -401,10 +428,12 @@
 
     };
 
+    window.addEventListener("nullscape-low-detail-change", refreshAnimationState);
+
     loadConfig();
     resize();
     syncTheme();
-    step();
+    refreshAnimationState();
 
     /*
      * ---- Settings popover ----
@@ -416,9 +445,10 @@
      */
     function buildSettingsUI() {
 
+        const settingsContainer = document.getElementById("settingsPanel");
         const headerControls = document.querySelector(".site-header-controls");
 
-        if (!headerControls || document.getElementById("particleSettingsButton")) {
+        if ((!settingsContainer && !headerControls) || document.getElementById("particleSettingsButton")) {
 
             return;
 
@@ -428,11 +458,15 @@
 
         button.type = "button";
         button.id = "particleSettingsButton";
-        button.className = "mute-toggle-button particle-settings-button";
+        button.className = settingsContainer
+            ? "settings-option particle-settings-button"
+            : "mute-toggle-button particle-settings-button";
         button.setAttribute("aria-label", "Particle effect settings");
         button.setAttribute("aria-expanded", "false");
         button.title = "Customize ambient particles";
-        button.innerHTML = '<span class="particle-settings-icon">&#10022;</span>';
+        button.innerHTML = settingsContainer
+            ? "PARTICLE FIELD"
+            : '<span class="particle-settings-icon">&#10022;</span>';
 
         const panel = document.createElement("div");
 
@@ -499,7 +533,11 @@
 
         const muteButton = document.getElementById("muteToggleButton");
 
-        if (muteButton) {
+        if (settingsContainer) {
+
+            settingsContainer.appendChild(button);
+
+        } else if (muteButton) {
 
             headerControls.insertBefore(button, muteButton);
 

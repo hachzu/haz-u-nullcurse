@@ -244,6 +244,25 @@ function tweenNumberText(el, targetValue, options = {}) {
 
     }
 
+    if (document.documentElement.classList.contains("low-detail-mode")) {
+
+        if (el._rollRAF) {
+            cancelAnimationFrame(el._rollRAF);
+            el._rollRAF = null;
+        }
+
+        const format = options.format || (value => Math.round(value).toLocaleString());
+        const target = Number(targetValue);
+
+        if (Number.isFinite(target)) {
+            el.dataset.rollValue = target;
+            el.textContent = format(target);
+        }
+
+        return;
+
+    }
+
     const duration = options.duration ?? 550;
     const format = options.format || (value => Math.round(value).toLocaleString());
 
@@ -3093,23 +3112,27 @@ function updateMuteToggleUI() {
 
 }
 
+window.NullscapeSound = {
+    isMuted: () => soundMuted,
+    setMuted: muted => {
+        soundMuted = Boolean(muted);
+
+        try {
+            localStorage.setItem(SOUND_MUTE_KEY, soundMuted ? "true" : "false");
+        } catch (error) {
+            console.warn("couldn't save mute preference:", error);
+        }
+
+        updateMuteToggleUI();
+        window.dispatchEvent(new CustomEvent("nullscape-sound-change"));
+    }
+};
+
 if (muteToggleButton) {
 
     muteToggleButton.addEventListener("click", () => {
 
-        soundMuted = !soundMuted;
-
-        try {
-
-            localStorage.setItem(SOUND_MUTE_KEY, soundMuted ? "true" : "false");
-
-        } catch (error) {
-
-            console.warn("couldn't save mute preference:", error);
-
-        }
-
-        updateMuteToggleUI();
+        window.NullscapeSound.setMuted(!soundMuted);
 
     });
 
@@ -3389,6 +3412,11 @@ if (bgLayer) {
 
     window.addEventListener("mousemove", event => {
 
+        if (document.documentElement.classList.contains("low-detail-mode")) {
+            bgLayer.style.transform = "";
+            return;
+        }
+
         backgroundDriftX = event.clientX;
         backgroundDriftY = event.clientY;
 
@@ -3411,6 +3439,19 @@ if (bgLayer) {
             bgLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
 
         });
+
+    });
+
+    window.addEventListener("nullscape-low-detail-change", event => {
+
+        if (event.detail.enabled) {
+            if (backgroundDriftFrame !== null) {
+                cancelAnimationFrame(backgroundDriftFrame);
+                backgroundDriftFrame = null;
+            }
+
+            bgLayer.style.transform = "";
+        }
 
     });
 

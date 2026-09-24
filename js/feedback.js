@@ -129,6 +129,16 @@
 
         }
 
+        // Settings stays immediately to Feedback's right, even though this
+        // button is created dynamically after the page markup is parsed.
+        const settingsButton = document.getElementById("settingsToggleButton");
+
+        if (settingsButton) {
+
+            headerControls.appendChild(settingsButton);
+
+        }
+
         const textarea = panel.querySelector("#feedbackTextarea");
         const fromInput = panel.querySelector("#feedbackFromInput");
         const charCount = panel.querySelector("#feedbackCharCount");

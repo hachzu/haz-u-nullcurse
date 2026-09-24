@@ -38,12 +38,27 @@
     <link rel="stylesheet" href="css/feedback.css">
     <link rel="stylesheet" href="css/update-check.css">
     <link rel="stylesheet" href="css/curse-help.css">
+    <link rel="stylesheet" href="css/low-detail.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <script>
+        try {
+            if (localStorage.getItem("nullscapeLowDetailMode") === "true") {
+                document.documentElement.classList.add("low-detail-mode");
+            }
+        } catch (error) { /* storage can be unavailable in private contexts */ }
+    </script>
 </head>
 
 <body>
 
 <div id="bgLayer" class="bg-layer"></div>
 <canvas id="particleCanvas" class="particle-canvas"></canvas>
+<section id="settingsPanel" class="settings-panel" hidden aria-label="Settings">
+    <div class="settings-panel-header">SETTINGS <button type="button" id="settingsCloseButton" class="settings-close-button" aria-label="Close settings">&times;</button></div>
+    <button type="button" class="settings-option low-detail-toggle-button" id="lowDetailToggle" aria-pressed="false"></button>
+    <button type="button" class="settings-option" id="settingsSfxToggle" aria-pressed="true"></button>
+</section>
+<div id="detailLoader" class="detail-loader" aria-live="polite" aria-label="Applying display settings"><span></span><strong>APPLYING DISPLAY SETTINGS</strong></div>
 <div class="app">
 
     <aside class="left-panel">
@@ -61,16 +76,7 @@
                         <div class="live-viewer-list" id="liveViewerList"></div>
                     </div>
 
-                    <button
-                        type="button"
-                        id="muteToggleButton"
-                        class="mute-toggle-button"
-                        aria-pressed="false"
-                        aria-label="Mute sound effects"
-                        title="Mute sound effects"
-                    >
-                        <span class="mute-toggle-icon" id="muteToggleIcon">&#128266;</span>
-                    </button>
+                    <button type="button" id="settingsToggleButton" class="settings-toggle-button" aria-expanded="false" aria-controls="settingsPanel" title="Settings">&#9881;</button>
 
                 </div>
             </div>
@@ -1646,6 +1652,7 @@
 
 
 <script type="module" src="js/presence.js"></script>
+<script src="js/low-detail.js"></script>
 <script src="js/live-viewers.js"></script>
 <script src="js/script.js"></script>
 <script src="js/curse-help.js"></script>
@@ -1657,6 +1664,7 @@
 <script src="js/spotlight.js"></script>
 <script src="js/feedback.js"></script>
 <script src="js/update-check.js"></script>
+<script src="js/settings.js"></script>
 
 </body>
 </html>
