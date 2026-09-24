@@ -12,4 +12,5 @@
     if (sfxButton) sfxButton.addEventListener("click", () => { if (window.NullscapeSound) window.NullscapeSound.setMuted(!window.NullscapeSound.isMuted()); refreshSfx(); });
     window.addEventListener("nullscape-sound-change", refreshSfx);
     refreshSfx();
+
 }());
