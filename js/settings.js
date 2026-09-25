@@ -4,7 +4,7 @@
     const openButton = document.getElementById("settingsToggleButton");
     const closeButton = document.getElementById("settingsCloseButton");
     const sfxButton = document.getElementById("settingsSfxToggle");
-    function setOpen(open) { if (!panel || !openButton) return; panel.hidden = !open; openButton.setAttribute("aria-expanded", String(open)); }
+    function setOpen(open) { if (!panel || !openButton) return; panel.hidden = !open; openButton.setAttribute("aria-expanded", String(open)); if (open) document.dispatchEvent(new CustomEvent("nullscape-settings-opened")); }
     if (openButton) openButton.addEventListener("click", () => setOpen(panel.hidden));
     if (closeButton) closeButton.addEventListener("click", () => setOpen(false));
     document.addEventListener("keydown", event => { if (event.key === "Escape") setOpen(false); });
