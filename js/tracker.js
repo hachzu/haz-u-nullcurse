@@ -162,6 +162,9 @@ function loadCurseVisibilityState() {
  * unlockAll: lets the user actually mark those otherwise-locked
  * enemies active with no level or dependency required.
  *
+ * listMode: integrates cap tracking into these same buttons while
+ * preserving the current list visibility and every dependency rule.
+ *
  * unlockAll only has anything to unlock once showAll is revealing
  * the extra enemies, so it stays disabled until showAll is on, and
  * turning showAll off also turns unlockAll back off.
@@ -169,6 +172,7 @@ function loadCurseVisibilityState() {
 const enemyVisibilityState = {
 
     showAll: false,
+    listMode: false,
     unlockAll: false
 
 };
@@ -209,6 +213,7 @@ function loadEnemyVisibilityState() {
         const saved = JSON.parse(raw);
 
         enemyVisibilityState.showAll = Boolean(saved.showAll);
+        enemyVisibilityState.listMode = Boolean(saved.listMode);
         enemyVisibilityState.unlockAll = Boolean(saved.unlockAll) && enemyVisibilityState.showAll;
 
     } catch (error) {
@@ -672,9 +677,119 @@ function hasEnemy(name) {
 }
 
 
+/* Enemy caps used when LIST mode is active in Active Enemies. In regular Party+
+   mode, multiplayer doubles only the non-fixed caps. Extreme multiplayer has
+   its own rule: all caps double except Operator, Kolona, Cadence, and
+   Scrapmaw. */
+const ENEMY_TRACKER_CAPS = Object.freeze({
+    "Bell": { cap: 1 },
+    "Baby": { cap: 2 },
+    "Mart": { cap: 1 },
+    "ICBM": { cap: 2 },
+    "Husk": { cap: 2 },
+    "Springer": { cap: 2 },
+    "Flesh": { cap: 2 },
+    "Operator": { cap: 1, fixed: true },
+    "Guardian": { cap: 1 },
+    "Telefragger": { cap: 6, fixed: true },
+    "Kolona": { cap: 2, fixed: true },
+    "Voidbound Baby": { cap: 2 },
+    "Cadence": { cap: 1, fixed: true },
+    "Sigil": { cap: 2, fixed: true },
+    "Voidbreaker": { cap: 6, fixed: true },
+    "Voidbound Guardian": { cap: 3, fixed: true },
+    "Scrapmaw": { cap: 1, fixed: true }
+});
+
+
+function getSelectedGameMode() {
+
+    return typeof upgradeState !== "undefined" ? upgradeState.mode : "solo";
+
+}
+
+
+function isPartyPlusMode() {
+
+    return getSelectedGameMode() === "partyplus";
+
+}
+
+
+function isMultiplayerMode() {
+
+    return ["duo", "party", "partyplus"].includes(getSelectedGameMode());
+
+}
+
+
+function getSelectedGameModeLabel() {
+
+    return ({ solo: "SOLO", duo: "DUO", party: "PARTY", partyplus: "PARTY+" })[getSelectedGameMode()] || "SOLO";
+
+}
+
+
+const EXTREME_MULTIPLAYER_CAP_EXCEPTIONS = new Set([
+    "Operator", "Kolona", "Cadence", "Scrapmaw"
+]);
+
+
+function isExtremeMultiplayerLobby() {
+
+    return runState.difficulty === "Extreme" && isMultiplayerMode();
+
+}
+
+
+function getEnemyTrackerCap(enemyName) {
+
+    const rule = ENEMY_TRACKER_CAPS[enemyName];
+
+    if (!rule) {
+
+        return 1;
+
+    }
+
+    if (isExtremeMultiplayerLobby()) {
+
+        return EXTREME_MULTIPLAYER_CAP_EXCEPTIONS.has(enemyName)
+            ? rule.cap
+            : rule.cap * 2;
+
+    }
+
+    return rule.fixed || !isPartyPlusMode()
+        ? rule.cap
+        : rule.cap * 2;
+
+}
+
+
 function getEnemyMaxStack(enemy) {
 
-    return enemy.maxStack || 1;
+    return enemyVisibilityState.listMode
+        ? getEnemyTrackerCap(enemy.name)
+        : (enemy.maxStack || 1);
+
+}
+
+
+function pruneActiveEnemyStacks() {
+
+    enemies.forEach(enemy => {
+
+        const count = getEnemyCount(enemy.name);
+        const maxStack = getEnemyMaxStack(enemy);
+
+        if (count > maxStack) {
+
+            runState.activeEnemies.set(enemy.name, maxStack);
+
+        }
+
+    });
 
 }
 
@@ -2843,6 +2958,7 @@ function loadRunState() {
 function render() {
 
     runState.level = getLevel();
+    pruneActiveEnemyStacks();
 
     const difficultyContainer = document.getElementById("difficultyContainer");
 
@@ -2870,7 +2986,6 @@ function render() {
 
     tweenNumberText(document.getElementById("curseCount"), getDisplayedCurseNames().length);
     tweenNumberText(document.getElementById("enemyCount"), runState.activeEnemies.size);
-
     renderActiveCurses();
 
         const medalCurseContainerEl = document.getElementById("medalCurseContainer");
@@ -3283,6 +3398,7 @@ updateCurseVisibilityToggleUI();
 
 
 const showAllEnemiesToggle = document.getElementById("showAllEnemiesToggle");
+const enemyListToggle = document.getElementById("enemyListToggle");
 const unlockAllEnemiesToggle = document.getElementById("unlockAllEnemiesToggle");
 
 function updateEnemyVisibilityToggleUI() {
@@ -3291,6 +3407,13 @@ function updateEnemyVisibilityToggleUI() {
 
         showAllEnemiesToggle.classList.toggle("active", enemyVisibilityState.showAll);
         showAllEnemiesToggle.setAttribute("aria-checked", enemyVisibilityState.showAll ? "true" : "false");
+
+    }
+
+    if (enemyListToggle) {
+
+        enemyListToggle.classList.toggle("active", enemyVisibilityState.listMode);
+        enemyListToggle.setAttribute("aria-checked", enemyVisibilityState.listMode ? "true" : "false");
 
     }
 
@@ -3304,6 +3427,19 @@ function updateEnemyVisibilityToggleUI() {
         unlockAllEnemiesToggle.disabled = !enemyVisibilityState.showAll;
 
     }
+
+}
+
+if (enemyListToggle) {
+
+    attachClickAction(enemyListToggle, () => {
+
+        enemyVisibilityState.listMode = !enemyVisibilityState.listMode;
+        saveEnemyVisibilityState();
+        updateEnemyVisibilityToggleUI();
+        render();
+
+    }, playUtilitySound);
 
 }
 

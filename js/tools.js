@@ -3638,6 +3638,7 @@ renderLobbyTagLog();
 (function () {
 
     const STORAGE_KEY = "nullscapeParticleConfig";
+    const DEFAULT_OFF_MIGRATION_KEY = "nullscapeParticlesDefaultOffV1";
 
     const THEMES = {
         default: ["#b866ff", "#d59bff", "#7a2fc4"],
@@ -3646,7 +3647,7 @@ renderLobbyTagLog();
     };
 
     const DEFAULT_CONFIG = {
-        enabled: true,
+        enabled: false,
         density: 150,  // particles per ~1,000,000px^2 of viewport
         speed: 1,      // multiplier on drift speed
         size: 2.5,     // multiplier on particle radius
@@ -3671,6 +3672,17 @@ renderLobbyTagLog();
             const saved = JSON.parse(raw);
 
             config = { ...DEFAULT_CONFIG, ...saved };
+
+            // Apply the new default once for people who saved settings before
+            // particles became opt-in. Afterwards, their own toggle choice is
+            // respected on future visits.
+            if (!localStorage.getItem(DEFAULT_OFF_MIGRATION_KEY)) {
+
+                config.enabled = false;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+                localStorage.setItem(DEFAULT_OFF_MIGRATION_KEY, "true");
+
+            }
 
         } catch (error) {
 

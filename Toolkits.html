@@ -98,8 +98,8 @@
         </section>
 
 
-        <!-- Player count and game mode both affect tracker rules as
-             well as shop prices, so they stay available at all times. -->
+        <!-- Game mode determines tracker rules; player count remains
+             available for the shop calculations. -->
         <section class="control-section level-section">
 
             <label for="playerCountInput">PLAYER COUNT <span class="label-note"></span></label>
@@ -162,6 +162,18 @@
                     >
                         0
                     </span>
+
+                    <button
+                        type="button"
+                        id="enemyListToggle"
+                        class="mini-visibility-toggle"
+                        role="switch"
+                        aria-checked="false"
+                        title="Enable enemy cap stacks directly in the visible Active Enemies list"
+                    >
+                        <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
+                        <span class="mini-visibility-label">LIST</span>
+                    </button>
 
                     <button
                         type="button"
