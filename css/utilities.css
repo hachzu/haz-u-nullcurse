@@ -1,75 +1,4 @@
-/*
- * Curse Tracker help
- * --------------------------
- * A compact "?" trigger that sits right next to the CURSE POOLS
- * title, and a full-screen overlay dialog it opens - a purple-themed
- * card holding plain text plus a handful of genuine, non-clickable
- * copies of real UI pieces (curse cards, badges, buttons, switches)
- * so people can see exactly what each part of the tracker looks like
- * instead of only reading about it.
- *
- * See curse-help.js for the open/close/backdrop/Escape wiring.
- */
-
-
-/* A gentle brightening pulse for small accent text (the overlay's
-   eyebrow label, the "?" toggle icon, and the info-card icons). Kept
-   local to this file rather than reused from style.css's own
-   keyframes, since it doesn't need to match anything outside the
-   guide. */
-@keyframes curse-help-glow-pulse {
-
-    0%,
-    100% {
-        text-shadow: 0 0 4px rgba(216, 155, 255, 0.25);
-    }
-
-    50% {
-        text-shadow: 0 0 12px rgba(216, 155, 255, 0.7), 0 0 4px rgba(255, 255, 255, 0.4);
-    }
-
-}
-
-
-/* Wraps the CURSE POOLS heading and the help trigger on one line so
-   the button reads as attached to the title instead of floating
-   somewhere else on the page. */
-.pool-title-row {
-    display: flex;
-
-    align-items: center;
-    flex-wrap: wrap;
-
-    gap: 12px;
-}
-
-
-/* ---- Compact trigger button ----
-   Deliberately small and quiet - a round "?" plus a short label,
-   sized to sit comfortably beside the (much larger) CURSE POOLS
-   heading rather than competing with it. */
-.curse-help-toggle {
-    flex-shrink: 0;
-
-    display: inline-flex;
-
-    align-items: center;
-    gap: 6px;
-
-    padding: 5px 12px 5px 6px;
-
-    background: rgba(184, 102, 255, 0.1);
-
-    border: 1px solid rgba(184, 102, 255, 0.45);
-    border-radius: 999px;
-
-    color: #d0bfef;
-
-    cursor: pointer;
-    user-select: none;
-
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
-}
+/* Source: toolkit-utilities.css */
 
 
 .curse-help-toggle:hover,
@@ -911,3 +840,478 @@
     }
 
 }
+/* Source: low-detail.css */
+/* A deliberately plain rendering path for slower devices. */
+html.low-detail-mode,
+html.low-detail-mode body { background: #11091a; }
+
+html.low-detail-mode *,
+html.low-detail-mode *::before,
+html.low-detail-mode *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+}
+
+html.low-detail-mode .particle-canvas,
+html.low-detail-mode .landing-bg,
+html.low-detail-mode .landing-wipe,
+html.low-detail-mode .particle-settings-button { display: none !important; }
+
+/* Keep one still image background instead of the full-detail moving layer. */
+html.low-detail-mode .bg-layer {
+    display: block !important;
+    z-index: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("../assets/background/Background.png") !important;
+    background-size: cover;
+    background-position: center;
+    opacity: var(--bg-opacity, 0.09);
+    transform: none !important;
+    will-change: auto;
+}
+
+/* The original layer sits behind the document at z-index -1. In this mode it
+   is intentionally promoted behind the app so Background.png remains visible. */
+html.low-detail-mode .app { z-index: 1; }
+
+/* Solid fills avoid costly decorative background painting while retaining the UI. */
+html.low-detail-mode .left-panel,
+html.low-detail-mode .toolkit-panel,
+html.low-detail-mode .landing-card {
+    background-image: none !important;
+    background-color: #1a1026 !important;
+}
+
+/* The tracker side stays transparent so the retained Background.png can show
+   through, as it does in the normal page. */
+html.low-detail-mode .right-panel {
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+/* Lobby subpanels used an animation's final frame to become opaque. */
+html.low-detail-mode .lobby-subpanel--open {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+.detail-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    gap: 14px;
+    background: rgba(10, 5, 18, 0.92);
+    color: #f0e4ff;
+    font: 800 12px/1 var(--font-modern, sans-serif);
+    letter-spacing: 1.5px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.detail-loader span {
+    width: 34px;
+    height: 34px;
+    justify-self: center;
+    border: 3px solid rgba(213, 155, 255, 0.25);
+    border-top-color: #d59bff;
+    border-radius: 50%;
+}
+
+.detail-loader--active { opacity: 1; pointer-events: auto; animation: detail-loader-fade 0.65s ease both; }
+.detail-loader--active span { animation: detail-loader-spin 0.65s linear infinite; }
+@keyframes detail-loader-fade { 0%, 100% { opacity: 0; } 15%, 85% { opacity: 1; } }
+@keyframes detail-loader-spin { to { transform: rotate(360deg); } }
+
+html.low-detail-mode .detail-loader--active { animation: detail-loader-fade 0.65s ease both !important; }
+html.low-detail-mode .detail-loader--active span { animation: detail-loader-spin 0.65s linear infinite !important; }
+
+html.low-detail-mode button:hover,
+html.low-detail-mode a:hover,
+html.low-detail-mode input:hover,
+html.low-detail-mode select:hover,
+html.low-detail-mode .curse-card:hover,
+html.low-detail-mode .enemy-button:hover {
+    outline: 1px solid currentColor;
+    outline-offset: 1px;
+}
+
+.low-detail-toggle-button {
+    flex-shrink: 0;
+    min-height: 30px;
+    padding: 5px 8px;
+    border: 1px solid rgba(216, 155, 255, 0.55);
+    border-radius: 6px;
+    background: rgba(20, 6, 31, 0.85);
+    color: #f0e4ff;
+    font: 700 10px/1 var(--font-modern, sans-serif);
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+
+.low-detail-toggle-button:hover,
+.low-detail-toggle-button[aria-pressed="true"] {
+    background: #3a1761;
+    border-color: #d59bff;
+    color: #fff;
+}
+
+.landing-low-detail-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+}
+/* Source: settings.css */
+/* Compact settings popover: keeps preference controls out of the busy header. */
+.settings-toggle-button { flex-shrink: 0; width: 30px; height: 30px; padding: 0; border: 1px solid rgba(216, 155, 255, 0.55); border-radius: 50%; background: rgba(20, 6, 31, 0.85); color: #f0e4ff; font-size: 15px; cursor: pointer; }
+.feedback-button + .settings-toggle-button { margin-left: 8px; }
+.settings-panel { position: fixed; top: 14px; left: 14px; z-index: 80; width: min(280px, calc(100vw - 28px)); padding: 14px; border: 1px solid rgba(216, 155, 255, 0.55); border-radius: 10px; background: #1a1026; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45); }
+.settings-panel[hidden] { display: none; }
+.settings-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: #f0e4ff; font: 800 12px/1 var(--font-modern, sans-serif); letter-spacing: 1px; }
+.settings-close-button { padding: 0; border: 0; background: transparent; color: #f0e4ff; font-size: 20px; cursor: pointer; }
+.settings-option { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid rgba(216, 155, 255, 0.28); border-radius: 7px; background: rgba(255, 255, 255, 0.04); color: #e8dcff; font: 700 11px/1 var(--font-modern, sans-serif); letter-spacing: 0.5px; cursor: pointer; }
+.settings-option + .settings-option { margin-top: 8px; }
+.settings-option:hover, .settings-option[aria-pressed="true"] { border-color: #d59bff; background: #3a1761; }
+/* Source: settings-spotlight.css */
+/*
+ * Settings Spotlight styles
+ * --------------------------
+ * Four dimming panels framing the settings button, a pulsing
+ * highlight ring, and a callout bubble recommending Low Detail Mode
+ * to anyone on slower hardware.
+ *
+ * Follows the exact same structural approach as spotlight.css (the
+ * tools spotlight) but uses its own "settings-spotlight-*" class
+ * namespace so the two overlays can safely coexist on the same page
+ * without any CSS bleed.
+ *
+ * The callout opens to the right of the settings button (top-left
+ * corner of the screen), with a fallback to below when there isn't
+ * enough horizontal room - see settings-spotlight.js → position().
+ */
+
+
+/* ── Overlay shell ──────────────────────────────────────────────── */
+
+.settings-spotlight-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 190;       /* just below the tools spotlight (200) */
+
+    pointer-events: none;
+}
+
+
+/* ── Dimming panels ─────────────────────────────────────────────── */
+
+.settings-spotlight-panel {
+    position: fixed;
+
+    pointer-events: auto;
+    cursor: pointer;
+
+    background: rgba(5, 1, 12, 0);
+
+    transition: background 0.3s ease;
+}
+
+.settings-spotlight-overlay--visible .settings-spotlight-panel {
+    background: rgba(5, 1, 12, 0.82);
+}
+
+.settings-spotlight-panel--top    { top: 0; left: 0; right: 0; }
+.settings-spotlight-panel--bottom { left: 0; right: 0; bottom: 0; }
+.settings-spotlight-panel--left   { left: 0; }
+.settings-spotlight-panel--right  { right: 0; }
+
+
+/* ── Highlight ring ─────────────────────────────────────────────── */
+
+.settings-spotlight-ring {
+    position: fixed;
+
+    pointer-events: none;
+
+    border: 2px solid rgba(216, 155, 255, 0.9);
+    border-radius: 50%;     /* settings button is circular */
+
+    box-shadow:
+        0 0 0 6px rgba(184, 102, 255, 0.22),
+        0 0 30px rgba(184, 102, 255, 0.45);
+
+    opacity: 0;
+
+    animation: settings-spotlight-pulse 1.8s ease-in-out infinite;
+
+    transition: opacity 0.3s ease;
+}
+
+.settings-spotlight-overlay--visible .settings-spotlight-ring {
+    opacity: 1;
+}
+
+@keyframes settings-spotlight-pulse {
+    0%, 100% { transform: scale(1);     }
+    50%       { transform: scale(1.06); }   /* slightly more than the tools ring */
+}
+
+
+/* ── Callout bubble ─────────────────────────────────────────────── */
+
+.settings-spotlight-callout {
+    position: fixed;
+
+    width: 296px;
+    max-width: calc(100vw - 24px);
+
+    padding: 18px 20px 16px;
+
+    pointer-events: auto;
+
+    background: linear-gradient(160deg, #1f0f38 0%, #12061f 100%);
+
+    border: 1px solid rgba(216, 155, 255, 0.5);
+    border-radius: 14px;
+
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(184, 102, 255, 0.25);
+
+    color: #f0e4ff;
+
+    opacity: 0;
+    transform: translateX(-6px);    /* slides in from the left */
+
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.settings-spotlight-overlay--visible .settings-spotlight-callout {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+
+/* ── Arrow ──────────────────────────────────────────────────────── */
+
+/*
+ * Default: callout is to the RIGHT of the button. Arrow points left
+ * (the rotated square sits on the callout's left edge).
+ */
+.settings-spotlight-callout-arrow {
+    position: absolute;
+    top: 20px;
+    left: -8px;
+
+    width: 16px;
+    height: 16px;
+
+    background: #1a0a2e;
+
+    border-left:   1px solid rgba(216, 155, 255, 0.5);
+    border-bottom: 1px solid rgba(216, 155, 255, 0.5);
+
+    transform: rotate(45deg);
+}
+
+/*
+ * Callout dropped BELOW the button (not enough horizontal room).
+ * Arrow points upward - sits on the callout's top edge.
+ */
+.settings-spotlight-callout--below .settings-spotlight-callout-arrow {
+    top: -8px;
+    left: 20px;
+
+    border-left:   1px solid rgba(216, 155, 255, 0.5);
+    border-top:    1px solid rgba(216, 155, 255, 0.5);
+    border-bottom: none;
+    border-right:  none;
+
+    transform: rotate(45deg);
+}
+
+
+/* ── Callout content ────────────────────────────────────────────── */
+
+.settings-spotlight-callout-icon {
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 8px;
+
+    /* subtle glow matching the ring */
+    filter: drop-shadow(0 0 6px rgba(184, 102, 255, 0.55));
+}
+
+.settings-spotlight-callout-title {
+    margin-bottom: 8px;
+
+    color: #f0e4ff;
+
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.settings-spotlight-callout-body {
+    margin-bottom: 14px;
+
+    color: #d0bfef;
+
+    font-family: var(--font-modern);
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+.settings-spotlight-callout-body p + p {
+    margin-top: 6px;
+}
+
+.settings-spotlight-callout-body strong {
+    color: #e8d9ff;
+    font-weight: 700;
+}
+
+.settings-spotlight-callout-tip {
+    margin-top: 8px !important;
+
+    padding: 7px 10px;
+
+    background: rgba(184, 102, 255, 0.1);
+
+    border: 1px solid rgba(184, 102, 255, 0.28);
+    border-radius: 7px;
+
+    color: #c8b3f0 !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+}
+
+
+/* ── Callout action buttons ─────────────────────────────────────── */
+
+.settings-spotlight-callout-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Primary CTA: Open Settings */
+.settings-spotlight-open-button {
+    flex: 1 1 auto;
+
+    padding: 9px 14px;
+
+    background: linear-gradient(135deg, #b866ff, #7a2fc4);
+
+    border: 1px solid #d59bff;
+    border-radius: 8px;
+
+    color: #ffffff;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+
+    cursor: pointer;
+
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.settings-spotlight-open-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 16px rgba(184, 102, 255, 0.5);
+}
+
+/* Secondary: Got it (close, show again next visit) */
+.settings-spotlight-dismiss-button {
+    flex: 1 1 auto;
+
+    padding: 9px 12px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    border: 1px solid rgba(216, 155, 255, 0.35);
+    border-radius: 8px;
+
+    color: #c0adee;
+
+    font-family: var(--font-modern);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+
+    cursor: pointer;
+
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.settings-spotlight-dismiss-button:hover {
+    background: rgba(184, 102, 255, 0.12);
+    border-color: #d59bff;
+    color: #fff;
+}
+
+/* Tertiary: Don't show again (persistent dismiss) */
+.settings-spotlight-neveragain-button {
+    flex: 0 0 100%;           /* own row so it reads as clearly secondary */
+
+    padding: 6px 10px;
+
+    background: transparent;
+
+    border: none;
+
+    color: rgba(176, 155, 220, 0.55);
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    cursor: pointer;
+
+    transition: color 0.12s;
+}
+
+.settings-spotlight-neveragain-button:hover {
+    color: #b6a3dd;
+}
+
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 500px) {
+
+    .settings-spotlight-callout {
+        width: 250px;
+        padding: 14px 16px 12px;
+    }
+
+    .settings-spotlight-callout-actions {
+        flex-direction: column;
+    }
+
+    .settings-spotlight-neveragain-button {
+        flex: 0 0 auto;
+    }
+
+}
+/* Source: sharp.css */
+:where(*, *::before, *::after) {
+    border-radius: 2px !important;
+}
+

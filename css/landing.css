@@ -605,6 +605,11 @@ body {
     flex-shrink: 0;
 }
 
+/* Crisp, nearly-square corners shared with the rest of the site. */
+:where(*, *::before, *::after) {
+    border-radius: 2px !important;
+}
+
 @media (max-width: 640px) {
 
     .landing-card {

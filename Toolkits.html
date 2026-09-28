@@ -26,21 +26,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/death-tracker.css">
-    <link rel="stylesheet" href="css/particles.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tracker.css">
     <link rel="stylesheet" href="css/upgrades.css">
-    <link rel="stylesheet" href="css/altars.css">
-    <link rel="stylesheet" href="css/lobby.css">
+    <link rel="stylesheet" href="css/tools.css">
+    <link rel="stylesheet" href="css/utilities.css">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
-    <link rel="stylesheet" href="css/spotlight.css">
-    <link rel="stylesheet" href="css/feedback.css">
-    <link rel="stylesheet" href="css/update-check.css">
-    <link rel="stylesheet" href="css/curse-help.css">
-    <link rel="stylesheet" href="css/low-detail.css">
-    <link rel="stylesheet" href="css/settings.css">
-    <link rel="stylesheet" href="css/settings-spotlight.css">
 
     <script>
         try {
@@ -370,9 +361,11 @@
                             Nothing Curse and Progressive Mode now
                             share one look: a small label next to a
                             track+thumb switch showing ON/OFF (see
-                            .upgrade-toggle-block in upgrades.css).
+                            .upgrade-toggle-block in the upgrade
+                            calculator styles).
                             The Progressive block is injected right
-                            after this one by upgrades.js.
+                            after this one by the upgrade calculator
+                            scripts.
                         -->
                         <div id="upgradeToggleGroup" class="upgrade-toggle-group">
 
@@ -447,8 +440,8 @@
 
         <!--
             Death Tracker panel - same sliding-overlay pattern as the
-            Upgrade panel above (see .death-panel in death-tracker.css
-            and setDeathPanelOpen in death-tracker.js). Toggled by the
+            Upgrade panel above (see .death-panel in tracker styles
+            and setDeathPanelOpen in run-trackers.js). Toggled by the
             deathToggleButton fixed button below.
         -->
         <div id="deathPanel" class="death-panel">
@@ -569,7 +562,8 @@
         <!--
             Altars panel - same sliding-overlay pattern as the
             Upgrade and Death Tracker panels above (see .altars-panel
-            in altars.css and setAltarsPanelOpen in altars.js).
+            in the altar styles and setAltarsPanelOpen in
+            run-trackers.js).
             Toggled by the altarsToggleButton fixed button below.
         -->
         <div id="altarsPanel" class="altars-panel">
@@ -671,13 +665,14 @@
         <!--
             Lobby Maker panel - same sliding-overlay pattern as the
             Upgrade/Death/Altars panels above (see .lobby-panel in
-            lobby.css and setLobbyPanelOpen in lobby.js). Toggled by
+            lobby styles and setLobbyPanelOpen in the lobby maker
+            scripts). Toggled by
             the lobbyToggleButton fixed button below.
 
             Body layout: a toolbar of Font/Color/Style buttons, a
             single shared workspace box that shows whichever one of
             those is active (in normal document flow, not a floating
-            popover - see .lobby-tool-workspace in lobby.css), the
+            popover - see .lobby-tool-workspace in the lobby styles), the
             title input itself sitting below that with its own
             heading, then the live tag output preview + copy history.
         -->
@@ -1575,10 +1570,10 @@
 
         <!--
             Only this inner wrapper slides away when collapsed (see
-            .floating-toggle-buttons.collapsed in style.css) - the
+            .floating-toggle-buttons.collapsed in the layout styles) - the
             arrow button after it stays put as a fixed anchor, so the
             buttons can always be brought back from the same spot.
-            The show/hide logic lives in script.js
+            The show/hide logic lives in the curse tracker scripts
             (setFloatingButtonsHidden).
         -->
         <div class="floating-toggle-buttons-inner">
@@ -1654,20 +1649,10 @@
 
 
 <script type="module" src="js/presence.js"></script>
-<script src="js/low-detail.js"></script>
-<script src="js/live-viewers.js"></script>
-<script src="js/script.js"></script>
-<script src="js/curse-help.js"></script>
+<script src="js/startup.js"></script>
+<script src="js/tracker.js"></script>
 <script src="js/upgrades.js"></script>
-<script src="js/death-tracker.js"></script>
-<script src="js/altars.js"></script>
-<script src="js/lobby.js"></script>
-<script src="js/particles.js"></script>
-<script src="js/spotlight.js"></script>
-<script src="js/feedback.js"></script>
-<script src="js/update-check.js"></script>
-<script src="js/settings.js"></script>
-<script src="js/settings-spotlight.js"></script>
+<script src="js/tools.js"></script>
 
 </body>
 </html>

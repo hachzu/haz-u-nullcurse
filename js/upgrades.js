@@ -1,3 +1,4 @@
+/* Source: upgrade-calculator-state.js */
 /*
  * Upgrade Calculator logic
  * --------------------------
@@ -1420,6 +1421,8 @@ function createUnownButton(item, owned) {
 
 }
 
+/* Source: upgrade-calculator-view.js */
+
 
 /*
  * Up/down stepper shown on rows that aren't fully owned yet - the
@@ -2608,6 +2611,8 @@ function renderProgressiveToggle() {
     renderProgressiveLevelBadge(document.getElementById("upgradeProgressiveStatusRow"));
 
 }
+
+/* Source: upgrade-calculator-controls.js */
 
 
 /*
