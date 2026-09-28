@@ -677,10 +677,9 @@ function hasEnemy(name) {
 }
 
 
-/* Enemy caps used when LIST mode is active in Active Enemies. In regular Party+
-   mode, multiplayer doubles only the non-fixed caps. Extreme multiplayer has
-   its own rule: all caps double except Operator, Kolona, Cadence, and
-   Scrapmaw. */
+/* Enemy caps used when LIST mode is active in Active Enemies. Party+
+   establishes the lobby cap first, then Extreme doubles that cap. Fixed
+   caps never scale for either setting. */
 const ENEMY_TRACKER_CAPS = Object.freeze({
     "Bell": { cap: 1 },
     "Baby": { cap: 2 },
@@ -716,32 +715,6 @@ function isPartyPlusMode() {
 }
 
 
-function isMultiplayerMode() {
-
-    return ["duo", "party", "partyplus"].includes(getSelectedGameMode());
-
-}
-
-
-function getSelectedGameModeLabel() {
-
-    return ({ solo: "SOLO", duo: "DUO", party: "PARTY", partyplus: "PARTY+" })[getSelectedGameMode()] || "SOLO";
-
-}
-
-
-const EXTREME_MULTIPLAYER_CAP_EXCEPTIONS = new Set([
-    "Operator", "Kolona", "Cadence", "Scrapmaw"
-]);
-
-
-function isExtremeMultiplayerLobby() {
-
-    return runState.difficulty === "Extreme" && isMultiplayerMode();
-
-}
-
-
 function getEnemyTrackerCap(enemyName) {
 
     const rule = ENEMY_TRACKER_CAPS[enemyName];
@@ -752,17 +725,15 @@ function getEnemyTrackerCap(enemyName) {
 
     }
 
-    if (isExtremeMultiplayerLobby()) {
+    if (rule.fixed) {
 
-        return EXTREME_MULTIPLAYER_CAP_EXCEPTIONS.has(enemyName)
-            ? rule.cap
-            : rule.cap * 2;
+        return rule.cap;
 
     }
 
-    return rule.fixed || !isPartyPlusMode()
-        ? rule.cap
-        : rule.cap * 2;
+    const lobbyCap = isPartyPlusMode() ? rule.cap * 2 : rule.cap;
+
+    return runState.difficulty === "Extreme" ? lobbyCap * 2 : lobbyCap;
 
 }
 
