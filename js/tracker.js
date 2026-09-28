@@ -678,8 +678,8 @@ function hasEnemy(name) {
 
 
 /* Enemy caps used when LIST mode is active in Active Enemies. Party+
-   establishes the lobby cap first, then Extreme doubles that cap. Fixed
-   caps never scale for either setting. */
+   establishes the lobby cap first, then Extreme doubles that cap. Some
+   special enemies use their own fixed Standard/Casual and Extreme caps. */
 const ENEMY_TRACKER_CAPS = Object.freeze({
     "Bell": { cap: 1 },
     "Baby": { cap: 2 },
@@ -690,13 +690,13 @@ const ENEMY_TRACKER_CAPS = Object.freeze({
     "Flesh": { cap: 2 },
     "Operator": { cap: 1, fixed: true },
     "Guardian": { cap: 1 },
-    "Telefragger": { cap: 6, fixed: true },
+    "Telefragger": { cap: 4, fixed: true, extremeCap: 6 },
     "Kolona": { cap: 2, fixed: true },
     "Voidbound Baby": { cap: 2 },
     "Cadence": { cap: 1, fixed: true },
     "Sigil": { cap: 2, fixed: true },
-    "Voidbreaker": { cap: 6, fixed: true },
-    "Voidbound Guardian": { cap: 3, fixed: true },
+    "Voidbreaker": { cap: 4, fixed: true, extremeCap: 6 },
+    "Voidbound Guardian": { cap: 2, fixed: true, extremeCap: 3 },
     "Scrapmaw": { cap: 1, fixed: true }
 });
 
@@ -726,6 +726,16 @@ function getEnemyTrackerCap(enemyName) {
     }
 
     if (rule.fixed) {
+
+        if (runState.difficulty === "Extreme") {
+
+            if (rule.extremeCap !== undefined) {
+
+                return rule.extremeCap;
+
+            }
+
+        }
 
         return rule.cap;
 
