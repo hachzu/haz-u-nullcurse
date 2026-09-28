@@ -1008,6 +1008,44 @@ function cycleUpgradeSelection(item) {
 }
 
 
+/* Ctrl-click is a fast tracker correction: it changes owned stacks
+   directly, does not spend Golden Gifts, and clears any queued target
+   for that upgrade so the owned state is immediately authoritative. */
+function adjustOwnedStackWithShortcut(item) {
+
+    const owned = getOwnedStack(item.name);
+    const maxStack = item.maxStack || 1;
+
+    if (owned >= maxStack) {
+
+        const nextOwned = Math.max(0, owned - 1);
+
+        if (nextOwned === 0) {
+
+            upgradeState.owned.delete(item.name);
+
+        } else {
+
+            upgradeState.owned.set(item.name, nextOwned);
+
+        }
+
+        playRemoveSound();
+
+    } else {
+
+        upgradeState.owned.set(item.name, Math.min(maxStack, owned + 1));
+        playPurifySound();
+
+    }
+
+    upgradeState.pending.delete(item.name);
+    saveUpgradeState();
+    refreshUpgradePanel();
+
+}
+
+
 function resetUpgradeSelections() {
 
     resetUpgradeShopState();
@@ -1799,9 +1837,25 @@ function createUpgradeCard(item) {
     // (Business License, Gift Magnet, Gift Idol, Subspacial Barrier -
     // each tier priced from its own table entry). The arrows remain
     // available alongside it for stepping/cancelling one at a time.
-    if (!locked && !isFullyOwned) {
+    row.addEventListener("click", event => {
 
-        row.addEventListener("click", () => cycleUpgradeSelection(item));
+        if (event.ctrlKey || event.metaKey) {
+
+            event.preventDefault();
+            adjustOwnedStackWithShortcut(item);
+            return;
+
+        }
+
+        if (!locked && !isFullyOwned) {
+
+            cycleUpgradeSelection(item);
+
+        }
+
+    });
+
+    if (!locked && !isFullyOwned) {
 
         row.addEventListener("keydown", event => {
 

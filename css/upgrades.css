@@ -365,6 +365,17 @@
 }
 
 
+.upgrade-panel-shortcut-note {
+    color: #8ac2de;
+
+    font-family: var(--font-modern);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.5;
+}
+
+
 .upgrade-zoom-key {
     display: inline-block;
 
