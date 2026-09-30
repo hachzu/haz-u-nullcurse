@@ -2921,21 +2921,37 @@
 }
 
 .altar-context {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
     margin: 16px 0 23px;
 }
 
-.altar-context-chip {
-    padding: 5px 8px;
+.altar-context-detail {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 9px 10px;
     border: 1px solid color-mix(in srgb, var(--altar-accent) 30%, transparent);
-    border-radius: 999px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.22);
-    color: var(--altar-muted);
     font-family: var(--font-modern);
-    font-size: 10px;
+}
+
+.altar-context-detail span {
+    color: var(--altar-muted);
+    font-size: 8px;
     font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.altar-context-detail strong {
+    overflow: hidden;
+    color: var(--altar-bright);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .altar-calculator-section-heading {

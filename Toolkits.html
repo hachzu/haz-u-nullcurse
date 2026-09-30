@@ -651,12 +651,30 @@
 
                         <div class="purification-altar-toolbar">
                             <div>
-                                <span class="purification-altar-toolbar-label">ACTIVE MEDAL CURSES</span>
-                                <p>Sync to choose a curse from your Active Curses tracker.</p>
+                                <span class="purification-altar-toolbar-label">PURIFICATION LIST</span>
+                                <p>Build a separate list of medal curses to price at this altar.</p>
                             </div>
                             <button id="purificationAltarSync" class="altar-balance-button purification-altar-sync" type="button">
-                                Sync active curses
+                                Sync active curses · optional
                             </button>
+                        </div>
+
+                        <div class="purification-altar-picker">
+                            <div class="purification-altar-picker-copy">
+                                <span class="purification-altar-picker-step">START HERE · 1</span>
+                                <strong>Choose a medal curse to price</strong>
+                                <span>Build your list manually, then select a curse below to view its purification cost.</span>
+                            </div>
+                            <div class="purification-altar-picker-controls">
+                                <div class="purification-altar-custom-select">
+                                    <button id="purificationAltarPickerToggle" class="purification-altar-picker-toggle" type="button" aria-expanded="false" aria-controls="purificationAltarPickerMenu">
+                                        <span id="purificationAltarPickerValue">Choose a medal curse</span>
+                                        <span class="purification-altar-picker-chevron" aria-hidden="true">⌄</span>
+                                    </button>
+                                    <div id="purificationAltarPickerMenu" class="purification-altar-picker-menu" role="listbox" aria-label="Medal curses"></div>
+                                </div>
+                            <button id="purificationAltarAddCurse" class="altar-balance-button" type="button">Add curse</button>
+                            </div>
                         </div>
 
                         <div id="purificationAltarTargets" class="purification-altar-targets" aria-live="polite"></div>
