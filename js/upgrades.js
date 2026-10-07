@@ -188,12 +188,9 @@ const upgradeState = {
     mode: "solo",
     goldenGifts: 0,
 
-    // Progressive mode: off by default. Off means every upgrade is
-    // open regardless of level or prerequisites (a free sandbox for
-    // planning). On restores normal level/dependency gating and
-    // advances the run level to the next shop tier on every
-    // purchase - see getNextShopLevel().
-    progressive: false,
+    // Progressive defaults on with level, prerequisite, and affordability checks.
+    // Advance shop tiers using the level control.
+    progressive: true,
 
     // Progressive sub-toggles - both only take effect while
     // Progressive itself is on, and both default off so Progressive
@@ -208,6 +205,9 @@ const upgradeState = {
     // Hide Locked: upgrades below the current run level disappear
     // from the grid entirely instead of showing greyed-out/locked.
     progressiveHideLocked: false,
+
+    // Opt in to advancing one shop tier after a successful purchase.
+    progressiveAutoSkip: false,
 
     // Icon Mode: off by default. On strips names/level text from
     // every upgrade row down to just the icon (see .icon-mode in
@@ -241,6 +241,7 @@ function saveUpgradeState() {
             progressive: upgradeState.progressive,
             progressiveAllowDebt: upgradeState.progressiveAllowDebt,
             progressiveHideLocked: upgradeState.progressiveHideLocked,
+            progressiveAutoSkip: upgradeState.progressiveAutoSkip,
             iconMode: upgradeState.iconMode,
             freeformSort: upgradeState.freeformSort,
 
@@ -276,9 +277,10 @@ function loadUpgradeState() {
 
         upgradeState.mode = saved.mode || "solo";
         upgradeState.goldenGifts = Math.max(0, Number(saved.goldenGifts) || 0);
-        upgradeState.progressive = Boolean(saved.progressive);
+        upgradeState.progressive = saved.progressive !== false;
         upgradeState.progressiveAllowDebt = Boolean(saved.progressiveAllowDebt);
         upgradeState.progressiveHideLocked = Boolean(saved.progressiveHideLocked);
+        upgradeState.progressiveAutoSkip = Boolean(saved.progressiveAutoSkip);
         upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.freeformSort = Boolean(saved.freeformSort);
         upgradeState.pending = new Map(saved.pending || []);
@@ -304,7 +306,7 @@ function resetUpgradeShopState() {
     upgradeState.owned.clear();
     upgradeState.goldenGifts = 0;
     upgradeState.mode = "solo";
-    upgradeState.progressive = false;
+    upgradeState.progressive = true;
 
     saveUpgradeState();
     refreshUpgradePanel();
@@ -669,7 +671,7 @@ function getPrevShopLevel(currentLevel) {
 
 function isUpgradeUnavailable(item) {
 
-    // Progressive mode off (the default) - nothing is locked, so
+    // Progressive mode off - nothing is locked, so
     // every upgrade is open with no level or dependency required.
     if (!upgradeState.progressive) {
 
@@ -1127,6 +1129,11 @@ function purchaseSelectedUpgrades() {
 
     saveUpgradeState();
 
+    if (upgradeState.progressive && upgradeState.progressiveAutoSkip) {
+        advanceProgressiveLevel();
+        return;
+    }
+
     // Full refresh so any other panel state (mode, totals, etc.)
     // stays in sync after the purchase.
     refreshUpgradePanel();
@@ -1135,11 +1142,8 @@ function purchaseSelectedUpgrades() {
 
 
 /*
- * Progressive mode no longer advances the level automatically on
- * purchase - the player clicks this explicitly (see the "-> Lv X"
- * button next to the Progressive toggle, built in
- * renderProgressiveLevelBadge) whenever they're ready to move up to
- * the next shop tier.
+ * Advance one shop tier, either through the level button or after a
+ * successful purchase when Progressive's Auto Skip option is enabled.
  */
 function advanceProgressiveLevel() {
 
@@ -2254,7 +2258,7 @@ function createProgressiveToggle() {
         + "Golden Gifts - \"Left\" will just show a negative number. "
         + "ON: Simulates a real run. Upgrades stay level-locked, purchases "
         + "require enough Golden Gifts to go through, and you move up to the "
-        + "next shop level yourself using the button that appears here.";
+        + "next shop level with the level button or automatically with Auto Skip.";
 
     const track = document.createElement("span");
 
@@ -2367,7 +2371,7 @@ function createProgressiveSubToggle(id, stateKey, title) {
 
 
 /*
- * The two Progressive sub-toggles - Allow Debt and Hide Locked - both
+ * Progressive sub-toggles - Auto Skip, Allow Debt, and Hide Locked -
  * only matter while Progressive itself is on, so they're built once
  * into their own block and just shown/hidden in lockstep with
  * Progressive's own controls (see the showControls check in
@@ -2416,6 +2420,21 @@ function createProgressiveSubToggles() {
             + "the grid entirely instead."
     ));
 
+    const autoSkipRow = document.createElement("div");
+    autoSkipRow.className = "upgrade-progressive-subtoggle-row";
+    const autoSkipLabel = document.createElement("span");
+    autoSkipLabel.className = "upgrade-control-label upgrade-control-label--sub";
+    autoSkipLabel.textContent = "Auto Skip";
+    autoSkipRow.appendChild(autoSkipLabel);
+    const autoSkipToggle = createProgressiveSubToggle(
+        "upgradeProgressiveAutoSkipToggle",
+        "progressiveAutoSkip",
+        "ON: Each successful purchase advances to the next shop level while Progressive is on. OFF: Advance levels manually."
+    );
+    autoSkipToggle.setAttribute("aria-label", "Auto Skip");
+    autoSkipRow.appendChild(autoSkipToggle);
+
+    container.appendChild(autoSkipRow);
     container.appendChild(debtRow);
     container.appendChild(hideRow);
 
@@ -2460,7 +2479,7 @@ function syncProgressiveSubToggle(id, stateKey) {
  * level, plus a button showing (and letting the player click through
  * to) the next shop level - only shown while Progressive mode is on,
  * since that's the only time the level is meant to move at all.
- * Advancing is now an explicit click (see advanceProgressiveLevel),
+ * Advancing uses the level button or Auto Skip (see advanceProgressiveLevel),
  * not something that happens automatically on purchase.
  */
 function renderProgressiveLevelBadge(statusRow) {
@@ -2645,6 +2664,7 @@ function renderProgressiveToggle() {
 
     }
 
+    syncProgressiveSubToggle("upgradeProgressiveAutoSkipToggle", "progressiveAutoSkip");
     syncProgressiveSubToggle("upgradeProgressiveDebtToggle", "progressiveAllowDebt");
     syncProgressiveSubToggle("upgradeProgressiveHideLockedToggle", "progressiveHideLocked");
 
@@ -2652,7 +2672,7 @@ function renderProgressiveToggle() {
 
     if (subToggles) {
 
-        // Both sub-toggles only do anything while Progressive itself
+        // These sub-toggles only do anything while Progressive itself
         // is on, so the row stays collapsed alongside the level
         // badge/revert/advance controls the rest of the time - now
         // an animated collapse/expand instead of an instant

@@ -131,8 +131,14 @@
 
         <section class="control-section">
 
-            <div class="section-label">
-                DIFFICULTY
+            <div class="section-label difficulty-heading">
+                <span>DIFFICULTY</span>
+                <button type="button" id="chaosModeToggle" class="mini-visibility-toggle"
+                    role="switch" aria-checked="false" aria-controls="chaosCurseSection"
+                    title="Show the Chaos Curses basin">
+                    <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
+                    <span class="mini-visibility-label">CHAOS MODE</span>
+                </button>
             </div>
 
             <div
@@ -1540,6 +1546,19 @@
                 id="medalCurseContainer"
                 class="result-grid"
             ></div>
+
+        </section>
+
+
+        <section id="chaosCurseSection" class="result-section result-section--hidden">
+
+            <div class="result-heading">
+
+                <h2 id="chaosHeading" class="animated-header-text">• CHAOS CURSES</h2>
+
+            </div>
+
+            <div id="chaosCurseContainer" class="result-grid"></div>
 
         </section>
 

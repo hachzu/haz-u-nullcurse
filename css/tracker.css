@@ -3262,6 +3262,23 @@ body {
 }
 
 
+.difficulty-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+#chaosHeading {
+    background: linear-gradient(90deg, #ff3b3b 0%, #000 25%, #ff3b3b 50%, #000 75%, #ff3b3b 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 18px rgba(174, 19, 19, 0.45);
+}
+
+
 #medalHeading {
     background: linear-gradient(
         90deg,
@@ -4020,6 +4037,26 @@ body {
 }
 
 
+#chaosCurseContainer .curse-card {
+    background: linear-gradient(160deg, #210606 0%, #080808 100%);
+    border-color: rgba(174, 19, 19, 0.4);
+}
+
+
+#chaosCurseContainer .curse-card:hover {
+    background: linear-gradient(160deg, #2e0808 0%, #000 100%);
+    border-color: #ae1313;
+    box-shadow: 0 0 16px rgba(174, 19, 19, 0.35);
+}
+
+
+#chaosCurseContainer .curse-name-label,
+#chaosCurseContainer .card-media-placeholder {
+    color: #e08a8a;
+}
+
+
+#chaosCurseContainer .curse-info,
 #enemyCurseContainer .curse-info {
     color: #a35c5c;
 }

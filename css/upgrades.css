@@ -922,7 +922,7 @@
 
 
 .upgrade-progressive-subtoggles--visible {
-    max-height: 60px;
+    max-height: 120px;
     margin-top: 6px;
     padding-top: 6px;
     opacity: 1;

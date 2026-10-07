@@ -5,6 +5,8 @@ const runState = {
 
     difficulty: "Standard",
 
+    chaosMode: false,
+
     activeEnemies: new Map(),
 
     activeCurses: new Set(),
@@ -582,6 +584,31 @@ const enemyCurses = [
 ];
 
 
+// Chaos curses use shared cards without level or enemy requirements.
+const chaosCurses = [
+    "Nuclear Bomb",
+    "Legion",
+    "Where’s Husk?",
+    "Flip Switch",
+    "Don’t Touch Me",
+    "Water Planet",
+    "Destroyer",
+    "Muted",
+    "Stairs... Stairs",
+    "Less Stairs",
+    "Tripnuke",
+    "Delusion",
+    "Soy Retro",
+    "Bloody Bell",
+    "Missile Silo",
+    "Husk Presence",
+    "Husk Block",
+    "Mighty Cavalry",
+    "Teledancer",
+    "Cognitive Dissonance"
+].map(name => ({ name, chaos: true }));
+
+
 const greaterCurses = [
 
     { name: "One Less Choice", type: "Global" },
@@ -946,7 +973,10 @@ function slugify(name) {
 
 function getAssetPath(assetType, name) {
 
-    return `assets/${assetType}/${slugify(name)}.png`;
+    const assetName = assetType === "curses" && chaosCurses.some(curse => curse.name === name)
+        ? name.replace(/['’]/g, "")
+        : name;
+    return `assets/${assetType}/${slugify(assetName)}.png`;
 
 }
 
@@ -1219,7 +1249,8 @@ function findCurseByName(name) {
     const allCurses = [
         ...globalCurses,
         ...enemyCurses,
-        ...greaterCurses
+        ...greaterCurses,
+        ...chaosCurses
     ];
 
     return allCurses.find(item => item.name === name);
@@ -1437,6 +1468,10 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
  * the sidebar's current level.
  */
 function isCurseSelectable(curse, ignoreLevel = false) {
+
+    if (curse.chaos && !runState.chaosMode) {
+        return false;
+    }
 
     if (isCurseAtCap(curse)) {
 
@@ -2825,6 +2860,8 @@ function persistRunState() {
 
             difficulty: runState.difficulty,
 
+            chaosMode: runState.chaosMode,
+
             playerCount: getPlayerCount(),
 
             activeEnemies: Array.from(runState.activeEnemies),
@@ -2905,6 +2942,7 @@ function loadRunState() {
 
         runState.level = saved.level || 1;
         runState.difficulty = saved.difficulty || "Standard";
+        runState.chaosMode = saved.chaosMode === true;
         runState.activeEnemies = new Map(
             (saved.activeEnemies || []).map(entry => Array.isArray(entry) ? entry : [entry, 1])
         );
@@ -2989,6 +3027,16 @@ function render() {
         medalSectionEl.classList.toggle("result-section--hidden", medalDisplayState.hideSection);
 
     }
+    const chaosToggle = document.getElementById("chaosModeToggle");
+    chaosToggle.classList.toggle("active", runState.chaosMode);
+    chaosToggle.setAttribute("aria-checked", String(runState.chaosMode));
+    document.getElementById("chaosCurseSection").classList.toggle("result-section--hidden", !runState.chaosMode);
+    if (runState.chaosMode) {
+        renderPool("chaosCurseContainer", chaosCurses.filter(curse => isCurseVisibleInPool(curse, true)));
+    } else {
+        document.getElementById("chaosCurseContainer").innerHTML = "";
+    }
+
     renderPool("globalCurseContainer", getGlobalPool());
     renderPool("enemyCurseContainer", getEnemyPool());
     renderPool("greaterCurseContainer", getGreaterPool());
@@ -3156,6 +3204,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
 
     runState.level = 1;
     runState.difficulty = "Standard";
+    runState.chaosMode = false;
 
     runState.activeEnemies.clear();
     runState.activeCurses.clear();
@@ -3241,6 +3290,12 @@ if (muteToggleButton) {
 }
 
 updateMuteToggleUI();
+
+attachClickAction(document.getElementById("chaosModeToggle"), () => {
+    runState.chaosMode = !runState.chaosMode;
+    render();
+}, playUtilitySound);
+
 
 const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
 
