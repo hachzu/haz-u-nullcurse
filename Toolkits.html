@@ -25,6 +25,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lobby Maker: the font families used by Roblox rich text. -->
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/tracker.css">
     <link rel="stylesheet" href="css/upgrades.css">
@@ -137,7 +139,7 @@
                     role="switch" aria-checked="false" aria-controls="chaosCurseSection"
                     title="Show the Chaos Curses basin">
                     <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
-                    <span class="mini-visibility-label">CHAOS MODE</span>
+                    <span class="mini-visibility-label">Chaos</span>
                 </button>
             </div>
 
@@ -613,15 +615,13 @@
                                 <img src="assets/upgrades/MoreAltars.png" alt="">
                             </div>
                             <div>
-                                <p class="altar-calculator-kicker">ALTAR COST CALCULATOR</p>
                                 <h2 id="protectionAltarTitle">Protection Altar</h2>
-                                <p>Preview the Golden Gifts required at this altar before you commit.</p>
                             </div>
                         </div>
 
                         <div class="altar-calculator-controls">
                             <label class="altar-gifts-field" for="protectionAltarGifts">
-                                <span>Golden Gifts before altar</span>
+                                <span>Golden Gifts</span>
                                 <input id="protectionAltarGifts" type="number" min="0" step="1" inputmode="numeric" value="0">
                             </label>
                             <button id="protectionAltarUseBalance" class="altar-balance-button" type="button">
@@ -632,7 +632,7 @@
                         <div id="protectionAltarContext" class="altar-context" aria-live="polite"></div>
 
                         <div class="altar-calculator-section-heading">
-                            <span>Choose altar level</span>
+                            <span>Altar level</span>
                             <span id="protectionAltarFormula" class="altar-formula"></span>
                         </div>
 
@@ -649,27 +649,22 @@
                                 <img src="assets/upgrades/MedalPink.png" alt="">
                             </div>
                             <div>
-                                <p class="altar-calculator-kicker">ALTAR COST CALCULATOR</p>
                                 <h2 id="purificationAltarTitle">Purification Altar</h2>
-                                <p>Find the Golden Gifts required to cleanse a medal curse.</p>
                             </div>
                         </div>
 
                         <div class="purification-altar-toolbar">
                             <div>
-                                <span class="purification-altar-toolbar-label">PURIFICATION LIST</span>
-                                <p>Build a separate list of medal curses to price at this altar.</p>
+                                <span class="purification-altar-toolbar-label">CURSES</span>
                             </div>
                             <button id="purificationAltarSync" class="altar-balance-button purification-altar-sync" type="button">
-                                Sync active curses · optional
+                                Use active curses
                             </button>
                         </div>
 
                         <div class="purification-altar-picker">
                             <div class="purification-altar-picker-copy">
-                                <span class="purification-altar-picker-step">START HERE · 1</span>
-                                <strong>Choose a medal curse to price</strong>
-                                <span>Build your list manually, then select a curse below to view its purification cost.</span>
+                                <strong>Add a medal curse</strong>
                             </div>
                             <div class="purification-altar-picker-controls">
                                 <div class="purification-altar-custom-select">

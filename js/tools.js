@@ -542,16 +542,10 @@ function renderProtectionAltarCalculator() {
     }
 
     const soloOrDuo = mode === "solo" || mode === "duo";
-    const percent = soloOrDuo ? 5 : 10;
-    const playerTerm = soloOrDuo
-        ? `${playerCount} player${playerCount === 1 ? "" : "s"}`
-        : `√${playerCount} ÷ 1.75`;
-
     renderAltarContext(protectionAltarContext, [
-        { label: "Run level", value: currentLevel },
+        { label: "Level", value: currentLevel },
         { label: "Party", value: `${playerCount} player${playerCount === 1 ? "" : "s"}` },
-        { label: "Mode", value: formatAltarMode(mode) },
-        { label: "Cost basis", value: `${percent}% Gifts + ${playerTerm}` }
+        { label: "Mode", value: formatAltarMode(mode) }
     ]);
 
     protectionAltarFormula.textContent = soloOrDuo
@@ -589,7 +583,7 @@ function renderProtectionAltarCalculator() {
         mode
     );
 
-    protectionAltarSummary.innerHTML = `<span>Protection Altar · Level ${selectedProtectionAltarLevel}</span><strong>${selectedCost.toLocaleString()} <small>Golden Gifts</small></strong>`;
+    protectionAltarSummary.innerHTML = `<span>Level ${selectedProtectionAltarLevel}</span><strong>${selectedCost.toLocaleString()} <small>Golden Gifts</small></strong>`;
 
 }
 
@@ -728,7 +722,7 @@ function renderPurificationAltarCalculator() {
         const empty = document.createElement("p");
 
         empty.className = "purification-altar-empty";
-        empty.textContent = "Your purification list is empty. Add a medal curse above, or sync the active medal curses when you want to use your run.";
+        empty.textContent = "Add a curse or use active curses to see its cost.";
 
         purificationAltarTargets.appendChild(empty);
 
@@ -778,13 +772,15 @@ function renderPurificationAltarCalculator() {
     }
 
     renderAltarContext(purificationAltarContext, [
-        { label: "Run level", value: level },
+        { label: "Level", value: level },
         { label: "Party", value: `${playerCount} player${playerCount === 1 ? "" : "s"}` },
-        { label: "Level multiplier", value: `×${levelMultiplier}` },
-        { label: "Selected value", value: `${curseValue} curse value` }
+        { label: "Multiplier", value: `×${levelMultiplier}` },
+        { label: "Curse value", value: curseValue }
     ]);
 
-    purificationAltarSummary.innerHTML = `<span>${curse ? curse.name : "Curse"} · Purification Altar</span><strong>${cost.toLocaleString()} <small>Golden Gifts</small></strong>`;
+    purificationAltarSummary.innerHTML = curse
+        ? `<span>${curse.name}</span><strong>${cost.toLocaleString()} <small>Golden Gifts</small></strong>`
+        : `<span>Select a curse</span><strong>— <small>Golden Gifts</small></strong>`;
 
 }
 
@@ -2290,8 +2286,9 @@ if (lobbyHighlightAllButton && lobbyEditorInput) {
  * typewriter, techno, horror, quirky script, friendly sans) rather
  * than several near-duplicates. "face" is the rbxasset family path
  * Roblox's rich-text <font family="..."> tag expects; "previewFamily"
- * is just a close-enough web font stand-in so the in-browser editor
- * looks roughly right (Roblox's real fonts aren't available here).
+ * loads the matching family from Google Fonts for the picker,
+ * editor, and preview. Roblox and browsers may use different font
+ * versions or rasterization, so their pixels can still differ.
  */
 const LOBBY_FONT_CATALOG = [
     // previewFamily uses the same web font family used by the rendered
