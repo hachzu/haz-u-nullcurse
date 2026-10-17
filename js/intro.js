@@ -34,6 +34,8 @@
     let audio;
     let graph;
     let audioCleanup;
+    let trackAudio;
+    let trackReady;
     let safetyTimer;
     let gate;
     let finished = false;
@@ -146,6 +148,54 @@
         catch (_) { return null; }
         return audio;
     }
+    function prepareTrack() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        try {
+            // Separate from the motif so its cleanup leaves the landing track playing.
+            const context = trackAudio = new AudioContext();
+            const resumed = context.resume();
+            trackReady = Promise.all([
+                resumed,
+                fetch('assets/Telefragger_TV!!!.mp3')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Track unavailable');
+                        return response.arrayBuffer();
+                    })
+                    .then(data => context.decodeAudioData(data))
+            ]).then(([, buffer]) => buffer);
+            trackReady.catch(() => {
+                if (context.state !== 'closed') context.close().catch(() => {});
+            });
+        } catch (_) {}
+    }
+    function stopTrack() {
+        const context = trackAudio;
+        trackAudio = null;
+        trackReady = null;
+        if (context && context.state !== 'closed') context.close().catch(() => {});
+    }
+    function scheduleTrack() {
+        const context = trackAudio;
+        if (!context || !trackReady) return;
+        const onset = context.currentTime + 3;
+        trackReady.then(buffer => {
+            if (trackAudio !== context || context.state === 'closed') return;
+            const source = context.createBufferSource();
+            source.buffer = buffer;
+            const volume = context.createGain();
+            const at = Math.max(onset, context.currentTime);
+            volume.gain.setValueAtTime(0, at);
+            volume.gain.linearRampToValueAtTime(.25, at + 2);
+            source.connect(volume).connect(context.destination);
+            source.onended = () => {
+                source.disconnect();
+                volume.disconnect();
+                context.close().catch(() => {});
+            };
+            source.start(at);
+        }).catch(() => {});
+    }
     function createGraph(context) {
         const output = context.createGain();
         output.gain.value = .7;
@@ -158,20 +208,23 @@
         limiter.release.value = .25;
         output.connect(limiter).connect(context.destination);
         const convolver = context.createConvolver();
-        const impulse = context.createBuffer(2, Math.ceil(context.sampleRate * 2.4), context.sampleRate);
-        // Deterministic room impulse, with a gentle, diffuse decay.
+        const impulse = context.createBuffer(2, Math.ceil(context.sampleRate * 4.8), context.sampleRate);
+        // A long, diffuse room tail gives the theremin a spacious sci-fi sound.
         let seed = 1729;
         for (let channel = 0; channel < 2; channel++) {
             const data = impulse.getChannelData(channel);
             for (let i = 0; i < data.length; i++) {
                 seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-                data[i] = (seed / 4294967296 * 2 - 1) * Math.pow(1 - i / data.length, 3);
+                data[i] = (seed / 4294967296 * 2 - 1) * Math.pow(1 - i / data.length, 2.2);
             }
         }
         convolver.buffer = impulse;
         const wet = context.createGain();
-        wet.gain.value = .3;
-        convolver.connect(wet).connect(output);
+        wet.gain.value = .55;
+        const roomTone = context.createBiquadFilter();
+        roomTone.type = 'lowpass';
+        roomTone.frequency.value = 2400;
+        convolver.connect(roomTone).connect(wet).connect(output);
         const delay = context.createDelay(1);
         delay.delayTime.value = .31;
         const feedback = context.createGain();
@@ -188,36 +241,54 @@
             const at = origin + noteTimes[index];
             const final = index === MOTIF.notes.length - 1;
             const duration = final ? 1.8 : .65;
-            const frequency = 440 * 2 ** ((note.midi - 12 - 69) / 12);
+            const frequency = 440 * 2 ** ((note.midi - 7 - 69) / 12);
             const envelope = context.createGain();
             envelope.gain.setValueAtTime(0, at);
-            envelope.gain.linearRampToValueAtTime(.3, at + .018);
+            envelope.gain.linearRampToValueAtTime(.3, at + .035);
             envelope.gain.linearRampToValueAtTime(.22, at + .1);
             envelope.gain.setValueAtTime(.22, at + (final ? .6 : .2));
             envelope.gain.exponentialRampToValueAtTime(.0001, at + duration);
             const lowpass = context.createBiquadFilter();
             lowpass.type = 'lowpass';
-            lowpass.Q.value = .45;
-            lowpass.frequency.setValueAtTime(1100, at);
-            lowpass.frequency.exponentialRampToValueAtTime(final ? 750 : 550, at + duration);
+            lowpass.Q.value = .35;
+            lowpass.frequency.setValueAtTime(1400, at);
+            lowpass.frequency.exponentialRampToValueAtTime(900, at + duration);
             envelope.connect(lowpass).connect(graph.output);
             const roomSend = context.createGain();
-            roomSend.gain.value = final ? .65 : .18;
+            roomSend.gain.value = final ? .95 : .6;
             lowpass.connect(roomSend).connect(graph.convolver);
             if (final) lowpass.connect(graph.delay);
-            // A lower register, rounded core and quiet sub keep the synth deep and warm.
+            // Smooth sine voices, a short pitch glide and delayed vibrato replace
+            // the buzzy saws while keeping the motif in its lower register.
             const voices = [
-                { type: 'triangle', ratio: 1, detune: 0, level: .48 },
-                { type: 'sawtooth', ratio: 1, detune: -6, level: .18 },
-                { type: 'sawtooth', ratio: 1, detune: 6, level: .18 },
-                { type: 'sine', ratio: .5, detune: 0, level: .16 }
+                { type: 'sine', ratio: 1, detune: 0, level: .88 },
+                { type: 'sine', ratio: 2, detune: 0, level: .09 },
+                { type: 'sine', ratio: .5, detune: 0, level: .08 }
             ];
+            const previousFrequency = index ? 440 * 2 ** ((MOTIF.notes[index - 1].midi - 7 - 69) / 12) : frequency * .985;
+            const vibrato = context.createOscillator();
+            vibrato.type = 'sine';
+            vibrato.frequency.value = 5.3;
+            const vibratoDepth = context.createGain();
+            vibratoDepth.gain.setValueAtTime(0, at);
+            vibratoDepth.gain.linearRampToValueAtTime(13, at + .22);
+            vibrato.connect(vibratoDepth);
+            oscillators.add(vibrato);
+            vibrato.onended = () => {
+                oscillators.delete(vibrato);
+                vibrato.disconnect();
+                vibratoDepth.disconnect();
+            };
+            vibrato.start(at);
+            vibrato.stop(at + duration + .02);
             let remaining = voices.length;
             voices.forEach(voice => {
                 const oscillator = context.createOscillator();
                 oscillator.type = voice.type;
-                oscillator.frequency.value = frequency * voice.ratio;
+                oscillator.frequency.setValueAtTime(previousFrequency * voice.ratio, at);
+                oscillator.frequency.exponentialRampToValueAtTime(frequency * voice.ratio, at + .08);
                 oscillator.detune.value = voice.detune;
+                vibratoDepth.connect(oscillator.detune);
                 const level = context.createGain();
                 level.gain.value = voice.level;
                 oscillator.connect(level).connect(envelope);
@@ -243,6 +314,7 @@
         const context = withAudio ? audio : null;
         const audioOrigin = context?.currentTime;
         if (context) scheduleNotes(context, audioOrigin);
+        scheduleTrack();
         home.dataset.introAudio = context ? 'playing' : (audio ? 'blocked' : 'unavailable');
         let lastBeat = 0;
         let lastFly = 0;
@@ -261,7 +333,7 @@
                 burst.remove();
                 clearTimeout(safetyTimer);
                 // Let the final echo finish, then release the audio context.
-                audioCleanup = setTimeout(stopSound, 3200);
+                audioCleanup = setTimeout(stopSound, 6500);
                 return;
             }
             home.dataset.introState = elapsed >= revealAt ? 'revealing' : elapsed >= assembledAt ? 'assembled' : fly ? 'playing' : 'waiting';
@@ -288,6 +360,7 @@
         leaving.classList.add('is-leaving');
         setTimeout(() => { if (gate === leaving) removeGate(); else leaving.remove(); }, 700);
         const context = createAudio();
+        prepareTrack();
         // resume() is called synchronously inside the click.
         const ready = context ? context.resume().catch(() => {}) : Promise.resolve();
         safetyTimer = setTimeout(finish, 12000);
@@ -299,11 +372,17 @@
     }
 
     window.addEventListener('resize', updateLift);
-    window.addEventListener('nullscape-route-change', event => { if (event.detail.route !== 'home') finish(); });
+    window.addEventListener('nullscape-route-change', event => {
+        if (event.detail.route !== 'home') {
+            stopTrack();
+            finish();
+        }
+    });
     window.addEventListener('nullscape-low-detail-change', event => { if (event.detail.enabled) finish(); });
     reducedMotion.addEventListener('change', event => { if (event.matches) finish(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden && started && !finished) finish(); });
     window.addEventListener('pagehide', finish);
+    window.addEventListener('pagehide', stopTrack);
     let savedLowDetail = false;
     try { savedLowDetail = localStorage.getItem('nullscapeLowDetailMode') === 'true'; } catch (_) {}
     if (reducedMotion.matches || lowDetail() || savedLowDetail || /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {

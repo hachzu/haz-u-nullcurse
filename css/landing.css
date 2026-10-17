@@ -43,7 +43,49 @@ body.at-home { margin: 0; background: #05010c; color: #e8dcff; overflow-x: hidde
     background: radial-gradient(ellipse at 50% 45%, transparent 30%, #05010c1a 70%, #05010c4d 100%);
 }
 .landing-content { display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0; text-align: center; padding-bottom: 24px; }
-.landing-brand { margin: 0 0 36px; width: 100%; font-weight: 700; }
+.landing-brand { position: relative; margin: 0 0 36px; width: 100%; font-weight: 700; }
+.landing-divider {
+    position: absolute;
+    left: 50%;
+    bottom: -22px;
+    width: min(360px, 76%);
+    height: 9px;
+    margin: 0;
+    translate: -50% 0;
+    pointer-events: none;
+}
+.landing-divider::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(90deg, transparent, #bc94da99 30%, #f0dcffbf),
+        linear-gradient(90deg, #f0dcffbf, #bc94da99 70%, transparent),
+        linear-gradient(90deg, transparent, #bc94da66),
+        linear-gradient(90deg, #bc94da66, transparent);
+    background-size: calc(50% - 15px) 1px, calc(50% - 15px) 1px, calc(36% - 15px) 1px, calc(36% - 15px) 1px;
+    background-position: left center, right center, 14% bottom, 86% bottom;
+    background-repeat: no-repeat;
+}
+.landing-divider::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border: 1px solid #e2c7f6bf;
+    border-radius: 0 !important;
+    background: #bc94da26;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+.intro-pending .landing-divider,
+.landing-view:is([data-intro-state='waiting'], [data-intro-state='playing'], [data-intro-state='assembled']) .landing-divider { visibility: hidden; }
+.landing-view[data-intro-state='revealing'] .landing-divider { animation: divider-reveal .85s cubic-bezier(.22,1.1,.4,1) both; }
+@keyframes divider-reveal {
+    from { opacity: 0; transform: scaleX(0); }
+    to { opacity: 1; transform: scaleX(1); }
+}
 .landing-logo-stage { display: block; position: relative; width: min(440px, 100%); margin: 0 auto; }
 .landing-logo { display: block; width: 100%; height: auto; margin: 0; }
 .logo-slices { position: absolute; inset: 0; display: none; pointer-events: none; }
