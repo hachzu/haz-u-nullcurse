@@ -3859,6 +3859,8 @@ renderLobbyTagLog();
     function shouldAnimate() {
         return config.enabled
             && !prefersReducedMotion
+            && !document.hidden
+            && !document.body.classList.contains("at-home")
             && !document.documentElement.classList.contains("low-detail-mode");
     }
 
@@ -4077,6 +4079,8 @@ renderLobbyTagLog();
     }
 
     window.addEventListener("resize", resize);
+    window.addEventListener("nullscape-route-change", refreshAnimationState);
+    document.addEventListener("visibilitychange", refreshAnimationState);
 
     window.addEventListener("mousemove", event => {
 

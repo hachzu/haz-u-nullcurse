@@ -1,627 +1,329 @@
-/*
- * Landing / intro page
- * --------------------------
- * Standalone splash screen shown before the main toolkit
- * (toolkits.html). Reuses the same dark-purple palette, Space
- * Grotesk type, and card/button language as style.css, but lives in
- * its own file since this page never loads the app's JS or its
- * other stylesheets.
- */
-
-* {
+/* Landing motion only; the original toolkit controls keep their own styles. */
+:root { --font-modern: 'Space Grotesk', Arial, Helvetica, sans-serif; }
+html { background: #05010c; }
+body.at-home { margin: 0; background: #05010c; color: #e8dcff; overflow-x: hidden; }
+/* Keep the tracker's negative-z background above the page's opaque body. */
+#toolkitView { position: relative; isolation: isolate; }
+.landing-view, .landing-view * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.landing-view {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+    min-height: 100svh;
+    padding: 40px 24px;
+    overflow: hidden;
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-:root {
-    --font-modern: 'Space Grotesk', Arial, Helvetica, sans-serif;
-}
-
-html, body {
-    height: 100%;
-}
-
-body {
-    min-height: 100vh;
     background: #05010c;
-    color: #e8dcff;
-    font-family: var(--font-modern);
-    overflow-x: hidden;
 }
-
-.landing-bg {
-    position: fixed;
-    inset: -10%;
-
-    z-index: -1;
+.landing-background {
+    position: absolute;
+    inset: -5%;
+    z-index: -2;
     pointer-events: none;
-
     background-image:
-        url("../assets/background/Background.png"),
+        url('../assets/background/Background.png'),
         radial-gradient(circle at 20% 10%, #1b0733 0%, transparent 45%),
         radial-gradient(circle at 85% 80%, #2a0a4a 0%, transparent 50%),
         linear-gradient(160deg, #05010c 0%, #0b0116 40%, #170025 100%);
-
-    background-size: cover, cover, cover, cover;
-    background-position: center, center, center, center;
+    background-position: center;
+    background-size: cover;
     background-repeat: no-repeat;
-
-    opacity: 0.1;
+    opacity: .22;
+    transform: translate3d(var(--landing-x, 0px), var(--landing-y, 0px), 0);
+    transition: transform .65s ease-out, opacity .8s ease;
 }
-
-.landing {
-    min-height: 100vh;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 48px 24px;
-
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-/* Applied by the script when Continue is clicked - the page fades
-   and drops back slightly while the wipe (below) sweeps in over it,
-   instead of just hard-cutting to the next page. */
-.landing-main--leaving {
-    opacity: 0;
-    transform: scale(0.98);
-}
-
-/*
- * Full-screen wipe for the exit transition. A single oversized
- * panel (bigger than the viewport diagonal so rotating it never
- * exposes a gap at the corners), rotated to a diagonal angle and
- * parked off past the top-left corner by default. JS just flips it
- * to its centered position - since the panel is huge and already
- * rotated, sliding it across the screen reads as a diagonal wipe
- * sweeping in from the corner, rather than growing from the middle.
- * Starts fully transparent and click-through (pointer-events: none)
- * so it's invisible on a normal page load.
- */
-.landing-wipe {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-
-    width: 220vmax;
-    height: 220vmax;
-    margin-top: -110vmax;
-    margin-left: -110vmax;
-
-    z-index: 40;
+.landing-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     pointer-events: none;
-
-    background: linear-gradient(135deg, #d59bff 0%, #b866ff 30%, #6a1fd0 60%, #170025 100%);
-
+    background: radial-gradient(ellipse at 50% 45%, transparent 30%, #05010c1a 70%, #05010c4d 100%);
+}
+.landing-content { display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0; text-align: center; padding-bottom: 24px; }
+.landing-brand { margin: 0 0 36px; width: 100%; font-weight: 700; }
+.landing-logo-stage { display: block; position: relative; width: min(440px, 100%); margin: 0 auto; }
+.landing-logo { display: block; width: 100%; height: auto; margin: 0; }
+.logo-slices { position: absolute; inset: 0; display: none; pointer-events: none; }
+.intro-piece {
+    position: absolute;
+    width: 20%;
+    top: 0;
+    height: 100%;
+    border-radius: 0 !important;
+    background-image: url('../assets/branding/NullscapeToolkits.png');
+    background-size: 500% 100%;
+    background-repeat: no-repeat;
     opacity: 0;
-    transform: translate(-62%, -62%) rotate(-18deg);
-
-    transition:
-        transform 0.65s cubic-bezier(0.65, 0, 0.35, 1),
-        opacity 0.08s ease;
+    transform: translate(var(--piece-x, 0px), var(--piece-y, 0px)) rotate(var(--piece-r, 0deg)) scale(var(--piece-s, 1));
+    filter: blur(var(--piece-blur, 0px));
+    transition: transform .42s cubic-bezier(.22,1.15,.36,1), filter .3s ease-out, opacity .15s ease;
+    will-change: transform, filter;
 }
-
-.landing-wipe--active {
-    opacity: 1;
-    transform: translate(0%, 0%) rotate(-18deg);
-}
-
-.landing-card {
-    width: 100%;
-    max-width: 720px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    text-align: center;
-
-    padding: 56px 48px;
-
-    background: linear-gradient(160deg, rgba(21, 8, 38, 0.75) 0%, rgba(13, 4, 22, 0.85) 100%);
-
-    border: 1px solid #3a1a5c;
-    border-radius: 18px;
-
-    box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.55),
-        0 0 60px rgba(150, 60, 220, 0.12),
-        inset 0 0 90px rgba(150, 60, 220, 0.05);
-
-    backdrop-filter: blur(6px);
-}
-
-/*
- * Entrance animation
- * --------------------------
- * Every direct piece of the card fades up into place on page load,
- * staggered slightly so it reads as one sequence instead of
- * everything popping in at once. Each element shares the same
- * keyframes and just gets a later animation-delay the further down
- * the card it sits.
- */
-@keyframes landing-rise-in {
-
-    from {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-.landing-eyebrow,
-.landing-title,
-.landing-lede,
-.landing-notes,
-.landing-features-heading,
-.landing-features,
-.continue-button,
-.landing-feedback,
-.landing-credit,
-.landing-inspired {
-    opacity: 0;
-    animation: landing-rise-in 0.6s ease forwards;
-}
-
-.landing-eyebrow { animation-delay: 0.05s; }
-.landing-title { animation-delay: 0.15s; }
-.landing-lede { animation-delay: 0.3s; }
-.landing-notes { animation-delay: 0.42s; }
-.landing-features-heading { animation-delay: 0.52s; }
-.landing-features { animation-delay: 0.58s; }
-.continue-button { animation-delay: 0.72s; }
-.landing-feedback { animation-delay: 0.84s; }
-.landing-credit { animation-delay: 0.96s; }
-.landing-inspired { animation-delay: 1.04s; }
-
-@media (prefers-reduced-motion: reduce) {
-
-    .landing-eyebrow,
-    .landing-title,
-    .landing-lede,
-    .landing-notes,
-    .landing-features-heading,
-    .landing-features,
-    .continue-button,
-    .landing-feedback,
-    .landing-credit,
-    .landing-inspired {
-        opacity: 1;
-        animation: none;
-    }
-
-    .landing,
-    .landing-wipe {
-        transition: none;
-    }
-
-}
-
-.landing-eyebrow {
-    margin-bottom: 18px;
-
-    color: #9a7cc9;
-
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-}
-
-/*
- * The headline itself - a static (non-animated) vertical gradient,
- * purple at the top fading down into white, matching the site's
- * purple/white identity without borrowing the horizontal scrolling
- * treatment .animated-header-text uses elsewhere. Only its entrance
- * (opacity/position) animates, not the gradient itself.
- */
-.landing-title {
-    margin-bottom: 22px;
-
-    font-size: 44px;
-    font-weight: 900;
-    line-height: 1.15;
-    letter-spacing: 0.5px;
-
-    background: linear-gradient(180deg, #b866ff 0%, #d59bff 45%, #f3ebff 75%, #ffffff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-
-    text-shadow: 0 0 40px rgba(184, 102, 255, 0.35);
-}
-
-/* "Hello! Welcome to" reads as a lead-in, not the main event, so it
-   sits noticeably smaller than the NULLSCAPE TOOLKITS lines below
-   it instead of matching their size. */
-.landing-title-intro {
-    display: inline-block;
-
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.landing-title-brand {
-    letter-spacing: 2px;
-}
-
-.landing-lede {
-    max-width: 480px;
-    margin-bottom: 26px;
-
-    color: #d0bfef;
-
-    font-size: 13.5px;
-    line-height: 1.6;
-}
-
-/*
- * Indirect disclaimers - phrased as plain, casual asides rather
- * than formal legal copy, sitting in a quieter block below the lede
- * so they read as "good to know" instead of a wall of terms.
- */
-.landing-notes {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    max-width: 540px;
-    margin-bottom: 36px;
-    padding: 18px 20px;
-
-    background: rgba(255, 255, 255, 0.03);
-
-    border: 1px dashed rgba(154, 124, 201, 0.35);
-    border-radius: 12px;
-}
-
-.landing-notes p {
-    color: #a998cf;
-
-    font-size: 11.5px;
-    line-height: 1.6;
-}
-
-.landing-notes a {
-    color: #d59bff;
-
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.landing-notes a:hover {
-    color: #f0e4ff;
-}
-
-/*
- * Small label sitting above the toggle-button row, same quiet
- * uppercase treatment as .landing-eyebrow but scoped to just this
- * section so it reads as "here's what's in the box" right before
- * the pills themselves.
- */
-.landing-features-heading {
-    margin-bottom: 12px;
-
-    color: #6d5a94;
-
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-}
-
-/*
- * Feature tags - static pills copying the exact visual language of
- * the app's own floating panel-toggle buttons (see
- * .upgrade-toggle-button / .death-toggle-button / .altars-toggle-
- * button in their respective stylesheets): same gradients, borders,
- * and glow per panel. Deliberately NOT animated the way those
- * buttons are on the main page - no hue-shift keyframes, no
- * collapse-to-icon/expand-on-hover behavior. Always full text,
- * always still. Curse Tracker isn't a toggle button in the app
- * itself (it's the default left panel), so it borrows the site's
- * general purple/white brand gradient instead.
- */
+.intro-pending .landing-view,
+.landing-view[data-intro-state='waiting'],
+.landing-view[data-intro-state='playing'],
+.landing-view[data-intro-state='assembled'] { background: #000; }
+.intro-pending .landing-background,
+.landing-view:is([data-intro-state='waiting'],[data-intro-state='playing'],[data-intro-state='assembled']) .landing-background { opacity: 0; }
+.intro-pending .landing-vignette,
+.landing-view:is([data-intro-state='waiting'],[data-intro-state='playing'],[data-intro-state='assembled']) .landing-vignette { visibility: hidden; }
+.intro-pending .landing-brand { visibility: hidden; }
+.landing-view:is([data-intro-state='waiting'],[data-intro-state='playing'],[data-intro-state='assembled']) .landing-brand { transform: translateY(var(--intro-lift, 110px)); }
+.landing-view[data-intro-state='revealing'] .landing-brand { transform: none; transition: transform 1s cubic-bezier(.22,1.1,.4,1); }
+.landing-view:is([data-intro-state='waiting'],[data-intro-state='playing']) .landing-logo { opacity: 0; }
+.landing-view[data-intro-state='playing'] .logo-slices { display: block; }
+.intro-pending .landing-features-viewport,
+.intro-pending .continue-button,
+.landing-view:is([data-intro-state='waiting'],[data-intro-state='playing'],[data-intro-state='assembled']) :is(.landing-features-viewport,.continue-button) { visibility: hidden; opacity: 0; pointer-events: none; }
+.landing-view[data-intro-state='revealing'] .landing-feature-tag { animation: intro-controls .5s ease both; animation-delay: calc(.2s + var(--tag-index) * .08s); }
+.landing-view[data-intro-state='revealing'] .continue-button { animation: intro-controls .55s ease .65s both; }
+@keyframes intro-controls { from { opacity: 0; transform: translateY(10px); } to { opacity: var(--tag-opacity, 1); transform: none; } }
 .landing-features {
-    display: flex;
-    flex-wrap: wrap;
-
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
     gap: 10px;
 
     width: 100%;
-    margin-bottom: 40px;
+    margin: 0;
 }
 
 .landing-feature-tag {
     display: inline-flex;
 
     align-items: center;
+    justify-content: center;
+    min-width: 0;
     gap: 6px;
 
-    padding: 12px 18px;
+    padding: 12px 8px;
 
     border-radius: 999px;
 
     font-family: var(--font-modern);
-    font-size: 11px;
+    font-size: clamp(8px, 1.25vw, 11px);
     font-weight: 700;
-    letter-spacing: 1.4px;
+    letter-spacing: clamp(.35px, .08vw, .8px);
     white-space: nowrap;
 
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 
+
+
+
+
+/* Each tag gets one color, in a single-hue gradient. */
+.landing-feature-tag { color: #fff; text-shadow: none; }
 .landing-feature-tag--curses {
-    background: linear-gradient(90deg, #b866ff 0%, #d97dff 25%, #b866ff 50%, #d97dff 75%, #b866ff 100%);
-
-    border: 1px solid rgba(216, 155, 255, 0.8);
-
-    color: #1a0730;
-
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(184, 102, 255, 0.35);
+    background: linear-gradient(135deg, #5a2a8a 0%, #9a56e0 100%);
+    border: 1px solid rgba(216, 155, 255, .5);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .4), 0 0 10px rgba(184, 102, 255, .22);
 }
-
 .landing-feature-tag--upgrades {
-    background: linear-gradient(90deg, #ffffff 0%, #8fd9ff 25%, #ffffff 50%, #8fd9ff 75%, #ffffff 100%);
-
-    border: 1px solid rgba(143, 217, 255, 0.8);
-
-    color: #073349;
-
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(143, 217, 255, 0.4);
+    background: linear-gradient(135deg, #1d5a94 0%, #4aa8e8 100%);
+    border: 1px solid rgba(143, 217, 255, .5);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .4), 0 0 10px rgba(74, 168, 232, .22);
 }
-
 .landing-feature-tag--deaths {
-    background: linear-gradient(90deg, #3d0000 0%, #ae1313 20%, #ff2d2d 45%, #ff6b6b 60%, #3d0000 85%, #3d0000 100%);
-
-    border: 1px solid rgba(255, 157, 157, 0.8);
-
-    color: #ffffff;
-
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(174, 19, 19, 0.4);
+    background: linear-gradient(135deg, #781010 0%, #d02a2a 100%);
+    border: 1px solid rgba(255, 157, 157, .5);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .4), 0 0 10px rgba(208, 42, 42, .22);
 }
-
-/* Black/white, matching the Altars panel's own noir theme in the
-   app (see Altars.css). */
 .landing-feature-tag--altars {
-    background: linear-gradient(90deg, #050505 0%, #ffffff 25%, #bfbfbf 50%, #ffffff 75%, #050505 100%);
-
-    border: 1px solid rgba(255, 255, 255, 0.85);
-
-    color: #ffffff;
-
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(255, 255, 255, 0.25);
-
-    opacity: 0.75;
+    background: linear-gradient(135deg, #38383e 0%, #8a8a92 100%);
+    border: 1px solid rgba(255, 255, 255, .4);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .4), 0 0 10px rgba(255, 255, 255, .12);
+    opacity: .75;
 }
-
-/* Beige/white, matching the Lobby Maker panel's own theme in the
-   app (see lobby.css). */
 .landing-feature-tag--lobby {
-    background: linear-gradient(90deg, #d8c3a5 0%, #ffffff 25%, #f0e6d2 50%, #ffffff 75%, #d8c3a5 100%);
-
-    border: 1px solid rgba(216, 195, 165, 0.85);
-
-    color: #3a2f1f;
-
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.4),
-        0 0 10px rgba(216, 195, 165, 0.3);
+    background: linear-gradient(135deg, #6a563a 0%, #a98c5f 100%);
+    border: 1px solid rgba(216, 195, 165, .55);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .4), 0 0 10px rgba(216, 195, 165, .18);
 }
-
-/* An opaque dark chip regardless of which pill it sits on top of -
-   the altars and lobby tags both fade through a light/white stop at
-   their midpoint, so a badge that just inherited the parent's own
-   coloring would wash out right there. This stays legible either
-   way. */
-.landing-soon-tag {
-    padding: 2px 7px;
-
-    background: rgba(8, 6, 14, 0.6);
-
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 999px;
-
-    color: #ffffff;
-
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.8px;
+.landing-features-viewport {
+    width: 100%;
+    min-width: 0;
+    max-width: 1050px;
+    margin-bottom: 28px;
+    padding: 10px 0 14px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #76518f #100719;
+    overscroll-behavior-x: contain;
 }
-
-/*
- * Continue button - same purple/white brand gradient as the
- * headline, so it reads as "the door that headline is standing
- * next to" rather than a generic CTA. Points at toolkits.html (see
- * the href on this element in index.html) - a relative path, so it
- * always resolves correctly next to wherever this page itself is
- * being served from. The click itself is intercepted by the script
- * in index.html to play the wipe transition before actually
- * navigating.
- */
-.continue-button {
+.landing-features { padding: 0; list-style: none; }
+.landing-view .landing-feature-tag { border-radius: 999px !important; }
+.landing-feature-tag--altars { --tag-opacity: .75; }
+.landing-view .continue-button {
     display: inline-flex;
-
     align-items: center;
-    gap: 10px;
-
-    padding: 16px 34px;
-
-    background: linear-gradient(90deg, #b866ff 0%, #d59bff 50%, #ffffff 100%);
-
-    border: 1px solid #e0c8ff;
-    border-radius: 999px;
-
-    color: #1a0730;
-    text-decoration: none;
-
-    font-family: var(--font-modern);
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.8px;
-
-    box-shadow: 0 0 26px rgba(184, 102, 255, 0.4);
-
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-}
-
-.continue-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 34px rgba(184, 102, 255, 0.6);
-}
-
-.continue-button-arrow {
-    transition: transform 0.15s ease;
-}
-
-.continue-button:hover .continue-button-arrow {
-    transform: translateX(3px);
-}
-
-.landing-credit {
-    margin-top: 22px;
-
-    color: #4f4166;
-
-    font-size: 10px;
-    letter-spacing: 0.5px;
-}
-
-.landing-credit-handle {
-    color: #d59bff;
-    font-weight: 700;
-}
-
-.landing-inspired {
-    margin-top: 5px;
-
-    color: #3a3050;
-
-    font-size: 9px;
-    letter-spacing: 0.3px;
-}
-
-/*
- * Feedback callout - a quiet, casual invite to send suggestions or
- * report bugs, with a click-to-copy Discord tag. Sits between the
- * Continue button and the credit line as a low-key aside rather
- * than a bordered box, since it's a friendly note, not another
- * feature to sell.
- */
-.landing-feedback {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 9px;
-
-    margin-top: 28px;
-}
-
-.landing-feedback-text {
-    color: #7a6699;
-
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-.landing-discord-tag {
-    display: inline-flex;
-
-    align-items: center;
-    gap: 7px;
-
-    padding: 7px 14px;
-
-    background: rgba(88, 101, 242, 0.1);
-
-    border: 1px solid rgba(88, 101, 242, 0.45);
-    border-radius: 999px;
-
-    color: #b8beff;
-
-    font-family: var(--font-modern);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-
-    cursor: pointer;
-
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.12s;
-}
-
-.landing-discord-tag:hover {
-    background: rgba(88, 101, 242, 0.2);
-
-    border-color: #7f88ff;
-
-    color: #ffffff;
-
-    box-shadow: 0 0 16px rgba(88, 101, 242, 0.35);
-
-    transform: translateY(-1px);
-}
-
-.landing-discord-tag--copied {
-    background: rgba(123, 230, 168, 0.16);
-
-    border-color: #7be6a8;
-
-    color: #eafff2;
-}
-
-.landing-discord-icon {
-    width: 13px;
-    height: 13px;
-
-    flex-shrink: 0;
-}
-
-/* Crisp, nearly-square corners shared with the rest of the site. */
-:where(*, *::before, *::after) {
+    justify-content: center;
+    min-width: 146px;
+    min-height: 46px;
+    padding: 12px 40px;
+    border: 1px solid #f0dcff;
     border-radius: 2px !important;
+    background: linear-gradient(135deg, #c99bee 0%, #e2c7f6 50%, #f8eefe 100%);
+    color: #261037;
+    box-shadow: inset 0 1px 0 #ffffff80, inset 0 -2px 0 #76429126, 0 6px 18px #00000040;
+    text-decoration: none;
+    font: 700 13px/1.4 var(--font-modern);
+    letter-spacing: .7px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-
+.landing-view .continue-button:hover { transform: translateY(-1px); border-color: #fff7ff; box-shadow: inset 0 1px 0 #ffffffcc, inset 0 -2px 0 #76429126, 0 8px 22px #00000055; }
+.landing-view .continue-button:active { transform: translateY(1px); box-shadow: inset 0 1px 3px #76429133; }
+.landing-features-viewport:focus-visible { outline: 1px solid #bc94da; outline-offset: 4px; }
+.landing-view a:focus-visible, .landing-view button:focus-visible { outline: 2px solid #f0dcff; outline-offset: 6px; }
+.landing-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.landing-error { margin: 20px 0 0; color: #e8dcff; font: 13px/1.5 Arial, sans-serif; }
+.landing-error p { margin: 0 0 8px; }
+.landing-error button { padding: 6px 12px; border: 1px solid #b866ff; background: #1b0a2d; color: #e8dcff; cursor: pointer; }
+body.at-home > :not(.landing-view):not(script) { display: none !important; }
+@media (max-width: 540px) {
+    .landing-view { padding: 32px 24px; }
+    .landing-logo-stage { max-width: 340px; }
+    .landing-brand { margin-bottom: 30px; }
+}
 @media (max-width: 640px) {
-
-    .landing-card {
-        padding: 40px 24px;
-    }
-
-    .landing-title {
-        font-size: 32px;
-    }
-
-    .landing-title-intro {
-        font-size: 16px;
-    }
-
+    .landing-features { min-width: 700px; }
+    .landing-feature-tag { font-size: 10px; letter-spacing: .6px; }
 }
+@media (prefers-reduced-motion: reduce) {
+    .landing-view *, .landing-view *::before, .landing-view *::after { animation: none !important; transition: none !important; }
+    .landing-background, .landing-brand { transform: none !important; }
+}
+html.low-detail-mode .landing-view * { animation: none !important; transition: none !important; filter: none !important; }
+html.low-detail-mode .landing-background { transform: none; }
+
+/* Click-to-enter gate */
+.landing-view .intro-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #000;
+    color: #fff;
+    font: 400 14px/1 var(--font-modern);
+    letter-spacing: .4em;
+    text-transform: lowercase;
+    cursor: pointer;
+    transition: opacity .6s ease;
+}
+.landing-view .intro-gate:focus-visible { outline: none; }
+.intro-gate span { animation: gate-pulse 2.6s ease-in-out infinite; }
+.intro-gate.is-leaving { opacity: 0; pointer-events: none; }
+@keyframes gate-pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+/* Floaty idle motion once the intro is done */
+.landing-view[data-intro-state='done'] .landing-logo-stage {
+    animation: logo-sway 9s ease-in-out infinite, logo-bob 5.5s ease-in-out infinite;
+    will-change: transform, translate, rotate;
+}
+@keyframes logo-sway {
+    0%, 100% { translate: 0 0; rotate: 0deg; }
+    25% { translate: 7px 0; rotate: .9deg; }
+    75% { translate: -7px 0; rotate: -.9deg; }
+}
+@keyframes logo-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+.landing-view[data-intro-state='done'] .landing-feature-tag {
+    animation: tag-float 5s ease-in-out infinite;
+    animation-delay: calc(var(--tag-index, 0) * -.7s);
+}
+@keyframes tag-float {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -3px; }
+}
+
+/* Subtle logo intro */
+.intro-piece.landed { animation: piece-flash .6s ease-out; }
+@keyframes piece-flash {
+    0% { filter: brightness(1.45) drop-shadow(0 0 8px rgba(216,155,255,.6)); }
+    100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+}
+.logo-burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border-radius: 50% !important;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle, rgba(226,184,255,.6) 0%, rgba(184,102,255,.25) 40%, transparent 70%);
+    mix-blend-mode: screen;
+}
+.logo-burst.final { width: 320px; height: 320px; margin: -160px 0 0 -160px; }
+.logo-burst.hit { animation: logo-burst .7s ease-out; }
+@keyframes logo-burst {
+    0% { opacity: .7; transform: scale(.4); }
+    100% { opacity: 0; transform: scale(1.5); }
+}
+.landing-logo-stage.thump { animation: logo-thump .35s ease-out; }
+@keyframes logo-thump {
+    0% { translate: 0 0; }
+    30% { translate: 0 2px; }
+    60% { translate: 0 -1px; }
+    100% { translate: 0 0; }
+}
+.landing-view:is([data-intro-state='assembled'], [data-intro-state='revealing']) .landing-logo { animation: logo-snap .9s ease-out; }
+@keyframes logo-snap {
+    0% { filter: brightness(1.35) drop-shadow(0 0 12px rgba(216,155,255,.6)); }
+    100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+}
+/* Light sweep clipped to the logo's own shape */
+.logo-shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    -webkit-mask-image: url('../assets/branding/NullscapeToolkits.png');
+    mask-image: url('../assets/branding/NullscapeToolkits.png');
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.4) 50%, transparent 62%);
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    background-position: 150% 0;
+}
+.landing-view[data-intro-state='revealing'] .logo-shine { animation: logo-shine 1.2s ease-out .1s both; }
+.landing-view[data-intro-state='done'] .logo-shine { animation: logo-shine-loop 10s ease-in-out 2s infinite; }
+@keyframes logo-shine {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+}
+@keyframes logo-shine-loop {
+    0% { background-position: 150% 0; }
+    16%, 100% { background-position: -50% 0; }
+}
+
+/* Credit, bottom right */
+.landing-credit {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    z-index: 1;
+    font: 500 11px/1 var(--font-modern);
+    letter-spacing: .08em;
+    color: rgba(232, 220, 255, .45);
+    text-decoration: none;
+    transition: color .2s ease, opacity .6s ease;
+}
+a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
+.landing-view:is([data-intro-state='waiting'], [data-intro-state='playing'], [data-intro-state='assembled']) .landing-credit { opacity: 0; }

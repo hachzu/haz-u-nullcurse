@@ -7,6 +7,15 @@
     <title>Nullscape Toolkits
     </title>
 
+    <!-- Keep old bookmarks on the single-page shell. DOMParser does not
+         execute this when the shell imports the tool markup. -->
+    <script>
+        const toolkitDestination = new URL('./', window.location.href);
+        toolkitDestination.search = window.location.search;
+        toolkitDestination.hash = window.location.hash || '#/curses';
+        window.location.replace(toolkitDestination.href);
+    </script>
+
     <!--
         Link preview metadata (Discord, Slack, iMessage, Twitter/X,
         etc all read these).

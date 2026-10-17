@@ -1,0 +1,11 @@
+Generated with the built-in image-generation tool.
+Reference: assets/branding/Nullscape.png
+Selected output: exec-332e707c-94bc-4cc8-b3eb-6b8a6da8468e.png
+
+Use case: precise-object-edit.
+Asset type: transparent PNG logo lockup for a fan-made Nullscape toolkit landing page.
+Image 1 is the edit target and authoritative brand reference.
+Primary request: Create a restrained "Nullscape Toolkits" lockup using this EXACT original logo. Keep the existing left emblem, the exact word "Nullscape", its black serif letterforms, white outline, proportions, and original purple aura as faithful and unchanged as possible. Add only a small, clean subtitle "Toolkits" centered directly underneath the wordmark, with generous clear separation. The subtitle should be understated light lavender-white serif lettering, readable and natural, without a heavy black fill, outline, forced imitation effect, or additional glow. It should feel like a simple companion line, not a second competing logo.
+Text verbatim: "Nullscape" and "Toolkits". No other text.
+Wide horizontal two-line composition, small transparent padding, no scene or mockup.
+Genuinely transparent background, smooth alpha edges. Avoid any new symbols, extra ornaments, 3D effects, bevels, light rays, frames, sliced segments, seams, stripes, vertical lines, texture, or added glow. Do not redesign or simplify the original emblem or change the original brand spelling. Keep it simple and extremely faithful.
