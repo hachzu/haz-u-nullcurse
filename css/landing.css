@@ -369,3 +369,205 @@ html.low-detail-mode .landing-background { transform: none; }
 }
 a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 .landing-view:is([data-intro-state='waiting'], [data-intro-state='playing'], [data-intro-state='assembled']) .landing-credit { opacity: 0; }
+
+.landing-view {
+    --checker-dark: #76429122;
+    --checker-glow: #e2c7f61f;
+    --vine-stroke: %23bc94da;
+    /* Vine growing in from the left, and its mirror for the right */
+    --vine-l: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 64' fill='none' stroke='%23bc94da' stroke-width='1.6' stroke-linecap='round'><path d='M36 60C14 58 8 46 18 38S30 26 20 16 12 6 14 2'/><path d='M18 38l-8-2M20 16l9-3M17 47l-7 4'/><path d='M10 36c-3-4 0-7 4-6-1 3-2 5-4 6zM29 13c0-4 4-5 6-3-1 3-3 4-6 3zM10 51c-3-3-1-7 3-6 0 3-1 5-3 6z' fill='%23bc94da' fill-opacity='.55'/><rect x='33' y='57' width='5' height='5' transform='rotate(45 35.5 59.5)' fill='%23f0dcff' stroke='none'/></svg>");
+    --vine-r: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 64' fill='none' stroke='%23bc94da' stroke-width='1.6' stroke-linecap='round'><g transform='matrix(-1 0 0 1 40 0)'><path d='M36 60C14 58 8 46 18 38S30 26 20 16 12 6 14 2'/><path d='M18 38l-8-2M20 16l9-3M17 47l-7 4'/><path d='M10 36c-3-4 0-7 4-6-1 3-2 5-4 6zM29 13c0-4 4-5 6-3-1 3-3 4-6 3zM10 51c-3-3-1-7 3-6 0 3-1 5-3 6z' fill='%23bc94da' fill-opacity='.55'/><rect x='33' y='57' width='5' height='5' transform='rotate(45 35.5 59.5)' fill='%23f0dcff' stroke='none'/></g></svg>");
+}
+ 
+/* ---------- Continue button ---------- */
+.landing-view .continue-button {
+    position: relative;
+    isolation: isolate;
+    overflow: visible;
+    min-width: 180px;
+    min-height: 52px;
+    padding: 14px 52px;
+    border: 1px solid #f0dcff;
+    border-radius: 0 !important;
+    color: #1d0a2c;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    /* shine layer on top of the original lilac gradient */
+    background:
+        linear-gradient(105deg, transparent 40%, #ffffff8c 50%, transparent 60%) -160% 0 / 250% 100% no-repeat,
+        linear-gradient(135deg, #c99bee 0%, #e2c7f6 50%, #f8eefe 100%);
+    box-shadow:
+        inset 0 1px 0 #ffffff99,
+        inset 0 -2px 0 #76429133,
+        0 0 0 3px #05010c,
+        0 0 0 4px #bc94da80,
+        0 8px 26px #00000066,
+        0 0 26px #b866ff40;
+    transition: transform .22s ease, box-shadow .3s ease, border-color .2s ease, background-position .9s ease;
+    animation: btn-void-pulse 4.2s ease-in-out infinite;
+}
+ 
+/* Checkerboard inlay with a thin inner frame */
+.landing-view .continue-button::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    pointer-events: none;
+    border: 1px solid #3a1a5a59;
+    background:
+        repeating-conic-gradient(var(--checker-dark) 0 25%, transparent 0 50%) 0 0 / 14px 14px;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #0000 28%, #0000 72%, #000 100%);
+    mask-image: linear-gradient(90deg, #000 0, #0000 28%, #0000 72%, #000 100%);
+    transition: background-position 1.2s linear;
+}
+ 
+/* Vines creeping out of both sides, plus corner studs */
+.landing-view .continue-button::after {
+    content: '';
+    position: absolute;
+    inset: -9px -40px;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        var(--vine-l) left center / auto 100% no-repeat,
+        var(--vine-r) right center / auto 100% no-repeat;
+    opacity: .7;
+    transform: scaleX(.9);
+    filter: drop-shadow(0 0 4px #b866ff80);
+    transition: transform .5s cubic-bezier(.22,1.1,.4,1), opacity .4s ease, filter .4s ease;
+}
+ 
+.landing-view .continue-button:hover,
+.landing-view .continue-button:focus-visible {
+    transform: translateY(-2px);
+    border-color: #fff7ff;
+    background-position: 160% 0, 0 0;
+    box-shadow:
+        inset 0 1px 0 #ffffffcc,
+        inset 0 -2px 0 #76429133,
+        0 0 0 3px #05010c,
+        0 0 0 4px #e2c7f6cc,
+        0 12px 30px #00000070,
+        0 0 42px #b866ff80;
+}
+.landing-view .continue-button:hover::before,
+.landing-view .continue-button:focus-visible::before { background-position: 28px 14px; }
+.landing-view .continue-button:hover::after,
+.landing-view .continue-button:focus-visible::after {
+    opacity: 1;
+    transform: scaleX(1);
+    filter: drop-shadow(0 0 8px #d89bffcc);
+}
+.landing-view .continue-button:active { transform: translateY(1px); }
+ 
+@keyframes btn-void-pulse {
+    0%, 100% { filter: none; }
+    50% { filter: drop-shadow(0 0 8px #b866ff55); }
+}
+ 
+/* ---------- Feature tags: gem-cut, checkered, studded ---------- */
+.landing-view .landing-feature-tag {
+    --tag-checker: repeating-conic-gradient(#ffffff17 0 25%, transparent 0 50%) 0 0 / 10px 10px;
+    position: relative;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 0 !important;
+    /* elongated hexagon / cut gem */
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+    box-shadow: inset 0 0 14px #00000059, inset 0 1px 0 #ffffff40;
+    transition: filter .25s ease, scale .25s ease;
+}
+/* Diamond studs flanking each label, echoing the divider */
+.landing-view .landing-feature-tag::before,
+.landing-view .landing-feature-tag::after {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    background: #ffffffd9;
+    transform: rotate(45deg);
+    box-shadow: 0 0 6px #ffffff99;
+    opacity: .75;
+    transition: opacity .25s ease, box-shadow .25s ease;
+}
+.landing-view .landing-feature-tag:hover { filter: brightness(1.2); scale: 1.05; }
+.landing-view .landing-feature-tag:hover::before,
+.landing-view .landing-feature-tag:hover::after { opacity: 1; box-shadow: 0 0 10px #fff; }
+ 
+/* Same single-hue gradients as before, with the checker laid over each */
+.landing-view .landing-feature-tag--curses   { background: var(--tag-checker), linear-gradient(135deg, #5a2a8a 0%, #9a56e0 100%); }
+.landing-view .landing-feature-tag--upgrades { background: var(--tag-checker), linear-gradient(135deg, #1d5a94 0%, #4aa8e8 100%); }
+.landing-view .landing-feature-tag--deaths   { background: var(--tag-checker), linear-gradient(135deg, #781010 0%, #d02a2a 100%); }
+.landing-view .landing-feature-tag--altars   { background: var(--tag-checker), linear-gradient(135deg, #38383e 0%, #8a8a92 100%); }
+.landing-view .landing-feature-tag--lobby    { background: var(--tag-checker), linear-gradient(135deg, #6a563a 0%, #a98c5f 100%); }
+ 
+@media (max-width: 640px) {
+    .landing-view .continue-button { padding: 14px 44px; letter-spacing: 2px; }
+    .landing-view .continue-button::after { inset: -9px -32px; }
+    .landing-view .landing-feature-tag { padding: 12px 16px; }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    .landing-view .continue-button { animation: none !important; }
+}
+
+/* ==========================================================================
+   Smooth logo intro: replaces the five chopped slices.
+   Paste at the VERY BOTTOM of landing.css (after landing-buttons.css).
+   The logo stays one piece. A soft-edged wipe reveals it left to right, one
+   step per note, while it sharpens out of a blur.
+   ========================================================================== */
+
+@property --reveal {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: 0%;
+}
+@property --logo-blur {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 7px;
+}
+
+.landing-logo-stage {
+    transition:
+        --reveal .6s cubic-bezier(.22, 1, .36, 1),
+        --logo-blur .6s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Logo is visible the whole time, but masked until each note reveals more. */
+.landing-view:is([data-intro-state='waiting'], [data-intro-state='playing'], [data-intro-state='assembled']) .landing-logo {
+    opacity: 1;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--reveal) - 16%), transparent var(--reveal));
+    mask-image: linear-gradient(90deg, #000 calc(var(--reveal) - 16%), transparent var(--reveal));
+    filter: blur(var(--logo-blur));
+}
+
+/* The old slice pieces are gone; keep this container inert. */
+.logo-slices { display: none !important; }
+
+.landing-logo-stage { transition: none; }
+.landing-view:is([data-intro-state='waiting'], [data-intro-state='playing']) .landing-logo {
+    opacity: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+    filter: none;
+}
+.landing-view:is([data-intro-state='assembled']) .landing-logo {
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+.landing-view[data-intro-state='playing'] .logo-slices { display: block !important; }
+ 
+/* Each slat is a full-size copy of the logo, clipped to a slanted band by intro.js */
+.intro-piece {
+    left: 0;
+    width: 100%;
+    background-size: 100% 100%;
+    background-position: 0 0;
+    filter: none;
+    transition: transform .45s cubic-bezier(.16, 1, .3, 1), opacity .3s ease-out;
+}

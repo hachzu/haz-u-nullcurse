@@ -47,21 +47,24 @@
     burst.className = 'logo-burst';
     const shine = document.createElement('div');
     shine.className = 'logo-shine';
-    // Each piece has its own entrance: direction, spin and size.
+    // Each slat slides in along its own slanted cut, alternating direction.
     const FROM = [
-        { x: -26, y: -38, r: -5, s: 1.08 },
-        { x: 22, y: 36, r: 4, s: .93 },
-        { x: -14, y: -42, r: -3, s: 1.06 },
-        { x: 28, y: 34, r: 5, s: .94 },
-        { x: -20, y: -36, r: -4, s: 1.07 }
+        { x: 30, y: -60, r: 0, s: 1 },
+        { x: -30, y: 60, r: 0, s: 1 },
+        { x: 30, y: -60, r: 0, s: 1 },
+        { x: -30, y: 60, r: 0, s: 1 },
+        { x: 30, y: -60, r: 0, s: 1 }
     ];
+    const SLANT = 5; // how far each cut leans, in % of the logo width
 
     features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index));
     for (let index = 0; index < 5; index++) {
         const tile = document.createElement('span');
         tile.className = 'intro-piece';
-        tile.style.left = `${index * 20}%`;
-        tile.style.backgroundPosition = `${index * 25}% 50%`;
+        const first = index === 0, last = index === 4;
+        const a = first ? -2 * SLANT : index * 20;
+        const b = last ? 100 + 2 * SLANT : (index + 1) * 20 + .4; // tiny overlap hides hairline seams
+        tile.style.clipPath = `polygon(${a + SLANT}% 0, ${b + SLANT}% 0, ${b - SLANT}% 100%, ${a - SLANT}% 100%)`;
         tile.dataset.fixOnBeat = String(index + 1);
         slices.append(tile);
         tiles.push(tile);
@@ -82,7 +85,7 @@
             tile.style.setProperty('--piece-y', on ? '0px' : `${from.y}px`);
             tile.style.setProperty('--piece-r', on ? '0deg' : `${from.r}deg`);
             tile.style.setProperty('--piece-s', on ? '1' : String(from.s));
-            tile.style.setProperty('--piece-blur', on ? '0px' : '4px');
+            tile.style.setProperty('--piece-blur', '0px');
             tile.style.opacity = on ? '1' : '0';
             if (!on) tile.classList.remove('landed');
         });
