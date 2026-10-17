@@ -23,7 +23,6 @@
     const features = home.querySelector('.landing-features-viewport');
     const enter = document.getElementById('enterToolkit');
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    const lowDetail = () => document.documentElement.classList.contains('low-detail-mode');
     const noteTimes = MOTIF.notes.map(note => MOTIF.initialSilence + note.beat * 60 / MOTIF.bpm);
     const assembledAt = noteTimes.at(-1) + .35;
     const revealAt = assembledAt + .32;
@@ -381,14 +380,11 @@
             finish();
         }
     });
-    window.addEventListener('nullscape-low-detail-change', event => { if (event.detail.enabled) finish(); });
     reducedMotion.addEventListener('change', event => { if (event.matches) finish(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden && started && !finished) finish(); });
     window.addEventListener('pagehide', finish);
     window.addEventListener('pagehide', stopTrack);
-    let savedLowDetail = false;
-    try { savedLowDetail = localStorage.getItem('nullscapeLowDetailMode') === 'true'; } catch (_) {}
-    if (reducedMotion.matches || lowDetail() || savedLowDetail || /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {
+    if (reducedMotion.matches || /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {
         finish();
         return;
     }

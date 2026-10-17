@@ -29,12 +29,11 @@
         background.style.removeProperty('--landing-y');
     }
     window.addEventListener('pointermove', event => {
-        if (home.hidden || event.pointerType === 'touch' || reducedMotion.matches || document.documentElement.classList.contains('low-detail-mode')) return;
+        if (home.hidden || event.pointerType === 'touch' || reducedMotion.matches) return;
         background.style.setProperty('--landing-x', `${-(event.clientX / innerWidth - .5) * 20}px`);
         background.style.setProperty('--landing-y', `${-(event.clientY / innerHeight - .5) * 20}px`);
     }, { passive: true });
     document.addEventListener('pointerleave', resetParallax);
-    window.addEventListener('nullscape-low-detail-change', resetParallax);
     reducedMotion.addEventListener('change', resetParallax);
 
     function showError(message) {

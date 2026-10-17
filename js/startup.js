@@ -1,6 +1,6 @@
 /* Source: site-bootstrap.js */
 /* Source: low-detail.js */
-/* Persistent low-detail setting shared by the landing page and the toolkit. */
+/* Persistent low-detail setting for the toolkit; the landing stays full detail. */
 (function () {
     const STORAGE_KEY = "nullscapeLowDetailMode";
     const root = document.documentElement;

@@ -841,13 +841,14 @@
 
 }
 /* Source: low-detail.css */
-/* A deliberately plain rendering path for slower devices. */
-html.low-detail-mode,
-html.low-detail-mode body { background: #11091a; }
+/* A deliberately plain rendering path for slower devices, active only in the toolkit.
+   Scope the global resets too: these styles remain loaded when returning home. */
+html.low-detail-mode:has(body:not(.at-home)),
+html.low-detail-mode:has(body:not(.at-home)) body { background: #11091a; }
 
-html.low-detail-mode *,
-html.low-detail-mode *::before,
-html.low-detail-mode *::after {
+html.low-detail-mode:has(body:not(.at-home)) *,
+html.low-detail-mode:has(body:not(.at-home)) *::before,
+html.low-detail-mode:has(body:not(.at-home)) *::after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
@@ -857,13 +858,13 @@ html.low-detail-mode *::after {
     backdrop-filter: none !important;
 }
 
-html.low-detail-mode .particle-canvas,
-html.low-detail-mode .landing-bg,
-html.low-detail-mode .landing-wipe,
-html.low-detail-mode .particle-settings-button { display: none !important; }
+html.low-detail-mode:has(body:not(.at-home)) .particle-canvas,
+html.low-detail-mode:has(body:not(.at-home)) .landing-bg,
+html.low-detail-mode:has(body:not(.at-home)) .landing-wipe,
+html.low-detail-mode:has(body:not(.at-home)) .particle-settings-button { display: none !important; }
 
 /* Keep one still image background instead of the full-detail moving layer. */
-html.low-detail-mode .bg-layer {
+html.low-detail-mode:has(body:not(.at-home)) .bg-layer {
     display: block !important;
     z-index: 0;
     inset: 0;
@@ -879,25 +880,25 @@ html.low-detail-mode .bg-layer {
 
 /* The original layer sits behind the document at z-index -1. In this mode it
    is intentionally promoted behind the app so Background.png remains visible. */
-html.low-detail-mode .app { z-index: 1; }
+html.low-detail-mode:has(body:not(.at-home)) .app { z-index: 1; }
 
 /* Solid fills avoid costly decorative background painting while retaining the UI. */
-html.low-detail-mode .left-panel,
-html.low-detail-mode .toolkit-panel,
-html.low-detail-mode .landing-card {
+html.low-detail-mode:has(body:not(.at-home)) .left-panel,
+html.low-detail-mode:has(body:not(.at-home)) .toolkit-panel,
+html.low-detail-mode:has(body:not(.at-home)) .landing-card {
     background-image: none !important;
     background-color: #1a1026 !important;
 }
 
 /* The tracker side stays transparent so the retained Background.png can show
    through, as it does in the normal page. */
-html.low-detail-mode .right-panel {
+html.low-detail-mode:has(body:not(.at-home)) .right-panel {
     background-image: none !important;
     background-color: transparent !important;
 }
 
 /* Lobby subpanels used an animation's final frame to become opaque. */
-html.low-detail-mode .lobby-subpanel--open {
+html.low-detail-mode:has(body:not(.at-home)) .lobby-subpanel--open {
     opacity: 1 !important;
     transform: none !important;
 }
@@ -931,15 +932,15 @@ html.low-detail-mode .lobby-subpanel--open {
 @keyframes detail-loader-fade { 0%, 100% { opacity: 0; } 15%, 85% { opacity: 1; } }
 @keyframes detail-loader-spin { to { transform: rotate(360deg); } }
 
-html.low-detail-mode .detail-loader--active { animation: detail-loader-fade 0.65s ease both !important; }
-html.low-detail-mode .detail-loader--active span { animation: detail-loader-spin 0.65s linear infinite !important; }
+html.low-detail-mode:has(body:not(.at-home)) .detail-loader--active { animation: detail-loader-fade 0.65s ease both !important; }
+html.low-detail-mode:has(body:not(.at-home)) .detail-loader--active span { animation: detail-loader-spin 0.65s linear infinite !important; }
 
-html.low-detail-mode button:hover,
-html.low-detail-mode a:hover,
-html.low-detail-mode input:hover,
-html.low-detail-mode select:hover,
-html.low-detail-mode .curse-card:hover,
-html.low-detail-mode .enemy-button:hover {
+html.low-detail-mode:has(body:not(.at-home)) button:hover,
+html.low-detail-mode:has(body:not(.at-home)) a:hover,
+html.low-detail-mode:has(body:not(.at-home)) input:hover,
+html.low-detail-mode:has(body:not(.at-home)) select:hover,
+html.low-detail-mode:has(body:not(.at-home)) .curse-card:hover,
+html.low-detail-mode:has(body:not(.at-home)) .enemy-button:hover {
     outline: 1px solid currentColor;
     outline-offset: 1px;
 }

@@ -239,8 +239,6 @@ body.at-home > :not(.landing-view):not(script) { display: none !important; }
     .landing-view *, .landing-view *::before, .landing-view *::after { animation: none !important; transition: none !important; }
     .landing-background, .landing-brand { transform: none !important; }
 }
-html.low-detail-mode .landing-view * { animation: none !important; transition: none !important; filter: none !important; }
-html.low-detail-mode .landing-background { transform: none; }
 
 /* Click-to-enter gate */
 .landing-view .intro-gate {
@@ -549,6 +547,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 .logo-slices { display: none !important; }
 
 .landing-logo-stage { transition: none; }
+
 .landing-view:is([data-intro-state='waiting'], [data-intro-state='playing']) .landing-logo {
     opacity: 0;
     -webkit-mask-image: none;

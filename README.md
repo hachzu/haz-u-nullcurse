@@ -12,7 +12,8 @@ narrow screens scroll the single row horizontally. The tracker background
 uses subtle parallax and a light vignette. The original logo is kept
 in `assets/branding/Nullscape.png`; the new asset and generation prompt are
 `assets/branding/NullscapeToolkits.png` and `NullscapeToolkits.prompt.txt`.
-Reduced motion and the saved low-detail setting disable landing motion.
+Reduced motion disables landing motion. Low-detail mode affects only the toolkit;
+the landing page keeps its full appearance, intro, and parallax.
 
 `js/intro.js` contains the note pitches, rhythmic positions, tempo, initial
 silence and reveal timing. Web Audio synthesizes the phrase locally, with
@@ -23,7 +24,7 @@ The audio clock drives animation when sound is allowed. On a fresh browser
 visit, autoplay may be blocked: the animation still runs automatically, and
 a click/tap or key during the assembly restarts it with synchronized sound.
 There is no delayed surprise playback after the controls appear. Direct tool
-links, reduced motion and low-detail mode skip the intro. Tool navigation and
+links and reduced motion skip the intro. Tool navigation and
 returning home never replay it.
 
 The landing and tools share one document. Shared links can use `#/curses`,
