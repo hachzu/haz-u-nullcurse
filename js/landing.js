@@ -19,6 +19,10 @@
     let initialized = false;
     let routeRevision = 0;
     let loadRevision = 0;
+    let assetState = { loaded: 0, total: 1, ready: false, error: false };
+    // Required toolkit resources only; optional image preloading remains non-blocking.
+    window.NullscapeAssets = Object.freeze({ getState: () => ({ ...assetState,
+        progress: assetState.ready ? 1 : assetState.loaded / assetState.total }) });
     try {
         document.documentElement.classList.toggle('low-detail-mode', localStorage.getItem('nullscapeLowDetailMode') === 'true');
     } catch (_) { /* Storage is optional. */ }
@@ -55,11 +59,13 @@
     }
     function prepareAssets() {
         const revision = ++loadRevision;
+        assetState = { loaded: 0, total: 1, ready: false, error: false };
         $('loadError').hidden = true;
         corePromise = (async () => {
             const markup = await fetchResource('Toolkits.html');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
             const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
+            if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
             // Preload silently; optional images never hold up the Continue button.
             fetchResource('assets/preload.json', 'json').then(assets => {
                 const images = [...new Set(assets)];
@@ -69,9 +75,16 @@
                     }
                 }));
             }).catch(() => {});
-            await Promise.all(core.map(url => fetchResource(url)));
+            await Promise.all(core.map(async url => {
+                await fetchResource(url);
+                if (revision === loadRevision) assetState.loaded++;
+            }));
+            if (revision === loadRevision) assetState.ready = true;
         })().catch(error => {
-            if (revision === loadRevision) showError('Could not load the toolkit. Please try again.');
+            if (revision === loadRevision) {
+                assetState.error = true;
+                showError('Could not load the toolkit. Please try again.');
+            }
             throw error;
         });
         corePromise.catch(() => {});

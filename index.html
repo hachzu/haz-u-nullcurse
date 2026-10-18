@@ -28,10 +28,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="180x180" href="assets/branding/nullscape-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/branding/nullscape-icon.png">
-    <link rel="preload" as="image" href="assets/branding/NullscapeToolkits.png">
-    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261018-3">
-    <script src="js/intro.js?v=20261018-1" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
-    <script src="js/landing.js?v=20261018-1" defer></script>
+    <link rel="preload" as="image" href="assets/branding/Nullscape.png">
+    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261018-loading-drop1">
+    <script src="js/intro.js?v=20261018-loading-drop2" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
+    <script src="js/landing.js?v=20261018-loading-drop1" defer></script>
 </head>
 <body class="at-home">
     <main id="landingView" class="landing-view">
@@ -39,9 +39,14 @@
         <div class="landing-vignette" aria-hidden="true"></div>
         <div class="landing-content">
             <h1 class="landing-brand" aria-label="Nullscape Toolkits">
-                <span class="landing-logo-stage" id="logoStage">
-                    <img class="landing-logo" id="animatedLogo" src="assets/branding/NullscapeToolkits.png" alt="Nullscape Toolkits" width="2170" height="725" fetchpriority="high">
-                    <span class="logo-slices" id="logoSlices" aria-hidden="true"></span>
+                <span class="ns-logo-build">
+                    <span class="landing-logo-stage" id="logoStage">
+                        <span class="ns-logo-face">
+                            <img class="landing-logo" id="animatedLogo" src="assets/branding/Nullscape.png" alt="Nullscape" width="1100" height="300" fetchpriority="high">
+                            <span class="logo-slices" id="logoSlices" aria-hidden="true"></span>
+                        </span>
+                        <span class="ns-toolkit-reveal" aria-hidden="true"><span class="ns-toolkit-caption">Toolkits</span></span>
+                    </span>
                 </span>
                 <span class="landing-divider" aria-hidden="true"></span>
             </h1>
