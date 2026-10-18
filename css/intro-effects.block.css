@@ -78,18 +78,18 @@
 .landing-view .ns-startup-load {
     position: absolute;
     left: 50%;
-    top: calc(50% + clamp(86px, 13vw, 114px));
+    top: var(--ns-load-top, calc(50% + 80px));
     width: min(256px, 64vw);
-    transform: translateX(-50%);
+    transform: translate(-50%, var(--ns-load-rise, 0px));
     z-index: 6;
     pointer-events: none;
-    color: #e8dcff99;
+    color: #e8dcffcc;
     font: 400 10px/1.4 var(--font-modern);
     letter-spacing: .06em;
     font-variant-numeric: tabular-nums;
 }
 .ns-startup-row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
-.ns-startup-rail { display: block; height: 2px; overflow: hidden; background: #c6a4e326; }
+.ns-startup-rail { display: block; height: 3px; overflow: hidden; background: #c6a4e33b; }
 .ns-startup-fill {
     display: block;
     width: 100%;

@@ -3,10 +3,10 @@
 (() => {
     'use strict';
     const CONFIG = {
-        notes: [ // Existing 128 BPM motif, including the extra hold before note 5.
+        notes: [ // Original 128 BPM motif, without the extra hold before note 5.
             { midi: 62, at: .5 }, { midi: 77, at: 1.203125 },
             { midi: 76, at: 1.90625 }, { midi: 70, at: 2.375 },
-            { midi: 69, at: 4.078125 }
+            { midi: 69, at: 3.078125 }
         ],
         timing: {
             sliceLead: .55, assembledHold: .45, dropHold: 2, uiDuration: 1.5,
@@ -36,8 +36,8 @@
         },
         synth: {
             transpose: -7, noteDuration: .75, finalDuration: 2.8,
-            attack: .035, settle: .1, hold: .24, finalHold: .9,
-            glide: .08, vibratoFade: .22, releasePad: .02,
+            attack: .012, settle: .08, hold: .24, finalHold: .9,
+            glide: .035, vibratoFade: .22, releasePad: .02,
             reverb: 4.8, echo: .31, compressorAttack: .003, compressorRelease: .25
         },
         fx: {
@@ -108,7 +108,8 @@
     const assembledAt = impactAt + CONFIG.timing.assembledHold;
     const motifTailEnd = impactAt + CONFIG.synth.finalDuration + CONFIG.synth.reverb;
     const songOffset = CUT.offset;
-    const loadingAt = assembledAt;
+    const loadingAt = noteTimes[0];
+    const earliestSongAt = assembledAt + CONFIG.loading.minimumLoad;
     // Assigned only when required resources have finished loading.
     let songAt = Infinity, dropAt = Infinity, revealAt = Infinity, doneAt = Infinity;
     const buildAt = impactAt - CONFIG.build.hold;
@@ -366,7 +367,7 @@
         wet.gain.value = .55;
         const roomTone = context.createBiquadFilter();
         roomTone.type = 'lowpass';
-        roomTone.frequency.value = 2400;
+        roomTone.frequency.value = 4200;
         convolver.connect(roomTone).connect(wet).connect(output);
         const delay = context.createDelay(1);
         delay.delayTime.value = CONFIG.synth.echo;
@@ -394,22 +395,21 @@
             envelope.gain.exponentialRampToValueAtTime(.0001, at + duration);
             const lowpass = context.createBiquadFilter();
             lowpass.type = 'lowpass';
-            lowpass.Q.value = .35;
-            lowpass.frequency.setValueAtTime(final ? 2000 : 1400, at);
-            lowpass.frequency.exponentialRampToValueAtTime(900, at + duration);
+            lowpass.Q.value = .55;
+            lowpass.frequency.setValueAtTime(final ? 5800 : 4800, at);
+            lowpass.frequency.exponentialRampToValueAtTime(2600, at + duration);
             envelope.connect(lowpass).connect(graph.output);
             const roomSend = context.createGain();
             roomSend.gain.value = final ? 1.1 : .6;
             lowpass.connect(roomSend).connect(graph.convolver);
             if (final) lowpass.connect(graph.delay);
-            // Smooth sine voices, a short pitch glide and delayed vibrato replace
-            // the buzzy saws while keeping the motif in its lower register.
+            // A bright saw edge over a clear core keeps the sci-fi glide and room tail.
             const voices = [
-                { type: 'sine', ratio: 1, detune: 0, level: .88 },
-                { type: 'sine', ratio: 2, detune: 0, level: .09 },
-                { type: 'sine', ratio: .5, detune: 0, level: .08 }
+                { type: 'triangle', ratio: 1, detune: 0, level: .58 },
+                { type: 'sawtooth', ratio: 1, detune: 3, level: .22 },
+                { type: 'sine', ratio: 2, detune: 0, level: .16 }
             ];
-            if (final) voices.push({ type: 'sine', ratio: .25, detune: 0, level: .2 }); // sub weight on the last note
+            if (final) voices.push({ type: 'sine', ratio: .5, detune: 0, level: .08 });
             const previousFrequency = index ? 440 * 2 ** ((MOTIF.notes[index - 1].midi + CONFIG.synth.transpose - 69) / 12) : frequency * .985;
             const vibrato = context.createOscillator();
             vibrato.type = 'sine';
@@ -735,7 +735,7 @@
         function scheduleFinalPhase(rendered, assets) {
             if (finalScheduled || !assets.ready || assets.error || (context && !cutSettled)) return;
             // Never schedule in the past: slow loading extends the first phase.
-            songAt = Math.max(loadingAt + CONFIG.loading.minimumLoad, rendered + CONFIG.timing.scheduleLead);
+            songAt = Math.max(earliestSongAt, rendered + CONFIG.timing.scheduleLead);
             hasCut = Boolean(context && cutBufferReady);
             if (hasCut) {
                 try { scheduleCut(context, audioOrigin, cutBufferReady); }
@@ -760,7 +760,7 @@
         }
         function updateLoading(elapsed, assets) {
             const l = CONFIG.loading;
-            const timeFraction = Math.min(1, Math.max(0, (elapsed - loadingAt) / l.minimumLoad));
+            const timeFraction = Math.min(1, Math.max(0, (elapsed - loadingAt) / (earliestSongAt - loadingAt)));
             const resources = (Math.min(1, Math.max(0, assets.progress || 0)) + (context ? cutProgress : 1)) / 2;
             let progress = l.assetPortion * Math.min(timeFraction, resources);
             let label = !assets.ready ? 'Loading toolkit' : context && !cutSettled ? 'Loading music' : 'Preparing';
@@ -780,7 +780,13 @@
             startupLoad.setAttribute('aria-valuetext', `${label}, ${percent}%`);
             startupLoad.style.setProperty('--ns-load-progress', String(progress));
             startupLoad.hidden = elapsed < loadingAt || elapsed >= dropAt + l.exitHold + l.exit;
-            startupLoad.style.opacity = String(elapsed < dropAt ? 1 : Math.max(0, 1 - Math.max(0, elapsed - dropAt - l.exitHold) / l.exit));
+            if (!startupLoad.hidden) {
+                const logoBottom = logoFace.getBoundingClientRect().bottom - home.getBoundingClientRect().top;
+                startupLoad.style.setProperty('--ns-load-top', `${logoBottom + 24}px`);
+            }
+            const entrance = Math.min(1, Math.max(0, (elapsed - loadingAt) / .18));
+            startupLoad.style.setProperty('--ns-load-rise', `${(1 - entrance) * 6}px`);
+            startupLoad.style.opacity = String(elapsed < dropAt ? entrance : Math.max(0, 1 - Math.max(0, elapsed - dropAt - l.exitHold) / l.exit));
         }
         scheduleFinalPhase(context ? context.currentTime - audioOrigin : -CONFIG.timing.scheduleLead, requiredAssets());
         function tick() {
@@ -790,8 +796,8 @@
             const elapsed = rendered - latency - CONFIG.timing.visualOffset;
             const assets = requiredAssets();
             scheduleFinalPhase(rendered, assets);
-            updateLoading(elapsed, assets);
             updateLogoBuild(elapsed);
+            updateLoading(elapsed, assets);
             const showCredit = hasCut && songPlaying && elapsed >= songAt + CUT.creditDelay && elapsed < songEndAt;
             if (showCredit && nowPlaying.hidden) {
                 nowPlaying.style.setProperty('--ns-credit-late', `${-Math.max(0, elapsed - songAt - CUT.creditDelay)}s`);

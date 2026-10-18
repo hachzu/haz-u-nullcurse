@@ -111,9 +111,9 @@ function harness({ reduced = false, failSong = false, deferSong = false, assetsR
     };
 }
 
-const LOADING = 4.528125;
-const SONG = 6.928125;
-const DROP = 11.763125;
+const LOADING = .5;
+const SONG = 5.928125;
+const DROP = 10.763125;
 const bar = h => h.elements.landingView.children.find(node => node.className === 'ns-startup-load');
 const percent = h => Number(bar(h).attributes['aria-valuenow']);
 const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source');
@@ -131,13 +131,19 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(fade[1].at(-1), .5);
     assert.equal(fade[3], 1.4);
     assert.ok(fade[1].every((v, i, a) => !i || v >= a[i - 1]));
-    h.advance(.509);
-    assert.equal(h.logs.find(e => e[1].event === 'note-1')[1].differenceMs, 9);
     h.advance(LOADING - .01);
     assert.equal(bar(h).hidden, true);
+    h.advance(.509);
+    assert.equal(h.logs.find(e => e[1].event === 'note-1')[1].differenceMs, 9);
+    assert.equal(bar(h).hidden, false, 'show the bar on the first note');
+    assert.equal(bar(h).style['--ns-load-top'], '171px', 'anchor 24px beneath the visible logo');
     h.advance(LOADING + .1);
     assert.equal(bar(h).hidden, false);
     assert.ok(percent(h) > 0 && percent(h) < 10);
+    h.advance(3.08);
+    assert.equal(h.logs.find(e => e[1].event === 'note-5')[1].scheduled, 3.078125);
+    assert.equal(h.elements['.landing-features-viewport'].inert, true);
+    assert.ok(context.nodes.some(n => n.kind === 'oscillator' && n.type === 'sawtooth'));
     h.advance(SONG + .001);
     assert.equal(percent(h), 85);
     h.advance(DROP - .001);
