@@ -14,14 +14,7 @@
             visualOffset: 0, // Positive values delay visuals further; device calibration.
             gateFade: .7, loadTimeout: 20
         },
-        loading: { minimumLoad: 2.4, assetPortion: .85, fallbackCountdown: .8, exit: .55, exitHold: .2 },
-        build: {
-            hold: 1.7, firstInterval: .5, lastInterval: .15,
-            thumpDuration: .12, thumpAttack: .006, thumpVolume: .22,
-            thumpStartHz: 90, thumpEndHz: 45,
-            silence: .08, muteRamp: .01, padVolume: .012,
-            padHz: 55, padRise: 1.5
-        },
+        loading: { minimumLoad: 3.4, assetPortion: .85, fallbackCountdown: .8, exit: .55, exitHold: .2 },
         song: {
             url: 'assets/adelightfulnewdeath-cut.mp3?v=20261018-new-cut1',
             title: 'A Delightful New Death', artist: 'Digital Descendant',
@@ -44,7 +37,6 @@
             flash: .1, rgb: .2, glitch: .15, punch: .52, ring: 1.1,
             ringDelay: .10, spark: .85, background: 1.5,
             preDropGlint: .85, preDropGlintLead: 1,
-            heartbeat: .12, impactRingDelay: .14,
             backgroundAttack: .012, backgroundRelease: .38, backgroundWindow: 1.4,
             backgroundScale: .032, backgroundTravel: 9, backgroundLight: .22,
             assemblyStartScale: 1.08, assemblyPeakScale: 1.25, assemblySettle: 1,
@@ -112,17 +104,6 @@
     const earliestSongAt = assembledAt + CONFIG.loading.minimumLoad;
     // Assigned only when required resources have finished loading.
     let songAt = Infinity, dropAt = Infinity, revealAt = Infinity, doneAt = Infinity;
-    const buildAt = impactAt - CONFIG.build.hold;
-    const vacuumAt = impactAt - CONFIG.build.silence;
-    const heartbeatTimes = [];
-    const rampIntervals = Math.max(2, Math.floor((vacuumAt - buildAt - CONFIG.build.thumpDuration) /
-        ((CONFIG.build.firstInterval + CONFIG.build.lastInterval) / 2)));
-    let heartbeatStep = 0;
-    for (let at = buildAt; at + CONFIG.build.thumpDuration <= vacuumAt;) {
-        heartbeatTimes.push(at);
-        const progress = Math.min(1, heartbeatStep++ / (rampIntervals - 1));
-        at += CONFIG.build.firstInterval + (CONFIG.build.lastInterval - CONFIG.build.firstInterval) * progress;
-    }
     const tiles = [];
     const oscillators = new Set();
     const fxLayer = document.createElement('div');
@@ -196,7 +177,7 @@
         if (event.target !== stage) return;
         if (event.animationName === 'logo-thump') stage.classList.remove('thump');
         if (event.animationName === 'logo-slam') stage.classList.remove('slam');
-        if (event.animationName === 'ns-heartbeat') stage.classList.remove('ns-heartbeat');
+        if (event.animationName === 'ns-assembly-impact') stage.classList.remove('ns-assembly-impact');
         if (event.animationName === 'ns-kick') stage.classList.remove('ns-kick');
     });
     content.addEventListener('animationend', event => {
@@ -231,30 +212,6 @@
         fxLayer.append(node);
         return node;
     }
-    // The big payoff on the last note: flash, shockwaves, sparks and a screen shake.
-    function impactFx(late) {
-        const homeRect = home.getBoundingClientRect();
-        const rect = logoFace.getBoundingClientRect();
-        const x = rect.left + rect.width / 2 - homeRect.left;
-        const y = rect.top + rect.height / 2 - homeRect.top;
-        fx('logo-flash', x, y, {}, late);
-        fx('logo-ring', x, y, {}, late);
-        fx('logo-ring', x, y, { '--delay': `${CONFIG.fx.impactRingDelay}s` }, late);
-        const reach = Math.min(1, innerWidth / 800);
-        const count = 28;
-        for (let i = 0; i < count; i++) {
-            const angle = (i / count) * Math.PI * 2 + (Math.random() - .5) * .35;
-            const distance = (110 + Math.random() * 270) * reach;
-            fx('logo-spark', x, y, {
-                '--dx': `${Math.cos(angle) * distance * 1.35}px`,
-                '--dy': `${Math.sin(angle) * distance * .8}px`,
-                '--rot': `${Math.round(Math.random() * 360)}deg`,
-                '--size': `${(2 + Math.random() * 4).toFixed(1)}px`,
-                '--dur': `${(.8 + Math.random() * .8).toFixed(2)}s`
-            }, late);
-        }
-        restart(content, 'impact-shake', late);
-    }
     // Fires exactly on a note: flash the piece, burst of light, and a thump.
     function hit(beat, late = 0) {
         home.dataset.introBeat = String(beat);
@@ -264,10 +221,13 @@
         burst.classList.toggle('final', final);
         burst.style.left = final ? '50%' : `${(beat - 1) * 20 + 10}%`;
         restart(burst, 'hit', late);
-        if (final) {
-            restart(stage, 'slam', late);
-            impactFx(late);
-        } else {
+        if (final && late < .65) {
+            const rect = logoFace.getBoundingClientRect();
+            const homeRect = home.getBoundingClientRect();
+            fx('ns-assembly-ring', rect.left + rect.width / 2 - homeRect.left,
+                rect.top + rect.height / 2 - homeRect.top, {}, late);
+            restart(stage, 'ns-assembly-impact', late);
+        } else if (!final) {
             restart(stage, 'thump', late);
         }
     }
@@ -320,8 +280,8 @@
         slices.replaceChildren();
         fxLayer.replaceChildren();
         content.classList.remove('impact-shake');
-        stage.classList.remove('slam', 'thump');
-        stage.classList.remove('ns-heartbeat', 'ns-kick');
+        stage.classList.remove('slam', 'thump', 'ns-assembly-impact');
+        stage.classList.remove('ns-kick');
         shine.classList.remove('ns-pre-drop-glint');
         stage.querySelectorAll('.ns-chroma, .ns-glitch').forEach(node => node.remove());
         content.classList.remove('ns-camera');
@@ -496,66 +456,11 @@
         });
         return cutPromise;
     }
-    function track(source, ...nodes) {
-        oscillators.add(source);
-        source.onended = () => {
-            oscillators.delete(source);
-            source.disconnect();
-            nodes.forEach(node => node.disconnect());
-        };
-    }
-    function scheduleBuild(context, origin) {
-        const b = CONFIG.build;
-        // These buses bypass the room: nothing can leak into either silence gap.
-        const buildBus = context.createGain();
-        buildBus.gain.setValueAtTime(1, origin + buildAt);
-        buildBus.gain.setValueAtTime(1, origin + vacuumAt - b.muteRamp);
-        buildBus.gain.linearRampToValueAtTime(0, origin + vacuumAt);
-        buildBus.connect(context.destination);
-        heartbeatTimes.forEach(time => {
-            const at = origin + time;
-            const source = context.createOscillator();
-            source.type = 'sine';
-            source.frequency.setValueAtTime(b.thumpStartHz, at);
-            source.frequency.exponentialRampToValueAtTime(b.thumpEndHz, at + b.thumpDuration);
-            const gain = context.createGain();
-            gain.gain.setValueAtTime(0, at);
-            gain.gain.linearRampToValueAtTime(b.thumpVolume, at + b.thumpAttack);
-            gain.gain.exponentialRampToValueAtTime(.0001, at + b.thumpDuration - b.muteRamp);
-            gain.gain.linearRampToValueAtTime(0, at + b.thumpDuration);
-            source.connect(gain).connect(buildBus);
-            track(source, gain);
-            source.start(at);
-            source.stop(at + b.thumpDuration);
-        });
-        const lowpass = context.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 220;
-        const pad = context.createGain();
-        pad.gain.setValueAtTime(0, origin + buildAt);
-        pad.gain.linearRampToValueAtTime(b.padVolume, origin + buildAt + b.firstInterval);
-        pad.gain.setValueAtTime(b.padVolume, origin + vacuumAt - b.muteRamp);
-        pad.gain.linearRampToValueAtTime(0, origin + vacuumAt);
-        lowpass.connect(pad).connect(buildBus);
-        [-7, 0, 7].forEach(detune => {
-            const source = context.createOscillator();
-            source.type = 'sine';
-            source.detune.value = detune;
-            source.frequency.setValueAtTime(b.padHz, origin + buildAt);
-            source.frequency.exponentialRampToValueAtTime(b.padHz * b.padRise, origin + vacuumAt);
-            source.connect(lowpass);
-            track(source);
-            source.start(origin + buildAt);
-            source.stop(origin + vacuumAt);
-        });
+    function scheduleMotifTail(context, origin) {
+        // Retain the room tail without a heartbeat build or pre-note mute.
         const master = graph.master.gain;
         master.setValueAtTime(1, origin);
-        master.setValueAtTime(1, origin + vacuumAt - b.muteRamp);
-        master.linearRampToValueAtTime(0, origin + vacuumAt);
-        master.setValueAtTime(0, origin + impactAt);
-        master.setValueAtTime(1, origin + impactAt);
-        // Let the whole final room tail finish, then silence residual feedback.
-        master.setValueAtTime(1, origin + motifTailEnd - b.muteRamp);
+        master.setValueAtTime(1, origin + motifTailEnd - .01);
         master.linearRampToValueAtTime(0, origin + motifTailEnd);
     }
     function scheduleCut(context, origin, buffer) {
@@ -585,9 +490,6 @@
             // tick closes the context only after both the audible tail and intro end.
         };
         source.start(at, songOffset);
-    }
-    function pulse(className, late, duration) {
-        if (late < duration && !reducedMotion.matches) restart(stage, className, late);
     }
     function backgroundKick(at) {
         if (!reducedMotion.matches) backgroundKicks.push(at);
@@ -718,12 +620,11 @@
         }
         if (context) {
             scheduleNotes(context, audioOrigin);
-            scheduleBuild(context, audioOrigin);
+            scheduleMotifTail(context, audioOrigin);
         }
         home.dataset.introAudio = context ? 'playing' : 'unavailable';
         const events = [
-            ...noteTimes.map((at, index) => ({ at, fire: late => hit(index + 1, late), label: `note-${index + 1}` })),
-            ...heartbeatTimes.map(at => ({ at, fire: late => pulse('ns-heartbeat', late, CONFIG.fx.heartbeat) }))
+            ...noteTimes.map((at, index) => ({ at, fire: late => hit(index + 1, late), label: `note-${index + 1}` }))
         ].sort((a, b) => a.at - b.at);
         let eventIndex = 0;
         let flyIndex = 0;

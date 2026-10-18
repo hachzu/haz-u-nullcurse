@@ -924,14 +924,6 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 .landing-view[data-intro-drop='1'][data-intro-state='revealing'] .landing-background:not(.ns-background) {
     animation: none;
 }
-.landing-view .landing-logo-stage.ns-heartbeat {
-    animation: ns-heartbeat var(--ns-heartbeat, .12s) ease-out var(--ns-late, 0s) both;
-}
-@keyframes ns-heartbeat {
-    0% { scale: 1; filter: brightness(1); }
-    12% { scale: 1.025; filter: brightness(1.18) drop-shadow(0 0 9px #bc94da66); }
-    100% { scale: 1; filter: brightness(1); }
-}
 .landing-view .landing-background {
     scale: var(--ns-beat-scale, 1);
     translate: 0 var(--ns-beat-y, 0px);
@@ -1081,5 +1073,41 @@ html.low-detail-mode .landing-view *::after { animation: none !important; transi
 }
 @media (prefers-reduced-motion: reduce) {
     .landing-view .ns-now-playing { animation: none; }
+}
+
+/* A quiet finish to assembly; the music drop retains its own stronger effects. */
+.landing-view .logo-burst.final.hit { animation: ns-assembly-soft .45s ease-out var(--ns-late, 0s) both; }
+.landing-view .logo-burst.final { width: 180px; height: 180px; margin: -90px 0 0 -90px; }
+@keyframes ns-assembly-soft {
+    from { opacity: .24; transform: scale(.8); }
+    to { opacity: 0; transform: scale(1.12); }
+}
+.landing-view .intro-piece[data-fix-on-beat='5'].landed { animation: none; }
+.landing-view:is([data-intro-state='assembled'], [data-intro-state='revealing']) .landing-logo { animation: none; }
+
+.landing-view .landing-logo-stage.ns-assembly-impact {
+    animation: ns-assembly-impact .5s ease-out var(--ns-late, 0s) both;
+}
+@keyframes ns-assembly-impact {
+    0% { scale: 1; filter: brightness(1); }
+    18% { scale: .992; filter: brightness(1.12); }
+    45% { scale: 1.006; filter: brightness(1.04); }
+    100% { scale: 1; filter: brightness(1); }
+}
+.ns-assembly-ring {
+    position: absolute;
+    left: var(--fx-x);
+    top: var(--fx-y);
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+    border: 1px solid #d2aff0;
+    border-radius: 50% !important;
+    opacity: 0;
+    animation: ns-assembly-ring .65s ease-out both;
+}
+@keyframes ns-assembly-ring {
+    0% { opacity: .22; transform: scale(.7); }
+    100% { opacity: 0; transform: scale(2.2); }
 }
 /* END NS AUDIO-LOCKED EFFECTS */

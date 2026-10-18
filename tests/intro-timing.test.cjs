@@ -112,8 +112,8 @@ function harness({ reduced = false, failSong = false, deferSong = false, assetsR
 }
 
 const LOADING = .5;
-const SONG = 5.928125;
-const DROP = 10.763125;
+const SONG = 6.928125;
+const DROP = 11.763125;
 const bar = h => h.elements.landingView.children.find(node => node.className === 'ns-startup-load');
 const percent = h => Number(bar(h).attributes['aria-valuenow']);
 const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source');
@@ -142,6 +142,13 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.ok(percent(h) > 0 && percent(h) < 10);
     h.advance(3.08);
     assert.equal(h.logs.find(e => e[1].event === 'note-5')[1].scheduled, 3.078125);
+    assert.equal(h.elements.logoStage.classList.contains('slam'), false);
+    assert.equal(h.elements.logoStage.classList.contains('ns-heartbeat'), false);
+    assert.equal(h.elements['.landing-content'].classList.contains('impact-shake'), false);
+    const effects = h.elements.landingView.children.find(n => n.className === 'logo-fx');
+    assert.equal(effects.children.length, 1, 'assembly has one gentle ring');
+    assert.equal(effects.children[0].className, 'ns-assembly-ring');
+    assert.equal(h.elements.logoStage.classList.contains('ns-assembly-impact'), true);
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
     assert.ok(context.nodes.some(n => n.kind === 'oscillator' && n.type === 'sawtooth'));
     h.advance(SONG + .001);
