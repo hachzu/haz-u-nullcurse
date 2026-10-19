@@ -15,7 +15,11 @@
             visualOffset: 0, // Positive values delay visuals further; device calibration.
             gateFade: .7, loadTimeout: 20
         },
-        loading: { minimumLoad: 3.4, assetPortion: .4, fallbackCountdown: .8, exit: .55, exitHold: .2 },
+        loading: {
+            minimumLoad: 3.4, assetPortion: .4, fallbackCountdown: .8, exit: .55, exitHold: .2,
+            assetSteps: [[0, 0], [.13, .19], [.23, .19], [.5, .58], [.64, .58], [.88, .9], [1, 1]],
+            startSteps: [[0, 0], [.14, .22], [.23, .22], [.48, .62], [.56, .62], [.74, .88], [.83, .88], [.94, .98], [1, 1]]
+        },
         clips: {
             drop: 'assets/audio/beat-drop.mp3', ambience: 'assets/audio/beacon-ambience.mp3',
             enter: 'assets/audio/enter.mp3', dropVolume: 1.4, ambienceVolume: .65,
@@ -26,7 +30,7 @@
             url: 'assets/adelightfulnewdeath-landing.mp3?v=20261019-full-track1',
             title: 'A Delightful New Death', artist: 'Digital Descendant',
             creditDelay: 3, creditFade: .7, // Credit appears this long after audible playback begins.
-            offset: 0, volume: .5, fadeIn: 7.2,
+            offset: 0, volume: .35, fadeIn: 7.2,
             preroll: 3.2055, // Extra lead-in from 4:40 in the full song; keep the existing drop cue.
             dropFileTime: 8.0405, // Full-track bass entry at 4:48.0405, relative to the 4:40 excerpt.
             kicks: [7.295, 7.485, 7.67, 7.855, 8.0405, 8.185, 8.315, 8.81, 9.005],
@@ -134,7 +138,11 @@
     const loadFill = document.createElement('span');
     loadFill.className = 'ns-startup-fill';
     loadRail.append(loadFill);
-    startupLoad.append(loadRow, loadRail);
+    const loadQuote = document.createElement('span');
+    loadQuote.className = 'ns-startup-quote';
+    loadQuote.textContent = 'i like to make things dramatic ok';
+    loadQuote.hidden = true;
+    startupLoad.append(loadRow, loadRail, loadQuote);
     home.append(startupLoad);
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const lastIndex = MOTIF.notes.length - 1;
@@ -902,20 +910,32 @@
             finalScheduled = true;
             if (DEBUG) console.table({ noteFive: impactAt, loadingAt, songAt, dropAt, revealAt, doneAt, hasCut });
         }
+        function loadingProfile(fraction, steps) {
+            for (let i = 1; i < steps.length; i++) {
+                const [endTime, endValue] = steps[i];
+                if (fraction > endTime) continue;
+                const [startTime, startValue] = steps[i - 1];
+                const t = Math.max(0, Math.min(1, (fraction - startTime) / (endTime - startTime)));
+                return startValue + (endValue - startValue) * t * t * (3 - 2 * t);
+            }
+            return 1;
+        }
         function updateLoading(elapsed, assets) {
             const l = CONFIG.loading;
             const timeFraction = Math.min(1, Math.max(0, (elapsed - loadingAt) / (earliestSongAt - loadingAt)));
             const resources = (Math.min(1, Math.max(0, assets.progress || 0)) +
                 (context ? (cutProgress + clipProgress) / 2 : 1)) / 2;
-            let progress = l.assetPortion * Math.min(timeFraction, resources);
+            // Presentation pauses never bypass real resource readiness or the audio clock.
+            let progress = l.assetPortion * Math.min(loadingProfile(timeFraction, l.assetSteps), resources);
             let label = !assets.ready ? 'Loading toolkit' : context && (!cutSettled || !clipsSettled) ? 'Loading music' : 'Preparing';
             if (finalScheduled && elapsed >= songAt) {
                 const fraction = Math.min(1, Math.max(0, (elapsed - songAt) / (dropAt - songAt)));
-                progress = l.assetPortion + (1 - l.assetPortion) * (1 - (1 - fraction) ** 1.4);
+                progress = l.assetPortion + (1 - l.assetPortion) * loadingProfile(fraction, l.startSteps);
                 label = hasCut ? 'Starting' : 'Preparing';
             }
             if (elapsed >= dropAt) { progress = 1; label = 'Ready'; }
             const percent = elapsed >= dropAt ? 100 : Math.min(99, Math.floor(progress * 100));
+            loadQuote.hidden = percent < 95;
             if (percent !== shownPercent) {
                 shownPercent = percent;
                 loadPercent.textContent = `${percent}%`;

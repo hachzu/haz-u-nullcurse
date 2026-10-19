@@ -1116,9 +1116,9 @@ html.low-detail-mode .landing-view *::after { animation: none !important; transi
 .ns-beacon-layer { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 .ns-drop-beacon {
     position: absolute; bottom: -2%; left: var(--beacon-x, 50%);
-    width: clamp(170px, 30vw, 380px); height: 108%;
+    width: clamp(80px, 14vw, 170px); height: 108%;
     transform-origin: 50% 100%; opacity: 0;
-    filter: drop-shadow(0 0 22px #fff3b8) drop-shadow(0 0 64px #ffe58a) drop-shadow(0 0 120px #ffdc7380);
+    filter: drop-shadow(0 0 16px #fff3b880) drop-shadow(0 0 44px #ffe58a66) drop-shadow(0 0 86px #ffdc7333);
     animation: ns-beacon-rise 1s cubic-bezier(.16,.8,.25,1) var(--ns-late, 0s) both;
 }
 /* Continuous opaque light gold through the column; only the outer edges feather. */
@@ -1127,15 +1127,15 @@ html.low-detail-mode .landing-view *::after { animation: none !important; transi
     background: linear-gradient(90deg, #ffe99d00 0%, #ffe99d 9%, #fff0b7 24%, #fff9df 50%, #fff0b7 76%, #ffe99d 91%, #ffe99d00 100%);
 }
 .ns-drop-beacon::before {
-    content: ''; position: absolute; inset: 0 40%; z-index: 1;
+    content: ''; position: absolute; inset: 0 43%; z-index: 1;
     background: linear-gradient(90deg, #fffbe000, #fffbe8 30%, #fffef5 50%, #fffbe8 70%, #fffbe000);
-    box-shadow: 0 0 22px #fff5c9, 0 0 48px #ffe99d;
+    box-shadow: 0 0 14px #fff5c980, 0 0 32px #ffe99d66;
 }
 @keyframes ns-beacon-rise {
     0% { opacity: 0; clip-path: inset(100% -200px 0); transform: translateX(-50%) scaleX(.55); }
-    4% { opacity: 1; clip-path: inset(92% -200px 0); transform: translateX(-50%) scaleX(.7); }
-    18% { opacity: 1; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1); }
-    45% { opacity: .95; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1.06); }
+    4% { opacity: .45; clip-path: inset(92% -200px 0); transform: translateX(-50%) scaleX(.7); }
+    18% { opacity: .7; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1); }
+    45% { opacity: .55; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1.06); }
     100% { opacity: 0; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1.15); }
 }
 /* Enter button: same layout/vines/checker as before, now glowing light gold.
@@ -1197,4 +1197,44 @@ html.low-detail-mode .landing-view *::after { animation: none !important; transi
     .ns-spawn-svg { animation: none; }
 }
 html.low-detail-mode .ns-beacon-layer { display: none; }
+
+
+/* Sparse pinpricks of violet, revealed with the background. */
+.ns-dust-layer {
+    position: absolute; inset: 0; z-index: -1; overflow: hidden;
+    pointer-events: none; opacity: 0; transition: opacity 1.8s ease;
+}
+.landing-view:is([data-intro-drop='1'], [data-intro-state='done']) .ns-dust-layer { opacity: 1; }
+.ns-dust-layer i {
+    position: absolute; left: var(--dust-x); top: var(--dust-y);
+    width: 1.5px; height: 1.5px; border-radius: 50% !important;
+    background: #e3b9ff; box-shadow: 0 0 3px 1px #bc80ef38;
+    opacity: .3;
+    animation: ns-dust-drift var(--dust-duration) ease-in-out var(--dust-delay) infinite alternate;
+    animation-play-state: paused;
+}
+.ns-dust-layer i:nth-child(3n) { width: 2.25px; height: 2.25px; }
+.landing-view:is([data-intro-drop='1'], [data-intro-state='done']):not([hidden]) .ns-dust-layer i { animation-play-state: running; }
+@keyframes ns-dust-drift {
+    0% { transform: translate3d(0, 18px, 0); opacity: .12; }
+    40% { opacity: .42; }
+    100% { transform: translate3d(var(--dust-drift), -42px, 0); opacity: .2; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .landing-view .ns-dust-layer i { animation: none; opacity: .22; }
+}
+html.low-detail-mode .ns-dust-layer { display: none; }
+
+
+.ns-startup-quote {
+    display: block; margin-top: 10px; text-align: center;
+    font-size: 10px; font-style: italic; line-height: 1.5;
+    letter-spacing: 0; color: #d8beeccc;
+    animation: ns-loading-quote .35s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes ns-loading-quote {
+    from { opacity: 0; transform: translateY(4px) scale(.97); }
+    to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ns-startup-quote { animation: none; } }
 /* END NS AUDIO-LOCKED EFFECTS */

@@ -143,7 +143,7 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.ok(Math.abs(song.started[0] - .05 + 8.0405 - DROP) < 1e-9);
     const fade = context.nodes.flatMap(n => n.gain.events).find(e => e[0] === 'curve');
     assert.equal(fade[1][0], 0);
-    assert.equal(fade[1].at(-1), .5);
+    assert.ok(Math.abs(fade[1].at(-1) - .35) < 1e-7);
     assert.equal(fade[3], 7.2);
     assert.ok(fade[1].every((v, i, a) => !i || v >= a[i - 1]));
     h.advance(LOADING - .01);
@@ -451,5 +451,33 @@ test('rapid tab switches settle on the visible state; navigation cancels a pause
     await h.visibility(false);
     assert.equal(h.contexts[0].state, 'closed');
     assert.equal(h.frames.size, 0);
+});
+
+test('loading has brief holds and smooth bursts, stays monotonic, and completes only on the drop', async () => {
+    const h = harness(); await h.start();
+    const quote = bar(h).children.find(n => n.className === 'ns-startup-quote');
+    assert.equal(quote.textContent, 'i like to make things dramatic ok');
+    assert.equal(quote.hidden, true);
+    h.advance(LOADING + (SONG - LOADING) * .16);
+    const assetHold = bar(h).style['--ns-load-progress'];
+    h.advance(LOADING + (SONG - LOADING) * .21);
+    assert.equal(bar(h).style['--ns-load-progress'], assetHold);
+    h.advance(SONG + (DROP - SONG) * .16);
+    const musicHold = bar(h).style['--ns-load-progress'];
+    h.advance(SONG + (DROP - SONG) * .21);
+    assert.equal(bar(h).style['--ns-load-progress'], musicHold);
+    let previous = Number(musicHold);
+    for (let i = 22; i <= 99; i++) {
+        h.advance(SONG + (DROP - SONG) * i / 100);
+        const next = Number(bar(h).style['--ns-load-progress']);
+        assert.ok(next >= previous);
+        assert.ok(percent(h) < 100);
+        assert.equal(quote.hidden, percent(h) < 95);
+        previous = next;
+    }
+    h.advance(DROP + .001);
+    assert.equal(percent(h), 100);
+    assert.equal(quote.hidden, false);
+    h.intro.finish();
 });
 
