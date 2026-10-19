@@ -64,6 +64,41 @@
     const slices = document.getElementById('logoSlices');
     const features = home.querySelector('.landing-features-viewport');
     const enter = document.getElementById('enterToolkit');
+    // Roblox spawn sun: ring, inner ring, hub, and 8 rays (long on the compass points, short on the diagonals).
+    // It is built here and placed inside the Enter button, behind the label.
+    enter.querySelector('.enter-spawn')?.remove();
+    const spawnBack = document.createElement('span');
+    spawnBack.className = 'ns-enter-spawn-back';
+    spawnBack.setAttribute('aria-hidden', 'true');
+    (() => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', 'ns-spawn-svg');
+        svg.setAttribute('viewBox', '0 0 256 256');
+        const pt = (r, deg) => {
+            const a = (deg - 90) * Math.PI / 180;
+            return [128 + r * Math.cos(a), 128 + r * Math.sin(a)];
+        };
+        const f = ([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+        // Eight curved, pinwheel spikes: a long sweeping edge and a short steep edge, tips slightly uneven.
+        let d = '';
+        for (let k = 0; k < 8; k++) {
+            const a = k * 45, tip = k % 2 ? 116 : 126;
+            if (!k) d += `M${f(pt(66, a - 43))}`;
+            d += `Q${f(pt(70, a - 12))} ${f(pt(tip, a))}Q${f(pt(68, a + 1))} ${f(pt(66, a + 2))}`;
+        }
+        // Circular opening so a thin white gap shows around the center ring.
+        d += `Z M185 128a57 57 0 1 0-114 0a57 57 0 1 0 114 0Z`;
+        const star = document.createElementNS(ns, 'path');
+        star.setAttribute('d', d);
+        star.setAttribute('fill', 'currentColor');
+        star.setAttribute('fill-rule', 'evenodd');
+        const ring = document.createElementNS(ns, 'circle');
+        for (const [k, v] of Object.entries({ cx: 128, cy: 128, r: 46, fill: 'none', stroke: 'currentColor', 'stroke-width': 9 })) ring.setAttribute(k, v);
+        svg.append(star, ring);
+        spawnBack.append(svg);
+    })();
+    enter.prepend(spawnBack);
     const nowPlaying = document.createElement('div');
     nowPlaying.className = 'ns-now-playing';
     nowPlaying.hidden = true;
