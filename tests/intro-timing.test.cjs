@@ -25,6 +25,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         }
         addEventListener() {}
         append(...nodes) { this.children.push(...nodes); }
+        prepend(...nodes) { this.children.unshift(...nodes); }
         replaceChildren() { this.children = []; }
         remove() { this.removed = true; }
         removeAttribute() {}
@@ -73,7 +74,8 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
             return { numberOfChannels: channels, length, sampleRate, duration: length / sampleRate,
                 getChannelData: channel => data[channel] };
         }
-        resume() { return Promise.resolve(); }
+        resume() { this.state = 'running'; return Promise.resolve(); }
+        suspend() { this.state = 'suspended'; return Promise.resolve(); }
         close() { this.state = 'closed'; return Promise.resolve(); }
     }
     const sandbox = {
@@ -92,13 +94,14 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
                 signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
             });
         } }),
-        document: { getElementById: name => elements[name] ||= new Element(), createElement: () => new Element(),
-            documentElement: new Element(), fonts: { ready: Promise.resolve() }, addEventListener() {} },
+        document: { getElementById: name => elements[name] ||= new Element(), createElement: () => new Element(), createElementNS: () => new Element(),
+            documentElement: new Element(), fonts: { ready: Promise.resolve() }, hidden: false,
+            addEventListener: (name, handler) => { (listeners[name] ||= []).push(handler); } },
         window: { AudioContext: noAudio ? undefined : Context,
             NullscapeAssets: { getState: () => ({ ...assetState }) },
             OfflineAudioContext: class { decodeAudioData(data) {
                 const id = new Uint8Array(data)[0];
-                const duration = [150.360816, 7.793, 34.81, 2.198][id];
+                const duration = [153.554286, 7.793, 34.81, 2.198][id];
                 const sampleRate = 48000, length = Math.round(duration * sampleRate);
                 return Promise.resolve({ id, duration, sampleRate, length, numberOfChannels: 2,
                     getChannelData: () => new Float32Array(length) });
@@ -112,10 +115,11 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         intro: sandbox.window.NullscapeIntro,
         async start() { sandbox.window.NullscapeIntro.start(); await flush(); this.advance(0); },
         async releaseSong() { releaseAudio?.(); await flush(); },
+        async visibility(hidden) { sandbox.document.hidden = hidden; this.dispatch('visibilitychange'); await flush(); },
         advance(elapsed) {
             const context = contexts[0];
-            if (context) context.currentTime = elapsed + .05 + context.baseLatency + context.outputLatency;
-            else wallNow = (elapsed + .05) * 1000;
+            if (context?.state === 'running') context.currentTime = elapsed + .05 + context.baseLatency + context.outputLatency;
+            wallNow = (elapsed + .05) * 1000;
             const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn());
         },
         dispatch(name, event = {}) { (listeners[name] || []).forEach(fn => fn(event)); }
@@ -123,7 +127,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
 }
 
 const LOADING = .5;
-const SONG = 6.928125;
+const SONG = 3.722625;
 const DROP = 11.763125;
 const bar = h => h.elements.landingView.children.find(node => node.className === 'ns-startup-load');
 const percent = h => Number(bar(h).attributes['aria-valuenow']);
@@ -136,11 +140,11 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.ok(song);
     assert.equal(song.started[1], 0, 'play the supplied opening without the old trim');
     assert.ok(Math.abs(song.started[0] - .05 - SONG) < 1e-9);
-    assert.ok(Math.abs(song.started[0] - .05 + 4.835 - DROP) < 1e-9);
+    assert.ok(Math.abs(song.started[0] - .05 + 8.0405 - DROP) < 1e-9);
     const fade = context.nodes.flatMap(n => n.gain.events).find(e => e[0] === 'curve');
     assert.equal(fade[1][0], 0);
     assert.equal(fade[1].at(-1), .5);
-    assert.equal(fade[3], 1.4);
+    assert.equal(fade[3], 7.2);
     assert.ok(fade[1].every((v, i, a) => !i || v >= a[i - 1]));
     h.advance(LOADING - .01);
     assert.equal(bar(h).hidden, true);
@@ -165,7 +169,7 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
     assert.ok(context.nodes.some(n => n.kind === 'oscillator' && n.type === 'sawtooth'));
     h.advance(SONG + .001);
-    assert.equal(percent(h), 85);
+    assert.equal(percent(h), 40);
     h.advance(DROP - .001);
     assert.equal(percent(h), 99);
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
@@ -198,9 +202,9 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(h.elements.landingView.dataset.introState, 'done');
     assert.equal(context.state, 'running', 'finishing the bar must not stop the music');
     song.onended();
-    h.advance(SONG + 150.360816 - .02);
+    h.advance(SONG + 153.554286 - .02);
     assert.equal(context.state, 'running', 'keep the audible output tail alive');
-    h.advance(SONG + 150.360816 + .01);
+    h.advance(SONG + 153.554286 + .01);
     assert.equal(context.state, 'running', 'beacon ambience continues after the song ends');
     h.dispatch('pagehide');
     assert.equal(context.state, 'closed');
@@ -210,13 +214,13 @@ test('slow required assets extend loading; no fake completion or early audio', a
     const h = harness({ assetsReady: false }); await h.start();
     h.advance(10);
     assert.equal(songSource(h), undefined);
-    assert.ok(percent(h) < 85);
+    assert.ok(percent(h) < 40);
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
     h.assets.ready = true; h.assets.progress = 1;
     h.advance(10.1);
     const song = songSource(h);
     assert.ok(song.started[0] >= h.contexts[0].currentTime + .049);
-    const drop = song.started[0] - .05 + 4.835;
+    const drop = song.started[0] - .05 + 8.0405;
     h.advance(drop - .001);
     assert.equal(percent(h), 99);
     h.advance(drop + .01);
@@ -233,12 +237,12 @@ test('audio download can finish late without stalling the five-note logo or desy
     assert.equal(h.logs.filter(e => /^note-/.test(e[1].event)).length, 5);
     h.advance(8);
     assert.equal(songSource(h), undefined);
-    assert.ok(percent(h) < 85);
+    assert.ok(percent(h) < 40);
     await h.releaseSong();
     h.advance(8.1);
     const song = songSource(h);
     assert.ok(song.started[0] >= h.contexts[0].currentTime + .049);
-    const drop = song.started[0] - .05 + 4.835;
+    const drop = song.started[0] - .05 + 8.0405;
     h.advance(drop + .01);
     assert.equal(percent(h), 100);
     assert.equal(h.logs.filter(e => e[1].event === 'drop').length, 1);
@@ -387,5 +391,65 @@ test('Enter cue survives tool navigation while the entire landing mix fades out'
     h.dispatch('pagehide');
     assert.equal(context.state, 'closed');
     assert.equal(songSource(h).stopped, true);
+});
+
+test('alt-tab freezes assembly, loading and audio, then resumes without skipping notes', async () => {
+    const h = harness(); await h.start(); h.advance(1.3);
+    const context = h.contexts[0], before = context.currentTime, progress = percent(h);
+    const animation = { playState: 'running', pause() { this.playState = 'paused'; }, play() { this.playState = 'running'; } };
+    h.elements.landingView.getAnimations = () => [animation];
+    await h.visibility(true);
+    assert.equal(context.state, 'suspended');
+    assert.equal(animation.playState, 'paused');
+    assert.equal(h.frames.size, 0);
+    h.advance(60);
+    assert.equal(context.currentTime, before);
+    assert.equal(percent(h), progress);
+    assert.equal(h.elements['.landing-features-viewport'].inert, true);
+    await h.visibility(false);
+    assert.equal(context.state, 'running');
+    assert.equal(animation.playState, 'running');
+    h.advance(1.31);
+    assert.equal(h.logs.filter(e => /^note-/.test(e[1].event)).length, 2);
+    h.advance(3.08);
+    assert.equal(h.logs.filter(e => /^note-/.test(e[1].event)).length, 5);
+    h.intro.finish();
+});
+
+test('a tab switch just before the drop cannot reveal the background or finish loading early', async () => {
+    const h = harness(); await h.start(); h.advance(DROP - .05);
+    await h.visibility(true); h.advance(100);
+    assert.equal(percent(h), 99);
+    assert.ok(!h.logs.some(e => e[1].event === 'drop'));
+    await h.visibility(false); h.advance(DROP - .01);
+    assert.equal(percent(h), 99);
+    h.advance(DROP + .01);
+    assert.equal(percent(h), 100);
+    assert.equal(h.logs.filter(e => e[1].event === 'drop').length, 1);
+    assert.equal(h.elements['.landing-features-viewport'].inert, true);
+    h.intro.finish();
+});
+
+test('silent fallback excludes time spent in a hidden tab from its animation clock', async () => {
+    const h = harness({ noAudio: true }); await h.start(); h.advance(1);
+    await h.visibility(true); h.advance(60);
+    await h.visibility(false); h.advance(60.1);
+    assert.equal(h.elements.landingView.dataset.introState, 'playing');
+    assert.equal(h.logs.filter(e => /^note-/.test(e[1].event)).length, 1);
+    assert.ok(percent(h) < 40);
+    assert.equal(h.elements['.landing-features-viewport'].inert, true);
+    h.intro.finish();
+});
+
+test('rapid tab switches settle on the visible state; navigation cancels a paused intro permanently', async () => {
+    const h = harness(); await h.start(); h.advance(2);
+    await Promise.all([h.visibility(true), h.visibility(false), h.visibility(true), h.visibility(false)]);
+    assert.equal(h.contexts[0].state, 'running');
+    assert.equal(h.frames.size, 1);
+    await h.visibility(true);
+    h.dispatch('nullscape-route-change', { detail: { route: 'curses' } });
+    await h.visibility(false);
+    assert.equal(h.contexts[0].state, 'closed');
+    assert.equal(h.frames.size, 0);
 });
 

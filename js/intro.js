@@ -15,7 +15,7 @@
             visualOffset: 0, // Positive values delay visuals further; device calibration.
             gateFade: .7, loadTimeout: 20
         },
-        loading: { minimumLoad: 3.4, assetPortion: .85, fallbackCountdown: .8, exit: .55, exitHold: .2 },
+        loading: { minimumLoad: 3.4, assetPortion: .4, fallbackCountdown: .8, exit: .55, exitHold: .2 },
         clips: {
             drop: 'assets/audio/beat-drop.mp3', ambience: 'assets/audio/beacon-ambience.mp3',
             enter: 'assets/audio/enter.mp3', dropVolume: 1.4, ambienceVolume: .65,
@@ -23,12 +23,13 @@
             enterVolume: .9, crossfade: .5, exitFade: .8
         },
         song: {
-            url: 'assets/adelightfulnewdeath-cut.mp3?v=20261018-new-cut1',
+            url: 'assets/adelightfulnewdeath-landing.mp3?v=20261019-full-track1',
             title: 'A Delightful New Death', artist: 'Digital Descendant',
             creditDelay: 3, creditFade: .7, // Credit appears this long after audible playback begins.
-            offset: 0, volume: .5, fadeIn: 1.4,
-            dropFileTime: 4.835, // Measured first sustained bass entry in the replacement cut.
-            kicks: [4.0895, 4.2795, 4.4645, 4.6495, 4.835, 4.9795, 5.1095, 5.6045, 5.7995],
+            offset: 0, volume: .5, fadeIn: 7.2,
+            preroll: 3.2055, // Extra lead-in from 4:40 in the full song; keep the existing drop cue.
+            dropFileTime: 8.0405, // Full-track bass entry at 4:48.0405, relative to the 4:40 excerpt.
+            kicks: [7.295, 7.485, 7.67, 7.855, 8.0405, 8.185, 8.315, 8.81, 9.005],
             fftSize: 2048, lowHz: 30, highHz: 130, threshold: 1.5,
             energyFloor: .015, rearmRatio: 1.08, refractory: .15,
             energyAverage: .65, // Seconds of smoothing for the adaptive detector.
@@ -143,7 +144,7 @@
     const motifTailEnd = impactAt + CONFIG.synth.finalDuration + CONFIG.synth.reverb;
     const songOffset = CUT.offset;
     const loadingAt = noteTimes[0];
-    const earliestSongAt = assembledAt + CONFIG.loading.minimumLoad;
+    const earliestSongAt = Math.max(loadingAt, assembledAt + CONFIG.loading.minimumLoad - CUT.preroll);
     // Assigned only when required resources have finished loading.
     let songAt = Infinity, dropAt = Infinity, revealAt = Infinity, doneAt = Infinity;
     const tiles = [];
@@ -180,6 +181,8 @@
     let finished = false;
     let started = false;
     let generation = 0;
+    let syncVisibility = () => {};
+    let cancelVisibilityPause = () => {};
 
     const LEAD = CONFIG.timing.sliceLead;
     const burst = document.createElement('div');
@@ -327,6 +330,7 @@
     }
     function finish() {
         generation++;
+        cancelVisibilityPause();
         finished = true;
         cancelAnimationFrame(frame);
         removeGate();
@@ -789,7 +793,7 @@
         placeTiles(0);
         setControlsEnabled(false);
         const context = withAudio ? audio : null;
-        const wallOrigin = performance.now() + CONFIG.timing.scheduleLead * 1000;
+        let wallOrigin = performance.now() + CONFIG.timing.scheduleLead * 1000;
         const audioOrigin = context ? context.currentTime + CONFIG.timing.scheduleLead : 0;
         songAt = dropAt = revealAt = doneAt = Infinity;
         let hasCut = false;
@@ -813,6 +817,61 @@
         let flyIndex = 0;
         let uiComplete = false;
         let lastState = 'waiting';
+        let pagePaused = false;
+        let pauseStarted = 0;
+        let pausedAnimations = [];
+        let visibilityTask = Promise.resolve();
+        let resumeGate;
+        function resumeIntro() {
+            visibilityTask = visibilityTask.then(async () => {
+                if (run !== generation || document.hidden || !pagePaused) return;
+                if (context) {
+                    try { await context.resume(); } catch (_) { /* Offer a gesture below. */ }
+                    if (run !== generation || document.hidden) return;
+                    if (context.state !== 'running') {
+                        if (!resumeGate) {
+                            resumeGate = document.createElement('button');
+                            resumeGate.type = 'button';
+                            resumeGate.className = 'intro-gate';
+                            resumeGate.textContent = 'click to resume';
+                            resumeGate.addEventListener('click', resumeIntro);
+                            home.append(resumeGate);
+                        }
+                        return;
+                    }
+                } else wallOrigin += performance.now() - pauseStarted;
+                resumeGate?.remove();
+                resumeGate = null;
+                pausedAnimations.forEach(animation => animation.play());
+                pausedAnimations = [];
+                pagePaused = false;
+                frame = requestAnimationFrame(tick);
+            });
+        }
+        syncVisibility = () => {
+            if (run !== generation || uiComplete || home.hidden) return;
+            if (!document.hidden) { if (pagePaused) resumeIntro(); return; }
+            if (!pagePaused) {
+                pagePaused = true;
+                pauseStarted = performance.now();
+                cancelAnimationFrame(frame);
+                pausedAnimations = home.getAnimations({ subtree: true }).filter(animation => animation.playState === 'running');
+                pausedAnimations.forEach(animation => animation.pause());
+            }
+            // Serialize suspend/resume so rapid tab switches cannot leave the clocks apart.
+            visibilityTask = visibilityTask.then(async () => {
+                if (run !== generation || !document.hidden || !context || context.state === 'closed') return;
+                try { await context.suspend(); } catch (_) { /* Context may have closed during navigation. */ }
+            });
+        };
+        cancelVisibilityPause = () => {
+            pausedAnimations.forEach(animation => animation.play());
+            pausedAnimations = [];
+            resumeGate?.remove();
+            pagePaused = false;
+            syncVisibility = () => {};
+            cancelVisibilityPause = () => {};
+        };
         function requiredAssets() {
             return window.NullscapeAssets?.getState() || { ready: false, progress: 0, error: false };
         }
@@ -876,7 +935,7 @@
         }
         scheduleFinalPhase(context ? context.currentTime - audioOrigin : -CONFIG.timing.scheduleLead, requiredAssets());
         function tick() {
-            if (run !== generation) return;
+            if (run !== generation || pagePaused) return;
             const latency = context ? Math.max(0, (context.baseLatency || 0) + (context.outputLatency || 0)) : 0;
             const rendered = context ? context.currentTime - audioOrigin : (performance.now() - wallOrigin) / 1000;
             const elapsed = rendered - latency - CONFIG.timing.visualOffset;
@@ -927,7 +986,8 @@
             }
             frame = requestAnimationFrame(tick);
         }
-        frame = requestAnimationFrame(tick);
+        if (document.hidden) syncVisibility();
+        else frame = requestAnimationFrame(tick);
     }
 
     // Click-to-enter gate: a real user gesture guarantees the audio can play.
@@ -964,7 +1024,7 @@
         }
     });
     reducedMotion.addEventListener('change', event => { if (event.matches) finish(); });
-    document.addEventListener('visibilitychange', () => { if (document.hidden && started && !finished) finish(); });
+    document.addEventListener('visibilitychange', () => { if (started && !finished) syncVisibility(); });
     window.addEventListener('pagehide', () => { finish(); stopSound(true); });
     window.addEventListener('nullscape-low-detail-change', event => { if (event.detail.enabled) finish(); });
     let savedLowDetail = false;
