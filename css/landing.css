@@ -1118,34 +1118,25 @@ html.low-detail-mode .landing-view *::after { animation: none !important; transi
     position: absolute; bottom: -2%; left: var(--beacon-x, 50%);
     width: clamp(170px, 30vw, 380px); height: 108%;
     transform-origin: 50% 100%; opacity: 0;
-    filter: drop-shadow(0 0 22px #fff6cc) drop-shadow(0 0 64px #ffe58acc) drop-shadow(0 0 120px #ffd95a66);
+    filter: drop-shadow(0 0 22px #fff3b8) drop-shadow(0 0 64px #ffe58a) drop-shadow(0 0 120px #ffdc7380);
     animation: ns-beacon-rise 1s cubic-bezier(.16,.8,.25,1) var(--ns-late, 0s) both;
 }
-/* The long rectangle: nearly flat white-gold body, softly feathered side edges, fading toward the top. */
+/* Continuous opaque light gold through the column; only the outer edges feather. */
 .ns-drop-beacon::after {
     content: ''; position: absolute; inset: 0; z-index: 0;
-    background: linear-gradient(90deg, #ffe9a000 0%, #ffecaa55 7%, #fff6d0bb 20%, #fffdf2ee 50%, #fff6d0bb 80%, #ffecaa55 93%, #ffe9a000 100%);
-    -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 55%, #0000 100%);
-    mask-image: linear-gradient(0deg, #000 0%, #000 55%, #0000 100%);
+    background: linear-gradient(90deg, #ffe99d00 0%, #ffe99d 9%, #fff0b7 24%, #fff9df 50%, #fff0b7 76%, #ffe99d 91%, #ffe99d00 100%);
 }
 .ns-drop-beacon::before {
-    content: ''; position: absolute; inset: 0 calc(50% - 5px); z-index: 1;
-    background: linear-gradient(0deg, #ffffff, #ffffff 65%, #fffbe000);
-    box-shadow: 0 0 16px #fff, 0 0 40px #fff2b8;
-    transform-origin: 50% 100%;
-    animation: ns-beacon-trace .42s ease-out var(--ns-late, 0s) both;
+    content: ''; position: absolute; inset: 0 40%; z-index: 1;
+    background: linear-gradient(90deg, #fffbe000, #fffbe8 30%, #fffef5 50%, #fffbe8 70%, #fffbe000);
+    box-shadow: 0 0 22px #fff5c9, 0 0 48px #ffe99d;
 }
 @keyframes ns-beacon-rise {
-    0% { opacity: 0; transform: translateX(-50%) scaleY(.02) scaleX(.55); }
-    8% { opacity: .95; transform: translateX(-50%) scaleY(1) scaleX(.85); }
-    22% { opacity: .72; transform: translateX(-50%) scaleY(1) scaleX(1); }
-    45% { opacity: .2; transform: translateX(-50%) scaleY(1.02) scaleX(1.12); }
-    100% { opacity: 0; transform: translateX(-50%) scaleY(1.04) scaleX(1.25); }
-}
-@keyframes ns-beacon-trace {
-    0% { opacity: 0; transform: scaleY(.02); }
-    18% { opacity: 1; transform: scaleY(1); }
-    100% { opacity: 0; transform: scaleY(1); }
+    0% { opacity: 0; clip-path: inset(100% -200px 0); transform: translateX(-50%) scaleX(.55); }
+    4% { opacity: 1; clip-path: inset(92% -200px 0); transform: translateX(-50%) scaleX(.7); }
+    18% { opacity: 1; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1); }
+    45% { opacity: .95; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1.06); }
+    100% { opacity: 0; clip-path: inset(0 -200px 0); transform: translateX(-50%) scaleX(1.15); }
 }
 /* Enter button: same layout/vines/checker as before, now glowing light gold.
    The Roblox spawn sun lives inside it, behind the label. */
