@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../js/intro.js'), 'utf8');
 
-function harness({ reduced = false, failSong = false, deferSong = false, failClips = false, assetsReady = true, noAudio = false, latency = .1 } = {}) {
+function harness({ reduced = false, failSong = false, deferSong = false, failClips = false, assetsReady = true, noAudio = false, latency = .1, storage = {}, blockedStorage = false } = {}) {
     const listeners = {};
     const frames = new Map();
     const contexts = [];
@@ -23,9 +23,11 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
             this.classList = { add: name => classes.add(name), remove: (...names) => names.forEach(name => classes.delete(name)),
                 contains: name => classes.has(name), toggle: (name, on) => on ? classes.add(name) : classes.delete(name) };
         }
-        addEventListener() {}
+        addEventListener(name, handler) { (this.listeners ||= {})[name] = handler; }
+        dispatch(name) { this.listeners?.[name]?.({ target: this }); }
         append(...nodes) { this.children.push(...nodes); }
         prepend(...nodes) { this.children.unshift(...nodes); }
+        after(...nodes) { this.following = nodes; }
         replaceChildren() { this.children = []; }
         remove() { this.removed = true; }
         removeAttribute() {}
@@ -80,13 +82,17 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
     }
     const sandbox = {
         console: { debug: (...args) => logs.push(args), table() {} }, Float32Array, Math, URLSearchParams,
-        AbortController, setTimeout, clearTimeout, localStorage: { getItem: () => null },
+        AbortController, setTimeout, clearTimeout, localStorage: {
+            getItem: key => { if (blockedStorage) throw new Error('blocked'); return storage[key] ?? null; },
+            setItem: (key, value) => { if (blockedStorage) throw new Error('blocked'); storage[key] = value; }
+        },
         location: { hash: '', search: '?introdebug' }, innerWidth: 1000,
         performance: { now: () => wallNow }, getComputedStyle: () => ({ transform: 'none' }),
         matchMedia: () => ({ matches: reduced, addEventListener() {} }),
         requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame; },
         cancelAnimationFrame: id => frames.delete(id),
         fetch: async (url, { signal } = {}) => ({ ok: url.includes('/audio/') ? !failClips : !failSong, arrayBuffer: async () => {
+            signal?.throwIfAborted();
             if (url.includes('/audio/')) return Uint8Array.of(url.includes('beat-drop') ? 1 : url.includes('ambience') ? 2 : 3).buffer;
             if (!deferSong) return new ArrayBuffer(1);
             return new Promise((resolve, reject) => {
@@ -132,6 +138,57 @@ const DROP = 11.763125;
 const bar = h => h.elements.landingView.children.find(node => node.className === 'ns-startup-load');
 const percent = h => Number(bar(h).attributes['aria-valuenow']);
 const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source' && node.buffer?.id === 0);
+
+const preference = h => h.elements.enterToolkit.following[0];
+
+test('finishing at the gate or during playback cancels pending audio and frames', async () => {
+    for (const playing of [false, true]) {
+        const h = harness({ deferSong: true });
+        if (playing) { await h.start(); h.advance(1); }
+        h.intro.finish();
+        await h.releaseSong();
+        h.advance(30);
+        assert.equal(h.elements.landingView.dataset.introState, 'done');
+        assert.equal(h.elements['.landing-features-viewport'].inert, false);
+        assert.equal(h.frames.size, 0);
+        assert.ok(h.contexts.every(context => context.state === 'closed'));
+        assert.equal(songSource(h), undefined);
+    }
+});
+
+test('future-visit preference skips on reload and can be turned off again', () => {
+    const storage = {};
+    const first = harness({ storage });
+    assert.equal(preference(first).hidden, true);
+    first.intro.finish();
+    assert.equal(preference(first).hidden, false);
+    const checkbox = preference(first).children[0];
+    checkbox.checked = true;
+    checkbox.dispatch('change');
+    assert.equal(storage.nullscapeSkipIntro, 'true');
+    assert.equal(first.elements.landingView.dataset.introState, 'done');
+    const next = harness({ storage });
+    assert.equal(next.elements.landingView.dataset.introState, 'done');
+    assert.equal(next.contexts.length, 0);
+    assert.equal(next.frames.size, 0);
+    assert.equal(preference(next).hidden, false);
+    const nextCheckbox = preference(next).children[0];
+    nextCheckbox.checked = false;
+    nextCheckbox.dispatch('change');
+    const replay = harness({ storage });
+    assert.equal(replay.elements.landingView.dataset.introState, 'waiting');
+    replay.intro.finish();
+});
+
+test('future-visit preference tolerates blocked storage', () => {
+    const h = harness({ blockedStorage: true });
+    h.intro.finish();
+    const checkbox = preference(h).children[0];
+    checkbox.checked = true;
+    checkbox.dispatch('change');
+    assert.equal(h.elements.landingView.dataset.introState, 'done');
+    assert.equal(h.frames.size, 0);
+});
 
 test('drop, 100% and background share one cue; the full-size logo holds two seconds before controls', async () => {
     const h = harness(); await h.start();

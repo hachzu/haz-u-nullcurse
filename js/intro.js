@@ -192,6 +192,21 @@
     let syncVisibility = () => {};
     let cancelVisibilityPause = () => {};
 
+    const SKIP_INTRO_KEY = 'nullscapeSkipIntro';
+    const skipLabel = document.createElement('label');
+    skipLabel.className = 'ns-skip-future';
+    skipLabel.hidden = true;
+    const skipFuture = document.createElement('input');
+    skipFuture.type = 'checkbox';
+    try { skipFuture.checked = localStorage.getItem(SKIP_INTRO_KEY) === 'true'; } catch (_) {}
+    skipFuture.addEventListener('change', () => {
+        try { localStorage.setItem(SKIP_INTRO_KEY, String(skipFuture.checked)); } catch (_) {}
+    });
+    const skipText = document.createElement('span');
+    skipText.textContent = 'Skip intro on future visits';
+    skipLabel.append(skipFuture, skipText);
+    enter.after(skipLabel);
+
     const LEAD = CONFIG.timing.sliceLead;
     const burst = document.createElement('div');
     burst.className = 'logo-burst';
@@ -340,6 +355,7 @@
         generation++;
         cancelVisibilityPause();
         finished = true;
+        skipLabel.hidden = false;
         cancelAnimationFrame(frame);
         removeGate();
         home.dataset.introState = 'done';
@@ -996,6 +1012,7 @@
                 if (elapsed >= doneAt) {
                     uiComplete = true;
                     finished = true;
+                    skipLabel.hidden = false;
                     slices.replaceChildren();
                     burst.remove();
                 }
@@ -1050,7 +1067,7 @@
     let savedLowDetail = false;
     prepareClips();
     try { savedLowDetail = localStorage.getItem('nullscapeLowDetailMode') === 'true'; } catch (_) {}
-    if (reducedMotion.matches || savedLowDetail || document.documentElement.classList.contains('low-detail-mode') ||
+    if (skipFuture.checked || reducedMotion.matches || savedLowDetail || document.documentElement.classList.contains('low-detail-mode') ||
         /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {
         finish();
         return;

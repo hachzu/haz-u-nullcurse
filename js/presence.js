@@ -65,7 +65,7 @@ function ensureUsername() {
             <div class="username-gate-box">
                 <div class="username-gate-title username-gate-pop" style="animation-delay: 0.05s;">WELCOME</div>
                 <div class="username-gate-subtitle username-gate-pop" style="animation-delay: 0.16s;">
-                    What's your Roblox username or an alias you'd go by?
+                    Choose a Roblox username or alias, or continue anonymously.
                 </div>
                 <input
                     type="text"
@@ -80,6 +80,9 @@ function ensureUsername() {
                 <button type="button" id="usernameGateSubmit" class="username-gate-pop" style="animation-delay: 0.38s;">
                     CONTINUE
                 </button>
+                <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
+                    CONTINUE ANONYMOUSLY
+                </button>
             </div>
         `;
         document.body.appendChild(overlay);
@@ -93,20 +96,21 @@ function ensureUsername() {
 
         const input = overlay.querySelector("#usernameGateInput");
         const submitButton = overlay.querySelector("#usernameGateSubmit");
+        const anonymousButton = overlay.querySelector("#usernameGateAnonymous");
+        let submitted = false;
 
         input.focus();
 
-        function submit() {
+        function submit(value = input.value.trim()) {
 
-            const value = input.value.trim();
+            if (submitted) return;
 
             if (!value) {
                 input.focus();
                 return;
             }
 
-            // (Bad-word filtering can slot in right here later.)
-
+            submitted = true;
             storeUsername(value);
 
             overlay.classList.remove("username-gate-overlay--visible");
@@ -117,7 +121,12 @@ function ensureUsername() {
 
         }
 
-        submitButton.addEventListener("click", submit);
+        submitButton.addEventListener("click", () => submit());
+        anonymousButton.addEventListener("click", () => {
+            const number = new Uint32Array(1);
+            crypto.getRandomValues(number);
+            submit(`Anonymous #${number[0]}`);
+        });
 
         input.addEventListener("keydown", (e) => {
 

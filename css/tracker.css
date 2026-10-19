@@ -1999,7 +1999,8 @@ body {
 }
 
 
-#usernameGateSubmit {
+#usernameGateSubmit,
+#usernameGateAnonymous {
     width: auto;
 
     padding: 6px 4px;
@@ -2022,12 +2023,26 @@ body {
 }
 
 
-#usernameGateSubmit:hover {
+#usernameGateSubmit:hover,
+#usernameGateAnonymous:hover {
     color: #ffffff;
     text-shadow: 0 0 14px rgba(184, 102, 255, 0.6);
     transform: translateY(-1px);
 
     box-shadow: none;
+}
+
+#usernameGateAnonymous {
+    display: block;
+    margin: 14px auto 0;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+#usernameGateSubmit:focus-visible,
+#usernameGateAnonymous:focus-visible {
+    outline: 2px solid #d59bff;
+    outline-offset: 4px;
 }
 
 .live-viewer-dot {
