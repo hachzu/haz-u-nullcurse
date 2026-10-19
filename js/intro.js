@@ -16,6 +16,12 @@
             gateFade: .7, loadTimeout: 20
         },
         loading: { minimumLoad: 3.4, assetPortion: .85, fallbackCountdown: .8, exit: .55, exitHold: .2 },
+        clips: {
+            drop: 'assets/audio/beat-drop.mp3', ambience: 'assets/audio/beacon-ambience.mp3',
+            enter: 'assets/audio/enter.mp3', dropVolume: 1.4, ambienceVolume: .65,
+            musicDuck: .45, duckLead: .08, duckHold: 1.2, duckRelease: 1.8,
+            enterVolume: .9, crossfade: .5, exitFade: .8
+        },
         song: {
             url: 'assets/adelightfulnewdeath-cut.mp3?v=20261018-new-cut1',
             title: 'A Delightful New Death', artist: 'Digital Descendant',
@@ -109,6 +115,9 @@
     const oscillators = new Set();
     const fxLayer = document.createElement('div');
     fxLayer.className = 'logo-fx';
+    const beaconLayer = document.createElement('div');
+    beaconLayer.className = 'ns-beacon-layer';
+    beaconLayer.setAttribute('aria-hidden', 'true');
     let frame;
     let cutPromise;
     let cutBufferReady = null;
@@ -116,6 +125,14 @@
     let cutProgress = 0;
     let cutAbort;
     let audio;
+    let landingBus;
+    let clipsPromise;
+    let clipsSettled = false;
+    let clipProgress = 0;
+    const clips = {};
+    let ambienceSource;
+    let departing = false;
+    let exitTimer;
     let graph;
     let songPlaying = false;
     let songEnded = false;
@@ -246,11 +263,16 @@
         const screenCenter = home.getBoundingClientRect().top + home.clientHeight / 2;
         brand.style.setProperty('--intro-lift', `${screenCenter - logoCenter}px`);
     }
-    function stopSound() {
+    function stopSound(force = false) {
+        if (departing && !force) return;
+        clearTimeout(exitTimer);
+        departing = false;
         for (const oscillator of oscillators) { try { oscillator.stop(); } catch (_) {} }
         oscillators.clear();
         if (audio && audio.state !== 'closed') audio.close().catch(() => {});
         audio = null;
+        landingBus = null;
+        ambienceSource = null;
         graph = null;
         songPlaying = false;
         nowPlaying.hidden = true;
@@ -280,6 +302,7 @@
         setControlsEnabled(true);
         slices.replaceChildren();
         fxLayer.replaceChildren();
+        beaconLayer.replaceChildren();
         content.classList.remove('impact-shake');
         stage.classList.remove('slam', 'thump', 'ns-assembly-impact');
         stage.classList.remove('ns-kick');
@@ -290,13 +313,44 @@
         burst.remove();
         stopSound();
     }
-    window.NullscapeIntro = Object.freeze({ finish });
+    function enterToolkit() {
+        if (departing) return;
+        const context = createAudio();
+        if (!context) return;
+        context.resume().catch(() => {});
+        departing = true;
+        const now = context.currentTime + .005;
+        landingBus.gain.setValueAtTime(1, now);
+        landingBus.gain.linearRampToValueAtTime(0, now + CONFIG.clips.exitFade);
+        let duration = CONFIG.clips.exitFade;
+        if (clips.enter) {
+            const source = context.createBufferSource();
+            const level = context.createGain();
+            source.buffer = clips.enter;
+            level.gain.value = CONFIG.clips.enterVolume;
+            // The Enter cue survives navigation; only the landing mix fades out.
+            source.connect(level).connect(context.destination);
+            source.onended = () => { source.disconnect(); level.disconnect(); };
+            source.start(now);
+            duration = Math.max(duration, clips.enter.duration);
+        }
+        nowPlaying.hidden = true;
+        // Only resource cleanup uses a timer; the fade and cue use the audio clock.
+        exitTimer = setTimeout(() => stopSound(true),
+            (duration + (context.baseLatency || 0) + (context.outputLatency || 0) + .1) * 1000);
+    }
+    window.NullscapeIntro = Object.freeze({ finish, enterToolkit });
 
     function createAudio() {
         if (audio) return audio;
         const Audio = window.AudioContext || window.webkitAudioContext;
         if (!Audio) return null;
-        try { audio = new Audio({ latencyHint: 'interactive' }); }
+        try {
+            audio = new Audio({ latencyHint: 'interactive' });
+            landingBus = audio.createGain();
+            landingBus.gain.value = 1;
+            landingBus.connect(audio.destination);
+        }
         catch (_) { return null; }
         return audio;
     }
@@ -311,7 +365,7 @@
         limiter.attack.value = CONFIG.synth.compressorAttack;
         limiter.release.value = CONFIG.synth.compressorRelease;
         const master = context.createGain();
-        output.connect(limiter).connect(master).connect(context.destination);
+        output.connect(limiter).connect(master).connect(landingBus);
         const convolver = context.createConvolver();
         const impulse = context.createBuffer(2, Math.ceil(context.sampleRate * CONFIG.synth.reverb), context.sampleRate);
         // A long, diffuse room tail gives the theremin a spacious sci-fi sound.
@@ -457,6 +511,79 @@
         });
         return cutPromise;
     }
+    function prepareClips() {
+        if (clipsPromise) return clipsPromise;
+        const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!Offline) { clipsSettled = true; clipProgress = 1; return Promise.resolve(); }
+        let completed = 0;
+        clipsPromise = Promise.all(['drop', 'ambience', 'enter'].map(async name => {
+            const controller = new AbortController();
+            let timeout;
+            try {
+                const load = (async () => {
+                    const response = await fetch(CONFIG.clips[name], { signal: controller.signal });
+                    if (!response.ok) throw new Error('Clip unavailable');
+                    return new Offline(2, 1, 48000).decodeAudioData(await response.arrayBuffer());
+                })();
+                const bounded = new Promise(resolve => {
+                    timeout = setTimeout(() => { controller.abort(); resolve(null); }, CONFIG.timing.loadTimeout * 1000);
+                });
+                clips[name] = await Promise.race([load, bounded]);
+            } catch (_) { clips[name] = null; }
+            finally { clearTimeout(timeout); clipProgress = ++completed / 3; }
+        })).then(() => { clipsSettled = true; });
+        return clipsPromise;
+    }
+    function seamlessLoop(context, buffer) {
+        // Blend the decoded tail into the head, then rotate past that join.
+        // A looping AudioBuffer avoids media-element and MP3 restart gaps.
+        const overlap = Math.min(Math.round(buffer.sampleRate * CONFIG.clips.crossfade), Math.floor(buffer.length / 4));
+        if (overlap < 2) return buffer;
+        const length = buffer.length - overlap;
+        const loop = context.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const input = buffer.getChannelData(channel), output = loop.getChannelData(channel);
+            const body = buffer.length - 2 * overlap;
+            output.set(input.subarray(overlap, buffer.length - overlap));
+            for (let i = 0; i < overlap; i++) {
+                const mix = i / (overlap - 1);
+                output[body + i] = input[buffer.length - overlap + i] * Math.cos(mix * Math.PI / 2) +
+                    input[i] * Math.sin(mix * Math.PI / 2);
+            }
+        }
+        return loop;
+    }
+    function scheduleBeacon(context, at) {
+        const c = CONFIG.clips;
+        let ambienceAt = at;
+        if (clips.drop) {
+            const source = context.createBufferSource(), level = context.createGain();
+            source.buffer = clips.drop;
+            level.gain.setValueAtTime(c.dropVolume, at);
+            const end = at + clips.drop.duration;
+            ambienceAt = Math.max(at, end - c.crossfade);
+            level.gain.setValueAtTime(c.dropVolume, ambienceAt);
+            level.gain.linearRampToValueAtTime(0, end);
+            source.connect(level).connect(landingBus);
+            oscillators.add(source);
+            source.onended = () => { oscillators.delete(source); source.disconnect(); level.disconnect(); };
+            source.start(at);
+        }
+        if (clips.ambience) {
+            const source = context.createBufferSource(), level = context.createGain();
+            source.buffer = seamlessLoop(context, clips.ambience);
+            source.loop = true;
+            source.loopStart = 0;
+            source.loopEnd = source.buffer.duration;
+            level.gain.setValueAtTime(0, ambienceAt);
+            level.gain.linearRampToValueAtTime(c.ambienceVolume, ambienceAt + c.crossfade);
+            source.connect(level).connect(landingBus);
+            ambienceSource = source;
+            oscillators.add(source);
+            source.onended = () => { oscillators.delete(source); source.disconnect(); level.disconnect(); };
+            source.start(ambienceAt);
+        }
+    }
     function scheduleMotifTail(context, origin) {
         // Retain the room tail without a heartbeat build or pre-note mute.
         const master = graph.master.gain;
@@ -476,7 +603,18 @@
         analyser.fftSize = CUT.fftSize;
         analyser.smoothingTimeConstant = 0;
         spectrum = new Float32Array(analyser.frequencyBinCount);
-        source.connect(volume).connect(analyser).connect(context.destination);
+        const musicMix = context.createGain();
+        musicMix.gain.value = 1;
+        if (clips.drop) {
+            const drop = at + CUT.dropFileTime - songOffset;
+            const c = CONFIG.clips;
+            musicMix.gain.setValueAtTime(1, drop - c.duckLead);
+            musicMix.gain.linearRampToValueAtTime(c.musicDuck, drop);
+            musicMix.gain.setValueAtTime(c.musicDuck, drop + c.duckHold);
+            musicMix.gain.linearRampToValueAtTime(1, drop + c.duckHold + c.duckRelease);
+        }
+        // Duck after analysis so the background beat detector keeps its original response.
+        source.connect(volume).connect(analyser).connect(musicMix).connect(landingBus);
         songPlaying = true;
         songEnded = false;
         detector = { mean: 0, previous: null, last: -Infinity, armed: true };
@@ -485,6 +623,7 @@
             oscillators.delete(source);
             source.disconnect();
             volume.disconnect();
+            musicMix.disconnect();
             analyser?.disconnect();
             songPlaying = false;
             songEnded = true;
@@ -543,6 +682,14 @@
         const rect = logoFace.getBoundingClientRect();
         const x = rect.left + rect.width / 2 - homeRect.left;
         const y = rect.top + rect.height / 2 - homeRect.top;
+        const beacon = document.createElement('i');
+        beacon.className = 'ns-drop-beacon';
+        beacon.style.setProperty('--beacon-x', `${x}px`);
+        beacon.style.setProperty('--ns-late', `${-Math.max(0, late)}s`);
+        beacon.addEventListener('animationend', event => {
+            if (event.target === beacon && event.animationName === 'ns-beacon-rise') beacon.remove();
+        });
+        beaconLayer.append(beacon);
         fx('ns-drop-flash', x, y, {}, late);
         fx('ns-drop-ring', x, y, {}, late);
         fx('ns-drop-ring', x, y, { '--delay': `${CONFIG.fx.ringDelay}s` }, late);
@@ -635,7 +782,7 @@
             return window.NullscapeAssets?.getState() || { ready: false, progress: 0, error: false };
         }
         function scheduleFinalPhase(rendered, assets) {
-            if (finalScheduled || !assets.ready || assets.error || (context && !cutSettled)) return;
+            if (finalScheduled || !assets.ready || assets.error || (context && (!cutSettled || !clipsSettled))) return;
             // Never schedule in the past: slow loading extends the first phase.
             songAt = Math.max(earliestSongAt, rendered + CONFIG.timing.scheduleLead);
             hasCut = Boolean(context && cutBufferReady);
@@ -644,6 +791,7 @@
                 catch (_) { hasCut = false; songPlaying = false; songEnded = true; }
             }
             dropAt = songAt + (hasCut ? CUT.dropFileTime - songOffset : CONFIG.loading.fallbackCountdown);
+            if (context) scheduleBeacon(context, audioOrigin + dropAt);
             revealAt = dropAt + (hasCut ? CONFIG.timing.dropHold : 0);
             doneAt = revealAt + CONFIG.timing.uiDuration;
             songEndAt = hasCut ? songAt + cutBufferReady.duration - songOffset : 0;
@@ -663,9 +811,10 @@
         function updateLoading(elapsed, assets) {
             const l = CONFIG.loading;
             const timeFraction = Math.min(1, Math.max(0, (elapsed - loadingAt) / (earliestSongAt - loadingAt)));
-            const resources = (Math.min(1, Math.max(0, assets.progress || 0)) + (context ? cutProgress : 1)) / 2;
+            const resources = (Math.min(1, Math.max(0, assets.progress || 0)) +
+                (context ? (cutProgress + clipProgress) / 2 : 1)) / 2;
             let progress = l.assetPortion * Math.min(timeFraction, resources);
-            let label = !assets.ready ? 'Loading toolkit' : context && !cutSettled ? 'Loading music' : 'Preparing';
+            let label = !assets.ready ? 'Loading toolkit' : context && (!cutSettled || !clipsSettled) ? 'Loading music' : 'Preparing';
             if (finalScheduled && elapsed >= songAt) {
                 const fraction = Math.min(1, Math.max(0, (elapsed - songAt) / (dropAt - songAt)));
                 progress = l.assetPortion + (1 - l.assetPortion) * (1 - (1 - fraction) ** 1.4);
@@ -737,7 +886,7 @@
                     burst.remove();
                 }
             }
-            if (uiComplete && (!hasCut || songEnded) && elapsed >= Math.max(motifTailEnd, songEndAt)) {
+            if (uiComplete && !ambienceSource && (!hasCut || songEnded) && elapsed >= Math.max(motifTailEnd, songEndAt)) {
                 stopSound();
                 return;
             }
@@ -781,9 +930,10 @@
     });
     reducedMotion.addEventListener('change', event => { if (event.matches) finish(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden && started && !finished) finish(); });
-    window.addEventListener('pagehide', finish);
+    window.addEventListener('pagehide', () => { finish(); stopSound(true); });
     window.addEventListener('nullscape-low-detail-change', event => { if (event.detail.enabled) finish(); });
     let savedLowDetail = false;
+    prepareClips();
     try { savedLowDetail = localStorage.getItem('nullscapeLowDetailMode') === 'true'; } catch (_) {}
     if (reducedMotion.matches || savedLowDetail || document.documentElement.classList.contains('low-detail-mode') ||
         /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {
@@ -794,7 +944,7 @@
     home.dataset.introCharge = '0';
     setControlsEnabled(false);
     logoFace.append(burst, shine);
-    home.append(fxLayer);
+    home.append(beaconLayer, fxLayer);
     placeTiles(0);
     updateLift();
     prepareCut();

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../js/intro.js'), 'utf8');
 
-function harness({ reduced = false, failSong = false, deferSong = false, assetsReady = true, noAudio = false, latency = .1 } = {}) {
+function harness({ reduced = false, failSong = false, deferSong = false, failClips = false, assetsReady = true, noAudio = false, latency = .1 } = {}) {
     const listeners = {};
     const frames = new Map();
     const contexts = [];
@@ -68,7 +68,11 @@ function harness({ reduced = false, failSong = false, deferSong = false, assetsR
         createDynamicsCompressor() { return this.node('compressor'); }
         createConvolver() { return this.node('convolver'); }
         createDelay() { return this.node('delay'); }
-        createBuffer(channels, length) { return { getChannelData: () => new Float32Array(length) }; }
+        createBuffer(channels, length, sampleRate = this.sampleRate) {
+            const data = Array.from({ length: channels }, () => new Float32Array(length));
+            return { numberOfChannels: channels, length, sampleRate, duration: length / sampleRate,
+                getChannelData: channel => data[channel] };
+        }
         resume() { return Promise.resolve(); }
         close() { this.state = 'closed'; return Promise.resolve(); }
     }
@@ -80,7 +84,8 @@ function harness({ reduced = false, failSong = false, deferSong = false, assetsR
         matchMedia: () => ({ matches: reduced, addEventListener() {} }),
         requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame; },
         cancelAnimationFrame: id => frames.delete(id),
-        fetch: async (_, { signal } = {}) => ({ ok: !failSong, arrayBuffer: async () => {
+        fetch: async (url, { signal } = {}) => ({ ok: url.includes('/audio/') ? !failClips : !failSong, arrayBuffer: async () => {
+            if (url.includes('/audio/')) return Uint8Array.of(url.includes('beat-drop') ? 1 : url.includes('ambience') ? 2 : 3).buffer;
             if (!deferSong) return new ArrayBuffer(1);
             return new Promise((resolve, reject) => {
                 releaseAudio = () => resolve(new ArrayBuffer(1));
@@ -91,11 +96,17 @@ function harness({ reduced = false, failSong = false, deferSong = false, assetsR
             documentElement: new Element(), fonts: { ready: Promise.resolve() }, addEventListener() {} },
         window: { AudioContext: noAudio ? undefined : Context,
             NullscapeAssets: { getState: () => ({ ...assetState }) },
-            OfflineAudioContext: class { decodeAudioData() { return Promise.resolve({ duration: 150.360816 }); } },
+            OfflineAudioContext: class { decodeAudioData(data) {
+                const id = new Uint8Array(data)[0];
+                const duration = [150.360816, 7.793, 34.81, 2.198][id];
+                const sampleRate = 48000, length = Math.round(duration * sampleRate);
+                return Promise.resolve({ id, duration, sampleRate, length, numberOfChannels: 2,
+                    getChannelData: () => new Float32Array(length) });
+            } },
             addEventListener: (name, handler) => { (listeners[name] ||= []).push(handler); } }
     };
-    let code = source.replace('window.NullscapeIntro = Object.freeze({ finish });',
-        'window.NullscapeIntro = Object.freeze({ finish, start, config: CONFIG });');
+    let code = source.replace('window.NullscapeIntro = Object.freeze({ finish, enterToolkit });',
+        'window.NullscapeIntro = Object.freeze({ finish, enterToolkit, start, config: CONFIG });');
     vm.runInNewContext(code, sandbox);
     return { elements, contexts, logs, frames, assets: assetState,
         intro: sandbox.window.NullscapeIntro,
@@ -116,7 +127,7 @@ const SONG = 6.928125;
 const DROP = 11.763125;
 const bar = h => h.elements.landingView.children.find(node => node.className === 'ns-startup-load');
 const percent = h => Number(bar(h).attributes['aria-valuenow']);
-const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source');
+const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source' && node.buffer?.id === 0);
 
 test('drop, 100% and background share one cue; the full-size logo holds two seconds before controls', async () => {
     const h = harness(); await h.start();
@@ -149,6 +160,8 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(effects.children.length, 1, 'assembly has one gentle ring');
     assert.equal(effects.children[0].className, 'ns-assembly-ring');
     assert.equal(h.elements.logoStage.classList.contains('ns-assembly-impact'), true);
+    const beacon = h.elements.landingView.children.find(n => n.className === 'ns-beacon-layer');
+    assert.equal(beacon.children.length, 0, 'beacon waits for the music drop');
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
     assert.ok(context.nodes.some(n => n.kind === 'oscillator' && n.type === 'sawtooth'));
     h.advance(SONG + .001);
@@ -164,6 +177,10 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(h.elements['.landing-features-viewport'].inert, true);
     assert.equal(Number(h.elements['.ns-logo-build'].style['--ns-build-scale']), 1.25);
     assert.equal(h.elements['.landing-background'].classList.contains('ns-background'), true);
+    assert.equal(beacon.children.length, 1);
+    assert.equal(beacon.children[0].className, 'ns-drop-beacon');
+    assert.equal(beacon.children[0].style['--beacon-x'], '220px');
+    assert.ok(Math.abs(Number.parseFloat(beacon.children[0].style['--ns-late']) + .012) < 1e-9);
     const drop = h.logs.find(e => e[1].event === 'drop')[1];
     assert.ok(Math.abs(drop.scheduled - DROP) < 1e-6);
     assert.equal(drop.differenceMs, 12);
@@ -184,6 +201,8 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     h.advance(SONG + 150.360816 - .02);
     assert.equal(context.state, 'running', 'keep the audible output tail alive');
     h.advance(SONG + 150.360816 + .01);
+    assert.equal(context.state, 'running', 'beacon ambience continues after the song ends');
+    h.dispatch('pagehide');
     assert.equal(context.state, 'closed');
 });
 
@@ -272,7 +291,7 @@ test('song credit still appears three seconds after audible playback', async () 
 });
 
 test('missing MP3 completes the startup safely without a fake music drop', async () => {
-    const h = harness({ failSong: true }); await h.start();
+    const h = harness({ failSong: true, failClips: true }); await h.start();
     assert.ok(h.contexts[0].nodes.some(n => n.kind === 'oscillator'));
     assert.equal(songSource(h), undefined);
     h.advance(12);
@@ -330,5 +349,43 @@ test('exiting while the replacement MP3 downloads never starts playback later', 
     assert.equal(h.frames.size, 0);
     assert.equal(bar(h).hidden, true);
     assert.equal(h.contexts[0].state, 'closed');
+});
+
+test('recorded drop shares the music cue; decoded ambience crossfades in and loops without a restart', async () => {
+    const h = harness(); await h.start();
+    const context = h.contexts[0];
+    const drop = context.nodes.find(n => n.buffer?.id === 1);
+    const loop = context.nodes.find(n => n.loop);
+    assert.ok(Math.abs(drop.started[0] - .05 - DROP) < 1e-9);
+    const duck = context.nodes.find(n => n.gain.events.some(e => e[0] === 'linear' && e[1] === .45));
+    assert.ok(duck.gain.events.some(e => e[0] === 'linear' && e[1] === .45 && Math.abs(e[2] - drop.started[0]) < 1e-9));
+    assert.ok(duck.gain.events.some(e => e[0] === 'linear' && e[1] === 1 && Math.abs(e[2] - drop.started[0] - 3) < 1e-9));
+    assert.ok(Math.abs(loop.started[0] - drop.started[0] - drop.buffer.duration + .5) < 1e-9);
+    assert.equal(loop.loopStart, 0);
+    assert.ok(Math.abs(loop.loopEnd - 34.31) < 1e-9);
+    h.intro.finish();
+    assert.equal(loop.stopped, true);
+    assert.equal(drop.stopped, true);
+    assert.equal(context.state, 'closed');
+});
+
+test('Enter cue survives tool navigation while the entire landing mix fades out', async () => {
+    const h = harness(); await h.start(); h.advance(DROP + 4);
+    const context = h.contexts[0];
+    const bus = context.nodes[0];
+    const now = context.currentTime + .005;
+    h.intro.enterToolkit();
+    const cue = context.nodes.find(n => n.buffer?.id === 3);
+    assert.equal(cue.started[0], now);
+    assert.ok(bus.gain.events.some(e => e[0] === 'linear' && e[1] === 0 && Math.abs(e[2] - now - .8) < 1e-9));
+    h.intro.finish();
+    h.dispatch('nullscape-route-change', { detail: { route: 'curses' } });
+    assert.equal(context.state, 'running', 'navigation must allow the exit cue and fade to finish');
+    assert.equal(songSource(h).stopped, undefined);
+    h.intro.enterToolkit();
+    assert.equal(context.nodes.filter(n => n.buffer?.id === 3).length, 1, 'double clicks cannot stack cues');
+    h.dispatch('pagehide');
+    assert.equal(context.state, 'closed');
+    assert.equal(songSource(h).stopped, true);
 });
 
