@@ -3667,7 +3667,7 @@ function applyHeaderImage(element, label, sizeClass) {
 }
 
 
-applyHeaderImage(document.getElementById("logoText"), "Nullscape", "logo-image");
+// The shared landing wordmark and Toolkits caption are authored in the header markup.
 
 
 /*
@@ -3692,11 +3692,18 @@ function setFloatingButtonsHidden(hidden) {
 
     }
 
+    const inner = floatingToggleButtonsEl.querySelector(".floating-toggle-buttons-inner");
+    if (hidden && inner?.contains(document.activeElement)) floatingButtonsHideToggle.focus({ preventScroll: true });
+    if (inner) {
+        inner.inert = hidden;
+        inner.setAttribute("aria-hidden", String(hidden));
+    }
     floatingToggleButtonsEl.classList.toggle("collapsed", hidden);
 
     floatingButtonsHideToggle.setAttribute("aria-expanded", hidden ? "false" : "true");
     floatingButtonsHideToggle.setAttribute("aria-label", hidden ? "Show toolkit buttons" : "Hide toolkit buttons");
     floatingButtonsHideToggle.title = hidden ? "Show toolkit buttons" : "Hide toolkit buttons";
+    window.dispatchEvent(new CustomEvent("nullscape-tool-nav-change", { detail: { hidden } }));
 
     try {
 

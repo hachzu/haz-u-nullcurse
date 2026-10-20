@@ -1257,4 +1257,79 @@ html.low-detail-mode .ns-dust-layer { display: none; }
     to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ns-startup-quote { animation: none; } }
+
+
+/* Enlarge the foreground while allowing it to fit narrow screens. */
+.landing-view .landing-content { zoom: 1.1; width: calc(100% / 1.1); }
+.landing-view .ns-startup-load { width: min(282px, 70vw); font-size: 11px; }
+.landing-view .ns-startup-quote { font-size: 11px; }
+.landing-view .landing-features-viewport {
+    overflow: hidden; max-width: 1050px; padding: 0 12px;
+    -webkit-mask-image: none; mask-image: none;
+}
+.landing-conveyor-window {
+    width: 100%; overflow: hidden; padding: 14px 0 18px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.landing-conveyor {
+    display: flex; width: max-content;
+    animation: ns-conveyor-right 46s linear infinite;
+    animation-play-state: paused;
+}
+.landing-view .landing-features {
+    display: flex; flex: none; align-items: stretch; gap: 11px;
+    width: max-content; min-width: 0; margin: 0; padding: 0 11px 0 0;
+}
+.landing-features > li { display: flex; flex: none; width: 220px; }
+.landing-view .landing-feature-tag {
+    width: 100%; min-height: 42px; padding: 12px 10px;
+    text-decoration: none; font-size: 11px; letter-spacing: .6px;
+}
+.landing-view .landing-feature-tag--altars { opacity: 1; --tag-opacity: 1; }
+.landing-view .landing-feature-tag--players {
+    --tag-opacity: 1; opacity: 1; cursor: default; padding: 6px 10px;
+    border: 1px solid #ee78b84d;
+    background: var(--tag-checker), linear-gradient(135deg, #4b2340aa, #88406aaa);
+}
+.landing-view .landing-feature-tag--players:hover { filter: none; scale: 1; }
+.player-tracker-label { display: flex; flex-direction: column; align-items: center; gap: 3px; line-height: 1; }
+.player-tracker-label > span { color: #f5c3dd88; }
+.landing-feature-tag--players small { color: #ff91cf; font-size: 9px; letter-spacing: 1.2px; font-weight: 800; }
+.landing-view .landing-feature-tag--players::before,
+.landing-view .landing-feature-tag--players::after { background: #ff91cf; opacity: .35; box-shadow: none; }
+.landing-view:is([data-intro-state='revealing'], [data-intro-state='done']):not([hidden]) .landing-conveyor { animation-play-state: running; }
+.landing-view .landing-features-viewport:hover .landing-conveyor { animation-play-state: paused; }
+.landing-view .landing-features-viewport:is(:focus-visible, :has(:focus-visible)) .landing-conveyor-window {
+    overflow-x: auto; -webkit-mask-image: none; mask-image: none;
+}
+.landing-features-viewport:focus-within .landing-conveyor { animation-play-state: paused; }
+.landing-features-viewport:is(:focus-visible, :has(:focus-visible)) .landing-conveyor { animation: none; transform: none; }
+.landing-features-viewport:is(:focus-visible, :has(:focus-visible)) .is-copy { display: none; }
+.landing-view .landing-feature-tag:focus-visible { outline-offset: -5px; }
+@keyframes ns-conveyor-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+    .landing-view .landing-conveyor { animation: none; }
+    .landing-view .landing-conveyor-window { overflow-x: auto; }
+    .landing-view .landing-features.is-copy { display: none; }
+}
+html.low-detail-mode .landing-conveyor-window { overflow-x: auto; }
+html.low-detail-mode .landing-features.is-copy { display: none; }
+
+
+/* Stationary violet edge markers where the conveyor dissolves into the scene. */
+.landing-view .landing-features-viewport { position: relative; }
+.landing-features-viewport::before,
+.landing-features-viewport::after {
+    content: ''; position: absolute; top: 5px; bottom: 9px;
+    width: 7px; z-index: 2; pointer-events: none;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M4 0 8 4 4 8 0 4Z' fill='%23ead4ff'/%3E%3C/svg%3E") center / 5px 5px no-repeat,
+        linear-gradient(0deg, transparent, #d6b0eecc 32%, #d6b0eecc 68%, transparent) center / 1px 100% no-repeat;
+    opacity: .85;
+}
+.landing-features-viewport::before { left: 8.5px; }
+.landing-features-viewport::after { right: 8.5px; }
+.landing-features-viewport:is(:focus-visible, :has(:focus-visible))::before,
+.landing-features-viewport:is(:focus-visible, :has(:focus-visible))::after { opacity: 0; }
 /* END NS AUDIO-LOCKED EFFECTS */

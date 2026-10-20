@@ -1,0 +1,109 @@
+/* Toolkit-only polish. Landing styles and panel functionality stay independent. */
+.site-header-top .toolkit-brand {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; min-width: 0; color: #f0e2ff; text-decoration: none;
+}
+.toolkit-brand img { display: block; width: 100%; height: auto; }
+.toolkit-brand-caption {
+    margin-top: -8px; font: 500 22px/1.1 Georgia, 'Times New Roman', serif;
+    letter-spacing: .1em; text-indent: .1em;
+    text-shadow: 0 0 5px #d89bff66, 0 0 10px #b866ff1a;
+}
+.toolkit-brand:focus-visible { outline: 1px solid #d8b5ff; outline-offset: 6px; }
+.sidebar-credits { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lp-soft, #4a2270); text-align: center; }
+.sidebar-credits .credit { margin: 0 0 7px; color: var(--lp-text, #9a7cc9); font-size: 11px; }
+.sidebar-credits .credit-handle { animation: none; }
+.sidebar-credits .data-source-note { margin: 0; color: var(--lp-text, #9a7cc9); font-size: 10px; line-height: 1.65; }
+.sidebar-credits .contributors-link { display: block; margin-top: 6px; }
+
+/* Bare floating controls: compact squares, expanding labels, and a quiet chevron above. */
+#floatingToggleButtons {
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    flex-direction: column; align-items: center; gap: 3px;
+    width: max-content; max-width: calc(100vw - 40px);
+    padding: 0; border: 0; background: none; box-shadow: none; pointer-events: none;
+    transition: transform .45s cubic-bezier(.22, 1, .36, 1);
+}
+#floatingToggleButtons.collapsed { transform: translateY(49px); }
+#floatingToggleButtons .floating-toggle-buttons-inner {
+    display: flex; align-items: center; gap: 8px;
+    width: max-content; max-width: calc(100vw - 40px);
+    transform: translateY(0); opacity: 1; visibility: visible; pointer-events: auto;
+    transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .3s ease, visibility 0s;
+}
+#floatingToggleButtons.collapsed .floating-toggle-buttons-inner {
+    transform: translateY(calc(100% + 100px + env(safe-area-inset-bottom)));
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .3s ease, visibility 0s .45s;
+}
+#floatingToggleButtons .floating-toggle-buttons-inner > button {
+    --nav-a: #174e79; --nav-b: #54b4e3; --nav-border: #91d5fa;
+    display: flex; flex: none; align-items: center; justify-content: center; gap: 0;
+    min-width: 46px; min-height: 46px; padding: 13px;
+    border: 0; border-radius: 2px; clip-path: none;
+    background-image: repeating-conic-gradient(#ffffff18 0 25%, transparent 0 50%),
+        linear-gradient(90deg, var(--nav-a), var(--nav-b) 25%, var(--nav-a) 50%, var(--nav-b) 75%, var(--nav-a));
+    background-size: 10px 10px, 200% 100%;
+    color: #fff; font: 700 10px/1.2 var(--font-modern, sans-serif); letter-spacing: .6px;
+    text-shadow: 0 1px 2px #0005;
+    box-shadow: 0 4px 12px #0005, 0 0 10px color-mix(in srgb, var(--nav-border) 23%, transparent);
+    animation: toolkit-nav-gradient 14s linear infinite;
+    transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+#floatingToggleButtons #deathToggleButton { --nav-a: #7b171e; --nav-b: #d24c54; --nav-border: #f2989e; }
+#floatingToggleButtons #altarsToggleButton { --nav-a: #39383e; --nav-b: #8a8791; --nav-border: #bdb8c9; }
+#floatingToggleButtons #lobbyToggleButton { --nav-a: #695331; --nav-b: #b79a59; --nav-border: #e0c98b; }
+#floatingToggleButtons .floating-toggle-buttons-inner > button:is(:hover, :focus-visible) {
+    padding: 13px; transform: translateY(-2px); filter: brightness(1.08);
+    box-shadow: 0 6px 16px #0006, 0 0 16px color-mix(in srgb, var(--nav-border) 35%, transparent);
+}
+#floatingToggleButtons .floating-toggle-buttons-inner > button.active {
+    box-shadow: 0 4px 12px #0005, 0 0 15px color-mix(in srgb, var(--nav-border) 45%, transparent);
+}
+#floatingToggleButtons .floating-toggle-buttons-inner > button:focus-visible { outline: 1px solid var(--nav-border); outline-offset: 3px; }
+#floatingToggleButtons .floating-toggle-buttons-inner > button .btn-label {
+    display: block; max-width: 0; margin-left: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+    transition: max-width .35s cubic-bezier(.22, 1, .36, 1), margin-left .35s cubic-bezier(.22, 1, .36, 1), opacity .2s ease;
+}
+#floatingToggleButtons .floating-toggle-buttons-inner > button:focus-visible .btn-label { max-width: 110px; margin-left: 8px; opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+    #floatingToggleButtons .floating-toggle-buttons-inner > button:hover .btn-label { max-width: 110px; margin-left: 8px; opacity: 1; }
+}
+#floatingToggleButtons :is(.upgrade-toggle-key, .death-toggle-key, .altars-toggle-key, .lobby-toggle-key) { display: none; }
+#floatingToggleButtons :is(.upgrade-toggle-icon, .death-toggle-icon, .altars-toggle-icon, .lobby-toggle-icon) {
+    display: flex; flex: none; width: 20px; height: 20px; transform: none;
+}
+#floatingToggleButtons svg { display: block; width: 100%; height: 100%; }
+#floatingToggleButtons .floating-buttons-hide-toggle {
+    order: -1; width: 44px; height: 32px; padding: 0; pointer-events: auto;
+    border: 0; border-radius: 0; background: none; box-shadow: none;
+    opacity: .3; color: #e1c8f3;
+    transition: opacity .2s ease, transform .2s ease;
+}
+#floatingToggleButtons:hover .floating-buttons-hide-toggle,
+#floatingToggleButtons:focus-within .floating-buttons-hide-toggle { opacity: .7; }
+#floatingToggleButtons .floating-buttons-hide-toggle:is(:hover, :focus-visible) {
+    opacity: 1; transform: scale(1.16); background: none; box-shadow: none;
+}
+#floatingToggleButtons .floating-buttons-hide-toggle:focus-visible { outline: 1px solid #b797d4; outline-offset: 2px; }
+#floatingToggleButtons .floating-buttons-hide-icon { display: block; width: 18px; height: 18px; }
+#floatingToggleButtons.collapsed .floating-buttons-hide-icon { transform: rotate(180deg); }
+@keyframes toolkit-nav-gradient { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 200% 50%; } }
+@media (max-width: 600px) {
+    #floatingToggleButtons { right: max(12px, env(safe-area-inset-right)); max-width: calc(100vw - 24px); }
+    #floatingToggleButtons .floating-toggle-buttons-inner { max-width: calc(100vw - 24px); }
+}
+@media (hover: none) {
+    #floatingToggleButtons .floating-buttons-hide-toggle { height: 44px; opacity: .65; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #floatingToggleButtons,
+    #floatingToggleButtons.collapsed,
+    #floatingToggleButtons .floating-toggle-buttons-inner,
+    #floatingToggleButtons.collapsed .floating-toggle-buttons-inner,
+    #floatingToggleButtons .floating-toggle-buttons-inner > button,
+    #floatingToggleButtons .floating-toggle-buttons-inner > button .btn-label,
+    #floatingToggleButtons .floating-buttons-hide-toggle,
+    #floatingToggleButtons .floating-buttons-hide-icon { animation: none; transition: none; }
+}

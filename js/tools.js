@@ -4605,6 +4605,7 @@ renderLobbyTagLog();
 
     let elements = null;
     let resizeHandler = null;
+    let targetObserver = null;
     let keydownHandler = null;
 
     /*
@@ -4695,6 +4696,8 @@ renderLobbyTagLog();
         }
 
         const { overlay } = elements;
+        targetObserver?.disconnect();
+        targetObserver = null;
 
         overlay.classList.remove("tools-spotlight-overlay--visible");
 
@@ -4805,6 +4808,12 @@ renderLobbyTagLog();
 
         resizeHandler = () => position(target);
         window.addEventListener("resize", resizeHandler);
+        // Hover labels change the row width; keep the onboarding cutout aligned.
+        if (typeof ResizeObserver !== "undefined") {
+            targetObserver = new ResizeObserver(() => position(target));
+            targetObserver.observe(target);
+        }
+
 
         keydownHandler = event => {
 
@@ -4819,6 +4828,10 @@ renderLobbyTagLog();
         document.addEventListener("keydown", keydownHandler);
 
     }
+
+    window.addEventListener("nullscape-tool-nav-change", event => {
+        if (event.detail.hidden) close(false);
+    });
 
     function init() {
 

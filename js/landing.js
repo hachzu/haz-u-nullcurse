@@ -10,8 +10,8 @@
         curses: { title: 'Curse Tracker' },
         upgrades: { title: 'Upgrade Calculator', panel: 'upgradePanel', setter: 'setUpgradePanelOpen' },
         deaths: { title: 'Death Tracker', panel: 'deathPanel', setter: 'setDeathPanelOpen' },
-        altars: { title: 'Altars', panel: 'altarsPanel', setter: 'setAltarsPanelOpen' },
-        lobby: { title: 'Lobby Maker', panel: 'lobbyPanel', setter: 'setLobbyPanelOpen' }
+        altars: { title: 'Altars Calculator', panel: 'altarsPanel', setter: 'setAltarsPanelOpen' },
+        lobby: { title: 'Lobby Name Maker', panel: 'lobbyPanel', setter: 'setLobbyPanelOpen' }
     };
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     let toolDocument;
@@ -212,7 +212,17 @@
     home.append(credit);
 
     // Play the recorded game cue and fade the landing mix while navigation proceeds.
-    $('enterToolkit').addEventListener('click', () => window.NullscapeIntro?.enterToolkit());
+    home.querySelectorAll('a[href^="#/"]').forEach(link => link.addEventListener('click', event => {
+        if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        window.NullscapeIntro?.enterToolkit();
+    }));
+    const featureViewport = home.querySelector('.landing-features-viewport');
+    featureViewport.addEventListener('focusout', () => queueMicrotask(() => {
+        if (!featureViewport.contains(document.activeElement)) {
+            featureViewport.scrollLeft = 0;
+            featureViewport.querySelector('.landing-conveyor-window').scrollLeft = 0;
+        }
+    }));
 
     prepareAssets();
     if (readRoute()) applyRoute();

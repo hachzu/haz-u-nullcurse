@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="css/upgrades.css?v=20261018-2">
     <link rel="stylesheet" href="css/tools.css">
     <link rel="stylesheet" href="css/utilities.css?v=20261018-1">
+    <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
 
@@ -75,7 +76,10 @@
 
         <header class="site-header">
             <div class="site-header-top">
-                <div class="logo animated-header-text" id="logoText">NULLSCAPE</div>
+                <a class="toolkit-brand" id="logoText" href="#/" aria-label="Nullscape Toolkits — back to home">
+                    <img src="assets/branding/Nullscape.png" alt="Nullscape" width="1100" height="300">
+                    <span class="toolkit-brand-caption">Toolkits</span>
+                </a>
 
                 <div class="site-header-controls">
 
@@ -89,14 +93,6 @@
                     <button type="button" id="settingsToggleButton" class="settings-toggle-button" aria-expanded="false" aria-controls="settingsPanel" title="Settings">&#9881;</button>
 
                 </div>
-            </div>
-            <div class="subtitle">TOOLKITS</div>
-            <div class="credit">
-                Made by <span class="credit-handle">@lee.sys</span>
-            </div>
-            <div class="data-source-note">
-                Values are sourced from the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a> and may contain errors!
-                <a class="contributors-link" href="contributors/">Thank you to everyone who helped shape this toolkit.</a>
             </div>
         </header>
 
@@ -154,7 +150,7 @@
                     role="switch" aria-checked="false" aria-controls="chaosCurseSection"
                     title="Show the Chaos Curses basin">
                     <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
-                    <span class="mini-visibility-label">Chaos</span>
+                    <span class="mini-visibility-label">CHAOS</span>
                 </button>
             </div>
 
@@ -301,6 +297,16 @@
             </button>
 
         </div>
+
+        <footer class="sidebar-credits" aria-label="Credits and sources">
+            <div class="credit">
+                Made by <span class="credit-handle">@lee.sys</span>
+            </div>
+            <div class="data-source-note">
+                Values are sourced from the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a> and may contain errors!
+                <a class="contributors-link" href="contributors/">Thank you to everyone who helped shape this toolkit.</a>
+            </div>
+        </footer>
 
     </aside>
 
@@ -1629,7 +1635,7 @@
         what keeps them pinned together in the bottom-right corner
         instead of drifting into normal document flow.
     -->
-    <div class="floating-toggle-buttons" id="floatingToggleButtons">
+    <div class="floating-toggle-buttons" id="floatingToggleButtons" role="navigation" aria-label="Toolkit tools">
 
         <!--
             Only this inner wrapper slides away when collapsed (see
@@ -1639,7 +1645,7 @@
             The show/hide logic lives in the curse tracker scripts
             (setFloatingButtonsHidden).
         -->
-        <div class="floating-toggle-buttons-inner">
+        <div class="floating-toggle-buttons-inner" id="floatingToolButtons">
 
             <button
                 id="upgradeToggleButton"
@@ -1649,7 +1655,7 @@
                 aria-expanded="false"
                 aria-keyshortcuts="b"
             >
-                <span class="upgrade-toggle-icon">+</span>
+                <span class="upgrade-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6M5 21h14"/></svg></span>
                 <span class="btn-label">UPGRADES</span>
                 <span class="upgrade-toggle-key">B</span>
             </button>
@@ -1662,7 +1668,7 @@
                 aria-expanded="false"
                 aria-keyshortcuts="x"
             >
-                <span class="death-toggle-icon">&#9760;</span>
+                <span class="death-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M9 18H7v-3a7 7 0 1 1 10 0v3h-2v3H9z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="m12 13-1 2h2z"/></svg></span>
                 <span class="btn-label">DEATHS</span>
                 <span class="death-toggle-key">X</span>
             </button>
@@ -1675,7 +1681,7 @@
                 aria-expanded="false"
                 aria-keyshortcuts="n"
             >
-                <span class="altars-toggle-icon">&#43612;</span>
+                <span class="altars-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m12 3 8 6-8 6-8-6zM4 14l8 6 8-6M4 18l8 5 8-5"/></svg></span>
                 <span class="btn-label">ALTARS</span>
                 <span class="altars-toggle-key">N</span>
             </button>
@@ -1688,7 +1694,7 @@
                 aria-expanded="false"
                 aria-keyshortcuts="l"
             >
-                <span class="lobby-toggle-icon">&#127922;</span>
+                <span class="lobby-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></span>
                 <span class="btn-label">LOBBY</span>
                 <span class="lobby-toggle-key">L</span>
             </button>
@@ -1699,11 +1705,12 @@
             id="floatingButtonsHideToggle"
             class="floating-buttons-hide-toggle"
             type="button"
+            aria-controls="floatingToolButtons"
             aria-expanded="true"
             aria-label="Hide toolkit buttons"
             title="Hide toolkit buttons"
         >
-            <span class="floating-buttons-hide-icon" aria-hidden="true">&gt;</span>
+            <span class="floating-buttons-hide-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m6 9 6 6 6-6"/></svg></span>
         </button>
 
     </div>
@@ -1713,9 +1720,9 @@
 
 <script type="module" src="js/presence.js?v=20261020-anonymous1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js"></script>
+<script src="js/tracker.js?v=20261020-polish1"></script>
 <script src="js/upgrades.js"></script>
-<script src="js/tools.js"></script>
+<script src="js/tools.js?v=20261020-polish2"></script>
 
 </body>
 </html>

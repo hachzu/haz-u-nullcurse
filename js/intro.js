@@ -227,7 +227,7 @@
     ];
     const SLANT = 5; // how far each cut leans, in % of the logo width
 
-    features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index));
+    features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index % 6));
     for (let index = 0; index < 5; index++) {
         const tile = document.createElement('span');
         tile.className = 'intro-piece';
@@ -318,11 +318,12 @@
     function updateLift() {
         if (finished) return;
         const rect = logoFace.getBoundingClientRect();
+        const zoom = Number.parseFloat(getComputedStyle(content).zoom) || 1;
         const transform = getComputedStyle(brand).transform;
-        const currentShift = transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m42;
+        const currentShift = transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m42 * zoom;
         const logoCenter = (rect.top + rect.bottom) / 2 - currentShift;
         const screenCenter = home.getBoundingClientRect().top + home.clientHeight / 2;
-        brand.style.setProperty('--intro-lift', `${screenCenter - logoCenter}px`);
+        brand.style.setProperty('--intro-lift', `${(screenCenter - logoCenter) / zoom}px`);
     }
     function stopSound(force = false) {
         if (departing && !force) return;
@@ -702,8 +703,9 @@
         const clamp = value => Math.min(1, Math.max(0, value));
         const ease = value => value * value * (3 - 2 * value);
         // Fill the available screen without cutting the enlarged logo off on phones.
+        const zoom = Number.parseFloat(getComputedStyle(content).zoom) || 1;
         const peak = Math.max(1, Math.min(f.assemblyPeakScale,
-            ((home.clientWidth || innerWidth) - 32) / (stage.offsetWidth || 440)));
+            ((home.clientWidth || innerWidth) - 32) / ((stage.offsetWidth || 440) * zoom)));
         const start = Math.min(f.assemblyStartScale, 1 + (peak - 1) * .35);
         let scale = 1;
         if (!reducedMotion.matches && elapsed < revealAt + f.assemblySettle) {
