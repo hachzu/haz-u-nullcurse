@@ -529,4 +529,16 @@ html.low-detail-mode .landing-features.is-copy { display: none; }
 .landing-features-viewport::after { right: 8.5px; }
 .landing-features-viewport:is(:focus-visible, :has(:focus-visible))::before,
 .landing-features-viewport:is(:focus-visible, :has(:focus-visible))::after { opacity: 0; }
+
+
+/* Small shared visit total, kept out of the logo's black-screen assembly. */
+.landing-visits {
+    position: absolute; top: max(18px, env(safe-area-inset-top));
+    left: max(18px, env(safe-area-inset-left)); z-index: 3;
+    display: flex; align-items: baseline; gap: 8px;
+    font: 400 10px/1.4 var(--font-modern, sans-serif); letter-spacing: .08em;
+    color: #c6afd780; opacity: 0; transition: opacity .7s ease;
+}
+.landing-visits #siteVisitsCount { color: #e4d1efb3; font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.landing-view:is([data-intro-drop='1'], [data-intro-state='done']) .landing-visits { opacity: 1; }
 /* END NS AUDIO-LOCKED EFFECTS */

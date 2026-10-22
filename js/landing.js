@@ -115,7 +115,7 @@
             }
             const presence = document.createElement('script');
             presence.type = 'module';
-            presence.src = 'js/presence.js?v=20261020-anonymous1';
+            presence.src = 'js/presence.js?v=20261022-shared-config1';
             document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);

@@ -29,12 +29,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
     <link rel="preload" as="image" href="assets/branding/Nullscape.png">
-    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261020-conveyor-endpoints2">
+    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261022-visits1">
     <script src="js/intro.js?v=20261020-conveyor2" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
-    <script src="js/landing.js?v=20261020-lobby-name-maker1" defer></script>
+    <script src="js/landing.js?v=20261022-visits1" defer></script>
+    <script type="module" src="js/site-visits.js?v=20261022-1" onerror="document.getElementById('siteVisitsCount').textContent='—'"></script>
 </head>
 <body class="at-home">
     <main id="landingView" class="landing-view">
+        <div class="landing-visits" id="siteVisits" role="group" aria-label="Site visits">
+            <span aria-hidden="true">VISITS</span><span id="siteVisitsCount">600</span>
+        </div>
         <div class="landing-background" id="landingBackground" aria-hidden="true"></div>
         <div class="landing-vignette" aria-hidden="true"></div>
         <div class="ns-dust-layer" aria-hidden="true">
