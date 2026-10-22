@@ -204,7 +204,7 @@
     window.addEventListener('hashchange', applyRoute);
 
     // Credit in the bottom-right corner. Edit the name (and optional link) here.
-    const CREDIT = { text: 'made by @lee.sys', url: '' };
+    const CREDIT = { text: 'made by Hazu', url: '' };
     const credit = document.createElement(CREDIT.url ? 'a' : 'span');
     credit.className = 'landing-credit';
     credit.textContent = CREDIT.text;
