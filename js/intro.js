@@ -2,7 +2,7 @@
    All seconds below are relative to begin(), unless documented otherwise. */
 (() => {
     'use strict';
-    if (window.NullscapeMoved) return;
+    if (window.NullscapeMoved || document.documentElement.classList.contains('maintenance-active')) return;
     const CONFIG = {
         notes: [ // Original 128 BPM motif, without the extra hold before note 5.
             { midi: 62, at: .5 }, { midi: 77, at: 1.203125 },

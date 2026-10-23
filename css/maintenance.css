@@ -1,0 +1,86 @@
+/* Temporary Patch 5.1 cover. Remove maintenance-active from each HTML root to reopen. */
+#maintenanceScreen { display: none; }
+html.maintenance-active { background: #061915; color-scheme: dark; }
+html.maintenance-active body { margin: 0; overflow: hidden; }
+html.maintenance-active body > :not(#maintenanceScreen) { display: none !important; }
+html.maintenance-active #maintenanceScreen {
+    display: flex !important; position: fixed; inset: 0; z-index: 2147483647;
+    isolation: isolate; align-items: center; justify-content: center;
+    overflow: auto; padding: 32px 24px; box-sizing: border-box;
+    background: #061915; color: #d5f6e5; text-align: center;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+#maintenanceScreen .maintenance-background {
+    position: absolute; inset: 0; z-index: -2; pointer-events: none;
+    background: linear-gradient(180deg, #03151133, #031511b8),
+        url('../assets/branding/maintenance-5-1.png') center / cover no-repeat;
+    opacity: .48;
+}
+#maintenanceScreen .maintenance-content { width: min(620px, 100%); margin: auto; padding: 36px 0; }
+#maintenanceScreen .maintenance-label { margin: 28px 0 18px; color: #93d9bd; font-size: 11px; letter-spacing: .3em; }
+#maintenanceScreen h1 {
+    margin: 0; color: #d5f6e5; font: 400 clamp(23px, 4vw, 38px)/1.5 Georgia, serif;
+    text-wrap: balance; text-shadow: 0 2px 24px #02140f;
+}
+#maintenanceScreen .maintenance-loader { width: 64px; height: 64px; margin: auto; color: #b5f0d5; }
+/* Same spawn rotation and dust drift used by the landing page. */
+#maintenanceScreen .ns-spawn-svg { display: block; width: 100%; height: 100%; animation: ns-spawn-spin 14s linear infinite; }
+@keyframes ns-spawn-spin { to { transform: rotate(360deg); } }
+#maintenanceScreen .ns-dust-layer { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; opacity: 1; }
+#maintenanceScreen .ns-dust-layer i {
+    position: absolute; left: var(--dust-x); top: var(--dust-y); width: 2px; height: 2px;
+    border-radius: 50% !important; background: #b5f0d5; box-shadow: 0 0 5px #93d9bd55;
+    animation: ns-dust-drift var(--dust-duration) ease-in-out var(--dust-delay) infinite alternate;
+}
+@keyframes ns-dust-drift {
+    0% { transform: translate3d(0, 18px, 0); opacity: .12; }
+    40% { opacity: .42; }
+    100% { transform: translate3d(var(--dust-drift), -42px, 0); opacity: .2; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #maintenanceScreen .ns-spawn-svg, #maintenanceScreen .ns-dust-layer i { animation: none; opacity: .4; }
+}
+
+#maintenanceScreen [hidden] { display: none !important; }
+#maintenanceScreen .maintenance-gate {
+    position: absolute; inset: 0; z-index: 3; display: grid; place-items: center;
+    background: #000; color: #e6e6e6; cursor: pointer; font-size: 14px; letter-spacing: .08em;
+}
+#maintenanceScreen .maintenance-gate:focus-visible { outline: 1px solid #777; outline-offset: -8px; }
+#maintenanceScreen.awaiting-entry .maintenance-content { display: none; }
+#maintenanceScreen.awaiting-entry .maintenance-background,
+#maintenanceScreen.awaiting-entry .ns-dust-layer { opacity: 0; }
+#maintenanceScreen .maintenance-background { transition: opacity 1.6s ease; }
+#maintenanceScreen.has-entered .maintenance-loader { animation: ns-credit-in 1s ease both; }
+#maintenanceScreen.has-entered .maintenance-label { animation: ns-credit-in 1s .15s ease both; }
+#maintenanceScreen.has-entered h1 { animation: ns-credit-in 1.3s .3s ease both; }
+#maintenanceScreen.has-entered .maintenance-content { padding-bottom: 120px; }
+#maintenanceScreen .maintenance-visualizer {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;
+    width: min(520px, 72vw); height: min(85px, 12vh);
+    pointer-events: none; opacity: .28; z-index: -1;
+}
+#maintenanceScreen .maintenance-player {
+    position: absolute; bottom: 28px; left: 28px; right: 28px;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    font-size: 12px; line-height: 1.6; animation: ns-credit-in 1s .6s ease both;
+}
+#maintenanceScreen .maintenance-player strong { font-size: 11px; color: #93d9bd; }
+#maintenanceScreen .maintenance-disc {
+    flex: 0 0 36px; height: 36px; border: 1px solid #93d9bd66; border-radius: 50% !important;
+    background: radial-gradient(circle, #061915 0 2px, #d5f6e5 2px 3px, #34866a 3px 7px, transparent 7px),
+        repeating-radial-gradient(circle, transparent 0 7px, #93d9bd22 7px 8px, transparent 8px 10px),
+        conic-gradient(from 20deg, #103c30, #679d87, #103c30, #75b99c, #103c30);
+    animation: ns-vinyl-spin 9s linear infinite paused;
+}
+#maintenanceScreen.music-playing .maintenance-disc { animation-play-state: running; }
+#maintenanceScreen .maintenance-audio-status { position: absolute; bottom: 85px; left: 24px; right: 24px; font-size: 12px; color: #d5f6e5; }
+@keyframes ns-vinyl-spin { to { transform: rotate(360deg); } }
+@keyframes ns-credit-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 540px) {
+    #maintenanceScreen .maintenance-player { left: 16px; right: 16px; bottom: 22px; gap: 8px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #maintenanceScreen *, #maintenanceScreen *::before { animation: none !important; transition: none !important; }
+    #maintenanceScreen .maintenance-visualizer { display: none; }
+}

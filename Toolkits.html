@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="maintenance-active">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
         const toolkitDestination = new URL('./', window.location.href);
         toolkitDestination.search = window.location.search;
         toolkitDestination.hash = window.location.hash || '#/curses';
-        window.location.replace(toolkitDestination.href);
+        if (!document.documentElement.classList.contains('maintenance-active')) window.location.replace(toolkitDestination.href);
     </script>
 
     <!-- Keep these static tags in sync with index.html for link crawlers. -->
@@ -58,9 +58,25 @@
             }
         } catch (error) { /* storage can be unavailable in private contexts */ }
     </script>
+    <link rel="stylesheet" href="css/maintenance.css?v=20261023-3">
+    <script src="js/maintenance.js?v=20261023-3" defer></script>
 </head>
 
 <body>
+    <!-- Remove the maintenance-active class from <html> on all three pages to reopen. -->
+    <main id="maintenanceScreen" aria-labelledby="maintenanceTitle">
+        <div class="maintenance-background" aria-hidden="true"></div>
+        <div class="ns-dust-layer" aria-hidden="true"><i style="--dust-x:9%;--dust-y:17%;--dust-duration:18s;--dust-delay:-0s;--dust-drift:8px"></i><i style="--dust-x:46%;--dust-y:78%;--dust-duration:19s;--dust-delay:-2s;--dust-drift:9px"></i><i style="--dust-x:83%;--dust-y:39%;--dust-duration:20s;--dust-delay:-4s;--dust-drift:10px"></i><i style="--dust-x:20%;--dust-y:0%;--dust-duration:21s;--dust-delay:-6s;--dust-drift:11px"></i><i style="--dust-x:57%;--dust-y:61%;--dust-duration:22s;--dust-delay:-8s;--dust-drift:12px"></i><i style="--dust-x:94%;--dust-y:22%;--dust-duration:23s;--dust-delay:-10s;--dust-drift:13px"></i><i style="--dust-x:31%;--dust-y:83%;--dust-duration:24s;--dust-delay:-12s;--dust-drift:14px"></i><i style="--dust-x:68%;--dust-y:44%;--dust-duration:25s;--dust-delay:-14s;--dust-drift:15px"></i><i style="--dust-x:5%;--dust-y:5%;--dust-duration:26s;--dust-delay:-16s;--dust-drift:16px"></i><i style="--dust-x:42%;--dust-y:66%;--dust-duration:27s;--dust-delay:-18s;--dust-drift:17px"></i><i style="--dust-x:79%;--dust-y:27%;--dust-duration:28s;--dust-delay:-20s;--dust-drift:18px"></i><i style="--dust-x:16%;--dust-y:88%;--dust-duration:29s;--dust-delay:-22s;--dust-drift:19px"></i><i style="--dust-x:53%;--dust-y:49%;--dust-duration:18s;--dust-delay:-24s;--dust-drift:20px"></i><i style="--dust-x:90%;--dust-y:10%;--dust-duration:19s;--dust-delay:-26s;--dust-drift:21px"></i><i style="--dust-x:27%;--dust-y:71%;--dust-duration:20s;--dust-delay:-28s;--dust-drift:22px"></i><i style="--dust-x:64%;--dust-y:32%;--dust-duration:21s;--dust-delay:-30s;--dust-drift:23px"></i><i style="--dust-x:1%;--dust-y:93%;--dust-duration:22s;--dust-delay:-32s;--dust-drift:24px"></i><i style="--dust-x:38%;--dust-y:54%;--dust-duration:23s;--dust-delay:-34s;--dust-drift:25px"></i></div>
+        <div class="maintenance-gate" hidden role="button" tabindex="0" aria-label="Click anywhere to enter with music"><span>Click to enter</span></div>
+        <canvas class="maintenance-visualizer" aria-hidden="true"></canvas>
+        <div class="maintenance-player" hidden><span class="maintenance-disc" aria-hidden="true"></span><span>Subspace Lucidity (B-SIDE)<br><strong>Graphyre</strong></span></div>
+        <p class="maintenance-audio-status" role="status"></p>
+        <div class="maintenance-content">
+            <div class="maintenance-loader" aria-hidden="true"><svg class="ns-spawn-svg" viewBox="0 0 100 100" fill="none"><path d="M50 6 57 39 90 50 57 57 50 94 43 57 10 50 43 39Z" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="28" stroke="currentColor" stroke-opacity=".3"/></svg></div>
+            <p class="maintenance-label">PATCH 5.1</p>
+            <h1 id="maintenanceTitle">Nullscape Toolkits will remain under maintenance until the new content update arrives and we finish syncing the tools with it. See you soon!</h1>
+        </div>
+    </main>
 
 <div id="bgLayer" class="bg-layer"></div>
 <canvas id="particleCanvas" class="particle-canvas"></canvas>

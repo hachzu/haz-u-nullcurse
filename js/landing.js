@@ -2,7 +2,7 @@
    the original floating buttons and hotkeys remain the tool navigation. */
 (() => {
     'use strict';
-    if (window.NullscapeMoved) return;
+    if (window.NullscapeMoved || document.documentElement.classList.contains('maintenance-active')) return;
     const $ = id => document.getElementById(id);
     const home = $('landingView');
     const toolkit = $('toolkitView');
