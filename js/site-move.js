@@ -2,11 +2,14 @@
 (() => {
     'use strict';
     const oldBase = '/haz-u-nullcurse/';
+    const pathname = location.pathname.replace(/\/{2,}/g, '/');
     if (location.hostname !== 'hachzu.github.io' ||
-        !(location.pathname === oldBase.slice(0, -1) || location.pathname.startsWith(oldBase))) return;
+        !(pathname === oldBase.slice(0, -1) || pathname.startsWith(oldBase))) return;
 
     window.NullscapeMoved = true;
     document.documentElement.classList.add('site-moved');
+    // The retired host always directs visitors to the current site.
+    document.documentElement.classList.remove('maintenance-active');
     const style = document.createElement('style');
     style.textContent = `
         html.site-moved body { margin: 0; background: #090510; color: #eee6f7; }
@@ -44,7 +47,7 @@
             '<footer>this project will stay <a href="https://github.com/hachzu/haz-u-nullcurse" target="_blank" rel="noopener noreferrer">open-sourced</a>.</footer>';
         const link = notice.querySelector('.move-button');
         const updateLink = () => {
-            const path = location.pathname.slice(oldBase.length).replace(/index\.html$/, '');
+            const path = pathname.slice(oldBase.length).replace(/index\.html$/, '');
             const destination = new URL(path === 'Toolkits.html' ? './' : path, 'https://nullkits.pages.dev/');
             destination.search = location.search;
             destination.hash = location.hash;
