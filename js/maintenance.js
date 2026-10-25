@@ -84,7 +84,10 @@
         screen.focus({ preventScroll: true });
         play();
     }
-    screen.addEventListener('click', enter);
+    screen.addEventListener('click', event => {
+        if (event.target.closest('a')) return;
+        enter();
+    });
     gate.addEventListener('keydown', event => {
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); enter(); }
     });
@@ -100,6 +103,9 @@
         screen.classList.remove('music-playing'); stopDrawing();
     });
     document.addEventListener('visibilitychange', startDrawing);
+    window.addEventListener('nullscape-route-change', event => {
+        if (event.detail.route !== 'home') audio.pause();
+    });
     reduced.addEventListener('change', startDrawing);
     window.addEventListener('pagehide', () => { audio.pause(); context?.suspend(); });
 })();

@@ -98,7 +98,7 @@ html.maintenance-active #settingsToggleButton,
 html.maintenance-active #liveViewerBadge { display: none !important; }
 html.maintenance-active #toolkitContent .left-panel { display: none !important; }
 html.maintenance-active #toolkitContent .app { display: block; }
-html.maintenance-active #toolkitContent .right-panel { width: 100%; max-width: none; margin: 0; }
+html.maintenance-active #toolkitContent .right-panel { width: 100%; max-width: none; margin: 0; min-height: 100vh; height: 100dvh; }
 html.maintenance-active #toolkitContent #deathPanel:not(.open),
 html.maintenance-active #toolkitContent #lobbyPanel:not(.open) { display: none !important; }
 html.maintenance-active #toolkitContent .toolkit-panel-back { visibility: visible; }
