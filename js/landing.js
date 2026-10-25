@@ -2,7 +2,9 @@
    the original floating buttons and hotkeys remain the tool navigation. */
 (() => {
     'use strict';
-    if (window.NullscapeMoved || document.documentElement.classList.contains('maintenance-active')) return;
+    if (window.NullscapeMoved) return;
+    const maintenance = document.documentElement.classList.contains('maintenance-active');
+    const maintenanceRoutes = new Set(['deaths', 'lobby']);
     const $ = id => document.getElementById(id);
     const home = $('landingView');
     const toolkit = $('toolkitView');
@@ -42,6 +44,9 @@
     reducedMotion.addEventListener('change', resetParallax);
 
     function showError(message) {
+        if (maintenance) {
+            document.querySelector('.maintenance-tool-status').textContent = message + ' Reload this page to retry.';
+        }
         window.NullscapeIntro?.finish();
         $('errorMessage').textContent = message;
         $('loadError').hidden = false;
@@ -65,7 +70,7 @@
         corePromise = (async () => {
             const markup = await fetchResource('Toolkits.html');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
-            const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
+            const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"]):not([src*="maintenance.js"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
             if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
             // Preload silently; optional images never hold up the Continue button.
             fetchResource('assets/preload.json', 'json').then(assets => {
@@ -107,8 +112,12 @@
             styles.filter(node => !node.getAttribute('href').startsWith('css/')).forEach(node => document.head.append(node.cloneNode()));
             const body = toolDocument.body.cloneNode(true);
             body.querySelectorAll('script').forEach(node => node.remove());
+            body.querySelector('#maintenanceScreen')?.remove();
             $('toolkitContent').replaceChildren(...body.childNodes);
-            for (const source of toolDocument.querySelectorAll('script[src]:not([type="module"])')) {
+            if (maintenance) {
+                document.querySelectorAll('#toolkitContent .left-panel > :not(.site-header), #toolkitContent .right-panel > :not(#deathPanel):not(#lobbyPanel), #upgradeToggleButton, #altarsToggleButton').forEach(node => { node.inert = true; });
+            }
+            for (const source of toolDocument.querySelectorAll('script[src]:not([type="module"]):not([src*="maintenance.js"])')) {
                 const script = document.createElement('script');
                 script.src = source.getAttribute('src');
                 await loadElement(script);
@@ -116,7 +125,7 @@
             const presence = document.createElement('script');
             presence.type = 'module';
             presence.src = 'js/presence.js?v=20261022-shared-config1';
-            document.head.append(presence);
+            if (!maintenance) document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);
             Object.values(routes).forEach(route => {
@@ -129,7 +138,7 @@
     }
     function readRoute() {
         const route = location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
-        if (route && !routes[route]) {
+        if (route && (!routes[route] || (maintenance && !maintenanceRoutes.has(route)))) {
             history.replaceState(null, '', `${location.pathname}${location.search}#/`);
             return '';
         }
@@ -138,13 +147,24 @@
     function syncPanelRoute() {
         if (toolkit.hidden || !initialized) return;
         const active = Object.entries(routes).find(([, route]) => route.panel && $(route.panel)?.classList.contains('open'));
+        if (maintenance && !active) {
+            if (readRoute()) { history.replaceState(null, '', '#/'); applyRoute(); }
+            return;
+        }
         const route = active ? active[0] : 'curses';
+        if (maintenance && !maintenanceRoutes.has(route)) { location.hash = '#/'; return; }
         // Update the shareable URL without replaying navigation, resetting
         // scroll, or adding a browser-history entry for every panel toggle.
         if (readRoute() !== route) history.replaceState(null, '', `#/${route}`);
         document.title = `${routes[route].title} · Nullscape Toolkits`;
     }
     function showToolRoute(route) {
+        if (maintenance && !maintenanceRoutes.has(route)) return;
+        if (maintenance) {
+            document.documentElement.classList.add('maintenance-tool-open');
+            document.getElementById('maintenanceScreen').inert = true;
+            document.querySelector('.maintenance-tool-status').textContent = '';
+        }
         window.NullscapeIntro?.finish();
         const entering = toolkit.hidden;
         home.hidden = true;
@@ -167,6 +187,8 @@
         const revision = ++routeRevision;
         const route = readRoute();
         if (route) {
+            if (!corePromise) prepareAssets();
+            if (maintenance) document.querySelector('.maintenance-tool-status').textContent = 'Loading ' + routes[route].title + '…';
             // Once initialized, tool links switch synchronously with no overlay.
             if (initialized) { showToolRoute(route); return; }
             $('assetStatus').textContent = 'Loading toolkit';
@@ -179,6 +201,17 @@
                 showToolRoute(route);
             } catch (error) { console.warn('Toolkit startup:', error); }
         } else {
+            if (maintenance) {
+                document.documentElement.classList.remove('maintenance-tool-open');
+                document.getElementById('maintenanceScreen').inert = false;
+                toolkit.hidden = true;
+                home.hidden = true;
+                document.body.classList.add('at-home');
+                document.title = 'Maintenance · Nullscape Toolkits';
+                document.querySelector('.maintenance-tools a')?.focus({ preventScroll: true });
+                window.dispatchEvent(new CustomEvent('nullscape-route-change', { detail: { route: 'home' } }));
+                return;
+            }
             const returning = home.hidden;
             toolkit.hidden = true;
             home.hidden = false;
@@ -224,6 +257,6 @@
         }
     }));
 
-    prepareAssets();
-    if (readRoute()) applyRoute();
+    if (!maintenance) prepareAssets();
+    if (readRoute() || maintenance) applyRoute();
 })();

@@ -852,6 +852,7 @@ if (purificationAltarPickerToggle && purificationAltarPickerMenu) {
 
 
 function setAltarsPanelOpen(isOpen) {
+    if (isOpen && document.documentElement.classList.contains('maintenance-active')) return;
 
     if (!altarsPanel || !altarsToggleButton) {
 

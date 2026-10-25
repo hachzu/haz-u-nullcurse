@@ -75,6 +75,33 @@ html.maintenance-active #maintenanceScreen {
 }
 #maintenanceScreen.music-playing .maintenance-disc { animation-play-state: running; }
 #maintenanceScreen .maintenance-audio-status { position: absolute; bottom: 85px; left: 24px; right: 24px; font-size: 12px; color: #d5f6e5; }
+.maintenance-tools {
+    position: absolute; bottom: 96px; left: 24px; right: 24px;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; z-index: 4;
+}
+.maintenance-tools a {
+    display: inline-block; padding: 12px 18px; border: 1px solid #93d9bd66;
+    color: #d5f6e5; background: #092e25db; text-decoration: none; font-size: 13px;
+}
+.maintenance-tools a:hover { background: #174b3d; }
+.maintenance-tools a:focus-visible { outline: 2px solid #d5f6e5; outline-offset: 4px; }
+.maintenance-tool-status { flex-basis: 100%; margin: 0; font-size: 12px; }
+#maintenanceScreen.has-entered .maintenance-content { padding-bottom: 200px; }
+/* Only the two released tools are exposed in the maintenance shell. */
+html.maintenance-active.maintenance-tool-open body > #toolkitView { display: block !important; }
+html.maintenance-active.maintenance-tool-open #maintenanceScreen { display: none !important; }
+html.maintenance-active #toolkitContent .left-panel > :not(.site-header),
+html.maintenance-active #toolkitContent .right-panel > :not(#deathPanel):not(#lobbyPanel),
+html.maintenance-active #upgradeToggleButton,
+html.maintenance-active #altarsToggleButton,
+html.maintenance-active #settingsToggleButton,
+html.maintenance-active #liveViewerBadge { display: none !important; }
+html.maintenance-active #toolkitContent .left-panel { display: none !important; }
+html.maintenance-active #toolkitContent .app { display: block; }
+html.maintenance-active #toolkitContent .right-panel { width: 100%; max-width: none; margin: 0; }
+html.maintenance-active #toolkitContent #deathPanel:not(.open),
+html.maintenance-active #toolkitContent #lobbyPanel:not(.open) { display: none !important; }
+html.maintenance-active #toolkitContent .toolkit-panel-back { visibility: visible; }
 @keyframes ns-vinyl-spin { to { transform: rotate(360deg); } }
 @keyframes ns-credit-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 540px) {
