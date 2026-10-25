@@ -3003,3 +3003,17 @@
     color: #171717;
     box-shadow: 0 0 18px var(--altar-glow);
 }
+/* Keep incomplete upgrades readable while their prices are pending. */
+.upgrade-row--pending { cursor: default; border-color: #b89bd055; }
+.upgrade-row--pending .upgrade-row-price--pending {
+    color: #cfd2db;
+    background: rgba(120, 120, 130, 0.35);
+    border-color: rgba(180, 180, 190, 0.4);
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: normal;
+}
+.upgrade-row-info { gap: 5px; }
+.upgrade-row-name { white-space: normal; overflow-wrap: anywhere; }
+
+.upgrade-row--pending .upgrade-row-info { grid-column: 3 / -1; }

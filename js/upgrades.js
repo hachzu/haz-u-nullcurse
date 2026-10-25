@@ -30,7 +30,7 @@ const CASUAL_OVERRIDES = {
 
     "Grace Wings": { hidden: true },
     "Defuse Kit": { hidden: true },
-    "Radar Module : Tripmines": { hidden: true },
+    "Radar Module: Tripmines": { hidden: true },
 
     "Shield": { casualPrice: 2000, casualSoloPrice: 1000 },
     "Ice Skates": { casualPrice: 400, casualSoloPrice: 300 },
@@ -62,106 +62,565 @@ const EXTREME_OVERRIDES = {
 };
 
 
+// Reviewed against the wiki and its public GameData table on 2026-10-25.
+// Unconfirmed sentinel prices are deliberately excluded from calculations.
+const UPGRADE_NAME_ALIASES = {
+    "Last Robloxian Standing": "Final Stand",
+    "Last Man Standing": "Final Stand",
+    "Tria Orb": "Tria Orbs",
+    "Large Grapple Points": "Larger Grapple Points",
+    "Radar Module : Enemies": "Radar Module: Enemies",
+    "Radar Module : Altars": "Radar Module: Altars",
+    "Radar Module : Tripmines": "Radar Module: Tripmines",
+    "Radar Module : Instruments": "Radar Module: Instruments"
+};
+
 const upgradesList = [
-
-    { name: "Adrenaline", price: 50, soloPrice: 50, level: 3, category: "movement" },
-    { name: "Business License", prices: [75, 187.5], level: 3, maxStack: 2, category: "eco" },
-    { name: "Defuse Kit", price: 30, soloPrice: 30, level: 5, maxStack: 3, category: "survival" },
-    { name: "Paycheck", price: 55, soloPrice: 55, level: 3, maxStack: 5, category: "eco" },
-    { name: "Swiftness Ring", price: 80, soloPrice: 80, level: 3, maxStack: 3, category: "movement" },
-
-    { name: "Radar", price: 175, soloPrice: 175, level: 5, category: "environment" },
-    { name: "Better Jump Pads", price: 50, soloPrice: 50, level: 5, category: "environment" },
-    { name: "Double Jump", price: 150, soloPrice: 150, level: 5, category: "movement" },
-    { name: "Grapple Points", price: 100, soloPrice: 100, level: 5, category: "environment" },
-    { name: "Tria Orb", price: 100, soloPrice: 100, level: 5, category: "environment" },
-    { name: "Medal", price: 100, soloPrice: 100, level: 5, category: "eco" },
-
-
-    { name: "Advanced Gravity Coil", price: 600, soloPrice: 600, level: 8, category: "movement" },
-    { name: "Ice Skates", price: 400, soloPrice: 300, level: 8, category: "movement" },
-    { name: "Fanny Pack", price: 300, soloPrice: 300, level: 8, category: "eco" },
-    { name: "Grace Wings", price: 300, soloPrice: 200, level: 8, category: "movement" },
-    { name: "Helmet", price: 400, soloPrice: 400, level: 8, category: "class" },
-
     {
-        name: "Pocket Bell", price: 300, soloPrice: 300, level: 8, category: "movement",
-        requires: [
-            { type: "enemy", name: "Bell" },
-            { type: "upgrade", name: "Double Jump", stack: 1 }
-        ]
+        "name": "Better Jump Pads",
+        "price": 50,
+        "soloPrice": 50,
+        "level": 5,
+        "category": "environment",
+        "maxStack": 1,
     },
-
-    { name: "Last Robloxian Standing", price: 300, soloPrice: 300, level: 5, category: "survival" },
-
     {
-        name: "Radar Module : Altars", price: 300, soloPrice: 300, level: 8, category: "environment",
-        requires: { type: "upgrade", name: "Radar", stack: 1 }
+        "name": "Paycheck",
+        "price": 55,
+        "soloPrice": 55,
+        "level": 3,
+        "maxStack": 5,
+        "category": "eco",
     },
-
     {
-        name: "Radar Module : Tripmines", price: 400, soloPrice: 400, level: 8, category: "environment",
-        requires: { type: "upgrade", name: "Radar", stack: 1 }
+        "name": "Business License",
+        "prices": [
+            75,
+            187.5
+        ],
+        "level": 3,
+        "maxStack": 2,
+        "category": "eco",
     },
-
     {
-        name: "Radar Module : Enemies", price: 200, soloPrice: 200, level: 8, category: "environment",
-        requires: { type: "upgrade", name: "Radar", stack: 1 }
+        "name": "Swiftness Ring",
+        "price": 80,
+        "soloPrice": 80,
+        "level": 3,
+        "maxStack": 3,
+        "category": "movement",
     },
-
-    
-
-    { name: "More Altars", price: 600, soloPrice: 600, level: 10, category: "environment" },
-
-    { name: "Ninja Belt", price: 700, soloPrice: 500, level: 13, category: "class" },
-
     {
-        name: "Subspacial Barrier", prices: [1000, 3000], soloPrices: [500, 1500], level: 13,
-        casualLevel: 15,
-        maxStack: 2, category: "survival",
-        requires: { type: "upgrade", name: "Defuse Kit", stack: 3 },
-        casualRequires: null
+        "name": "Grapple Points",
+        "price": 100,
+        "soloPrice": 100,
+        "level": 5,
+        "category": "environment",
+        "maxStack": 1,
     },
-
     {
-        name: "Large Grapple Points", price: 500, soloPrice: 500, level: 13, category: "environment",
-        requires: { type: "upgrade", name: "Grapple Points", stack: 1 }
+        "name": "Star Marts",
+        "category": "environment",
+        "level": 8,
+        "maxStack": 1,
+        "price": 300,
+        "requires": {
+            "type": "enemy",
+            "name": "Mart",
+            "count": 1
+        },
+        "summary": "Star Marts grant temporary speed, collection range and debuff immunity.",
     },
-
-    { name: "Gift Magnet", prices: [1500, 2100, 2700], level: 15, maxStack: 3, category: "eco" },
-    { name: "Matrix Tetrahedron", price: 2500, soloPrice: 2500, level: 15, category: "movement" },
-    { name: "Shield", price: 4000, soloPrice: 1000, level: 15, category: "survival" },
-    { name: "Sport Shoes", price: 1350, soloPrice: 1350, level: 15, category: "movement" },
-
     {
-        name: "Shark Tail", price: 1200, soloPrice: 1200, level: 15, category: "class",
-        requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
+        "name": "Altar Boons",
+        "category": "eco",
+        "level": 8,
+        "maxStack": 2,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Paycheck",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Altar use increases Paycheck rewards.",
     },
-
     {
-        name: "Radar Module : Instruments", price: 1000, soloPrice: 1000, level: 15, category: "environment",
-        requires: { type: "enemy", name: "Cadence" }
+        "name": "Health Insurance",
+        "category": "eco",
+        "level": 8,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Paycheck",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Makes Paycheck trigger regardless of survival.",
     },
-
     {
-        name: "Panic Necklace", price: 3000, soloPrice: 3000, level: 18, category: "survival",
-        requires: { type: "upgrade", name: "Shield", stack: 1 }
+        "name": "Medal",
+        "price": 100,
+        "soloPrice": 100,
+        "level": 5,
+        "category": "eco",
+        "maxStack": 1,
     },
-
     {
-        name: "Drowned Ægis", price: 6000, soloPrice: 6000, level: 20, category: "survival",
-        requires: { type: "upgrade", name: "More Altars", stack: 1 }
+        "name": "Tria Orbs",
+        "price": 100,
+        "soloPrice": 100,
+        "level": 5,
+        "category": "environment",
+        "maxStack": 1,
     },
-
     {
-        name: "Miniature Hourglass", price: 3000, soloPrice: 3000, level: 20, category: "class",
-        requires: { type: "upgrade", name: "Ninja Belt", stack: 1 }
+        "name": "Double Jump",
+        "price": 150,
+        "soloPrice": 150,
+        "level": 5,
+        "category": "movement",
+        "maxStack": 1,
     },
-
-    { name: "Gift Idol", prices: [4000, 8000, 12000, 16000, 20000], level: 20, maxStack: 5, category: "eco" }
-
+    {
+        "name": "Radar",
+        "price": 175,
+        "soloPrice": 175,
+        "level": 5,
+        "category": "environment",
+        "maxStack": 1,
+    },
+    {
+        "name": "Radar Module: Enemies",
+        "price": 200,
+        "soloPrice": 200,
+        "level": 5,
+        "category": "environment",
+        "requires": {
+            "type": "upgrade",
+            "name": "Radar",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Radar Module: Altars",
+        "price": 300,
+        "soloPrice": 300,
+        "level": 5,
+        "category": "environment",
+        "requires": {
+            "type": "upgrade",
+            "name": "Radar",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Spring Shoes",
+        "category": "movement",
+        "level": 8,
+        "maxStack": 1,
+        "price": 100,
+        "summary": "Increases jump height when still or quick-turning.",
+    },
+    {
+        "name": "Fanny Pack",
+        "price": 300,
+        "soloPrice": 300,
+        "level": 8,
+        "category": "eco",
+        "maxStack": 1,
+    },
+    {
+        "name": "Grace Wings",
+        "price": 300,
+        "soloPrice": 200,
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Pocket Bell",
+        "price": 300,
+        "soloPrice": 300,
+        "level": 5,
+        "category": "movement",
+        "requires": [
+            {
+                "type": "enemy",
+                "name": "Bell"
+            },
+            {
+                "type": "upgrade",
+                "name": "Double Jump",
+                "stack": 1
+            }
+        ],
+        "maxStack": 1,
+    },
+    {
+        "name": "Ice Skates",
+        "price": 400,
+        "soloPrice": 300,
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Helmet",
+        "price": 400,
+        "soloPrice": 400,
+        "level": 8,
+        "category": "class",
+        "maxStack": 1,
+    },
+    {
+        "name": "Larger Grapple Points",
+        "price": 500,
+        "soloPrice": 500,
+        "level": 13,
+        "category": "environment",
+        "requires": {
+            "type": "upgrade",
+            "name": "Grapple Points",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Advanced Gravity Coil",
+        "price": 600,
+        "soloPrice": 600,
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Birthday Pony",
+        "category": "eco",
+        "level": 10,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "enemy",
+            "name": "Springer",
+            "count": 1
+        },
+        "pricePending": true,
+        "summary": "Springer collects gifts where it lands.",
+    },
+    {
+        "name": "More Altars",
+        "price": 600,
+        "soloPrice": 600,
+        "level": 10,
+        "category": "environment",
+        "maxStack": 1,
+    },
+    {
+        "name": "Subspacial Barrier",
+        "prices": [
+            1000,
+            3000
+        ],
+        "soloPrices": [
+            500,
+            1500
+        ],
+        "level": 10,
+        "casualLevel": 15,
+        "maxStack": 2,
+        "category": "survival",
+        "requires": {
+            "type": "upgrade",
+            "name": "Defuse Kit",
+            "stack": 3
+        },
+        "casualRequires": null,
+    },
+    {
+        "name": "Ninja Belt",
+        "price": 700,
+        "soloPrice": 500,
+        "level": 13,
+        "category": "class",
+        "maxStack": 1,
+    },
+    {
+        "name": "Soul Tracers",
+        "category": "eco",
+        "level": 15,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Helmet",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Deaths and collected soul orbs increase gift yield.",
+    },
+    {
+        "name": "Propeller Hat",
+        "category": "movement",
+        "level": 15,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Helmet",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Allows double jumps while bonked.",
+    },
+    {
+        "name": "Radar Module: Instruments",
+        "price": 1000,
+        "soloPrice": 1000,
+        "level": 15,
+        "category": "environment",
+        "requires": [
+            {
+                "type": "upgrade",
+                "name": "Radar",
+                "stack": 1
+            },
+            {
+                "type": "enemy",
+                "name": "Cadence",
+                "count": 1
+            }
+        ],
+        "maxStack": 1,
+    },
+    {
+        "name": "Shark Tail",
+        "price": 1200,
+        "soloPrice": 1200,
+        "level": 15,
+        "category": "class",
+        "requires": {
+            "type": "upgrade",
+            "name": "Ninja Belt",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Sport Shoes",
+        "price": 1350,
+        "soloPrice": 1350,
+        "level": 15,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Gift Magnet",
+        "prices": [
+            1500,
+            2100,
+            2700
+        ],
+        "level": 15,
+        "maxStack": 3,
+        "category": "eco",
+    },
+    {
+        "name": "Debuff Magnet",
+        "category": "eco",
+        "level": 15,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Gift Magnet",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Debuffs increase gift pickup range.",
+    },
+    {
+        "name": "Aggro Magnet",
+        "category": "eco",
+        "level": 15,
+        "maxStack": 1,
+        "price": null,
+        "requires": {
+            "type": "upgrade",
+            "name": "Gift Magnet",
+            "stack": 1
+        },
+        "pricePending": true,
+        "summary": "Targeting enemies increase gift pickup range.",
+    },
+    {
+        "name": "Matrix Tetrahedron",
+        "price": 2500,
+        "soloPrice": 2500,
+        "level": 15,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Shadow Cloak",
+        "category": "survival",
+        "level": 20,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Allows phasing through certain obstacles, players and airborne Springers.",
+    },
+    {
+        "name": "Miniature Hourglass",
+        "price": 3000,
+        "soloPrice": 3000,
+        "level": 20,
+        "category": "class",
+        "requires": {
+            "type": "upgrade",
+            "name": "Ninja Belt",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Fleeting Fate",
+        "category": "movement",
+        "level": 20,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Grants temporary movement and collection bonuses during collapse.",
+    },
+    {
+        "name": "Panic Necklace",
+        "price": 3000,
+        "soloPrice": 3000,
+        "level": 18,
+        "category": "survival",
+        "requires": {
+            "type": "upgrade",
+            "name": "Shield",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Gift Idol",
+        "prices": [
+            4000,
+            8000,
+            12000,
+            16000,
+            20000
+        ],
+        "level": 20,
+        "maxStack": 5,
+        "category": "eco",
+        "requires": {
+            "type": "upgrade",
+            "name": "Gift Magnet",
+            "stack": 1
+        },
+    },
+    {
+        "name": "Shield",
+        "price": 4000,
+        "soloPrice": 1000,
+        "level": 15,
+        "category": "survival",
+        "maxStack": 1,
+    },
+    {
+        "name": "Drowned Ægis",
+        "price": 6000,
+        "soloPrice": 6000,
+        "level": 20,
+        "category": "survival",
+        "requires": {
+            "type": "upgrade",
+            "name": "More Altars",
+            "stack": 1
+        },
+        "maxStack": 1,
+    },
+    {
+        "name": "Jet Boosters",
+        "category": "movement",
+        "level": 25,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Double jumps redirect momentum.",
+    },
+    {
+        "name": "Magnified Levels",
+        "category": "environment",
+        "level": 30,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Reduces level size.",
+    },
+    {
+        "name": "Transient Pennon",
+        "category": "class",
+        "level": 30,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Extends flight time.",
+    },
+    {
+        "name": "Quixotic Wing",
+        "category": "class",
+        "level": 30,
+        "maxStack": 1,
+        "price": null,
+        "pricePending": true,
+        "summary": "Extends flight time.",
+    },
+    {
+        "name": "Defuse Kit",
+        "price": 30,
+        "soloPrice": 30,
+        "level": 5,
+        "maxStack": 3,
+        "category": "survival",
+    },
+    {
+        "name": "Adrenaline",
+        "price": 50,
+        "soloPrice": 50,
+        "level": 3,
+        "category": "movement",
+        "maxStack": 1,
+    },
+    {
+        "name": "Final Stand",
+        "price": 300,
+        "soloPrice": 300,
+        "level": 8,
+        "category": "survival",
+        "maxStack": 1,
+    },
+    {
+        "name": "Radar Module: Tripmines",
+        "price": 400,
+        "soloPrice": 400,
+        "level": 8,
+        "category": "environment",
+        "requires": {
+            "type": "upgrade",
+            "name": "Radar",
+            "stack": 1
+        },
+        "maxStack": 1,
+    }
 ];
-
 
 const upgradeCategories = [
     
@@ -261,6 +720,18 @@ function saveUpgradeState() {
 }
 
 
+function migrateUpgradeEntries(entries) {
+    const result = new Map();
+    for (const [oldName, count] of Array.isArray(entries) ? entries : []) {
+        const name = UPGRADE_NAME_ALIASES[oldName] || oldName;
+        const item = upgradesList.find(candidate => candidate.name === name);
+        if (!item || item.pricePending || !Number.isFinite(Number(count))) continue;
+        const stack = Math.max(0, Math.min(item.maxStack || 1, Math.floor(Number(count))));
+        result.set(name, Math.max(result.get(name) || 0, stack));
+    }
+    return result;
+}
+
 function loadUpgradeState() {
 
     try {
@@ -283,8 +754,8 @@ function loadUpgradeState() {
         upgradeState.progressiveAutoSkip = Boolean(saved.progressiveAutoSkip);
         upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.freeformSort = Boolean(saved.freeformSort);
-        upgradeState.pending = new Map(saved.pending || []);
-        upgradeState.owned = new Map(saved.owned || []);
+        upgradeState.pending = migrateUpgradeEntries(saved.pending);
+        upgradeState.owned = migrateUpgradeEntries(saved.owned);
 
     } catch (error) {
 
@@ -371,7 +842,7 @@ function isUpgradeContextHidden(item) {
 
     }
 
-    if (item.name === "Last Robloxian Standing") {
+    if (item.name === "Final Stand") {
 
         const eligible = isPartyLikeMode();
 
@@ -565,6 +1036,7 @@ function isUpgradeLockedByLevel(item) {
  * than always active.
  */
 function isUpgradeHiddenByLevelFilter(item) {
+    if (item.pricePending) return false;
 
     return upgradeState.progressive
         && upgradeState.progressiveHideLocked
@@ -617,8 +1089,9 @@ function isSingleUpgradeRequirementMet(requirement) {
     }
 
     if (requirement.type === "enemy") {
-
-        return typeof hasEnemy === "function" && hasEnemy(requirement.name);
+        return typeof getEnemyCount === "function"
+            ? getEnemyCount(requirement.name) >= (requirement.count || 1)
+            : typeof hasEnemy === "function" && hasEnemy(requirement.name);
 
     }
 
@@ -670,6 +1143,7 @@ function getPrevShopLevel(currentLevel) {
 
 
 function isUpgradeUnavailable(item) {
+    if (item.pricePending) return true;
 
     // Progressive mode off - nothing is locked, so
     // every upgrade is open with no level or dependency required.
@@ -781,6 +1255,7 @@ function getIncrementalCost(item, fromStack, toStack) {
 
 
 function getUpgradePendingCost(item) {
+    if (item.pricePending) return 0;
 
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
@@ -855,6 +1330,7 @@ function hasVariablePricing(item) {
  *   rest of the shop - with it off this is a free planning sandbox.
  */
 function setStackTarget(item, targetStack) {
+    if (item.pricePending) return;
 
     if (isUpgradeContextHidden(item)) {
 
@@ -1014,6 +1490,7 @@ function cycleUpgradeSelection(item) {
    directly, does not spend Golden Gifts, and clears any queued target
    for that upgrade so the owned state is immediately authoritative. */
 function adjustOwnedStackWithShortcut(item) {
+    if (item.pricePending) return;
 
     const owned = getOwnedStack(item.name);
     const maxStack = item.maxStack || 1;
@@ -1065,7 +1542,7 @@ function resetUpgradeSelections() {
 function ownAllUpgrades() {
 
     upgradesList.forEach(item => {
-
+        if (item.pricePending) return;
         upgradeState.owned.set(item.name, item.maxStack || 1);
 
     });
@@ -1307,7 +1784,7 @@ function createUpgradeIcon(name) {
         const img = document.createElement("img");
 
         img.className = "upgrade-icon-image";
-        img.src = path;
+        img.src = path + '?v=20261026-shop2';
         img.alt = name;
 
         icon.appendChild(img);
@@ -1424,7 +1901,7 @@ function createRequirementIcon(requirement) {
         const img = document.createElement("img");
 
         img.className = "upgrade-icon-image";
-        img.src = path;
+        img.src = path + (assetType === 'upgrades' ? '?v=20261026-shop2' : '');
         img.alt = requirement.name;
 
         icon.appendChild(img);
@@ -1567,7 +2044,35 @@ function createStackStepper(item, locked, includeUnown) {
 }
 
 
+function createPendingUpgradeCard(item) {
+    const row = document.createElement('div');
+    row.className = 'upgrade-row upgrade-row--pending';
+    row.tabIndex = 0;
+    row.title = [item.name, item.summary, 'Price unconfirmed.',
+        item.requires ? 'Requires: ' + describeRequirement(item.requires) : 'Other prerequisites are not yet documented.'].filter(Boolean).join('\n');
+    row.setAttribute('aria-label', row.title);
+    const requirement = createRequirementChip(item);
+    if (requirement) row.appendChild(requirement);
+    const level = document.createElement('span');
+    level.className = 'upgrade-row-level';
+    level.textContent = `Lv${item.level}`;
+    row.append(level, createUpgradeIcon(item.name));
+    const info = document.createElement('div');
+    info.className = 'upgrade-row-info';
+    const name = document.createElement('span');
+    name.className = 'upgrade-row-name';
+    name.textContent = item.name;
+    const price = document.createElement('span');
+    price.className = 'upgrade-row-price upgrade-row-price--pending';
+    price.textContent = 'PRICE UNCONFIRMED';
+    info.append(name);
+    info.append(price);
+    row.append(info);
+    return row;
+}
+
 function createUpgradeCard(item) {
+    if (item.pricePending) return createPendingUpgradeCard(item);
 
     if (isUpgradeContextHidden(item)) {
 
@@ -1649,7 +2154,8 @@ function createUpgradeCard(item) {
 
     }
 
-    row.title = titleParts.join(" \u2022 ");
+    if (item.summary) titleParts.push(item.summary);
+    row.title = titleParts.join("\n");
     row.setAttribute("aria-label", titleParts.join(", "));
 
     if (locked) {
@@ -1960,19 +2466,16 @@ function buildFreeformUpgradeGrid(rows, emptyText) {
 }
 
 
+function compareUpgradesByLevel(a, b) {
+    return getEffectiveUpgradeLevel(a) - getEffectiveUpgradeLevel(b)
+        || a.name.localeCompare(b.name);
+}
+
 function sortUpgradeEntriesByLevel(entries) {
 
     return entries.slice().sort((a, b) => {
 
-        const levelDiff = (a.item.level || 0) - (b.item.level || 0);
-
-        if (levelDiff !== 0) {
-
-            return levelDiff;
-
-        }
-
-        return a.item.name.localeCompare(b.item.name);
+        return compareUpgradesByLevel(a.item, b.item);
 
     });
 
@@ -2027,7 +2530,8 @@ function renderUpgradeGrid() {
 
     upgradeCategories.forEach(category => {
 
-        const items = upgradesList.filter(item => item.category === category.key);
+        const items = upgradesList.filter(item => item.category === category.key)
+            .sort(compareUpgradesByLevel);
         const activeRows = [];
         const ownedRows = [];
 

@@ -1,6 +1,6 @@
 # Patch 5.1 maintenance
 
-Maintenance has been removed from index.html, Toolkits.html and contributors/index.html. The normal landing, tools and contributors page are enabled. The retired GitHub address retains its moved notice. Maintenance CSS, script, music and artwork are retained for possible future reuse; the pages no longer load the maintenance components.
+Maintenance is active on all public pages. Two bottom links open Death Tracker (#/deaths) and Lobby Name Maker (#/lobby). The router rejects other tool routes, hides unavailable navigation, and blocks upgrade/altar panel opening. Closing an allowed panel returns to maintenance. The retired GitHub address retains its moved notice. The private local preview still opens the full toolkit. These are browser UI restrictions, not server-side authentication or protection for public source files.
 
 Artwork: assets/branding/maintenance-5-1.png (1672 × 941), edited with the built-in image generation tool. The original attachment is preserved. Fading is applied in css/maintenance.css.
 
