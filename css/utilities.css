@@ -1316,3 +1316,16 @@ html.low-detail-mode:has(body:not(.at-home)) .enemy-button:hover {
     border-radius: 2px !important;
 }
 
+
+/* Equal header badges with Settings anchored to the sidebar's right edge. */
+.site-header-controls { gap: 10px; }
+.site-header-controls .live-viewer-badge,
+.site-header-controls .feedback-button {
+    box-sizing: border-box;
+    flex: 0 0 100px;
+    width: 100px;
+    height: 30px;
+    padding: 0 8px;
+    justify-content: center;
+}
+.site-header-controls #settingsToggleButton { margin-left: auto; }
