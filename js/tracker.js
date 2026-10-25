@@ -407,6 +407,12 @@ const enemies = [
     { name: "Voidbreaker", level: 15 },
 
     {
+        name: "Voidbound ICBM",
+        level: 15,
+        requiresEnemies: ["ICBM"]
+    },
+
+    {
         name: "Voidbound Guardian",
         level: 20,
         requiresEnemies: ["Guardian"]
@@ -720,6 +726,7 @@ const ENEMY_TRACKER_CAPS = Object.freeze({
     "Telefragger": { cap: 4, fixed: true, extremeCap: 6 },
     "Kolona": { cap: 2, fixed: true },
     "Voidbound Baby": { cap: 2 },
+    "Voidbound ICBM": { cap: 1, fixed: true },
     "Cadence": { cap: 1, fixed: true },
     "Sigil": { cap: 2, fixed: true },
     "Voidbreaker": { cap: 4, fixed: true, extremeCap: 6 },
@@ -2488,6 +2495,9 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
     card.appendChild(createCurseNameLabel(curse.name));
 
+    const dependencies = document.createElement("div");
+    dependencies.className = "card-dependencies";
+
     const dependentEnemyRaw = curse.enemy || (curse.requiresEnemies && curse.requiresEnemies[0]);
     const dependentEnemy = typeof dependentEnemyRaw === "string" ? dependentEnemyRaw : (dependentEnemyRaw && dependentEnemyRaw.name);
 
@@ -2497,7 +2507,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
     if (dependentEnemy) {
 
-        card.appendChild(createCurseEnemyBadge(dependentEnemy, dependentEnemyCount));
+        dependencies.appendChild(createCurseEnemyBadge(dependentEnemy, dependentEnemyCount));
 
     }
 
@@ -2525,7 +2535,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
         }
 
-        card.appendChild(createCurseRequirementBadge(
+        dependencies.appendChild(createCurseRequirementBadge(
             requirement.name,
             requirement.title,
             position
@@ -2582,6 +2592,11 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
         }
 
+    }
+
+    if (dependencies.childElementCount) {
+        card.classList.add('curse-card--dependencies');
+        card.appendChild(dependencies);
     }
 
     attachClickAction(card, () => {
@@ -3004,7 +3019,9 @@ function render() {
         });
 
     tweenNumberText(document.getElementById("curseCount"), getDisplayedCurseNames().length);
-    tweenNumberText(document.getElementById("enemyCount"), runState.activeEnemies.size);
+    const activeEnemyStacks = Array.from(runState.activeEnemies.values())
+        .reduce((total, count) => total + count, 0);
+    tweenNumberText(document.getElementById("enemyCount"), activeEnemyStacks);
     renderActiveCurses();
 
         const medalCurseContainerEl = document.getElementById("medalCurseContainer");
@@ -3150,6 +3167,19 @@ playerCountInputEl.addEventListener("change", () => {
 
 });
 
+
+document.querySelectorAll('[data-increment-input]').forEach(button => {
+    button.addEventListener('click', () => {
+        const input = document.getElementById(button.dataset.incrementInput);
+        const minimum = Number(input.min) || 1;
+        const maximum = input.max ? Number(input.max) : Infinity;
+        const current = Number.isFinite(input.valueAsNumber)
+            ? Math.trunc(input.valueAsNumber) : minimum;
+        input.value = Math.max(minimum, Math.min(maximum, current + Number(button.dataset.step)));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+});
 
 const activeCurseSearchInput = document.getElementById("activeCurseSearch");
 const activeCurseSearchClear = document.getElementById("activeCurseSearchClear");

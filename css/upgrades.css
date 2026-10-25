@@ -3004,7 +3004,12 @@
     box-shadow: 0 0 18px var(--altar-glow);
 }
 /* Keep incomplete upgrades readable while their prices are pending. */
-.upgrade-row--pending { cursor: default; border-color: #b89bd055; }
+.upgrade-row--pending {
+    cursor: default;
+    border-color: #b89bd055;
+    opacity: 0.4;
+    filter: grayscale(0.6);
+}
 .upgrade-row--pending .upgrade-row-price--pending {
     color: #cfd2db;
     background: rgba(120, 120, 130, 0.35);

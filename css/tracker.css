@@ -4510,3 +4510,129 @@ body {
  * (collapsed-by-default) rule for the same class.
  */
 
+
+/* Compact increment controls share the existing number field. */
+.number-increment-control { position: relative; }
+.number-increment-control input {
+    padding-right: 76px !important;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+.number-increment-control input::-webkit-inner-spin-button,
+.number-increment-control input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.number-increment-button {
+    position: absolute;
+    right: 37px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--lp-text, #9a7cc9);
+    cursor: pointer;
+}
+.number-increment-button:hover { background: rgba(143, 217, 255, 0.12); }
+.number-increment-button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+.number-increment-button--down { right: 5px; }
+
+.game-settings-disclosure { margin-bottom: 28px; }
+.game-settings-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    color: var(--lp-text, #9a7cc9);
+    background: transparent;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    list-style: none;
+}
+.game-settings-bar::-webkit-details-marker { display: none; }
+.game-settings-bar:hover { background: rgba(143, 217, 255, 0.04); }
+.game-settings-bar:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.game-settings-disclosure > .control-section:first-of-type { padding-top: 18px; }
+.game-settings-bar svg { transition: transform 220ms ease; }
+.game-settings-disclosure[open] > .game-settings-bar svg { transform: rotate(180deg); }
+.game-settings-disclosure > .control-section:last-child { margin-bottom: 0; }
+
+/* Native disclosure animation needs no timers or per-frame scripts. */
+@supports (interpolate-size: allow-keywords) and selector(details::details-content) {
+    .game-settings-disclosure { interpolate-size: allow-keywords; }
+    .game-settings-disclosure::details-content {
+        block-size: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: block-size 220ms ease, opacity 180ms ease,
+            content-visibility 220ms allow-discrete;
+    }
+    .game-settings-disclosure[open]::details-content {
+        block-size: auto;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-settings-bar svg,
+    .game-settings-disclosure::details-content { transition: none; }
+}
+
+/* Dependency icons have their own footer so names, rewards and locks stay clear. */
+.card-dependencies {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+    align-self: stretch;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 3px;
+}
+.card-dependencies > .curse-enemy-badge,
+.card-dependencies > .curse-requirement-badge {
+    position: relative;
+    inset: auto;
+    transform: none;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+}
+.curse-card--dependencies .card-media { flex: 0 1 auto; }
+.curse-card--dependencies .curse-name-label,
+.curse-card--dependencies .stack-info { flex-shrink: 0; }
+.enemy-button > .enemy-dependency-badge {
+    inset: auto 3px 3px auto;
+    transform: none;
+    width: 14px;
+    height: 14px;
+}
+.enemy-button:has(.enemy-dependency-badge) > .enemy-stack-badge {
+    right: auto;
+    left: 2px;
+}
+.curse-card .curse-enemy-badge,
+.curse-card .curse-requirement-badge,
+.enemy-button .enemy-dependency-badge,
+.curse-card .curse-enemy-badge-inner,
+.enemy-button .curse-enemy-badge-inner { border-radius: 50% !important; }
+.card-dependencies .curse-enemy-badge-count {
+    right: auto;
+    bottom: auto;
+    left: -3px;
+    top: -3px;
+    padding: 0 3px;
+}

@@ -43,7 +43,7 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261020-anonymous1">
+    <link rel="stylesheet" href="css/tracker.css?v=20261026-disclosure1">
     <link rel="stylesheet" href="css/upgrades.css?v=20261026-shop2">
     <link rel="stylesheet" href="css/tools.css">
     <link rel="stylesheet" href="css/utilities.css?v=20261018-1">
@@ -117,12 +117,20 @@
 
             <label for="levelInput">CURRENT LEVEL</label>
 
+            <div class="number-increment-control">
             <input
                 type="number"
                 id="levelInput"
                 min="1"
                 value="1"
             >
+                <button type="button" class="number-increment-button" data-increment-input="levelInput" data-step="1" aria-label="Increase current level by one" title="Increase current level by one">
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m4 10 4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" class="number-increment-button number-increment-button--down" data-increment-input="levelInput" data-step="-1" aria-label="Decrease current level by one" title="Decrease current level by one">
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
 
         </section>
 
@@ -133,6 +141,7 @@
 
             <label for="playerCountInput">PLAYER COUNT <span class="label-note"></span></label>
 
+            <div class="number-increment-control">
             <input
                 type="number"
                 id="playerCountInput"
@@ -140,10 +149,22 @@
                 max="100"
                 value="1"
             >
+                <button type="button" class="number-increment-button" data-increment-input="playerCountInput" data-step="1" aria-label="Increase player count by one" title="Increase player count by one">
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m4 10 4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" class="number-increment-button number-increment-button--down" data-increment-input="playerCountInput" data-step="-1" aria-label="Decrease player count by one" title="Decrease player count by one">
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
 
         </section>
 
 
+        <details class="game-settings-disclosure" open>
+            <summary class="game-settings-bar" aria-label="Show or hide game mode and difficulty">
+                <span>GAME SETTINGS</span>
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
         <section class="control-section">
 
             <div class="section-label">
@@ -182,6 +203,8 @@
 
         </section>
 
+
+        </details>
 
         <section id="activeEnemiesSection" class="control-section hide-when-upgrades-open">
 
@@ -1736,7 +1759,7 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261020-polish1"></script>
+<script src="js/tracker.js?v=20261026-voidbound1"></script>
 <script src="js/upgrades.js?v=20261026-shop2"></script>
 <script src="js/tools.js?v=20261025-limited1"></script>
 
