@@ -870,7 +870,7 @@ html.low-detail-mode:has(body:not(.at-home)) .bg-layer {
     inset: 0;
     width: 100%;
     height: 100%;
-    background-image: url("../assets/background/Background.png") !important;
+    background-image: var(--curse-background, url("../assets/background/CurseTracker3.png")) !important;
     background-size: cover;
     background-position: center;
     opacity: var(--bg-opacity, 0.09);

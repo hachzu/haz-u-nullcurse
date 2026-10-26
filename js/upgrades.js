@@ -27,42 +27,16 @@ const SOLO_DUO_AUTO_OWNED = new Set(["Paycheck"]);
 
 
 const CASUAL_OVERRIDES = {
-
     "Grace Wings": { hidden: true },
     "Defuse Kit": { hidden: true },
-    "Radar Module: Tripmines": { hidden: true },
-
-    "Shield": { casualPrice: 2000, casualSoloPrice: 1000 },
-    "Ice Skates": { casualPrice: 400, casualSoloPrice: 300 },
-    "Ninja Belt": { casualPrice: 500, casualSoloPrice: 500 },
-    "Matrix Tetrahedron": { casualPrice: 1500, casualSoloPrice: 1500 },
-    "Shark Tail": { casualPrice: 800, casualSoloPrice: 800 },
-    "Drowned Ægis": { casualPrice: 4000, casualSoloPrice: 4000 },
-    "Panic Necklace": { casualPrice: 1500, casualSoloPrice: 1500 },
-    "Sport Shoes": { casualPrice: 1000, casualSoloPrice: 1000 },
-    "Gift Magnet": { casualPrices: [750, 1050, 1350] },
-    "Gift Idol": { casualPrices: [3000, 6000, 9000, 12000, 15000] },
-    "Miniature Hourglass": { casualPrice: 1500, casualSoloPrice: 1500 }
-
+    "Radar Module: Tripmines": { hidden: true }
 };
 
 
-const EXTREME_OVERRIDES = {
-
-    "Sport Shoes": { extremePrice: 1600, extremeSoloPrice: 1600 },
-    "Shark Tail": { extremePrice: 1500, extremeSoloPrice: 1500 },
-    "Matrix Tetrahedron": { extremePrice: 3000, extremeSoloPrice: 3000 },
-    "Shield": { extremePrice: 5000, extremeSoloPrice: 1000 },
-    "Gift Magnet": { extremePrices: [1800, 2520, 3240], extremeSoloPrices: [1800, 2520, 3240] },
-    "Gift Idol": {
-        extremePrices: [5000, 10000, 15000, 20000, 25000],
-        extremeSoloPrices: [5000, 10000, 15000, 20000, 25000]
-    }
-
-};
+const EXTREME_OVERRIDES = {};
 
 
-// Reviewed against the wiki and its public GameData table on 2026-10-25.
+// Prices synced with stickstetris.github.io/NullscapeShopCalculator/ on 2026-10-26.
 // Unconfirmed sentinel prices are deliberately excluded from calculations.
 const UPGRADE_NAME_ALIASES = {
     "Last Robloxian Standing": "Final Stand",
@@ -79,7 +53,6 @@ const upgradesList = [
     {
         "name": "Better Jump Pads",
         "price": 50,
-        "soloPrice": 50,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
@@ -87,17 +60,16 @@ const upgradesList = [
     {
         "name": "Paycheck",
         "price": 55,
-        "soloPrice": 55,
+        "casualSoloPrice": 33,
         "level": 3,
         "maxStack": 5,
         "category": "eco",
     },
     {
         "name": "Business License",
-        "prices": [
-            75,
-            187.5
-        ],
+        "price": 75,
+        "prices": [75,160],
+        "casualSoloPrices": [50,100],
         "level": 3,
         "maxStack": 2,
         "category": "eco",
@@ -105,7 +77,8 @@ const upgradesList = [
     {
         "name": "Swiftness Ring",
         "price": 80,
-        "soloPrice": 80,
+        "casualPrice": 70,
+        "casualSoloPrice": 60,
         "level": 3,
         "maxStack": 3,
         "category": "movement",
@@ -113,17 +86,20 @@ const upgradesList = [
     {
         "name": "Grapple Points",
         "price": 100,
-        "soloPrice": 100,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
     },
     {
         "name": "Star Marts",
+        "price": 450,
+        "soloPrice": 400,
+        "casualSoloPrice": 300,
+        "extremePrice": 550,
+        "extremeSoloPrice": 500,
         "category": "environment",
         "level": 8,
         "maxStack": 1,
-        "price": 300,
         "requires": {
             "type": "enemy",
             "name": "Mart",
@@ -133,36 +109,38 @@ const upgradesList = [
     },
     {
         "name": "Altar Boons",
+        "prices": [525,1250],
+        "soloPrices": [500,1000],
+        "casualPrices": [475,950],
+        "casualSoloPrices": [450,900],
+        "extremePrices": [600,1200],
+        "extremeSoloPrices": [600,1200],
         "category": "eco",
         "level": 8,
         "maxStack": 2,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Paycheck",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Altar use increases Paycheck rewards.",
     },
     {
         "name": "Health Insurance",
+        "price": 500,
         "category": "eco",
         "level": 8,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Paycheck",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Makes Paycheck trigger regardless of survival.",
     },
     {
         "name": "Medal",
         "price": 100,
-        "soloPrice": 100,
         "level": 5,
         "category": "eco",
         "maxStack": 1,
@@ -170,7 +148,6 @@ const upgradesList = [
     {
         "name": "Tria Orbs",
         "price": 100,
-        "soloPrice": 100,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
@@ -178,15 +155,19 @@ const upgradesList = [
     {
         "name": "Double Jump",
         "price": 150,
-        "soloPrice": 150,
+        "casualSoloPrice": 125,
         "level": 5,
         "category": "movement",
         "maxStack": 1,
     },
     {
         "name": "Radar",
-        "price": 175,
-        "soloPrice": 175,
+        "price": 150,
+        "soloPrice": 125,
+        "casualPrice": 125,
+        "casualSoloPrice": 100,
+        "extremePrice": 175,
+        "extremeSoloPrice": 150,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
@@ -194,7 +175,8 @@ const upgradesList = [
     {
         "name": "Radar Module: Enemies",
         "price": 200,
-        "soloPrice": 200,
+        "soloPrice": 150,
+        "casualSoloPrice": 125,
         "level": 5,
         "category": "environment",
         "requires": {
@@ -207,7 +189,8 @@ const upgradesList = [
     {
         "name": "Radar Module: Altars",
         "price": 300,
-        "soloPrice": 300,
+        "soloPrice": 250,
+        "casualSoloPrice": 200,
         "level": 5,
         "category": "environment",
         "requires": {
@@ -219,16 +202,19 @@ const upgradesList = [
     },
     {
         "name": "Spring Shoes",
+        "price": 100,
         "category": "movement",
         "level": 8,
         "maxStack": 1,
-        "price": 100,
         "summary": "Increases jump height when still or quick-turning.",
     },
     {
         "name": "Fanny Pack",
         "price": 300,
-        "soloPrice": 300,
+        "soloPrice": 275,
+        "casualPrice": 250,
+        "casualSoloPrice": 250,
+        "extremePrice": 350,
         "level": 8,
         "category": "eco",
         "maxStack": 1,
@@ -237,6 +223,7 @@ const upgradesList = [
         "name": "Grace Wings",
         "price": 300,
         "soloPrice": 200,
+        "extremePrice": 325,
         "level": 8,
         "category": "movement",
         "maxStack": 1,
@@ -244,7 +231,8 @@ const upgradesList = [
     {
         "name": "Pocket Bell",
         "price": 300,
-        "soloPrice": 300,
+        "casualPrice": 275,
+        "casualSoloPrice": 250,
         "level": 5,
         "category": "movement",
         "requires": [
@@ -262,24 +250,31 @@ const upgradesList = [
     },
     {
         "name": "Ice Skates",
-        "price": 400,
-        "soloPrice": 300,
+        "price": 350,
+        "soloPrice": 325,
+        "casualPrice": 300,
+        "casualSoloPrice": 250,
+        "extremePrice": 400,
         "level": 8,
         "category": "movement",
         "maxStack": 1,
     },
     {
         "name": "Helmet",
-        "price": 400,
-        "soloPrice": 400,
+        "price": 350,
+        "soloPrice": 325,
+        "casualPrice": 300,
+        "casualSoloPrice": 275,
+        "extremeSoloPrice": 375,
         "level": 8,
         "category": "class",
         "maxStack": 1,
     },
     {
         "name": "Larger Grapple Points",
-        "price": 500,
-        "soloPrice": 500,
+        "price": 400,
+        "soloPrice": 300,
+        "extremeSoloPrice": 325,
         "level": 13,
         "category": "environment",
         "requires": {
@@ -291,44 +286,44 @@ const upgradesList = [
     },
     {
         "name": "Advanced Gravity Coil",
-        "price": 600,
+        "price": 650,
         "soloPrice": 600,
+        "casualPrice": 500,
+        "casualSoloPrice": 500,
+        "extremePrice": 725,
         "level": 8,
         "category": "movement",
         "maxStack": 1,
     },
     {
         "name": "Birthday Pony",
+        "price": 350,
+        "soloPrice": 300,
+        "extremeSoloPrice": 400,
         "category": "eco",
         "level": 10,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "enemy",
             "name": "Springer",
             "count": 1
         },
-        "pricePending": true,
         "summary": "Springer collects gifts where it lands.",
     },
     {
         "name": "More Altars",
-        "price": 600,
-        "soloPrice": 600,
+        "price": 500,
+        "soloPrice": 450,
+        "extremeSoloPrice": 550,
         "level": 10,
         "category": "environment",
         "maxStack": 1,
     },
     {
         "name": "Subspacial Barrier",
-        "prices": [
-            1000,
-            3000
-        ],
-        "soloPrices": [
-            500,
-            1500
-        ],
+        "price": 1000,
+        "prices": [1000,3000],
+        "soloPrices": [500,1250],
         "level": 10,
         "casualLevel": 15,
         "maxStack": 2,
@@ -342,44 +337,47 @@ const upgradesList = [
     },
     {
         "name": "Ninja Belt",
-        "price": 700,
+        "price": 600,
         "soloPrice": 500,
+        "casualPrice": 500,
+        "extremeSoloPrice": 525,
         "level": 13,
         "category": "class",
         "maxStack": 1,
     },
     {
         "name": "Soul Tracers",
+        "price": 1000,
+        "soloPrice": 600,
+        "casualSoloPrice": 400,
         "category": "eco",
         "level": 15,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Helmet",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Deaths and collected soul orbs increase gift yield.",
     },
     {
         "name": "Propeller Hat",
+        "price": 750,
+        "soloPrice": 650,
+        "casualSoloPrice": 550,
         "category": "movement",
         "level": 15,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Helmet",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Allows double jumps while bonked.",
     },
     {
         "name": "Radar Module: Instruments",
         "price": 1000,
-        "soloPrice": 1000,
         "level": 15,
         "category": "environment",
         "requires": [
@@ -399,7 +397,9 @@ const upgradesList = [
     {
         "name": "Shark Tail",
         "price": 1200,
-        "soloPrice": 1200,
+        "soloPrice": 1000,
+        "casualPrice": 800,
+        "extremePrice": 1500,
         "level": 15,
         "category": "class",
         "requires": {
@@ -412,71 +412,73 @@ const upgradesList = [
     {
         "name": "Sport Shoes",
         "price": 1350,
-        "soloPrice": 1350,
+        "soloPrice": 1250,
+        "casualPrice": 1000,
+        "extremePrice": 1600,
         "level": 15,
         "category": "movement",
         "maxStack": 1,
     },
     {
         "name": "Gift Magnet",
-        "prices": [
-            1500,
-            2100,
-            2700
-        ],
+        "price": 1500,
+        "prices": [1500,2100,2700],
+        "soloPrices": [1250,2000,2500],
+        "casualPrices": [750,1050,1350],
         "level": 15,
         "maxStack": 3,
         "category": "eco",
     },
     {
         "name": "Debuff Magnet",
+        "price": 2800,
+        "casualPrice": 1700,
         "category": "eco",
         "level": 15,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Gift Magnet",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Debuffs increase gift pickup range.",
     },
     {
         "name": "Aggro Magnet",
+        "price": 2800,
+        "casualPrice": 1700,
         "category": "eco",
         "level": 15,
         "maxStack": 1,
-        "price": null,
         "requires": {
             "type": "upgrade",
             "name": "Gift Magnet",
             "stack": 1
         },
-        "pricePending": true,
         "summary": "Targeting enemies increase gift pickup range.",
     },
     {
         "name": "Matrix Tetrahedron",
-        "price": 2500,
-        "soloPrice": 2500,
+        "price": 2250,
+        "soloPrice": 2000,
+        "casualPrice": 1500,
+        "extremePrice": 3000,
         "level": 15,
         "category": "movement",
         "maxStack": 1,
     },
     {
         "name": "Shadow Cloak",
+        "price": 2500,
         "category": "survival",
         "level": 20,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
         "summary": "Allows phasing through certain obstacles, players and airborne Springers.",
     },
     {
         "name": "Miniature Hourglass",
         "price": 3000,
-        "soloPrice": 3000,
+        "casualPrice": 1500,
         "level": 20,
         "category": "class",
         "requires": {
@@ -488,17 +490,18 @@ const upgradesList = [
     },
     {
         "name": "Fleeting Fate",
+        "price": 2500,
+        "casualPrice": 1750,
+        "casualSoloPrice": 1500,
         "category": "movement",
         "level": 20,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
         "summary": "Grants temporary movement and collection bonuses during collapse.",
     },
     {
         "name": "Panic Necklace",
         "price": 3000,
-        "soloPrice": 3000,
+        "casualPrice": 1500,
         "level": 18,
         "category": "survival",
         "requires": {
@@ -510,13 +513,10 @@ const upgradesList = [
     },
     {
         "name": "Gift Idol",
-        "prices": [
-            4000,
-            8000,
-            12000,
-            16000,
-            20000
-        ],
+        "price": 4000,
+        "prices": [3500,7000,10500,14000,17500],
+        "casualPrices": [3000,6000,9000,12000,15000],
+        "extremePrices": [5000,10000,15000,20000,25000],
         "level": 20,
         "maxStack": 5,
         "category": "eco",
@@ -529,7 +529,8 @@ const upgradesList = [
     {
         "name": "Shield",
         "price": 4000,
-        "soloPrice": 1000,
+        "soloPrice": 2000,
+        "casualPrice": 2000,
         "level": 15,
         "category": "survival",
         "maxStack": 1,
@@ -537,7 +538,7 @@ const upgradesList = [
     {
         "name": "Drowned Ægis",
         "price": 6000,
-        "soloPrice": 6000,
+        "casualPrice": 4000,
         "level": 20,
         "category": "survival",
         "requires": {
@@ -549,44 +550,40 @@ const upgradesList = [
     },
     {
         "name": "Jet Boosters",
+        "price": 6750,
         "category": "movement",
         "level": 25,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
+        "requires": { "type": "enemy", "name": "Scrapmaw", "count": 1 },
         "summary": "Double jumps redirect momentum.",
     },
     {
         "name": "Magnified Levels",
+        "price": 3000,
         "category": "environment",
         "level": 30,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
         "summary": "Reduces level size.",
     },
     {
         "name": "Transient Pennon",
+        "price": 30000,
         "category": "class",
         "level": 30,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
         "summary": "Extends flight time.",
     },
     {
         "name": "Quixotic Wing",
+        "price": 30000,
         "category": "class",
         "level": 30,
         "maxStack": 1,
-        "price": null,
-        "pricePending": true,
         "summary": "Extends flight time.",
     },
     {
         "name": "Defuse Kit",
         "price": 30,
-        "soloPrice": 30,
         "level": 5,
         "maxStack": 3,
         "category": "survival",
@@ -594,7 +591,6 @@ const upgradesList = [
     {
         "name": "Adrenaline",
         "price": 50,
-        "soloPrice": 50,
         "level": 3,
         "category": "movement",
         "maxStack": 1,
@@ -602,7 +598,6 @@ const upgradesList = [
     {
         "name": "Final Stand",
         "price": 300,
-        "soloPrice": 300,
         "level": 8,
         "category": "survival",
         "maxStack": 1,
@@ -610,7 +605,7 @@ const upgradesList = [
     {
         "name": "Radar Module: Tripmines",
         "price": 400,
-        "soloPrice": 400,
+        "soloPrice": 300,
         "level": 8,
         "category": "environment",
         "requires": {
@@ -682,7 +677,8 @@ const upgradeState = {
     freeformSort: false,
 
     pending: new Map(),
-    owned: new Map()
+    owned: new Map(),
+    paycheckAutoOwnedDisabled: false
 
 };
 
@@ -703,6 +699,7 @@ function saveUpgradeState() {
             progressiveAutoSkip: upgradeState.progressiveAutoSkip,
             iconMode: upgradeState.iconMode,
             freeformSort: upgradeState.freeformSort,
+            paycheckAutoOwnedDisabled: upgradeState.paycheckAutoOwnedDisabled,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -754,6 +751,7 @@ function loadUpgradeState() {
         upgradeState.progressiveAutoSkip = Boolean(saved.progressiveAutoSkip);
         upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.freeformSort = Boolean(saved.freeformSort);
+        upgradeState.paycheckAutoOwnedDisabled = Boolean(saved.paycheckAutoOwnedDisabled);
         upgradeState.pending = migrateUpgradeEntries(saved.pending);
         upgradeState.owned = migrateUpgradeEntries(saved.owned);
 
@@ -775,6 +773,7 @@ function resetUpgradeShopState() {
 
     upgradeState.pending.clear();
     upgradeState.owned.clear();
+    upgradeState.paycheckAutoOwnedDisabled = false;
     upgradeState.goldenGifts = 0;
     upgradeState.mode = "solo";
     upgradeState.progressive = true;
@@ -872,59 +871,30 @@ function isUpgradeContextHidden(item) {
 
 
 function getEffectivePrices(item) {
-
-    const difficultyKey = (runState.difficulty || "Standard").toLowerCase();
-
-    if (difficultyKey === "casual" && CASUAL_OVERRIDES[item.name]) {
-
-        const override = CASUAL_OVERRIDES[item.name];
-
-        return {
-
-            price: override.casualPrice !== undefined ? override.casualPrice : item.price,
-            soloPrice: override.casualSoloPrice !== undefined ? override.casualSoloPrice : item.soloPrice,
-            prices: override.casualPrices !== undefined ? override.casualPrices : item.prices,
-            soloPrices: item.soloPrices
-
-        };
-
-    }
-
-    if (difficultyKey === "extreme" && EXTREME_OVERRIDES[item.name]) {
-
-        const override = EXTREME_OVERRIDES[item.name];
-
-        return {
-
-            price: override.extremePrice !== undefined ? override.extremePrice : item.price,
-            soloPrice: override.extremeSoloPrice !== undefined ? override.extremeSoloPrice : item.soloPrice,
-            prices: override.extremePrices !== undefined ? override.extremePrices : item.prices,
-            soloPrices: override.extremeSoloPrices !== undefined ? override.extremeSoloPrices : item.soloPrices
-
-        };
-
-    }
-
-    return {
-
-        price: item.price,
-        soloPrice: item.soloPrice,
-        prices: item.prices,
-        soloPrices: item.soloPrices
-
-    };
-
+    const difficulty = (runState.difficulty || "Standard").toLowerCase();
+    const casual = difficulty === "casual";
+    const extreme = difficulty === "extreme";
+    const solo = upgradeState.mode === "solo";
+    // Explicit Solo prices take precedence over general difficulty prices.
+    const prices = (solo && casual ? item.casualSoloPrices : undefined)
+        ?? (solo && extreme ? item.extremeSoloPrices : undefined)
+        ?? (solo ? item.soloPrices : undefined)
+        ?? (casual ? item.casualPrices : undefined)
+        ?? (extreme ? item.extremePrices : undefined)
+        ?? item.prices;
+    const price = (solo && casual ? item.casualSoloPrice : undefined)
+        ?? (solo && extreme ? item.extremeSoloPrice : undefined)
+        ?? (solo ? item.soloPrice : undefined)
+        ?? (casual ? item.casualPrice : undefined)
+        ?? (extreme ? item.extremePrice : undefined)
+        ?? item.price;
+    return { price, soloPrice: price, prices, soloPrices: prices };
 }
 
 
 /*
- * Resolves the un-scaled price for owning `stack` total copies of
- * an item. Items with a "prices" table (Business License, Gift
- * Magnet, etc.) look the tier up directly - those tables already
- * represent the full price for owning that many. Items with only a
- * flat "price" but a maxStack above 1 (Defuse Kit, Swiftness Ring,
- * Paycheck) scale linearly: each additional copy costs the same
- * base unit price.
+ * Resolve the base cost for a tier. Table entries are individual purchase
+ * prices; flat-price items return the cumulative unscaled cost.
  */
 function computeBaseForStack(item, stack) {
 
@@ -941,11 +911,7 @@ function computeBaseForStack(item, stack) {
 
         const table = (isSolo && effective.soloPrices) ? effective.soloPrices : effective.prices;
 
-        // Elevator-style pricing: each table entry is the flat price
-        // to be sitting at that specific tier (1st stack, 2nd stack,
-        // etc.), not a marginal cost to be added to the ones before
-        // it - so the price of owning `stack` copies is just that
-        // one entry, not a running sum.
+        // Each entry is the purchase price of that tier, not a running total.
         return table[stack - 1] !== undefined ? table[stack - 1] : 0;
 
     }
@@ -973,7 +939,7 @@ function computeStackPrice(item, stack) {
 
     }
 
-    const base = computeBaseForStack(item, stack);
+    const base = computeBaseForStack(item, item.prices ? stack : 1);
     const playerCount = getScalingPlayerCount();
 
     let multiplier = Math.sqrt(playerCount);
@@ -982,7 +948,7 @@ function computeStackPrice(item, stack) {
     // does not apply that discount when it has only one player.
     // Keep that case on the ordinary non-Solo price path (for
     // example, a Swiftness Ring remains 80 rather than 72).
-    if (upgradeState.mode === "partyplus" && playerCount > 1) {
+    if ((upgradeState.mode === "partyplus" || playerCount > 8) && playerCount > 1) {
 
         multiplier = multiplier / 1.125;
 
@@ -996,7 +962,7 @@ function computeStackPrice(item, stack) {
 
     }
 
-    return Math.ceil(scaled);
+    return Math.ceil(scaled) * (item.prices ? 1 : stack);
 
 }
 
@@ -1030,17 +996,14 @@ function isUpgradeLockedByLevel(item) {
 
 /*
  * Progressive's "Hide Locked" sub-toggle - separate from the general
- * isUpgradeContextHidden (difficulty/mode-based hiding) since this
- * one only cares about the level gate specifically, only applies
- * while Progressive is on, and is opt-in via its own switch rather
- * than always active.
+ * isUpgradeContextHidden (difficulty/mode-based hiding). Use the same
+ * lock rules as the cards so level and dependency locks stay consistent.
  */
-function isUpgradeHiddenByLevelFilter(item) {
-    if (item.pricePending) return false;
+function isUpgradeHiddenByLockedFilter(item) {
 
     return upgradeState.progressive
         && upgradeState.progressiveHideLocked
-        && isUpgradeLockedByLevel(item);
+        && isUpgradeUnavailable(item);
 
 }
 
@@ -1089,14 +1052,19 @@ function isSingleUpgradeRequirementMet(requirement) {
     }
 
     if (requirement.type === "enemy") {
-        return typeof getEnemyCount === "function"
-            ? getEnemyCount(requirement.name) >= (requirement.count || 1)
-            : typeof hasEnemy === "function" && hasEnemy(requirement.name);
+        // Enemy dependencies are reminders rather than purchase gates.
+        return true;
 
     }
 
     return true;
 
+}
+
+function isEnemyUpgradeDependencyPresent(requirement) {
+    return typeof getEnemyCount === "function"
+        ? getEnemyCount(requirement.name) >= (requirement.count || 1)
+        : typeof hasEnemy === "function" && hasEnemy(requirement.name);
 }
 
 
@@ -1177,6 +1145,7 @@ function getOwnedStack(name) {
 
     if (
         SOLO_DUO_AUTO_OWNED.has(name)
+        && !upgradeState.paycheckAutoOwnedDisabled
         && (upgradeState.mode === "solo" || upgradeState.mode === "duo")
     ) {
 
@@ -1195,25 +1164,31 @@ function getPendingStack(name) {
 
 }
 
+// Only a direct down-arrow action removes owned stacks. Queued stacks
+// are cancelled first; removing the free Paycheck is remembered until reset.
+function decreaseUpgradeStack(item) {
+    const owned = getOwnedStack(item.name);
+    const pending = getPendingStack(item.name);
+    if (pending > owned) {
+        setStackTarget(item, pending - 1);
+        return;
+    }
+    if (owned <= 0) return;
+    if (item.name === "Paycheck" && owned === 1) {
+        upgradeState.paycheckAutoOwnedDisabled = true;
+    }
+    if (owned === 1) upgradeState.owned.delete(item.name);
+    else upgradeState.owned.set(item.name, owned - 1);
+    upgradeState.pending.delete(item.name);
+    playRemoveSound();
+    saveUpgradeState();
+    renderUpgradeGrid();
+}
+
 
 /*
- * Cost of moving an upgrade's stack from `fromStack` to `toStack`.
- *
- * Linear items (flat "price"/"soloPrice") scale evenly, so a plain
- * diff of the two cumulative totals is already correct - each stack
- * costs the same unit price regardless of how many came before it.
- *
- * Per-tier table items (Business License, Gift Magnet, Gift Idol,
- * Subspacial Barrier) are different: computeStackPrice(item, N) for
- * these already resolves to that one tier's own table entry, scaled -
- * it was never a running sum (see computeBaseForStack). So the price
- * of buying up to tier N is just that tier's own price, not "tier N's
- * price minus tier N-1's price." Subtracting the owned tier's price
- * here would double-apply the elevator pricing and undercharge every
- * stack past the first (e.g. Business License's real 2nd-stack price
- * of ~188 was showing as ~113 because the 1st stack's 75 was being
- * subtracted off it). Buying/selling several tiers at once sums each
- * individual tier's own price instead of just diffing the endpoints.
+ * Sum individual tier purchases between the owned and selected stack counts.
+ * Flat-price stacks are also rounded per purchase before their totals are summed.
  */
 function getIncrementalCost(item, fromStack, toStack) {
 
@@ -1817,7 +1792,7 @@ function describeSingleRequirement(requirement) {
 
     if (requirement.type === "enemy") {
 
-        return `${requirement.name} active in the enemy pool`;
+        return `${requirement.name}${isEnemyUpgradeDependencyPresent(requirement) ? " (in enemy pool)" : " (not in enemy pool)"}`;
 
     }
 
@@ -1841,20 +1816,18 @@ function createRequirementChip(item) {
     const chip = document.createElement("div");
 
     chip.className = "upgrade-requirement-chip";
-    chip.title = `Requires ${describeRequirement(requirementList)}`;
+    chip.title = `Dependencies: ${describeRequirement(requirementList)}`;
 
-    if (isUpgradeRequirementMet(item)) {
+    const missingEnemy = requirementList.some(requirement =>
+        requirement.type === "enemy" && !isEnemyUpgradeDependencyPresent(requirement)
+    );
+    if (missingEnemy) {
+        chip.classList.add("upgrade-requirement-chip--enemy-missing");
+    } else if (isUpgradeRequirementMet(item)) {
 
         chip.classList.add("upgrade-requirement-chip--met");
 
     }
-
-    const arrow = document.createElement("span");
-
-    arrow.className = "upgrade-requirement-arrow";
-    arrow.textContent = "\u2192";
-
-    chip.appendChild(arrow);
 
     const icons = document.createElement("div");
 
@@ -1878,6 +1851,10 @@ function createRequirementIcon(requirement) {
     const icon = document.createElement("div");
 
     icon.className = "upgrade-requirement-icon";
+    if (requirement.type === "enemy") {
+        const missing = !isEnemyUpgradeDependencyPresent(requirement);
+        icon.title = `${requirement.name}: ${missing ? "not in enemy pool" : "in enemy pool"}`;
+    }
 
     const placeholder = document.createElement("span");
 
@@ -1943,28 +1920,9 @@ function createUnownButton(item, owned) {
 /* Source: upgrade-calculator-view.js */
 
 
-/*
- * Up/down stepper shown on rows that aren't fully owned yet - the
- * "unowned" stacks still left to buy. A row stays in the shop (not
- * the OWNED UPGRADES basin - see renderUpgradeGrid's `owned >=
- * maxStack` routing) until every stack is bought, even if it already
- * owns some; while it's there it keeps this stepper for queuing more.
- * Once owned > 0, the "-" un-own button (see createUnownButton above)
- * is also needed so a single owned stack can be peeled off without
- * leaving the shop - rather than giving it a second grid column of
- * its own (which forced the row to expand to fit both controls),
- * it's nested right here between the two arrows, sharing the
- * stepper's own narrow column instead. Up queues one more pending
- * stack (mirrors a row click); down cancels a pending stack back
- * toward what's actually owned. Neither arrow un-owns an already-
- * purchased stack itself - that's still the "-" button's job. Works
- * the same for linear and per-tier-priced items alike, since
- * setStackTarget/computeStackPrice already resolve either correctly -
- * each arrow press on a variable-priced item steps one tier
- * "elevator style," pricing off that tier's own table entry rather
- * than adding tiers together.
- */
-function createStackStepper(item, locked, includeUnown) {
+/* Stackable upgrades use two controls: up queues a purchase; down cancels
+   queued stacks first, then removes owned stacks on a direct click. */
+function createStackStepper(item, locked) {
 
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
@@ -1987,10 +1945,10 @@ function createStackStepper(item, locked, includeUnown) {
 
     downButton.type = "button";
     downButton.className = "upgrade-stepper-button upgrade-stepper-button--down";
-    downButton.setAttribute("aria-label", `Deselect a pending ${item.name} stack`);
-    downButton.title = "Cancel one pending stack";
+    downButton.setAttribute("aria-label", `Decrease ${item.name} by one stack`);
+    downButton.title = pending > owned ? "Cancel one pending stack" : "Remove one owned stack";
     downButton.textContent = "\u25BC";
-    downButton.disabled = pending <= owned;
+    downButton.disabled = pending <= 0;
 
     upButton.addEventListener("click", event => {
 
@@ -2016,26 +1974,11 @@ function createStackStepper(item, locked, includeUnown) {
 
         }
 
-        setStackTarget(item, pending - 1);
+        decreaseUpgradeStack(item);
 
     });
 
     wrapper.appendChild(upButton);
-
-    if (includeUnown) {
-
-        const unownButton = createUnownButton(item, owned);
-
-        // Distinguishes the nested placement (sitting inline between
-        // the two arrows, sharing the stepper's own narrow column)
-        // from the standalone version used once a row is fully owned
-        // and has moved to the OWNED UPGRADES basin - see the CSS
-        // sizing override on this modifier class.
-        unownButton.classList.add("upgrade-unown-button--inline");
-
-        wrapper.appendChild(unownButton);
-
-    }
 
     wrapper.appendChild(downButton);
 
@@ -2047,6 +1990,7 @@ function createStackStepper(item, locked, includeUnown) {
 function createPendingUpgradeCard(item) {
     const row = document.createElement('div');
     row.className = 'upgrade-row upgrade-row--pending';
+    row.dataset.revealKey = `upgrade:${item.name}`;
     row.tabIndex = 0;
     row.title = [item.name, item.summary, 'Price unconfirmed.',
         item.requires ? 'Requires: ' + describeRequirement(item.requires) : 'Other prerequisites are not yet documented.'].filter(Boolean).join('\n');
@@ -2055,7 +1999,8 @@ function createPendingUpgradeCard(item) {
     if (requirement) row.appendChild(requirement);
     const level = document.createElement('span');
     level.className = 'upgrade-row-level';
-    level.textContent = `Lv${item.level}`;
+    level.textContent = getEffectiveUpgradeLevel(item);
+    level.setAttribute('aria-label', `Required level ${getEffectiveUpgradeLevel(item)}`);
     row.append(level, createUpgradeIcon(item.name));
     const info = document.createElement('div');
     info.className = 'upgrade-row-info';
@@ -2083,6 +2028,7 @@ function createUpgradeCard(item) {
     const row = document.createElement("div");
 
     row.className = "upgrade-row";
+    row.dataset.revealKey = `upgrade:${item.name}`;
     row.setAttribute("role", "button");
     row.tabIndex = 0;
 
@@ -2187,7 +2133,8 @@ function createUpgradeCard(item) {
     const levelBadge = document.createElement("span");
 
     levelBadge.className = "upgrade-row-level";
-    levelBadge.textContent = `Lv${getEffectiveUpgradeLevel(item)}`;
+    levelBadge.textContent = getEffectiveUpgradeLevel(item);
+    levelBadge.setAttribute("aria-label", `Required level ${getEffectiveUpgradeLevel(item)}`);
 
     row.appendChild(levelBadge);
 
@@ -2218,37 +2165,6 @@ function createUpgradeCard(item) {
         stackText.textContent = `${pending}/${maxStack}`;
 
         stack.appendChild(stackText);
-
-        const dots = document.createElement("div");
-
-        dots.className = "upgrade-row-dots";
-
-        for (let i = 0; i < maxStack; i++) {
-
-            const dot = document.createElement("span");
-
-            dot.className = "upgrade-dot";
-
-            // Elevator-style indicator: a stack that's actually been
-            // bought turns green, and at most one further dot lights
-            // up - the specific tier currently selected/pending, not
-            // every dot leading up to it - so the row reads as "which
-            // floor am I on" rather than a filled progress bar.
-            if (i < owned) {
-
-                dot.classList.add("upgrade-dot--owned");
-
-            } else if (i === pending - 1 && pending > owned) {
-
-                dot.classList.add("upgrade-dot--current");
-
-            }
-
-            dots.appendChild(dot);
-
-        }
-
-        stack.appendChild(dots);
 
         row.appendChild(stack);
 
@@ -2314,23 +2230,10 @@ function createUpgradeCard(item) {
     // once there were 5 categories sharing the panel instead of 4.
     info.appendChild(badge);
 
-    // A row stays in the shop until every stack is owned, even once
-    // it owns some - so it keeps its up/down stepper for queuing
-    // more the whole time (a one-off, non-stacking upgrade has
-    // nothing to step through, so it keeps the plain row-click buy
-    // behavior with no arrows at all). Once owned > 0 while still in
-    // the shop, the stepper also gets the "-" un-own button nested
-    // between its arrows (see createStackStepper) so a single owned
-    // stack can be peeled off and put back in the shop without
-    // touching what's pending, and without needing a second grid
-    // column of its own. Only once every stack is owned does the row
-    // move down into the OWNED UPGRADES basin (see renderUpgradeGrid)
-    // - at that point there's nothing left to buy, so the stepper
-    // drops away and the standalone "-" button (below) takes its
-    // place instead.
-    if (!isFullyOwned && maxStack > 1) {
+    // Stackables keep arrows in both sections; single upgrades keep their minus button.
+    if (maxStack > 1) {
 
-        row.appendChild(createStackStepper(item, locked, owned > 0));
+        row.appendChild(createStackStepper(item, locked));
 
     } else if (owned > 0) {
 
@@ -2481,6 +2384,13 @@ function sortUpgradeEntriesByLevel(entries) {
 
 }
 
+function sortAvailableUpgradeEntries(entries) {
+    return entries.slice().sort((a, b) =>
+        Number(isUpgradeUnavailable(a.item)) - Number(isUpgradeUnavailable(b.item))
+        || compareUpgradesByLevel(a.item, b.item)
+    );
+}
+
 
 /*
  * Renders two aligned rows of category columns: buyable/locked
@@ -2537,7 +2447,7 @@ function renderUpgradeGrid() {
 
         items.forEach(item => {
 
-            if (isUpgradeContextHidden(item) || isUpgradeHiddenByLevelFilter(item)) {
+            if (isUpgradeContextHidden(item) || isUpgradeHiddenByLockedFilter(item)) {
 
                 return;
 
@@ -2561,7 +2471,7 @@ function renderUpgradeGrid() {
 
             } else {
 
-                activeRows.push(row);
+                activeRows.push({ item, row });
                 allActiveEntries.push({ item, row });
 
             }
@@ -2575,7 +2485,7 @@ function renderUpgradeGrid() {
         }
 
         activeContainer.appendChild(
-            buildUpgradeCategoryColumn(category, activeRows, "All owned")
+            buildUpgradeCategoryColumn(category, sortAvailableUpgradeEntries(activeRows).map(entry => entry.row), "All owned")
         );
 
         if (ownedContainer) {
@@ -2591,7 +2501,7 @@ function renderUpgradeGrid() {
     if (freeform) {
 
         activeContainer.appendChild(
-            buildFreeformUpgradeGrid(sortUpgradeEntriesByLevel(allActiveEntries), "All owned")
+            buildFreeformUpgradeGrid(sortAvailableUpgradeEntries(allActiveEntries), "All owned")
         );
 
         if (ownedContainer) {
@@ -2919,9 +2829,8 @@ function createProgressiveSubToggles() {
     hideRow.appendChild(createProgressiveSubToggle(
         "upgradeProgressiveHideLockedToggle",
         "progressiveHideLocked",
-        "OFF: Upgrades below your current level still show, greyed out and "
-            + "locked. ON: Upgrades below your current level are hidden from "
-            + "the grid entirely instead."
+        "OFF: Locked upgrades remain visible. ON: Hide upgrades with unmet "
+            + "level or dependency requirements, or an unconfirmed price."
     ));
 
     const autoSkipRow = document.createElement("div");

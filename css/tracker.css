@@ -211,7 +211,10 @@
 
     padding: 32px;
 
-    background: linear-gradient(160deg, #0c0000 0%, #1a0303 100%);
+    background:
+        linear-gradient(160deg, rgba(12, 0, 0, 0.85), rgba(26, 3, 3, 0.91)),
+        url('../assets/background/DeathTracker.png') center top / auto 100vh no-repeat;
+    background-attachment: scroll, fixed;
 
     border-left: 1px solid rgba(255, 109, 109, 0.35);
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.6), inset 0 0 90px rgba(174, 19, 19, 0.06);
@@ -228,7 +231,7 @@
 
 
 .death-panel.open {
-    transform: translateX(0);
+    transform: none;
     opacity: 1;
 
     pointer-events: auto;
@@ -1393,7 +1396,7 @@ body {
 
 
 :root {
-    --bg-opacity: 0.09;
+    --bg-opacity: 0.18;
     --font-modern: 'Space Grotesk', Arial, Helvetica, sans-serif;
 }
 
@@ -1410,7 +1413,7 @@ body {
     pointer-events: none;
 
     background-image:
-        url("../assets/background/Background.png"),
+        var(--curse-background, url("../assets/background/CurseTracker3.png")),
         radial-gradient(circle at 20% 10%, #1b0733 0%, transparent 45%),
         radial-gradient(circle at 85% 80%, #2a0a4a 0%, transparent 50%),
         linear-gradient(160deg, #05010c 0%, #0b0116 40%, #170025 100%);
@@ -4977,3 +4980,14 @@ body {
 .tool-header-brand--upgrades img { width: 168.71%; left: -33.83%; top: -18.42%; }
 @keyframes tool-brand-float { 50% { transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .tool-header-brand { animation: none; } }
+
+.bg-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--next-curse-background, none) center / cover no-repeat;
+    opacity: 0;
+    pointer-events: none;
+}
+.bg-layer.background-changing::after { opacity: 1; transition: opacity 800ms ease; }
+@media (prefers-reduced-motion: reduce) { .bg-layer.background-changing::after { transition: none; } }

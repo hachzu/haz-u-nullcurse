@@ -238,7 +238,10 @@
 
     padding: 32px;
 
-    background: linear-gradient(160deg, #03111c 0%, #060b15 100%);
+    background:
+        linear-gradient(160deg, rgba(3, 17, 28, 0.82), rgba(6, 11, 21, 0.9)),
+        url('../assets/background/UpgradeShop.png') center / cover no-repeat;
+    background-attachment: scroll, fixed;
 
     border-left: 1px solid rgba(143, 217, 255, 0.35);
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(143, 217, 255, 0.05);
@@ -255,7 +258,7 @@
 
 
 .upgrade-panel.open {
-    transform: translateX(0);
+    transform: none;
     opacity: 1;
 
     pointer-events: auto;
@@ -2077,14 +2080,13 @@
 }
 
 
-/* Requirement / prerequisite chip - a small badge pinned to the
-   card's top-left corner, sitting slightly outside the row's own
-   border rather than sharing a grid cell with the level text, so it
-   never overlaps or merges with it. */
+/* Dependencies hang vertically beyond the right edge, clear of the controls. */
 .upgrade-requirement-chip {
     position: absolute;
-    top: -8px;
-    left: -10px;
+    top: 50%;
+    left: auto;
+    right: -19px;
+    transform: translateY(-50%);
     z-index: 2;
 
     display: flex;
@@ -2092,7 +2094,7 @@
     align-items: center;
     gap: 2px;
 
-    padding: 2px 4px 2px 5px;
+    padding: 3px;
 
     background: rgba(6, 12, 22, 0.95);
 
@@ -2123,6 +2125,7 @@
 
 .upgrade-requirement-icons {
     display: flex;
+    flex-direction: column;
 
     align-items: center;
     gap: 2px;
@@ -2275,8 +2278,9 @@
 
 
 .upgrade-panel.icon-mode .upgrade-requirement-chip {
-    top: -11px;
-    left: -11px;
+    top: 50%;
+    left: auto;
+    right: -19px;
 }
 
 
@@ -2406,6 +2410,12 @@
     }
 
 }
+
+.upgrade-panel:not(.icon-mode) .upgrade-row-price { font-size: 12px; }
+.upgrade-panel:not(.icon-mode) .upgrade-row-price-icon { width: 14px; height: 14px; }
+.upgrade-panel.icon-mode .upgrade-row-price,
+.upgrade-panel.icon-mode .upgrade-row-price-amount { font-size: 18px; }
+.upgrade-panel.icon-mode .upgrade-row-price-icon { width: 21px; height: 21px; }
 
 
 @media (max-width: 700px) {
@@ -2677,7 +2687,10 @@
 
     padding: 32px;
 
-    background: linear-gradient(160deg, #0a0a0a 0%, #161616 100%);
+    background:
+        linear-gradient(160deg, rgba(10, 10, 10, 0.76), rgba(22, 22, 22, 0.85)),
+        url('../assets/background/Altars.png') center top / auto 100vh no-repeat;
+    background-attachment: scroll, fixed;
 
     border-left: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(255, 255, 255, 0.05);
@@ -2694,7 +2707,7 @@
 
 
 .altars-panel.open {
-    transform: translateX(0);
+    transform: none;
     opacity: 1;
 
     pointer-events: auto;
@@ -3050,3 +3063,170 @@
     height: 71px;
 }
 .upgrade-shortcut-legend { flex-direction: column; gap: 8px; }
+
+/* Icon | name and price | controls, with the counter hanging outside.
+   The background numeral stops before the reserved controls track. */
+.upgrade-panel:not(.icon-mode) .upgrade-grid:not(.upgrade-grid--freeform) {
+    grid-template-columns: 36px minmax(0, 1fr) 20px;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-row {
+    grid-template-columns: 36px minmax(0, 1fr) 20px;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-grid--freeform .upgrade-row {
+    grid-template-columns: 30px minmax(0, 1fr) 16px;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-row > * { grid-row: 1; }
+.upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-row-stack,
+.upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-row-level,
+.upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-requirement-chip {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: start;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-icon { grid-column: 1; }
+.upgrade-panel:not(.icon-mode) .upgrade-row-info { grid-column: 2; }
+.upgrade-panel:not(.icon-mode) .upgrade-row-info {
+    padding-right: 52px;
+    box-sizing: border-box;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-row-stepper,
+.upgrade-panel:not(.icon-mode) .upgrade-unown-button { grid-column: 3; }
+.upgrade-row-stack {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: start;
+    position: absolute;
+    top: 50%;
+    left: -11px;
+    right: auto;
+    transform: translateY(-50%);
+    width: 20px;
+    padding: 3px 2px;
+    box-sizing: border-box;
+    background: #102b3d;
+    border: 1px solid #8fd9ff66;
+    z-index: 2;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-row { padding-left: 14px; }
+.upgrade-row-info { position: relative; z-index: 1; }
+.upgrade-row-dots { flex-wrap: wrap; justify-content: center; max-width: 16px; gap: 2px; }
+.upgrade-row-level {
+    grid-column: auto;
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #d4eaff;
+    opacity: 0.16;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    pointer-events: none;
+    user-select: none;
+}
+.upgrade-panel.icon-mode .upgrade-row-level {
+    top: 50%;
+    right: 8px;
+    left: auto;
+    transform: translateY(-50%);
+    max-width: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #d4eaff;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -2px;
+}
+.upgrade-panel.icon-mode .upgrade-row-stack {
+    position: absolute;
+    top: 50%;
+    left: -11px;
+    transform: translateY(-50%);
+    max-width: 20px;
+    flex-direction: column;
+}
+.upgrade-panel.icon-mode .upgrade-row-stack-text { display: block; }
+.upgrade-panel.icon-mode .upgrade-row-dots { display: none; }
+.upgrade-panel:not(.icon-mode) .upgrade-row--pending .upgrade-row-info { grid-column: 2; }
+.upgrade-requirement-chip--enemy-missing { border-color: #f06b70; }
+.upgrade-requirement-chip--enemy-missing .upgrade-requirement-arrow { color: #f06b70; }
+
+/* Keep hanging counters and dependency chips inside the scrolling panel,
+   including the first category and wrapped rows on smaller screens. */
+.upgrade-grid {
+    min-width: 0;
+    box-sizing: border-box;
+    padding-left: 16px;
+    padding-right: 24px;
+    padding-top: 8px;
+}
+.upgrade-panel:not(.icon-mode) .upgrade-grid--freeform {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    column-gap: 36px;
+}
+.upgrade-panel.icon-mode .upgrade-grid { column-gap: 36px; }
+.upgrade-panel:not(.icon-mode) .upgrade-categories:not(.upgrade-categories--freeform) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-width: 0;
+    overflow: visible;
+    padding-bottom: 8px;
+}
+.upgrade-panel-inner { overflow-x: hidden; scrollbar-width: none; }
+.upgrade-panel-inner::-webkit-scrollbar { display: none; }
+.upgrade-panel:not(.icon-mode) .upgrade-category:not(:first-child) {
+    padding-top: 0;
+    margin-top: 0;
+    padding-left: 0;
+    border-top: 0;
+    border-left: 1px solid rgba(143, 217, 255, 0.16);
+}
+.upgrade-requirement-chip,
+.upgrade-panel.icon-mode .upgrade-requirement-chip {
+    top: -10px;
+    left: 12px;
+    right: auto;
+    transform: none;
+    padding: 2px 3px;
+}
+.upgrade-requirement-icons { flex-direction: row; justify-content: center; }
+.upgrade-grid { padding-right: 0; padding-top: 12px; row-gap: 14px; }
+.upgrade-row-stack { justify-content: center; align-items: center; padding: 3px 1px; }
+.upgrade-panel:not(.icon-mode) .upgrade-category { container-type: inline-size; }
+@container (max-width: 250px) {
+    .upgrade-panel:not(.icon-mode) .upgrade-row {
+        grid-template-columns: 24px minmax(0, 1fr) 28px 14px;
+        column-gap: 4px;
+        padding: 6px 5px 6px 12px;
+        min-height: 54px;
+    }
+    .upgrade-panel:not(.icon-mode) .upgrade-icon { width: 24px; height: 30px; }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-info { padding-right: 0; }
+    .upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-row-level {
+        position: relative;
+        grid-column: 3;
+        grid-row: 1;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: 28px;
+        font-size: 30px;
+    }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-stepper,
+    .upgrade-panel:not(.icon-mode) .upgrade-unown-button { grid-column: 4; }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-price { font-size: 10px; padding: 3px; gap: 2px; }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-price-icon { width: 10px; height: 10px; }
+}

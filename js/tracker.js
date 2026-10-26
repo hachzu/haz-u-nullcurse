@@ -2348,6 +2348,7 @@ function createEnemyButton(enemy) {
     const button = document.createElement("button");
 
     button.className = "select-button enemy-button";
+    button.dataset.revealKey = `enemy:${enemy.name}`;
 
     const count = getEnemyCount(enemy.name);
     const maxStack = getEnemyMaxStack(enemy);
@@ -2456,6 +2457,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     const card = document.createElement("button");
 
     card.className = "curse-card";
+    card.dataset.revealKey = `curse:${curse.name}`;
     if (curse.divine) card.classList.add("curse-card--divine");
     card.style.setProperty("--level-order", (getCurseUnlockLevel(curse) || 1) * 2);
 
@@ -2565,7 +2567,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     // locked medal curse shows only the lock badge - previewing a
     // reward for something you can't select yet would be misleading
     // anyway.
-    if (isMedal && !locked) {
+    if (awardsMedalPayout && !locked) {
 
         const reward = document.createElement("div");
 
@@ -2716,6 +2718,7 @@ function renderActiveCurses() {
         const item = document.createElement("div");
 
         item.className = "active-curse";
+        item.dataset.revealKey = `active:${curse.name}`;
         if (curse.divine) item.classList.add("active-curse--divine");
         else if (curse.chaos) item.classList.add("active-curse--chaos");
 
@@ -2870,18 +2873,10 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
     curses.forEach(curse => {
 
-        // Every card in the dedicated Medal Curses container gets
-        // the medal highlight, same as before. Elsewhere (Global/
-        // Enemy Curses), a medal curse only picks up that same
-        // highlight once Hide Medal Curses is on - otherwise it
-        // stays a plain card like today, since it's already shown
-        // highlighted in the dedicated section.
-        const showMedalHighlight = isDedicatedMedalContainer
-            || (Boolean(curse.medal) && medalDisplayState.hideSection);
-
+        // Medal colors and payouts belong only to the dedicated Medal pool.
         const card = createCurseCard(
             curse,
-            showMedalHighlight,
+            isDedicatedMedalContainer,
             isDedicatedMedalContainer
         );
 

@@ -1,0 +1,36 @@
+@property --card-reveal-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+.card-reveal-host { position: relative; }
+.card-reveal-effect { position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit; }
+.card-reveal-track {
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--card-reveal-angle), transparent 0deg 250deg, var(--reveal-color) 315deg, #fff 345deg, transparent 360deg);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    filter: drop-shadow(0 0 3px var(--reveal-color));
+    animation: card-reveal-orbit 1600ms linear infinite, card-reveal-track-exit 5000ms linear both;
+    animation-delay: var(--reveal-delay), var(--reveal-delay);
+}
+.card-reveal-star {
+    position: absolute;
+    left: 3px;
+    bottom: 3px;
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 2px #fff4b577);
+    animation: card-reveal-star-exit 10000ms linear both;
+    animation-delay: var(--reveal-delay);
+}
+@keyframes card-reveal-orbit { to { --card-reveal-angle: 360deg; } }
+@keyframes card-reveal-track-exit { 0%, 80% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes card-reveal-star-exit { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+    .card-reveal-track { background: var(--reveal-color); animation-name: card-reveal-track-exit; animation-duration: 5000ms; }
+}
