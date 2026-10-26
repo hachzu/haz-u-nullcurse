@@ -43,8 +43,8 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261026-list1">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261026-shop2">
+    <link rel="stylesheet" href="css/tracker.css?v=20261026-chaos2">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261026-legend1">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-header1">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
@@ -183,12 +183,20 @@
 
             <div class="section-label difficulty-heading">
                 <span>DIFFICULTY</span>
+                <span class="difficulty-mode-toggles">
                 <button type="button" id="chaosModeToggle" class="mini-visibility-toggle"
                     role="switch" aria-checked="false" aria-controls="chaosCurseSection"
                     title="Show the Chaos Curses basin">
                     <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
                     <span class="mini-visibility-label">CHAOS</span>
                 </button>
+                    <button type="button" id="chaosPlusModeToggle" class="mini-visibility-toggle"
+                        role="switch" aria-checked="false" aria-controls="chaosCurseSection"
+                        title="Include Chaos+ exclusives in the same Chaos column">
+                        <span class="mini-visibility-track"><span class="mini-visibility-thumb"></span></span>
+                        <span class="mini-visibility-label">CHAOS+</span>
+                    </button>
+                </span>
             </div>
 
             <div
@@ -365,18 +373,12 @@
 
                     <div class="upgrade-panel-heading-group">
 
-                        <div class="upgrade-panel-heading animated-header-text">
-                            SHOP UPGRADE CALCULATOR
+                        <div class="tool-header-brand tool-header-brand--upgrades" role="heading" aria-level="1" aria-label="Upgrade calculator">
+                            <img src="assets/branding/UpgradesHeader.png" alt="Upgrades" width="2394" height="558">
                         </div>
-
-                        <div class="upgrade-panel-zoom-note">
-                            Panel not fitting your screen? Zoom out with
-                            <span class="upgrade-zoom-key">Ctrl</span> + <span class="upgrade-zoom-key">&minus;</span>
-                            (or <span class="upgrade-zoom-key">Ctrl</span> + <span class="upgrade-zoom-key">+</span> to zoom back in).
-                        </div>
-
-                        <div class="upgrade-panel-shortcut-note">
-                            <span class="upgrade-zoom-key">Ctrl</span> + click an upgrade to mark its next stack owned immediately. Ctrl + click an owned upgrade to remove one stack.
+                        <div class="upgrade-shortcut-legend" aria-label="Keyboard shortcuts">
+                            <span title="Ctrl and minus/plus adjust browser zoom"><kbd>Ctrl</kbd> <kbd>− / +</kbd> Zoom</span>
+                            <span title="Ctrl + click adds an owned stack; Ctrl + click a fully owned upgrade removes one"><kbd>Ctrl</kbd> + <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="1" width="8" height="14" rx="4"/><path d="M8 1v5M4 6h8"/></svg> ±1 owned</span>
                         </div>
 
                     </div>
@@ -385,11 +387,11 @@
 
                         <button
                             id="upgradeOwnAllButton"
-                            class="upgrade-reset-button upgrade-own-all-button"
+                            class="upgrade-reset-button upgrade-own-all-button upgrade-action-icon"
                             type="button"
-                            title="Mark every upgrade as fully owned - a quick way to see the full owned state, not an in-run purchase"
+                            title="Own all upgrades" aria-label="Own all upgrades"
                         >
-                            <span class="btn-label">OWN ALL</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 12 4 4 8-8m-3 8 8-8"/></svg><span class="btn-label">OWN ALL</span>
                         </button>
 
                         <button
@@ -1034,8 +1036,8 @@
 
             <div>
                 <div class="pool-title-row">
-                    <div class="pool-title animated-header-text">
-                        CURSE POOLS
+                    <div class="tool-header-brand tool-header-brand--curses" role="heading" aria-level="1" aria-label="Curse tracker">
+                        <img src="assets/branding/CursesHeader.png" alt="Curses" width="2394" height="558">
                     </div>
 
                     <button
@@ -1597,6 +1599,18 @@
 
 
         <div class="curse-pool-columns" id="cursePoolColumns">
+        <section id="chaosCurseSection" class="result-section result-section--hidden">
+
+            <div class="result-heading">
+
+                <h2 id="chaosHeading" class="animated-header-text">• CHAOS CURSES</h2>
+
+            </div>
+
+            <div id="chaosCurseContainer" class="result-grid"></div>
+
+        </section>
+
         <section class="result-section">
 
             <div class="result-heading">
@@ -1613,17 +1627,7 @@
         </section>
 
 
-        <section id="chaosCurseSection" class="result-section result-section--hidden">
 
-            <div class="result-heading">
-
-                <h2 id="chaosHeading" class="animated-header-text">• CHAOS CURSES</h2>
-
-            </div>
-
-            <div id="chaosCurseContainer" class="result-grid"></div>
-
-        </section>
 
 
         <section class="result-section">
@@ -1769,8 +1773,8 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261026-list1"></script>
-<script src="js/upgrades.js?v=20261026-shop2"></script>
+<script src="js/tracker.js?v=20261026-chaos2"></script>
+<script src="js/upgrades.js?v=20261026-legend1"></script>
 <script src="js/tools.js?v=20261025-limited1"></script>
 
 </body>

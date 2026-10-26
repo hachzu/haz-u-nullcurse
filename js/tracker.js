@@ -6,6 +6,7 @@ const runState = {
     difficulty: "Standard",
 
     chaosMode: false,
+    chaosPlusMode: false,
 
     activeEnemies: new Map(),
 
@@ -592,29 +593,14 @@ const enemyCurses = [
 ];
 
 
-// Chaos curses use shared cards without level or enemy requirements.
+// Divine identity follows the blue/purple artwork outline, independently of Chaos+.
+const DIVINE_CURSE_NAMES = new Set(["They're Here", "Water Pad", "Aura", "Bloody Bell", "Nuclear Bomb", "Legion", "Where’s Husk?", "Three Sixteenths", "Accurate Bell", "Husk Block", "Don’t Touch Me", "Muted", "Soy Retro"]);
+
+// Chaos+ extends the same Chaos pool; both bypass ordinary unlock requirements.
 const chaosCurses = [
-    "Nuclear Bomb",
-    "Legion",
-    "Where’s Husk?",
-    "Flip Switch",
-    "Don’t Touch Me",
-    "Water Planet",
-    "Destroyer",
-    "Muted",
-    "Stairs... Stairs",
-    "Less Stairs",
-    "Tripnuke",
-    "Delusion",
-    "Soy Retro",
-    "Bloody Bell",
-    "Missile Silo",
-    "Husk Presence",
-    "Husk Block",
-    "Mighty Cavalry",
-    "Teledancer",
-    "Cognitive Dissonance"
-].map(name => ({ name, chaos: true }));
+    ...["They're Here", "Water Pad", "Aura", "Bloody Bell", "Limitless", "Flip Switch", "Less Stairs", "Tripnuke", "Missile Silo", "Mighty Cavalry", "Teledancer", "Mart Slide", "Pacifier", "Conga Line", "Random Husk", "Aries", "Supernova", "Void Explosions", "Stop Sign"].map(name => ({ name, chaos: true, divine: DIVINE_CURSE_NAMES.has(name) })),
+    ...["Nuclear Bomb", "Legion", "Where’s Husk?", "Three Sixteenths", "Accurate Bell", "Husk Block", "Don’t Touch Me", "Muted", "Soy Retro", "Spreadshot", "Googolpede", "Reversed Convergence", "Stairs... Stairs...", "Husk Presence", "Fake Count"].map(name => ({ name, chaos: true, chaosPlus: true, divine: DIVINE_CURSE_NAMES.has(name) }))
+];
 
 
 const greaterCurses = [
@@ -1254,6 +1240,9 @@ function createCurseNameLabel(name) {
 
 
 function findCurseByName(name) {
+    const chaosCurse = chaosCurses.find(curse => curse.name === name);
+    if (chaosCurse && runState.chaosMode && (!chaosCurse.chaosPlus || runState.chaosPlusMode)) return chaosCurse;
+
 
     const allCurses = [
         ...globalCurses,
@@ -1478,7 +1467,7 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
  */
 function isCurseSelectable(curse, ignoreLevel = false) {
 
-    if (curse.chaos && !runState.chaosMode) {
+    if (curse.chaos && (!runState.chaosMode || (curse.chaosPlus && !runState.chaosPlusMode))) {
         return false;
     }
 
@@ -2467,6 +2456,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     const card = document.createElement("button");
 
     card.className = "curse-card";
+    if (curse.divine) card.classList.add("curse-card--divine");
     card.style.setProperty("--level-order", (getCurseUnlockLevel(curse) || 1) * 2);
 
     if (isMedal) {
@@ -2615,9 +2605,11 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     metadata.className = 'curse-row-meta';
     const level = document.createElement('span');
     level.className = 'curse-row-level';
+    if (curse.chaos) level.classList.add('curse-row-level--chaos');
+    if (curse.chaosPlus) level.classList.add('curse-row-level--chaos-plus');
     const requiredLevel = getCurseUnlockLevel(curse) || 1;
-    level.textContent = requiredLevel;
-    level.setAttribute('aria-label', `Requires level ${requiredLevel}`);
+    level.textContent = curse.chaosPlus ? '+' : (curse.chaos ? '' : requiredLevel);
+    level.setAttribute('aria-label', curse.chaosPlus ? 'Chaos+ curse' : (curse.chaos ? 'Chaos curse' : `Requires level ${requiredLevel}`));
     metadata.appendChild(level);
     if (dependencies.childElementCount) {
         card.classList.add('curse-card--dependencies');
@@ -2724,6 +2716,8 @@ function renderActiveCurses() {
         const item = document.createElement("div");
 
         item.className = "active-curse";
+        if (curse.divine) item.classList.add("active-curse--divine");
+        else if (curse.chaos) item.classList.add("active-curse--chaos");
 
         if (greater) {
 
@@ -2863,7 +2857,7 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
     }
 
-    const levels = [...new Set(curses.map(curse => getCurseUnlockLevel(curse) || 1))].sort((a, b) => a - b);
+    const levels = [...new Set(curses.filter(curse => !curse.chaos).map(curse => getCurseUnlockLevel(curse) || 1))].sort((a, b) => a - b);
     levels.forEach(level => {
         const divider = document.createElement('div');
         divider.className = 'curse-level-divider';
@@ -2913,6 +2907,7 @@ function persistRunState() {
             difficulty: runState.difficulty,
 
             chaosMode: runState.chaosMode,
+            chaosPlusMode: runState.chaosPlusMode,
 
             playerCount: getPlayerCount(),
 
@@ -2995,10 +2990,11 @@ function loadRunState() {
         runState.level = saved.level || 1;
         runState.difficulty = saved.difficulty || "Standard";
         runState.chaosMode = saved.chaosMode === true;
+        runState.chaosPlusMode = runState.chaosMode && saved.chaosPlusMode === true;
         runState.activeEnemies = new Map(
             (saved.activeEnemies || []).map(entry => Array.isArray(entry) ? entry : [entry, 1])
         );
-        runState.activeCurses = new Set(saved.activeCurses || []);
+        runState.activeCurses = new Set((saved.activeCurses || []).map(name => name === 'Stairs... Stairs' ? 'Stairs... Stairs...' : name));
         runState.curseStacks = new Map(saved.curseStacks || []);
         // The old format awarded payout to every selected medal curse,
         // so its saved values cannot reliably be carried forward.
@@ -3084,9 +3080,12 @@ function render() {
     const chaosToggle = document.getElementById("chaosModeToggle");
     chaosToggle.classList.toggle("active", runState.chaosMode);
     chaosToggle.setAttribute("aria-checked", String(runState.chaosMode));
+    const chaosPlusToggle = document.getElementById('chaosPlusModeToggle');
+    chaosPlusToggle.classList.toggle('active', runState.chaosPlusMode);
+    chaosPlusToggle.setAttribute('aria-checked', String(runState.chaosPlusMode));
     document.getElementById("chaosCurseSection").classList.toggle("result-section--hidden", !runState.chaosMode);
     if (runState.chaosMode) {
-        renderPool("chaosCurseContainer", chaosCurses.filter(curse => isCurseVisibleInPool(curse, true)));
+        renderPool("chaosCurseContainer", chaosCurses.filter(curse => (!curse.chaosPlus || runState.chaosPlusMode) && isCurseVisibleInPool(curse, true)).sort((a, b) => Number(b.divine) - Number(a.divine)));
     } else {
         document.getElementById("chaosCurseContainer").innerHTML = "";
     }
@@ -3272,6 +3271,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
     runState.level = 1;
     runState.difficulty = "Standard";
     runState.chaosMode = false;
+    runState.chaosPlusMode = false;
 
     runState.activeEnemies.clear();
     runState.activeCurses.clear();
@@ -3360,9 +3360,16 @@ updateMuteToggleUI();
 
 attachClickAction(document.getElementById("chaosModeToggle"), () => {
     runState.chaosMode = !runState.chaosMode;
+    if (!runState.chaosMode) runState.chaosPlusMode = false;
     render();
 }, playUtilitySound);
 
+
+attachClickAction(document.getElementById('chaosPlusModeToggle'), () => {
+    runState.chaosPlusMode = !runState.chaosPlusMode;
+    if (runState.chaosPlusMode) runState.chaosMode = true;
+    render();
+}, playUtilitySound);
 
 const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
 const curseListModeToggle = document.getElementById('curseListModeToggle');

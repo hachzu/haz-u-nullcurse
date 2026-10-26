@@ -3259,10 +3259,11 @@ function renderIconModeToggle() {
 
         button.type = "button";
         button.id = "upgradeIconModeToggle";
-        button.className = "upgrade-reset-button upgrade-icon-mode-button";
+        button.className = "upgrade-reset-button upgrade-icon-mode-button upgrade-action-icon";
+        button.setAttribute('aria-label', 'Icon view');
+        button.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>');
         button.setAttribute("aria-pressed", "false");
-        button.title = "Show upgrades as icons only, hiding names and levels for a quicker visual scan. "
-            + "Full details are still available as a tooltip on hover.";
+        button.title = "Toggle icon view";
 
         const label = document.createElement("span");
 
@@ -3320,11 +3321,11 @@ function renderFreeformSortToggle() {
 
         button.type = "button";
         button.id = "upgradeFreeformSortToggle";
-        button.className = "upgrade-reset-button upgrade-freeform-sort-button";
+        button.className = "upgrade-reset-button upgrade-freeform-sort-button upgrade-action-icon";
+        button.setAttribute('aria-label', 'Sort by level');
+        button.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16m-3-3 3 3 3-3M11 5h4m-4 7h7m-7 7h10"/></svg>');
         button.setAttribute("aria-pressed", "false");
-        button.title = "OFF: Upgrades stay grouped into their category columns. "
-            + "ON: Category grouping is dropped entirely - every visible upgrade "
-            + "lays out in one freeform 5-column grid ordered by level instead.";
+        button.title = "Toggle categories / all upgrades by level";
 
         const label = document.createElement("span");
 

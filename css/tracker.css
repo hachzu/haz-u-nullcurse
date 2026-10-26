@@ -4913,3 +4913,67 @@ body {
     opacity: 0.18;
 }
 .curse-pool-columns--list .curse-lock-badge--level { display: none; }
+
+/* Categories share one horizontal strip; extra pools never wrap out of view. */
+.right-panel:has(.curse-pool-columns--list) { min-width: 0; padding-bottom: 96px; }
+.curse-pool-columns--list {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    max-width: none;
+    overflow-x: auto;
+    padding-bottom: 72px;
+    scrollbar-width: thin;
+    scrollbar-color: #9147d6 transparent;
+}
+.curse-pool-columns--list > .result-section { flex: 1 0 190px; }
+.curse-pool-columns--list .curse-row-level--chaos { display: none; }
+.curse-pool-columns--list .curse-row-level--chaos-plus { display: block; font-size: 60px; }
+.difficulty-mode-toggles { display: inline-flex; gap: 6px; flex-wrap: nowrap; }
+
+/* Artwork-defined Divine curses use blue/violet in either Chaos variant. */
+#chaosHeading {
+    background-image: linear-gradient(90deg, #ae1313, #ff9d9d, #ae1313);
+    text-shadow: none;
+}
+#chaosCurseContainer .curse-card--divine {
+    background: linear-gradient(150deg, #101a30, #1a0b2c);
+    border-color: #9ba6e7;
+    border-image: linear-gradient(135deg, #78bfff, #ae7cda) 1;
+    box-shadow: none;
+}
+#chaosCurseContainer .curse-card--divine:hover {
+    background: linear-gradient(150deg, #192944, #2a1541);
+    box-shadow: none;
+}
+#chaosCurseContainer .curse-card--divine .curse-name-label { color: #d3ddff; }
+.curse-pool-columns--list #chaosCurseContainer .curse-card--divine { --stack-fill: #344d82; --stack-edge: #a7b4ed; }
+.active-curse--chaos {
+    background: linear-gradient(90deg, #641919, #ae3030);
+    border-color: #d46c6c;
+    box-shadow: none;
+}
+.active-curse--divine {
+    background: linear-gradient(90deg, #244974, #633e8e);
+    border-color: #a7b4ed;
+    box-shadow: none;
+}
+
+/* Centered level labels with equally subtle rules on both sides. */
+.curse-pool-columns--list .curse-level-divider::before {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: currentColor;
+    opacity: 0.18;
+}
+/* Wiki header art, cropped only by CSS to remove transparent outer margins. */
+.tool-header-brand { position: relative; flex: 0 0 auto; overflow: hidden; animation: tool-brand-float 6s ease-in-out infinite; }
+.tool-header-brand img { position: absolute; max-width: none; height: auto; pointer-events: none; }
+.tool-header-brand--curses { width: 220px; height: 95px; }
+.tool-header-brand--curses img { width: 227.78%; left: -62.23%; top: -18.68%; }
+.tool-header-brand--upgrades { width: 180px; height: 58px; }
+.tool-header-brand--upgrades img { width: 168.71%; left: -33.83%; top: -18.42%; }
+@keyframes tool-brand-float { 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .tool-header-brand { animation: none; } }
