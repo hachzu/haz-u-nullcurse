@@ -64,7 +64,8 @@ const curseVisibilityState = {
  * gives them, so the "this is worth a medal" signal isn't lost.
  */
 const medalDisplayState = {
-    hideSection: false
+    hideSection: false,
+    listMode: true
 };
 
 const MEDAL_DISPLAY_STORAGE_KEY = "nullscapeMedalDisplayState";
@@ -96,6 +97,7 @@ function loadMedalDisplayState() {
         const saved = JSON.parse(raw);
 
         medalDisplayState.hideSection = Boolean(saved.hideSection);
+        medalDisplayState.listMode = typeof saved.listMode === 'boolean' ? saved.listMode : true;
 
     } catch (error) {
 
@@ -2465,6 +2467,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     const card = document.createElement("button");
 
     card.className = "curse-card";
+    card.style.setProperty("--level-order", (getCurseUnlockLevel(curse) || 1) * 2);
 
     if (isMedal) {
 
@@ -2493,7 +2496,10 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
     card.appendChild(media);
 
-    card.appendChild(createCurseNameLabel(curse.name));
+    const copy = document.createElement('div');
+    copy.className = 'curse-card-copy';
+    copy.appendChild(createCurseNameLabel(curse.name));
+    card.appendChild(copy);
 
     const dependencies = document.createElement("div");
     dependencies.className = "card-dependencies";
@@ -2548,7 +2554,18 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
         const stackInfo = document.createElement("div");
 
         stackInfo.className = "curse-info stack-info";
-        stackInfo.textContent = `${getCurseStackCount(curse.name)} / ${curse.max}`;
+        const current = getCurseStackCount(curse.name);
+        stackInfo.setAttribute('aria-label', `${current} of ${curse.max} stacks`);
+        const currentStack = document.createElement('span');
+        currentStack.className = 'curse-stack-current';
+        currentStack.textContent = current;
+        const separator = document.createElement('span');
+        separator.className = 'curse-stack-separator';
+        separator.textContent = ' / ';
+        const maximumStack = document.createElement('span');
+        maximumStack.className = 'curse-stack-maximum';
+        maximumStack.textContent = curse.max;
+        stackInfo.append(currentStack, separator, maximumStack);
 
         card.appendChild(stackInfo);
 
@@ -2573,7 +2590,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
         // are rewarded for picking it from a medal curse pool.
         reward.title = `+${rewardAmount} added to your Medal Payout. It's also how many Golden Gifts you're rewarded for picking this from a medal curse pool.`;
 
-        card.appendChild(reward);
+        copy.appendChild(reward);
 
     }
 
@@ -2588,16 +2605,25 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
             lockBadge.className = `curse-lock-badge ${badgeInfo.className}`;
             lockBadge.textContent = badgeInfo.text;
 
-            card.appendChild(lockBadge);
+            copy.appendChild(lockBadge);
 
         }
 
     }
 
+    const metadata = document.createElement('div');
+    metadata.className = 'curse-row-meta';
+    const level = document.createElement('span');
+    level.className = 'curse-row-level';
+    const requiredLevel = getCurseUnlockLevel(curse) || 1;
+    level.textContent = requiredLevel;
+    level.setAttribute('aria-label', `Requires level ${requiredLevel}`);
+    metadata.appendChild(level);
     if (dependencies.childElementCount) {
         card.classList.add('curse-card--dependencies');
-        card.appendChild(dependencies);
+        metadata.appendChild(dependencies);
     }
+    card.appendChild(metadata);
 
     attachClickAction(card, () => {
 
@@ -2836,6 +2862,17 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
         return;
 
     }
+
+    const levels = [...new Set(curses.map(curse => getCurseUnlockLevel(curse) || 1))].sort((a, b) => a - b);
+    levels.forEach(level => {
+        const divider = document.createElement('div');
+        divider.className = 'curse-level-divider';
+        divider.style.setProperty('--level-order', level * 2 - 1);
+        divider.setAttribute('role', 'separator');
+        divider.setAttribute('aria-label', `Level ${level} curses`);
+        divider.textContent = `Level ${level}`;
+        container.appendChild(divider);
+    });
 
     curses.forEach(curse => {
 
@@ -3328,6 +3365,26 @@ attachClickAction(document.getElementById("chaosModeToggle"), () => {
 
 
 const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
+const curseListModeToggle = document.getElementById('curseListModeToggle');
+
+function updateCurseListModeUI() {
+    document.querySelectorAll('#cursePoolColumns .result-heading h2').forEach(heading => {
+        const label = heading.textContent.replace(/^•\s*/, '');
+        heading.textContent = medalDisplayState.listMode ? label : `• ${label}`;
+    });
+    document.getElementById('cursePoolColumns')?.classList.toggle('curse-pool-columns--list', medalDisplayState.listMode);
+    curseListModeToggle?.classList.toggle('active', medalDisplayState.listMode);
+    curseListModeToggle?.setAttribute('aria-checked', String(medalDisplayState.listMode));
+}
+
+if (curseListModeToggle) {
+    attachClickAction(curseListModeToggle, () => {
+        medalDisplayState.listMode = !medalDisplayState.listMode;
+        saveMedalDisplayState();
+        updateCurseListModeUI();
+    }, playUtilitySound);
+}
+
 
 function updateMedalDisplayToggleUI() {
 
@@ -3356,6 +3413,7 @@ if (hideMedalCursesToggle) {
 
 loadMedalDisplayState();
 updateMedalDisplayToggleUI();
+updateCurseListModeUI();
 
 const showUpcomingCursesToggle = document.getElementById("showUpcomingCursesToggle");
 const showAllCursesToggle = document.getElementById("showAllCursesToggle");

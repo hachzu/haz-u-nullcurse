@@ -43,7 +43,7 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261026-disclosure1">
+    <link rel="stylesheet" href="css/tracker.css?v=20261026-list1">
     <link rel="stylesheet" href="css/upgrades.css?v=20261026-shop2">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-header1">
@@ -1009,6 +1009,13 @@
 
                     <div class="pool-control-group-label">DISPLAY</div>
 
+                    <button type="button" id="curseListModeToggle" class="curse-visibility-toggle"
+                        role="switch" aria-checked="false" aria-controls="cursePoolColumns"
+                        title="Show curse categories as compact columns of rows">
+                        <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                        <span class="curse-visibility-label">LIST</span>
+                    </button>
+
                     <button
                         type="button"
                         id="hideMedalCursesToggle"
@@ -1589,6 +1596,7 @@
 
 
 
+        <div class="curse-pool-columns" id="cursePoolColumns">
         <section class="result-section">
 
             <div class="result-heading">
@@ -1664,6 +1672,8 @@
             ></div>
 
         </section>
+
+        </div>
 
     </main>
 
@@ -1759,7 +1769,7 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261026-voidbound1"></script>
+<script src="js/tracker.js?v=20261026-list1"></script>
 <script src="js/upgrades.js?v=20261026-shop2"></script>
 <script src="js/tools.js?v=20261025-limited1"></script>
 

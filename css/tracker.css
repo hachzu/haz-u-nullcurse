@@ -427,7 +427,7 @@
 
     color: #ffb0b0;
 
-    font-family: var(--font-modern);
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.4px;
@@ -1387,7 +1387,7 @@ body {
     min-height: 100vh;
     background: #05010c;
     color: #e8dcff;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-modern);
     overflow-x: hidden;
 }
 
@@ -4636,3 +4636,280 @@ body {
     top: -3px;
     padding: 0 3px;
 }
+
+/* Card mode keeps its original layout; list mode only changes presentation. */
+.curse-pool-columns { display: contents; }
+.curse-card-copy, .curse-row-meta { display: contents; }
+.curse-row-level { display: none; }
+.curse-pool-columns--list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px 12px;
+}
+.curse-pool-columns--list > .result-section { min-width: 0; margin: 0; }
+.curse-pool-columns--list .result-heading { justify-content: center; margin-bottom: 14px; }
+.curse-pool-columns--list .result-heading h2 { width: 100%; margin: 0; text-align: center; font-size: 16px; font-weight: 800; line-height: 1.5; }
+.curse-pool-columns--list .result-grid { grid-template-columns: minmax(0, 1fr); gap: 7px; padding-left: 14px; }
+.curse-pool-columns--list .curse-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 24px;
+    grid-template-rows: auto;
+    align-items: center;
+    justify-content: stretch;
+    gap: 4px 6px;
+    min-height: 62px;
+    aspect-ratio: auto;
+    margin: 0;
+    padding: 6px;
+    overflow: visible;
+    text-align: left;
+}
+.curse-pool-columns--list .curse-card .card-media {
+    grid-column: 1;
+    grid-row: 1;
+    width: 40px;
+    height: 44px;
+    max-height: none;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.curse-pool-columns--list .curse-card .card-media-image { object-fit: contain; }
+.curse-pool-columns--list .curse-row-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    grid-column: 3;
+    grid-row: 1;
+    gap: 5px;
+    min-width: 0;
+}
+.curse-pool-columns--list .curse-row-level {
+    display: block;
+    color: #b5a6cd;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.curse-pool-columns--list .curse-card-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    min-width: 0;
+    gap: 3px;
+    position: relative;
+    z-index: 1;
+}
+.curse-pool-columns--list .curse-name-label {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.3;
+    overflow: visible;
+    overflow-wrap: normal;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.curse-pool-columns--list .card-dependencies {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    padding: 0;
+    max-width: 24px;
+    gap: 4px;
+}
+.curse-pool-columns--list .card-dependencies > div {
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+}
+.curse-pool-columns--list .curse-info.stack-info {
+    position: absolute;
+    top: 50%;
+    left: -15px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    z-index: 2;
+    margin: 0;
+    padding: 2px 0;
+    background: rgba(10, 4, 20, 0.95);
+    color: #f0e4ff;
+    font-size: 9px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+.curse-pool-columns--list .curse-stack-separator { display: none; }
+.curse-pool-columns--list .curse-stack-current { border-bottom: 1px solid #b5a6cd; min-width: 10px; text-align: center; }
+.curse-pool-columns--list .curse-reward-badge,
+.curse-pool-columns--list .curse-lock-badge {
+    position: static;
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: start;
+    transform: none;
+    margin: 0;
+    padding: 2px 5px;
+    font-size: 8px;
+}
+
+@media (max-width: 1100px) {
+    .curse-pool-columns--list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+    .curse-pool-columns--list { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Hanging stack counters inherit the category of the list they appear in. */
+.curse-pool-columns--list #medalCurseContainer { --stack-fill: #075c7b; --stack-edge: #71dcff; }
+.curse-pool-columns--list #globalCurseContainer { --stack-fill: #5b2784; --stack-edge: #d59bff; }
+.curse-pool-columns--list #enemyCurseContainer { --stack-fill: #852b35; --stack-edge: #ff9d9d; }
+.curse-pool-columns--list #greaterCurseContainer { --stack-fill: #85400c; --stack-edge: #ffb37a; }
+.curse-pool-columns--list #chaosCurseContainer { --stack-fill: #7e1525; --stack-edge: #ff647e; }
+.curse-pool-columns--list .curse-info.stack-info {
+    box-sizing: border-box;
+    width: 17px;
+    left: -16px;
+    padding: 3px 1px;
+    background: var(--stack-fill, #5b2784);
+    border: 1px solid var(--stack-edge, #d59bff);
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 1px 4px #0008;
+}
+.curse-pool-columns--list .curse-stack-current { border-bottom-color: var(--stack-edge, #d59bff); }
+
+/* Large, subdued level numerals stay inside each row as background detail. */
+.curse-pool-columns--list .curse-card { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.curse-pool-columns--list .curse-card .card-media { width: 44px; height: 48px; position: relative; z-index: 1; }
+.curse-pool-columns--list .curse-name-label {
+    font-family: var(--font-modern);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+.curse-pool-columns--list .curse-row-meta:has(.card-dependencies) { width: 24px; }
+.curse-pool-columns--list .card-dependencies { position: relative; z-index: 1; }
+.curse-pool-columns--list .curse-row-level {
+    position: absolute;
+    right: 38px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: #e3d1ff;
+    opacity: 0.16;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+/* Blue and white Medal accents surround the shared opaque purple card fill. */
+#medalHeading {
+    background-image: linear-gradient(90deg, #3e80b3, #bbcedd, #3e80b3);
+    text-shadow: none;
+}
+#medalCurseContainer .curse-card,
+#medalCurseContainer .curse-card:hover,
+#globalCurseContainer .curse-card.medal,
+#globalCurseContainer .curse-card.medal:hover,
+#enemyCurseContainer .curse-card.medal,
+#enemyCurseContainer .curse-card.medal:hover {
+    background: linear-gradient(160deg, #150826 0%, #0d0416 100%);
+    border-color: #3f7399;
+    box-shadow: none;
+}
+#medalCurseContainer .curse-card .curse-name-label,
+#globalCurseContainer .curse-card.medal .curse-name-label,
+#enemyCurseContainer .curse-card.medal .curse-name-label { color: #c9dce9; }
+.curse-reward-badge,
+#globalCurseContainer .curse-card.medal .curse-reward-badge,
+#enemyCurseContainer .curse-card.medal .curse-reward-badge {
+    background: linear-gradient(135deg, #254760, #386f98);
+    border-color: #6c98b8;
+    color: #edf5fc;
+    box-shadow: none;
+}
+.active-curse--medal:not(.active-curse--medal-purified) {
+    background: linear-gradient(90deg, #1c3852, #32678f);
+    border-color: #6c98b8;
+    color: #edf5fc;
+    box-shadow: none;
+}
+.active-curse--medal-purified { box-shadow: none; }
+.curse-pool-columns--list #medalCurseContainer { --stack-fill: #254760; --stack-edge: #6c98b8; }
+.curse-pool-columns--list #medalCurseContainer .stack-info {
+    color: #0b263b;
+    box-shadow: none;
+}
+.curse-pool-columns--list #medalCurseContainer .curse-stack-current { border-bottom-color: #548bad; }
+
+.curse-pool-columns--list .curse-info.stack-info {
+    background: var(--stack-edge, #d59bff);
+    color: #171322;
+}
+.curse-pool-columns--list .curse-stack-current { border-bottom-color: #34283f80; }
+.active-curse--medal .purify-price { color: #edf5fc; text-shadow: none; }
+.active-curse--medal .purify-button,
+.active-curse--medal .active-curse-remove {
+    background: #b5cbdc;
+    border-color: #6c98b8;
+    color: #0b263b;
+    box-shadow: none;
+}
+
+/* Keep every numeral aligned, leaving the same right-side lane for dependencies. */
+.curse-pool-columns--list .curse-row-level { font-family: 'Source Sans Pro', sans-serif; }
+
+/* Small level separators exist only in the list presentation. */
+.curse-level-divider { display: none; }
+.right-panel:has(.curse-pool-columns--list) { padding-inline: 16px; }
+.curse-pool-columns--list {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-top: 18px;
+    column-gap: 16px;
+}
+.curse-pool-columns--list .curse-card { order: var(--level-order); }
+.curse-pool-columns--list .curse-level-divider {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    order: var(--level-order);
+    min-width: 0;
+    height: 10px;
+    color: #a794bd;
+    font-size: 8px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.2px;
+}
+.curse-pool-columns--list .curse-level-divider::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: currentColor;
+    opacity: 0.18;
+}
+.curse-pool-columns--list .curse-lock-badge--level { display: none; }
