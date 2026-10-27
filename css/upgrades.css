@@ -3297,6 +3297,9 @@
     flex: 1 1 100%;
 }
 .upgrade-gift-summary .upgrade-gifts-block { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.upgrade-summary-counter { min-width: 0; }
+.upgrade-summary-label { text-align: center; }
+.upgrade-summary-counter--remaining .upgrade-summary-label { color: #ffd074; }
 .upgrade-gift-summary .upgrade-gifts-block input { min-height: 50px; font-size: 18px; text-align: center; box-sizing: border-box; }
 .upgrade-gift-summary .upgrade-panel-total {
     flex-direction: column;

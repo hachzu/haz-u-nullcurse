@@ -44,7 +44,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/tracker.css?v=20261026-dimmer-bg1">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261027-summary-purchase1">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261027-counter-labels1">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
@@ -425,8 +425,9 @@
 
                         </div>
 
-                        <div class="upgrade-panel-total roll-pill">
-                            <span class="upgrade-panel-total-label">TOTAL</span>
+                        <div class="upgrade-summary-counter">
+                            <span id="upgradeTotalLabel" class="upgrade-control-label upgrade-summary-label">TOTAL</span>
+                        <div class="upgrade-panel-total roll-pill" aria-labelledby="upgradeTotalLabel">
                             <span
                                 id="upgradeTotalValue"
                                 class="upgrade-panel-total-value"
@@ -435,14 +436,17 @@
                             </span>
                         </div>
 
-                        <div class="upgrade-panel-total upgrade-panel-remaining roll-pill">
-                            <span class="upgrade-panel-total-label">LEFT GIFTS</span>
+                        </div>
+                        <div class="upgrade-summary-counter upgrade-summary-counter--remaining">
+                            <span id="upgradeRemainingLabel" class="upgrade-control-label upgrade-summary-label">GIFTS LEFT</span>
+                        <div class="upgrade-panel-total upgrade-panel-remaining roll-pill" aria-labelledby="upgradeRemainingLabel">
                             <span
                                 id="upgradeRemainingValue"
                                 class="upgrade-panel-total-value"
                             >
                                 0
                             </span>
+                        </div>
                         </div>
                         <button
                             id="purchaseUpgradeButton"
