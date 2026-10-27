@@ -4,11 +4,6 @@
     width: 100%; min-width: 0; color: #f0e2ff; text-decoration: none;
 }
 .toolkit-brand img { display: block; width: 100%; height: auto; }
-.toolkit-brand-caption {
-    margin-top: -8px; font: 500 22px/1.1 Georgia, 'Times New Roman', serif;
-    letter-spacing: .1em; text-indent: .1em;
-    text-shadow: 0 0 5px #d89bff66, 0 0 10px #b866ff1a;
-}
 .toolkit-brand:focus-visible { outline: 1px solid #d8b5ff; outline-offset: 6px; }
 .sidebar-credits { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lp-soft, #4a2270); text-align: center; }
 .sidebar-credits .credit { margin: 0 0 7px; color: var(--lp-text, #9a7cc9); font-size: 11px; }

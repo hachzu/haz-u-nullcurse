@@ -24,7 +24,7 @@ body.at-home { margin: 0; background: #000; color: #e8dcff; overflow-x: hidden; 
     inset: -5%;
     z-index: -2;
     pointer-events: none;
-    background-image: url('../assets/branding/maintenance-5-1.png');
+    background-image: var(--landing-background, url('../assets/background/CurseTracker2.png'));
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -32,6 +32,16 @@ body.at-home { margin: 0; background: #000; color: #e8dcff; overflow-x: hidden; 
     transform: translate3d(var(--landing-x, 0px), var(--landing-y, 0px), 0);
     transition: transform .65s ease-out, opacity .8s ease;
 }
+.landing-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--next-landing-background, none) center / cover no-repeat;
+    opacity: 0;
+    pointer-events: none;
+}
+.landing-background.background-changing::after { opacity: 1; transition: opacity 800ms ease; }
+@media (prefers-reduced-motion: reduce) { .landing-background.background-changing::after { transition: none; } }
 .landing-vignette {
     position: absolute;
     inset: 0;
@@ -813,7 +823,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     transform-origin: center;
     scale: var(--ns-build-scale, 1);
 }
-/* The clean source contains no Toolkits lettering or halo to hide. */
+/* Nullscape assembles on its own; the separate Toolkits artwork reveals after settling. */
 .landing-view .landing-logo-stage {
     display: flex;
     flex-direction: column;
@@ -861,15 +871,10 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     position: relative;
     display: flex;
     justify-content: center;
-    width: 100%;
-    margin: clamp(-20px, -4vw, -12px) auto 0;
+    width: 87.28813559%;
+    margin: -8% auto 0;
     pointer-events: none;
-    /* Clean live lettering avoids the haze baked into the old bitmap crop. */
     background: none;
-    color: #f0e2ff;
-    font: 500 clamp(28px, 3.8vw, 40px)/1.1 Georgia, 'Times New Roman', serif;
-    text-align: center;
-    text-shadow: 0 0 5px #d89bff66, 0 0 10px #b866ff1a;
     opacity: var(--ns-toolkit-visible, 0);
     -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--ns-toolkit-wipe, 0%) - 2%), transparent var(--ns-toolkit-wipe, 0%));
     mask-image: linear-gradient(90deg, #000 calc(var(--ns-toolkit-wipe, 0%) - 2%), transparent var(--ns-toolkit-wipe, 0%));
@@ -878,10 +883,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
 }
-.landing-view .ns-toolkit-caption {
-    letter-spacing: .1em;
-    margin-right: -.1em;
-}
+.landing-view .ns-toolkit-wordmark { display: block; width: 100%; height: auto; }
 .landing-view .ns-startup-load {
     position: absolute;
     left: 50%;
@@ -1383,12 +1385,6 @@ html.low-detail-mode .landing-features.is-copy { display: none; }
 }
 .landing-view .ns-logo-art { isolation: isolate; }
 .landing-view:is([data-intro-state='waiting'], [data-intro-state='playing']) .landing-logo-tinted::after { opacity: 0; }
-.landing-view .ns-toolkit-caption {
-    color: transparent;
-    background: linear-gradient(180deg, #ce73d0 0%, #ce73d0 88%, #d98ada 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-}
 .landing-view .ns-dust-layer i { background: #93dfb9; box-shadow: 0 0 3px 1px #5bcb9b38; }
 .ns-drop-spark { background: #93dfb9; box-shadow: 0 0 6px #5bcb9b66; }
 .landing-view .logo-burst {
@@ -1417,10 +1413,9 @@ html.low-detail-mode .landing-features.is-copy { display: none; }
 @media (prefers-reduced-motion: reduce) { .ns-audio-visualizer { display: none; } }
 html.low-detail-mode .ns-audio-visualizer { display: none; }
 
-/* The supplied wordmark keeps its original colors; Toolkits keeps its own gradient. */
+/* Keep the complete supplied artwork in its original colors. */
 .landing-logo-tinted::after, .landing-view .ns-logo-art::after { display: none; }
 .landing-credit { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; line-height: 1.4; }
 .landing-credit .landing-inspiration { max-width: min(360px, 75vw); text-align: right; color: #c6afd7; }
 
-/* Center the wordmark S over the l/k midpoint of the eight-letter caption. */
-.landing-view .ns-logo-face { left: -1.17647059%; }
+.landing-view .ns-logo-face { left: 0; }

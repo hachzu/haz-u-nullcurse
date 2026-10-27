@@ -13,11 +13,13 @@
         return;
     }
 
-    const layer = document.getElementById('bgLayer');
+    const initialized = window.NullscapeBackgroundLayers ||= new WeakSet();
+    function startBackground({ id, paths, interval, property, nextProperty, route }) {
+    const layer = document.getElementById(id);
     if (!layer) return;
-    const paths = ['CurseTracker3.png', 'CurseTracker2.png', 'CurseTracker.png']
-        .map(name => `assets/background/${name}`);
-    const interval = 60000;
+    if (initialized.has(layer)) return;
+    initialized.add(layer);
+    paths = paths.map(name => `assets/background/${name}`);
     let current = paths[0];
     let deck = shuffledDeck(paths.filter(path => path !== current), current);
     let timer;
@@ -25,8 +27,8 @@
     let deadline;
     let remaining = interval;
     const imageCSS = path => `url("${new URL(path, document.baseURI).href}")`;
-    const isVisible = () => !document.hidden && location.hash.replace(/^#\/?/, '').replace(/\/$/, '') === 'curses';
-    layer.style.setProperty('--curse-background', imageCSS(current));
+    const isVisible = () => !document.hidden && location.hash.replace(/^#\/?/, '').replace(/\/$/, '') === route;
+    layer.style.setProperty(property, imageCSS(current));
 
     function schedule() {
         clearTimeout(timer);
@@ -49,12 +51,12 @@
                 deck.unshift(next);
                 return;
             }
-            layer.style.setProperty('--next-curse-background', imageCSS(next));
+            layer.style.setProperty(nextProperty, imageCSS(next));
             layer.classList.add('background-changing');
             const fade = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 800;
             fadeTimer = setTimeout(() => {
                 current = next;
-                layer.style.setProperty('--curse-background', imageCSS(current));
+                layer.style.setProperty(property, imageCSS(current));
                 layer.classList.remove('background-changing');
             }, fade);
         } catch {
@@ -75,4 +77,9 @@
         clearTimeout(fadeTimer);
     });
     schedule();
+    }
+    startBackground({ id: 'landingBackground', paths: ['CurseTracker2.png', 'CurseTracker3.png', 'CurseTracker.png'],
+        interval: 10000, property: '--landing-background', nextProperty: '--next-landing-background', route: '' });
+    startBackground({ id: 'bgLayer', paths: ['CurseTracker3.png', 'CurseTracker2.png', 'CurseTracker.png'],
+        interval: 60000, property: '--curse-background', nextProperty: '--next-curse-background', route: 'curses' });
 })();
