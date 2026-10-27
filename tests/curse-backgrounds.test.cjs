@@ -5,14 +5,14 @@ const vm = require('node:vm');
 const path = require('node:path');
 const { shuffledDeck } = require('../js/curse-backgrounds.js');
 
-function harness() {
+function harness({ landing = false } = {}) {
     let now = 0, id = 0;
     const timers = new Map(), properties = new Map(), classes = new Set(), events = new Map();
     const layer = { style: { setProperty: (key, value) => properties.set(key, value) },
         classList: { add: value => classes.add(value), remove: value => classes.delete(value) } };
-    const document = { hidden: false, baseURI: 'https://example.test/toolkits/', getElementById: () => layer,
+    const document = { hidden: false, baseURI: 'https://example.test/toolkits/', getElementById: id => id === (landing ? 'landingBackground' : 'bgLayer') ? layer : null,
         addEventListener: (name, callback) => events.set(name, callback) };
-    const location = { hash: '#/curses' };
+    const location = { hash: landing ? '#/' : '#/curses' };
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/curse-backgrounds.js'), 'utf8'), {
         document, location, URL, performance: { now: () => now },
         Image: class { decode() { return Promise.resolve(); } },
@@ -65,4 +65,46 @@ test('leaving the tracker pauses the timer and returning resumes its remaining t
     assert(!h.classes.has('background-changing'));
     await h.advance(1);
     assert(h.classes.has('background-changing'));
+});
+
+test('landing shuffles all three original scenes every ten seconds without immediate repeats', async () => {
+    const h = harness({ landing: true });
+    const initial = h.properties.get('--landing-background');
+    assert.match(initial, /CurseTracker2\.png/);
+    await h.advance(9999);
+    assert.equal(h.properties.get('--landing-background'), initial);
+    await h.advance(1);
+    assert(h.classes.has('background-changing'));
+    await h.advance(800);
+    const second = h.properties.get('--landing-background');
+    assert.notEqual(second, initial);
+    await h.advance(10000);
+    const third = h.properties.get('--landing-background');
+    assert.equal(new Set([initial, second, third]).size, 3);
+    const paths = new Set([initial, second, third]);
+    let previous = third;
+    for (let i = 0; i < 8; i++) {
+        await h.advance(10000);
+        const current = h.properties.get('--landing-background');
+        assert(paths.has(current));
+        assert.notEqual(current, previous);
+        previous = current;
+    }
+});
+
+test('landing rotation pauses on tool routes and when the tab is hidden', async () => {
+    const h = harness({ landing: true }), initial = h.properties.get('--landing-background');
+    await h.advance(4000);
+    h.location.hash = '#/curses'; h.events.get('hashchange')();
+    await h.advance(60000);
+    assert.equal(h.properties.get('--landing-background'), initial);
+    h.location.hash = '#/'; h.events.get('hashchange')();
+    await h.advance(5999);
+    assert.equal(h.properties.get('--landing-background'), initial);
+    h.document.hidden = true; h.events.get('visibilitychange')();
+    await h.advance(60000);
+    assert.equal(h.properties.get('--landing-background'), initial);
+    h.document.hidden = false; h.events.get('visibilitychange')();
+    await h.advance(801);
+    assert.notEqual(h.properties.get('--landing-background'), initial);
 });
