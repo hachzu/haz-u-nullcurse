@@ -57,8 +57,30 @@
     };
     const DEBUG = new URLSearchParams(location.search).has('introdebug');
     const MOTIF = { notes: CONFIG.notes };
-    const CUT = CONFIG.song;
+    const SONG_VISIT_KEY = 'nullscapeLandingSongVisit';
+    let songVisit = 0;
+    try {
+        const saved = Number(localStorage.getItem(SONG_VISIT_KEY));
+        if (Number.isSafeInteger(saved) && saved >= 0) songVisit = saved;
+    } catch (_) { /* With storage blocked, the original soundtrack remains available. */ }
+    const CUT = songVisit % 2 === 1 ? {
+        ...CONFIG.song,
+        url: 'assets/nil-landing.mp3?v=20261027-jade1',
+        source: 'https://www.newgrounds.com/audio/listen/1556387',
+        title: 'nil', artist: 'Digital Descendant',
+        intermission: true, preroll: 0, dropFileTime: 0,
+        fadeIn: 3.5, transition: 2, kicks: []
+    } : CONFIG.song;
     const home = document.getElementById('landingView');
+    home.dataset.landingSong = CUT.intermission ? 'nil' : 'delightful';
+    const visualizer = document.createElement('canvas');
+    visualizer.className = 'ns-audio-visualizer';
+    visualizer.hidden = true;
+    visualizer.setAttribute('aria-hidden', 'true');
+    const visualizerPaint = visualizer.getContext?.('2d') || null;
+    const visualizerLevels = new Float32Array(96);
+    let visualizerLastTime = -Infinity;
+    home.append(visualizer);
     const brand = home.querySelector('.landing-brand');
     const content = home.querySelector('.landing-content');
     const background = home.querySelector('.landing-background');
@@ -109,9 +131,14 @@
     nowPlaying.hidden = true;
     nowPlaying.setAttribute('role', 'status');
     nowPlaying.setAttribute('aria-label', `Now playing: ${CUT.title} by ${CUT.artist}`);
-    const songTitle = document.createElement('span');
+    const songTitle = document.createElement(CUT.source ? 'a' : 'span');
     songTitle.className = 'ns-now-playing-title';
     songTitle.textContent = CUT.title;
+    if (CUT.source) {
+        songTitle.href = CUT.source;
+        songTitle.target = '_blank';
+        songTitle.rel = 'noopener noreferrer';
+    }
     const songArtist = document.createElement('span');
     songArtist.className = 'ns-now-playing-artist';
     songArtist.textContent = `by ${CUT.artist}`;
@@ -226,11 +253,13 @@
         { x: 40, y: -70, r: 0, s: .97 }
     ];
     const SLANT = 5; // how far each cut leans, in % of the logo width
+    const ASSEMBLY_TONES = ['231, 169, 208', '231, 169, 208', '231, 169, 208', '147, 201, 176', '183, 221, 199'];
 
     features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index % 6));
     for (let index = 0; index < 5; index++) {
         const tile = document.createElement('span');
         tile.className = 'intro-piece';
+        tile.style.setProperty('--ns-ripple-tone', ASSEMBLY_TONES[index]);
         const first = index === 0, last = index === 4;
         const a = first ? -2 * SLANT : index * 20;
         const b = last ? 100 + 2 * SLANT : (index + 1) * 20 + .6; // tiny overlap hides hairline seams
@@ -296,6 +325,8 @@
         home.dataset.introBeat = String(beat);
         if (!beat) return;
         const final = beat === tiles.length;
+        const tone = ASSEMBLY_TONES[beat - 1];
+        burst.style.setProperty('--ns-ripple-tone', tone);
         restart(tiles[beat - 1], 'landed', late);
         burst.classList.toggle('final', final);
         burst.style.left = final ? '50%' : `${(beat - 1) * 20 + 10}%`;
@@ -304,7 +335,7 @@
             const rect = logoFace.getBoundingClientRect();
             const homeRect = home.getBoundingClientRect();
             fx('ns-assembly-ring', rect.left + rect.width / 2 - homeRect.left,
-                rect.top + rect.height / 2 - homeRect.top, {}, late);
+                rect.top + rect.height / 2 - homeRect.top, { '--ns-ripple-tone': tone }, late);
             restart(stage, 'ns-assembly-impact', late);
         } else if (!final) {
             restart(stage, 'thump', late);
@@ -329,6 +360,8 @@
         if (departing && !force) return;
         clearTimeout(exitTimer);
         departing = false;
+        visualizer.hidden = true;
+        visualizerPaint?.clearRect(0, 0, visualizer.width, visualizer.height);
         for (const oscillator of oscillators) { try { oscillator.stop(); } catch (_) {} }
         oscillators.clear();
         if (audio && audio.state !== 'closed') audio.close().catch(() => {});
@@ -580,7 +613,8 @@
         const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
         if (!Offline) { clipsSettled = true; clipProgress = 1; return Promise.resolve(); }
         let completed = 0;
-        clipsPromise = Promise.all(['drop', 'ambience', 'enter'].map(async name => {
+        const names = CUT.intermission ? ['enter'] : ['drop', 'ambience', 'enter'];
+        clipsPromise = Promise.all(names.map(async name => {
             const controller = new AbortController();
             let timeout;
             try {
@@ -594,7 +628,7 @@
                 });
                 clips[name] = await Promise.race([load, bounded]);
             } catch (_) { clips[name] = null; }
-            finally { clearTimeout(timeout); clipProgress = ++completed / 3; }
+            finally { clearTimeout(timeout); clipProgress = ++completed / names.length; }
         })).then(() => { clipsSettled = true; });
         return clipsPromise;
     }
@@ -669,7 +703,7 @@
         spectrum = new Float32Array(analyser.frequencyBinCount);
         const musicMix = context.createGain();
         musicMix.gain.value = 1;
-        if (clips.drop) {
+        if (clips.drop && !CUT.intermission) {
             const drop = at + CUT.dropFileTime - songOffset;
             const c = CONFIG.clips;
             musicMix.gain.setValueAtTime(1, drop - c.duckLead);
@@ -780,9 +814,8 @@
         restart(home.querySelector('.landing-background'), 'ns-background', late);
     }
     function detectKick(context, rendered) {
-        const knownEnd = songAt + CUT.kicks.at(-1) - songOffset;
+        const knownEnd = songAt + (CUT.kicks.at(-1) ?? 0) - songOffset;
         if (!analyser || rendered < knownEnd || !songPlaying) return;
-        analyser.getFloatFrequencyData(spectrum);
         const hz = context.sampleRate / analyser.fftSize;
         const first = Math.max(1, Math.ceil(CUT.lowHz / hz));
         const last = Math.min(spectrum.length - 1, Math.floor(CUT.highHz / hz));
@@ -803,6 +836,33 @@
         const blend = 1 - Math.exp(-step / CUT.energyAverage);
         detector.mean = detector.previous === null ? energy : baseline + (energy - baseline) * blend;
         detector.previous = rendered;
+    }
+    function drawVisualizer(rendered) {
+        if (!visualizerPaint || reducedMotion.matches || document.documentElement.classList.contains('low-detail-mode')) return;
+        if (rendered - visualizerLastTime < 1 / 30) return;
+        visualizer.hidden = false;
+        const width = visualizer.clientWidth, height = visualizer.clientHeight;
+        if (!width || !height) return;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        if (visualizer.width !== Math.round(width * ratio) || visualizer.height !== Math.round(height * ratio)) {
+            visualizer.width = Math.round(width * ratio);
+            visualizer.height = Math.round(height * ratio);
+        }
+        const dt = Math.min(rendered - visualizerLastTime, .1);
+        visualizerLastTime = rendered;
+        visualizerPaint.setTransform(ratio, 0, 0, ratio, 0, 0);
+        visualizerPaint.clearRect(0, 0, width, height);
+        visualizerPaint.fillStyle = '#93d9bd';
+        const count = Math.min(96, Math.max(1, Math.floor(width / 5))), step = width / count;
+        for (let i = 0; i < count; i++) {
+            const position = Math.abs((i + .5) / count * 2 - 1);
+            const bin = Math.floor(2 + position ** 1.7 * (spectrum.length * .7 - 2));
+            const energy = Math.max(0, Math.min(1, (spectrum[bin] + 85) / 75));
+            const target = energy ** 1.6 * (1 - position * .5);
+            visualizerLevels[i] += (target - visualizerLevels[i]) * (1 - Math.exp(-dt * (target > visualizerLevels[i] ? 18 : 6)));
+            const bar = Math.max(1, visualizerLevels[i] * height);
+            visualizerPaint.fillRect(i * step + (step - 1.5) / 2, height - bar, 1.5, bar);
+        }
     }
     function seekTransitions(element, late) {
         if (late <= 0) return;
@@ -910,12 +970,12 @@
                 try { scheduleCut(context, audioOrigin, cutBufferReady); }
                 catch (_) { hasCut = false; songPlaying = false; songEnded = true; }
             }
-            dropAt = songAt + (hasCut ? CUT.dropFileTime - songOffset : CONFIG.loading.fallbackCountdown);
-            if (context) scheduleBeacon(context, audioOrigin + dropAt);
-            revealAt = dropAt + (hasCut ? CONFIG.timing.dropHold : 0);
+            dropAt = songAt + (hasCut ? (CUT.intermission ? CUT.transition : CUT.dropFileTime - songOffset) : CONFIG.loading.fallbackCountdown);
+            if (context && !CUT.intermission) scheduleBeacon(context, audioOrigin + dropAt);
+            revealAt = dropAt + (hasCut && !CUT.intermission ? CONFIG.timing.dropHold : 0);
             doneAt = revealAt + CONFIG.timing.uiDuration;
             songEndAt = hasCut ? songAt + cutBufferReady.duration - songOffset : 0;
-            if (hasCut) {
+            if (hasCut && !CUT.intermission) {
                 events.push({ at: dropAt - CONFIG.fx.preDropGlintLead,
                     fire: late => { if (late < CONFIG.fx.preDropGlint) restart(shine, 'ns-pre-drop-glint', late); },
                     label: 'pre-drop-glint' }, { at: dropAt, fire: dropFx, label: 'drop' },
@@ -940,16 +1000,17 @@
         }
         function updateLoading(elapsed, assets) {
             const l = CONFIG.loading;
+            const assetPortion = CUT.intermission ? .9 : l.assetPortion;
             const timeFraction = Math.min(1, Math.max(0, (elapsed - loadingAt) / (earliestSongAt - loadingAt)));
             const resources = (Math.min(1, Math.max(0, assets.progress || 0)) +
                 (context ? (cutProgress + clipProgress) / 2 : 1)) / 2;
             // Presentation pauses never bypass real resource readiness or the audio clock.
-            let progress = l.assetPortion * Math.min(loadingProfile(timeFraction, l.assetSteps), resources);
+            let progress = assetPortion * Math.min(loadingProfile(timeFraction, l.assetSteps), resources);
             let label = !assets.ready ? 'Loading toolkit' : context && (!cutSettled || !clipsSettled) ? 'Loading music' : 'Preparing';
             if (finalScheduled && elapsed >= songAt) {
                 const fraction = Math.min(1, Math.max(0, (elapsed - songAt) / (dropAt - songAt)));
-                progress = l.assetPortion + (1 - l.assetPortion) * loadingProfile(fraction, l.startSteps);
-                label = hasCut ? 'Starting' : 'Preparing';
+                progress = assetPortion + (1 - assetPortion) * loadingProfile(fraction, l.startSteps);
+                label = hasCut ? (CUT.intermission ? 'Fading in' : 'Starting') : 'Preparing';
             }
             if (elapsed >= dropAt) { progress = 1; label = 'Ready'; }
             const percent = elapsed >= dropAt ? 100 : Math.min(99, Math.floor(progress * 100));
@@ -998,7 +1059,11 @@
                 event.fire(fired - event.at);
                 if (event.label) logTiming(event.label, event.at, fired);
             }
-            if (context && hasCut) detectKick(context, rendered);
+            if (context && hasCut && songPlaying && rendered >= songAt) {
+                analyser.getFloatFrequencyData(spectrum);
+                if (!CUT.intermission) detectKick(context, rendered);
+                drawVisualizer(rendered);
+            }
             while (pendingKicks.length && pendingKicks[0] <= elapsed) backgroundKick(pendingKicks.shift());
             updateBackground(elapsed);
             if (!uiComplete) {
@@ -1042,6 +1107,8 @@
     function start() {
         if (started || finished) return;
         started = true;
+        // Count actual landing entries only, not direct toolkit links or aborted gates.
+        try { localStorage.setItem(SONG_VISIT_KEY, String(songVisit + 1)); } catch (_) {}
         const leaving = gate;
         leaving.classList.add('is-leaving');
         // Gate removal is cosmetic; its fade is driven by the audio-clock tick.

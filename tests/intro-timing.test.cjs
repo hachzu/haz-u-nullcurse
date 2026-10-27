@@ -10,6 +10,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
     const frames = new Map();
     const contexts = [];
     const logs = [];
+    const requests = [];
     let nextFrame = 0;
     let wallNow = 0;
     let releaseAudio;
@@ -34,6 +35,14 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         setAttribute(key, value) { this.attributes[key] = value; }
         focus() {}
         getAnimations() { return []; }
+        getContext() {
+            return this.paint ||= {
+                bars: [], clears: 0, fillStyle: '',
+                setTransform() {},
+                clearRect() { this.bars = []; this.clears++; },
+                fillRect(...args) { this.bars.push(args); }
+            };
+        }
         getBoundingClientRect() { return { left: 0, top: 0, width: 440, height: 147, bottom: 147 }; }
         querySelector(name) { return elements[name] ||= new Element(); }
         querySelectorAll(name) { return name === 'li' ? tags : []; }
@@ -91,7 +100,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         matchMedia: () => ({ matches: reduced, addEventListener() {} }),
         requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame; },
         cancelAnimationFrame: id => frames.delete(id),
-        fetch: async (url, { signal } = {}) => ({ ok: url.includes('/audio/') ? !failClips : !failSong, arrayBuffer: async () => {
+        fetch: async (url, { signal } = {}) => (requests.push(url), { ok: url.includes('/audio/') ? !failClips : !failSong, arrayBuffer: async () => {
             signal?.throwIfAborted();
             if (url.includes('/audio/')) return Uint8Array.of(url.includes('beat-drop') ? 1 : url.includes('ambience') ? 2 : 3).buffer;
             if (!deferSong) return new ArrayBuffer(1);
@@ -117,7 +126,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
     let code = source.replace('window.NullscapeIntro = Object.freeze({ finish, enterToolkit });',
         'window.NullscapeIntro = Object.freeze({ finish, enterToolkit, start, config: CONFIG });');
     vm.runInNewContext(code, sandbox);
-    return { elements, contexts, logs, frames, assets: assetState,
+    return { elements, contexts, logs, frames, requests, assets: assetState,
         intro: sandbox.window.NullscapeIntro,
         async start() { sandbox.window.NullscapeIntro.start(); await flush(); this.advance(0); },
         async releaseSong() { releaseAudio?.(); await flush(); },
@@ -140,6 +149,116 @@ const percent = h => Number(bar(h).attributes['aria-valuenow']);
 const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source' && node.buffer?.id === 0);
 
 const preference = h => h.elements.enterToolkit.following[0];
+
+test('actual landing entries alternate Delightful, nil, Delightful; an abandoned gate does not count', async () => {
+    const storage = {};
+    const abandoned = harness({ storage });
+    abandoned.intro.finish();
+    assert.equal(storage.nullscapeLandingSongVisit, undefined);
+    for (const [index, song] of ['delightful', 'nil', 'delightful'].entries()) {
+        const h = harness({ storage });
+        assert.equal(h.elements.landingView.dataset.landingSong, song);
+        await h.start();
+        assert.equal(storage.nullscapeLandingSongVisit, String(index + 1));
+        assert.equal(h.requests.some(url => url.includes('nil-landing')), song === 'nil');
+        h.intro.finish();
+    }
+});
+
+test('nil fades in at 90 percent, then reveals controls without a drop, glint or beacon audio', async () => {
+    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+    await h.start();
+    const source = songSource(h);
+    const startsAt = source.started[0] - .05;
+    assert.ok(Math.abs(startsAt - 6.928125) < 1e-8);
+    h.advance(startsAt);
+    assert.equal(percent(h), 90);
+    const fade = h.contexts[0].nodes.flatMap(node => node.gain.events).find(event => event[0] === 'curve');
+    assert.equal(fade[3], 3.5);
+    assert.equal(fade[1][0], 0);
+    assert.ok(Math.abs(fade[1].at(-1) - .35) < 1e-7);
+    assert.equal(h.requests.some(url => /beat-drop|beacon-ambience/.test(url)), false);
+    h.advance(startsAt + 2);
+    assert.equal(percent(h), 100);
+    assert.equal(h.elements.landingView.dataset.introState, 'revealing');
+    h.advance(startsAt + 3.6);
+    assert.equal(h.elements.landingView.dataset.introState, 'done');
+    assert.equal(h.logs.some(entry => ['drop', 'pre-drop-glint'].includes(entry[1].event)), false);
+    const credit = h.elements.landingView.children.find(node => node.className === 'ns-now-playing');
+    assert.equal(credit.children[0].textContent, 'nil');
+    assert.equal(credit.hidden, false);
+    h.intro.finish();
+});
+
+test('slow nil loading waits for real assets; a missing file still produces usable controls', async () => {
+    const h = harness({ storage: { nullscapeLandingSongVisit: '1' }, assetsReady: false });
+    await h.start();
+    h.advance(8);
+    assert.equal(songSource(h), undefined);
+    assert.ok(percent(h) < 90);
+    h.assets.ready = true; h.assets.progress = 1;
+    h.advance(10);
+    assert.ok(songSource(h).started[0] > h.contexts[0].currentTime);
+    h.advance(10.2);
+    assert.equal(percent(h), 90);
+    h.intro.finish();
+    const missing = harness({ storage: { nullscapeLandingSongVisit: '1' }, failSong: true });
+    await missing.start(); missing.advance(20);
+    assert.equal(songSource(missing), undefined);
+    assert.equal(missing.elements.landingView.dataset.introState, 'done');
+    missing.intro.finish();
+});
+
+test('nil remains tied to the paused audio clock when the tab is hidden', async () => {
+    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+    await h.start(); h.advance(6);
+    const before = percent(h);
+    await h.visibility(true); h.advance(30);
+    assert.equal(percent(h), before);
+    assert.equal(h.contexts[0].state, 'suspended');
+    await h.visibility(false); h.advance(6.2);
+    assert.ok(percent(h) < 100);
+    h.intro.finish();
+});
+
+test('nil keeps the visualizer active without driving background bumps', async () => {
+    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+    const canvas = h.elements.landingView.children.find(node => node.className === 'ns-audio-visualizer');
+    canvas.clientWidth = 480; canvas.clientHeight = 60;
+    await h.start();
+    const analyser = h.contexts[0].nodes.find(node => node.kind === 'analyser');
+    h.advance(7.1);
+    analyser.db = -10;
+    h.advance(7.2); h.advance(7.35);
+    assert.equal(Number(h.elements['.landing-background'].style['--ns-beat-scale']), 1);
+    assert.equal(canvas.hidden, false);
+    assert.equal(canvas.paint.bars.length, 96);
+    assert.ok(canvas.paint.bars.every(bar => bar[2] === 1.5));
+    assert.equal(canvas.paint.fillStyle, '#93d9bd');
+    const clears = canvas.paint.clears;
+    h.advance(7.36);
+    assert.equal(canvas.paint.clears, clears, 'drawing is capped at 30fps');
+    assert.equal(h.frames.size, 1, 'the visualizer does not create a second animation loop');
+    assert.equal(h.logs.some(entry => entry[1].event === 'drop'), false);
+    h.intro.finish();
+    assert.equal(canvas.hidden, true);
+    assert.equal(h.frames.size, 0);
+});
+
+test('intro ripple colors follow the purple-to-jade logo sections', async () => {
+    const h = harness(); await h.start();
+    const burst = h.elements['.ns-logo-face'].children.find(node => node.className === 'logo-burst');
+    h.advance(.5);
+    assert.equal(burst.style['--ns-ripple-tone'], '231, 169, 208');
+    h.advance(1.204);
+    assert.equal(burst.style['--ns-ripple-tone'], '231, 169, 208');
+    h.advance(3.08);
+    assert.equal(burst.style['--ns-ripple-tone'], '183, 221, 199');
+    const effects = h.elements.landingView.children.find(node => node.className === 'logo-fx');
+    const ring = effects.children.find(node => node.className === 'ns-assembly-ring');
+    assert.equal(ring.style['--ns-ripple-tone'], '183, 221, 199');
+    h.intro.finish();
+});
 
 test('finishing at the gate or during playback cancels pending audio and frames', async () => {
     for (const playing of [false, true]) {

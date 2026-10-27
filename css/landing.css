@@ -1,7 +1,8 @@
 /* Landing motion only; the original toolkit controls keep their own styles. */
 :root { --font-modern: 'Space Grotesk', Arial, Helvetica, sans-serif; }
 html { background: #05010c; }
-body.at-home { margin: 0; background: #05010c; color: #e8dcff; overflow-x: hidden; }
+html:has(body.at-home) { background: #000; }
+body.at-home { margin: 0; background: #000; color: #e8dcff; overflow-x: hidden; }
 /* Keep the tracker's negative-z background above the page's opaque body. */
 #toolkitView { position: relative; isolation: isolate; }
 .landing-view, .landing-view * { box-sizing: border-box; }
@@ -16,22 +17,18 @@ body.at-home { margin: 0; background: #05010c; color: #e8dcff; overflow-x: hidde
     padding: 40px 24px;
     overflow: hidden;
     box-sizing: border-box;
-    background: #05010c;
+    background: #000;
 }
 .landing-background {
     position: absolute;
     inset: -5%;
     z-index: -2;
     pointer-events: none;
-    background-image:
-        url('../assets/background/Background.png'),
-        radial-gradient(circle at 20% 10%, #1b0733 0%, transparent 45%),
-        radial-gradient(circle at 85% 80%, #2a0a4a 0%, transparent 50%),
-        linear-gradient(160deg, #05010c 0%, #0b0116 40%, #170025 100%);
+    background-image: url('../assets/branding/maintenance-5-1.png');
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
-    opacity: .22;
+    opacity: .38;
     transform: translate3d(var(--landing-x, 0px), var(--landing-y, 0px), 0);
     transition: transform .65s ease-out, opacity .8s ease;
 }
@@ -40,7 +37,7 @@ body.at-home { margin: 0; background: #05010c; color: #e8dcff; overflow-x: hidde
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: radial-gradient(ellipse at 50% 45%, transparent 30%, #05010c1a 70%, #05010c4d 100%);
+    background: radial-gradient(ellipse at 50% 45%, transparent 30%, #0000001a 70%, #00000070 100%);
 }
 .landing-content { display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0; text-align: center; padding-bottom: 24px; }
 .landing-brand { position: relative; margin: 0 0 36px; width: 100%; font-weight: 700; }
@@ -267,7 +264,7 @@ body.at-home > :not(.landing-view):not(script) { display: none !important; }
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 28px;
+    margin-top: 50px;
     color: #c6aed8;
     font: 400 12px/1.5 var(--font-modern, sans-serif);
     cursor: pointer;
@@ -615,13 +612,12 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 }
 .landing-view .landing-brand { margin-bottom: 64px; }
 
-/* Rail + vines, fading out at the ends */
+/* Vines, fading out at the ends */
 .landing-view .landing-divider::before {
     inset: 0;
     background:
         var(--divider-vine-l) right calc(50% + 22px) center / auto 100% no-repeat,
-        var(--divider-vine-r) left calc(50% + 22px) center / auto 100% no-repeat,
-        linear-gradient(90deg, transparent, #bc94da99 25%, #f0dcffd9 50%, #bc94da99 75%, transparent) center / 100% 1px no-repeat;
+        var(--divider-vine-r) left calc(50% + 22px) center / auto 100% no-repeat;
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
     filter: drop-shadow(0 0 5px #b866ff55);
@@ -629,6 +625,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 
 /* The gem replaces the old rotated square */
 .landing-view .landing-divider::after {
+    display: none;
     width: 46px;
     height: 34px;
     border: 0;
@@ -902,8 +899,8 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     transform: scaleX(var(--ns-load-progress, 0));
     will-change: transform;
 }
-.landing-view .landing-divider { bottom: -34px; }
-.landing-view .landing-brand { margin-bottom: 52px; }
+.landing-view .landing-divider { bottom: -50px; }
+.landing-view .landing-brand { margin-bottom: 68px; }
 /* Only the logo floats. The divider stays anchored in the brand container. */
 .landing-view[data-intro-state='done'] .landing-logo-stage {
     animation: logo-sway 9s ease-in-out infinite, logo-bob 5.5s ease-in-out infinite;
@@ -1345,3 +1342,75 @@ html.low-detail-mode .landing-features.is-copy { display: none; }
 .landing-visits #siteVisitsCount { color: #e4d1efb3; font-variant-numeric: tabular-nums; letter-spacing: .03em; }
 .landing-view:is([data-intro-drop='1'], [data-intro-state='done']) .landing-visits { opacity: 1; }
 /* END NS AUDIO-LOCKED EFFECTS */
+
+
+.ns-now-playing-title[href] { color: inherit; text-decoration: none; pointer-events: auto; }
+.ns-now-playing-title[href]:hover { text-decoration: underline; }
+
+/* Tint only the artwork. Black lettering and white outlines retain their
+   luminance, and the intro effects keep their own independent palette. */
+.landing-view { --landing-logo-gradient: linear-gradient(110deg, #e7a9d0 0%, #e7a9d0 44%, #93c9b0 56%, #b7ddc7 100%); }
+.landing-logo-tinted { position: relative; display: block; isolation: isolate; }
+.landing-logo-tinted,
+.landing-view .ns-logo-art {
+    /* Feather the source artwork's cropped halo at the bitmap edges. */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent), linear-gradient(0deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent), linear-gradient(0deg, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+}
+.landing-view .landing-logo-tinted > .landing-logo { filter: grayscale(1); }
+.landing-view .ns-logo-art { background-image: none !important; }
+.landing-view .ns-logo-art::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('../assets/branding/Nullscape.png') center / 100% 100% no-repeat;
+    filter: grayscale(1);
+}
+.landing-logo-tinted::after,
+.landing-view .ns-logo-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--landing-logo-gradient);
+    mix-blend-mode: color;
+    -webkit-mask: url('../assets/branding/Nullscape.png') center / 100% 100% no-repeat;
+    mask: url('../assets/branding/Nullscape.png') center / 100% 100% no-repeat;
+}
+.landing-view .ns-logo-art { isolation: isolate; }
+.landing-view:is([data-intro-state='waiting'], [data-intro-state='playing']) .landing-logo-tinted::after { opacity: 0; }
+.landing-view .ns-toolkit-caption {
+    color: transparent;
+    background: var(--landing-logo-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.landing-view .ns-dust-layer i { background: #93dfb9; box-shadow: 0 0 3px 1px #5bcb9b38; }
+.ns-drop-spark { background: #93dfb9; box-shadow: 0 0 6px #5bcb9b66; }
+.landing-view .logo-burst {
+    background: radial-gradient(circle, rgba(var(--ns-ripple-tone, 202, 120, 225), .6) 0%, rgba(var(--ns-ripple-tone, 202, 120, 225), .25) 40%, transparent 70%);
+}
+.ns-assembly-ring { border-color: rgba(var(--ns-ripple-tone, 78, 216, 157), .8); }
+@keyframes piece-flash {
+    0%, 100% { filter: blur(0px) brightness(1) drop-shadow(0 0 0 transparent); }
+    14% { filter: blur(0px) brightness(1.5) drop-shadow(0 0 10px rgba(var(--ns-ripple-tone, 202, 120, 225), .7)); }
+}
+.ns-audio-visualizer {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(480px, 60vw);
+    height: 100px;
+    z-index: 2;
+    opacity: .48;
+    pointer-events: none;
+}
+@media (max-width: 540px) {
+    .ns-audio-visualizer { height: 64px; }
+    .landing-view .ns-now-playing { bottom: 78px; }
+}
+@media (prefers-reduced-motion: reduce) { .ns-audio-visualizer { display: none; } }
+html.low-detail-mode .ns-audio-visualizer { display: none; }
