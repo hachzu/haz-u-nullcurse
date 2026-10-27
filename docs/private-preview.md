@@ -1,5 +1,7 @@
 # Private local toolkit preview
 
+Link's live Firebase transport is also disabled in this preview. The Link section can be inspected locally; `scripts/test-link-browser.cjs` tests collaboration between two browsers with mock rooms and all external requests blocked. See `docs/toolkit-link.md` for the one-time Firebase rules setup needed on the hosted site.
+
 Double-click **Preview Toolkits.cmd** in the project folder, keep its window open, then open:
 
 http://127.0.0.1:4173/#/curses

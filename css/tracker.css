@@ -4551,6 +4551,7 @@ body {
 .game-settings-bar {
     display: flex;
     align-items: center;
+    gap: 9px;
     justify-content: space-between;
     min-height: 28px;
     padding: 0;
@@ -4565,11 +4566,14 @@ body {
     list-style: none;
 }
 .game-settings-bar::-webkit-details-marker { display: none; }
+.game-settings-rule { flex: 1; height: 1px; background: currentColor; opacity: .28; }
+.game-settings-bar > span:not(.game-settings-rule) { white-space: nowrap; }
+.game-settings-bar svg { flex: 0 0 14px; }
 .game-settings-bar:hover { background: rgba(143, 217, 255, 0.04); }
 .game-settings-bar:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .game-settings-disclosure > .control-section:first-of-type { padding-top: 18px; }
-.game-settings-bar svg { transition: transform 220ms ease; }
-.game-settings-disclosure[open] > .game-settings-bar svg { transform: rotate(180deg); }
+.game-settings-bar svg { transform: rotate(-90deg); transition: transform 220ms ease; }
+.game-settings-disclosure[open] > .game-settings-bar svg { transform: rotate(0); }
 .game-settings-disclosure > .control-section:last-child { margin-bottom: 0; }
 
 /* Native disclosure animation needs no timers or per-frame scripts. */

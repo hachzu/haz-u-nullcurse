@@ -52,6 +52,10 @@ function createPreviewServer() {
                 res.writeHead(200, { 'Content-Type': 'text/javascript' });
                 res.end('// Live Firebase activity is disabled in private preview.'); return;
             }
+            if (relative === 'js/link-firebase.js') {
+                res.writeHead(200, { 'Content-Type': 'text/javascript' });
+                res.end('export async function connect() { throw new Error("Live Link is disabled in private preview. Test with a mock room, or use the hosted toolkit after configuring Firebase rules."); }'); return;
+            }
             const stat = await fs.promises.stat(file);
             if (!stat.isFile()) { res.writeHead(404).end(); return; }
             res.setHeader('Content-Type', TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream');

@@ -47,6 +47,10 @@ test('private preview opens tools without altering public HTML or contacting Fir
             assert.doesNotMatch(response.body, /import|initializeApp/);
         }
         assert.equal((await request('/js/tracker.js')).status, 200);
+        const link = await request('/js/link-firebase.js?v=test');
+        assert.equal(link.status, 200);
+        assert.match(link.body, /Live Link is disabled in private preview/);
+        assert.doesNotMatch(link.body, /initializeApp|firebaseConfig/);
         for (const url of ['/.git/config', '/docs/private-preview.md', '/assets/%2e%2e%2f.git/config', '/assets/%5c..%5c.git/config']) {
             assert.equal((await request(url)).status, 404, url);
         }

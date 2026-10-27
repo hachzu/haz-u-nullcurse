@@ -3331,6 +3331,44 @@ onLobbySelectionSync(syncLobbyFontList);
     renderGradientPill();
     pushFromHsv(false);
 
+    // Link updates picker controls without reapplying a remote color to the
+    // local text selection (selections belong to each editor independently).
+    window.NullscapeLobbyPicker = {
+        capture: () => ({ hue360, sat, val, activeStop, mode: lobbyColorPanel.dataset.mode,
+            gradient: [JSON.parse(JSON.stringify(gradient))] }),
+        apply(data) {
+            const clamp = (n, min, max, fallback) => Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+            const g = data?.gradient?.[0];
+            if (g && Object.values(LOBBY_GRADIENT_KINDS).includes(g.kind)
+                && Array.isArray(g.colors) && g.colors.length >= 2 && g.colors.length <= 3
+                && g.colors.every(color => /^#[\da-f]{6}$/i.test(color))
+                && Array.isArray(g.dividers) && g.dividers.length === (g.kind === LOBBY_GRADIENT_KINDS.THREE_STOP ? 2 : 1)
+                && g.dividers.every(n => Number.isFinite(n) && n > 0 && n < 1)
+                && (g.dividers.length === 1 || g.dividers[0] < g.dividers[1])) {
+                gradient = JSON.parse(JSON.stringify(g));
+            }
+            hue360 = clamp(data.hue360, 0, 360, hue360);
+            sat = clamp(data.sat, 0, 1, sat);
+            val = clamp(data.val, 0, 1, val);
+            activeStop = Math.floor(clamp(data.activeStop, 0, gradient.colors.length - 1, 0));
+            setColorMode(data.mode === 'gradient' ? 'gradient' : 'solid');
+            renderGradientPill(); renderGradientStops();
+            gradientPresetRow?.querySelectorAll('[data-lobby-gradient-kind]').forEach(button => {
+                const active = button.dataset.lobbyGradientKind === gradient.kind;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-selected', String(active));
+            });
+            outlineToggle?.setAttribute('aria-pressed', String(lobbyEditor.editingOutline));
+            outlineToggle?.classList.toggle('active', lobbyEditor.editingOutline);
+            outlineJoinRow?.classList.toggle('lobby-outline-joins--open', lobbyEditor.editingOutline);
+            syncingFromSelection = true;
+            pushFromHsv(false);
+            syncingFromSelection = false;
+            const prop = opacityPropName();
+            setOpacityUi(lobbyEditor.typingStyle[prop] || 0);
+        }
+    };
+
 })();
 
 /* ---- text input wiring: edits, selection, keyboard, undo/redo ---- */

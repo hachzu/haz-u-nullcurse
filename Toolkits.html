@@ -43,8 +43,9 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261027-pink-purple-logo1">
+    <link rel="stylesheet" href="css/tracker.css?v=20261027-link1">
     <link rel="stylesheet" href="css/upgrades.css?v=20261027-pink-purple-logo1">
+    <link rel="stylesheet" href="css/link.css?v=20261027-link1">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
@@ -163,7 +164,10 @@
 
         <details class="game-settings-disclosure" open>
             <summary class="game-settings-bar" aria-label="Show or hide game mode and difficulty">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="game-settings-rule" aria-hidden="true"></span>
                 <span>GAME SETTINGS</span>
+                <span class="game-settings-rule" aria-hidden="true"></span>
                 <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
         <section class="control-section">
@@ -327,6 +331,25 @@
 
         </section>
 
+
+        <section id="toolkitLink" class="control-section toolkit-link" aria-labelledby="toolkitLinkHeading">
+            <div class="section-heading">
+                <span id="toolkitLinkHeading">LINK</span>
+                <span id="linkBadge" class="link-badge" data-state="offline">LOCAL</span>
+            </div>
+            <p class="link-hint">Share a code. Edit the same toolkit together.</p>
+            <label class="link-sr-only" for="linkCode">Link code</label>
+            <div class="link-code-row">
+                <input id="linkCode" class="link-code-input" type="text" placeholder="enter a link code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="linkStatus">
+                <button id="linkCopy" class="link-small-button" type="button" hidden>Copy</button>
+            </div>
+            <div class="link-actions">
+                <button id="linkCreate" class="link-button" type="button">GENERATE CODE</button>
+                <button id="linkJoin" class="link-button" type="button">JOIN</button>
+                <button id="linkLeave" class="link-button" type="button" hidden>LEAVE LINK</button>
+            </div>
+            <p id="linkStatus" class="link-status" role="status" aria-live="polite">Local until you generate or join. Anyone with the code can edit.</p>
+        </section>
 
         <div class="run-controls">
 
@@ -1250,9 +1273,12 @@
 <script src="js/startup.js"></script>
 <script src="js/tracker.js?v=20261027-pink-purple-logo1"></script>
 <script src="js/upgrades.js?v=20261027-shared-delusion1"></script>
-<script src="js/tools.js?v=20261027-pink-purple-logo1"></script>
+<script src="js/tools.js?v=20261027-link1"></script>
 <script src="js/card-reveals.js?v=20261027-pink-purple-logo1"></script>
 <script src="js/curse-backgrounds.js?v=20261026-bgfix2"></script>
+<script src="js/link-core.js?v=20261027-link1"></script>
+<script src="js/link-state.js?v=20261027-link1"></script>
+<script src="js/link.js?v=20261027-link1"></script>
 
 </body>
 </html>

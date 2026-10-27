@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "presence": {
+      ".read": true,
+      ".write": true
+    },
+    "siteStats": {
+      "visits": {
+        ".read": true,
+        ".write": "(!data.exists() && newData.val() === 600) || (data.isNumber() && newData.val() === data.val() + 1)",
+        ".validate": "newData.isNumber() && newData.val() >= 600 && newData.val() % 1 === 0"
+      }
+    },
+    "toolkitLinks": {
+      ".read": false,
+      ".write": false,
+      "$code": {
+        ".read": "$code.matches(/^[A-HJ-NP-Z2-9]{20}$/) && (!data.exists() || data.child('meta/expiresAt').val() > now)",
+        ".write": "$code.matches(/^[A-HJ-NP-Z2-9]{20}$/) && (!newData.exists() || !data.exists() || data.child('meta/expiresAt').val() > now)",
+        ".validate": "newData.hasChildren(['meta', 'state'])",
+        "meta": {
+          ".validate": "newData.hasChildren(['version', 'createdAt', 'expiresAt']) && ((!data.exists() && newData.child('createdAt').val() === now && newData.child('expiresAt').val() > now && newData.child('expiresAt').val() <= now + 90000000) || (newData.child('version').val() === data.child('version').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('expiresAt').val() === data.child('expiresAt').val()))",
+          "version": { ".validate": "newData.val() === 1" },
+          "createdAt": { ".validate": "newData.isNumber()" },
+          "expiresAt": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+        "state": {
+          ".validate": "newData.hasChildren()",
+          "$field": { ".validate": "$field.length <= 768 && newData.isString() && newData.val().length <= 16384" }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
