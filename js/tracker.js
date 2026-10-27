@@ -230,152 +230,57 @@ function loadEnemyVisibilityState() {
 }
 
 
-/*
- * Rolling number animation
- * --------------------------
- * Smoothly tweens a numeric readout's text from whatever it
- * currently shows to a new target value, instead of snapping
- * straight to it - used for stat-style numbers that change on their
- * own as a side effect of other actions (medal payout, curse/enemy
- * counts, death totals, upgrade totals) rather than numbers the
- * player is actively typing into an input.
- *
- * If the element sits inside a `.roll-pill` wrapper, the wrapper's
- * own width is animated too (a small FLIP: measure the width before
- * and after the value changes, then transition between the two) so
- * a pill growing or shrinking - e.g. payout going from 2 digits to
- * 3 - stretches smoothly instead of snapping to its new size the
- * instant the extra digit appears.
- */
+/* Numeric readouts share one frame loop. No layout measurements, width
+   transitions or per-frame glow filters; repeated targets do not restart. */
+const rollingNumberFormatter = new Intl.NumberFormat();
+const activeNumberTweens = new Map();
+let numberTweenFrame = null;
+
+function writeRollingNumber(el, value, format) {
+    const text = format(value);
+    if (el.textContent !== text) el.textContent = text;
+    el._rollCurrent = value;
+}
+
+function updateNumberTweens(now) {
+    numberTweenFrame = null;
+    for (const [el, tween] of activeNumberTweens) {
+        if (el.isConnected === false) {
+            activeNumberTweens.delete(el);
+            continue;
+        }
+        const progress = Math.min(1, Math.max(0, (now - tween.startTime) / tween.duration));
+        const eased = 1 - (1 - progress) ** 3;
+        const value = progress === 1 ? tween.target : tween.start + (tween.target - tween.start) * eased;
+        writeRollingNumber(el, value, tween.format);
+        if (progress === 1) activeNumberTweens.delete(el);
+    }
+    if (activeNumberTweens.size) numberTweenFrame = requestAnimationFrame(updateNumberTweens);
+}
+
 function tweenNumberText(el, targetValue, options = {}) {
-
-    if (!el) {
-
-        return;
-
-    }
-
-    if (document.documentElement.classList.contains("low-detail-mode")) {
-
-        if (el._rollRAF) {
-            cancelAnimationFrame(el._rollRAF);
-            el._rollRAF = null;
-        }
-
-        const format = options.format || (value => Math.round(value).toLocaleString());
-        const target = Number(targetValue);
-
-        if (Number.isFinite(target)) {
-            el.dataset.rollValue = target;
-            el.textContent = format(target);
-        }
-
-        return;
-
-    }
-
-    const duration = options.duration ?? 550;
-    const format = options.format || (value => Math.round(value).toLocaleString());
-
+    if (!el) return;
     const target = Number(targetValue);
-
-    if (!Number.isFinite(target)) {
-
-        return;
-
-    }
-
-    const previous = el.dataset.rollValue !== undefined
-        ? parseFloat(el.dataset.rollValue)
-        : NaN;
-
-    const startValue = Number.isFinite(previous) ? previous : target;
-
-    el.dataset.rollValue = target;
-
-    if (startValue === target) {
-
-        el.textContent = format(target);
-
-        return;
-
-    }
-
-    if (el._rollRAF) {
-
-        cancelAnimationFrame(el._rollRAF);
-        el._rollRAF = null;
-
-    }
-
-    const pill = el.closest(".roll-pill");
-
-    if (pill) {
-
-        const firstWidth = pill.getBoundingClientRect().width;
-
-        const currentText = el.textContent;
-
-        el.textContent = format(target);
-
-        const lastWidth = pill.getBoundingClientRect().width;
-
-        el.textContent = currentText;
-
-        if (Math.abs(lastWidth - firstWidth) > 0.5) {
-
-            pill.style.transition = "none";
-            pill.style.width = `${firstWidth}px`;
-
-            void pill.offsetWidth;
-
-            pill.style.transition = "width 0.4s cubic-bezier(0.22, 1, 0.36, 1)";
-            pill.style.width = `${lastWidth}px`;
-
-            const clearPillWidth = () => {
-
-                pill.style.transition = "";
-                pill.style.width = "";
-                pill.removeEventListener("transitionend", clearPillWidth);
-
-            };
-
-            pill.addEventListener("transitionend", clearPillWidth);
-
+    if (!Number.isFinite(target)) return;
+    const format = options.format || (value => rollingNumberFormatter.format(Math.round(value)));
+    const duration = Math.max(0, Number(options.duration ?? 280) || 0);
+    const immediate = document.documentElement.classList.contains("low-detail-mode")
+        || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        || duration === 0;
+    if (!immediate && activeNumberTweens.get(el)?.target === target) return;
+    const previous = Number.isFinite(el._rollCurrent) ? el._rollCurrent : Number(el.dataset.rollValue);
+    el.dataset.rollValue = String(target);
+    if (immediate || !Number.isFinite(previous) || previous === target) {
+        activeNumberTweens.delete(el);
+        writeRollingNumber(el, target, format);
+        if (!activeNumberTweens.size && numberTweenFrame !== null) {
+            cancelAnimationFrame(numberTweenFrame);
+            numberTweenFrame = null;
         }
-
+        return;
     }
-
-    el.classList.add("roll-number-active");
-
-    const startTime = performance.now();
-
-    function step(now) {
-
-        const elapsed = now - startTime;
-        const t = Math.min(1, elapsed / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-
-        const current = startValue + (target - startValue) * eased;
-
-        el.textContent = format(current);
-
-        if (t < 1) {
-
-            el._rollRAF = requestAnimationFrame(step);
-
-        } else {
-
-            el.textContent = format(target);
-            el._rollRAF = null;
-            el.classList.remove("roll-number-active");
-
-        }
-
-    }
-
-    el._rollRAF = requestAnimationFrame(step);
-
+    activeNumberTweens.set(el, { start: previous, target, startTime: performance.now(), duration, format });
+    if (numberTweenFrame === null) numberTweenFrame = requestAnimationFrame(updateNumberTweens);
 }
 
 

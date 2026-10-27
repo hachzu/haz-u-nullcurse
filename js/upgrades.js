@@ -29,14 +29,15 @@ const SOLO_DUO_AUTO_OWNED = new Set(["Paycheck"]);
 const CASUAL_OVERRIDES = {
     "Grace Wings": { hidden: true },
     "Defuse Kit": { hidden: true },
-    "Radar Module: Tripmines": { hidden: true }
+    "Radar Module: Tripmines": { hidden: true },
+    "Miniature Hourglass": { hidden: true }
 };
 
 
 const EXTREME_OVERRIDES = {};
 
 
-// Prices synced with stickstetris.github.io/NullscapeShopCalculator/ on 2026-10-26.
+// Prices synced with stickstetris.github.io/NullscapeShopCalculator/ on 2026-10-27.
 // Unconfirmed sentinel prices are deliberately excluded from calculations.
 const UPGRADE_NAME_ALIASES = {
     "Last Robloxian Standing": "Final Stand",
@@ -52,334 +53,384 @@ const UPGRADE_NAME_ALIASES = {
 const upgradesList = [
     {
         "name": "Better Jump Pads",
-        "price": 50,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
+        "price": 50
     },
     {
         "name": "Paycheck",
-        "price": 55,
-        "casualSoloPrice": 33,
         "level": 3,
         "maxStack": 5,
         "category": "eco",
+        "price": 55,
+        "casualPrice": 55,
+        "casualSoloPrice": 33
     },
     {
         "name": "Business License",
-        "price": 75,
-        "prices": [75,160],
-        "casualSoloPrices": [50,100],
         "level": 3,
         "maxStack": 2,
         "category": "eco",
+        "price": 75,
+        "prices": [75,160,1400],
+        "soloPrices": [75,150,1250],
+        "casualPrices": [75,100,1000],
+        "casualSoloPrices": [50,100,1000],
+        "extremePrices": [75,200,2000],
+        "extremeSoloPrices": [75,180,1500]
     },
     {
         "name": "Swiftness Ring",
-        "price": 80,
-        "casualPrice": 70,
-        "casualSoloPrice": 60,
         "level": 3,
         "maxStack": 3,
         "category": "movement",
+        "price": 80,
+        "prices": [80,80,80,1250],
+        "soloPrices": [80,80,80,1000],
+        "casualPrices": [70,70,70,1000],
+        "casualSoloPrices": [60,60,60,800],
+        "extremePrices": [80,80,80,1500],
+        "extremeSoloPrices": [80,80,80,1250]
     },
     {
         "name": "Grapple Points",
-        "price": 100,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
+        "price": 100
     },
     {
         "name": "Star Marts",
-        "price": 450,
-        "soloPrice": 400,
-        "casualSoloPrice": 300,
-        "extremePrice": 550,
-        "extremeSoloPrice": 500,
         "category": "environment",
         "level": 8,
         "maxStack": 1,
+        "summary": "Star Marts grant temporary speed, collection range and debuff immunity.",
+        "price": 450,
+        "soloPrice": 400,
+        "casualPrice": 350,
+        "casualSoloPrice": 300,
+        "extremePrice": 550,
+        "extremeSoloPrice": 500,
         "requires": {
             "type": "enemy",
             "name": "Mart",
             "count": 1
-        },
-        "summary": "Star Marts grant temporary speed, collection range and debuff immunity.",
+        }
     },
     {
         "name": "Altar Boons",
-        "prices": [525,1250],
-        "soloPrices": [500,1000],
-        "casualPrices": [475,950],
-        "casualSoloPrices": [450,900],
-        "extremePrices": [600,1200],
-        "extremeSoloPrices": [600,1200],
         "category": "eco",
         "level": 8,
         "maxStack": 2,
+        "summary": "Altar use increases Paycheck rewards.",
+        "price": 525,
+        "prices": [525,1250,3000],
+        "soloPrices": [525,1001,2750],
+        "casualPrices": [475,1000,2750],
+        "casualSoloPrices": [450,1000,2500],
+        "extremePrices": [600,1500,4500],
+        "extremeSoloPrices": [600,1250,3999],
         "requires": {
             "type": "upgrade",
             "name": "Paycheck",
             "stack": 1
-        },
-        "summary": "Altar use increases Paycheck rewards.",
+        }
     },
     {
         "name": "Health Insurance",
-        "price": 500,
         "category": "eco",
         "level": 8,
         "maxStack": 1,
+        "summary": "Makes Paycheck trigger regardless of survival.",
+        "price": 500,
+        "casualPrice": 350,
+        "casualSoloPrice": 350,
         "requires": {
             "type": "upgrade",
             "name": "Paycheck",
             "stack": 1
-        },
-        "summary": "Makes Paycheck trigger regardless of survival.",
+        }
     },
     {
         "name": "Medal",
-        "price": 100,
         "level": 5,
         "category": "eco",
         "maxStack": 1,
+        "price": 100
     },
     {
         "name": "Tria Orbs",
-        "price": 100,
         "level": 5,
         "category": "environment",
         "maxStack": 1,
+        "price": 100
     },
     {
         "name": "Double Jump",
-        "price": 150,
-        "casualSoloPrice": 125,
         "level": 5,
         "category": "movement",
         "maxStack": 1,
+        "price": 150,
+        "casualPrice": 150,
+        "casualSoloPrice": 125,
+        "extremePrice": 175,
+        "extremeSoloPrice": 150
     },
     {
         "name": "Radar",
+        "level": 5,
+        "category": "environment",
+        "maxStack": 1,
         "price": 150,
         "soloPrice": 125,
         "casualPrice": 125,
         "casualSoloPrice": 100,
         "extremePrice": 175,
-        "extremeSoloPrice": 150,
-        "level": 5,
-        "category": "environment",
-        "maxStack": 1,
+        "extremeSoloPrice": 150
     },
     {
         "name": "Radar Module: Enemies",
+        "level": 8,
+        "category": "environment",
+        "maxStack": 1,
         "price": 200,
         "soloPrice": 150,
+        "casualPrice": 150,
         "casualSoloPrice": 125,
-        "level": 5,
-        "category": "environment",
+        "extremePrice": 250,
+        "extremeSoloPrice": 200,
         "requires": {
             "type": "upgrade",
             "name": "Radar",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Radar Module: Altars",
+        "level": 8,
+        "category": "environment",
+        "maxStack": 1,
         "price": 300,
         "soloPrice": 250,
+        "casualPrice": 250,
         "casualSoloPrice": 200,
-        "level": 5,
-        "category": "environment",
+        "extremePrice": 350,
+        "extremeSoloPrice": 300,
         "requires": {
             "type": "upgrade",
             "name": "Radar",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Spring Shoes",
-        "price": 100,
         "category": "movement",
         "level": 8,
         "maxStack": 1,
         "summary": "Increases jump height when still or quick-turning.",
+        "price": 100,
+        "requires": {
+            "type": "enemy",
+            "name": "Springer",
+            "count": 1
+        }
     },
     {
         "name": "Fanny Pack",
+        "level": 8,
+        "category": "eco",
+        "maxStack": 1,
         "price": 300,
         "soloPrice": 275,
         "casualPrice": 250,
         "casualSoloPrice": 250,
         "extremePrice": 350,
-        "level": 8,
-        "category": "eco",
-        "maxStack": 1,
+        "extremeSoloPrice": 300
     },
     {
         "name": "Grace Wings",
-        "price": 300,
-        "soloPrice": 200,
-        "extremePrice": 325,
         "level": 8,
         "category": "movement",
         "maxStack": 1,
+        "price": 300,
+        "soloPrice": 200,
+        "extremePrice": 325,
+        "extremeSoloPrice": 200
     },
     {
         "name": "Pocket Bell",
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
         "price": 300,
         "casualPrice": 275,
         "casualSoloPrice": 250,
-        "level": 5,
-        "category": "movement",
+        "extremePrice": 350,
+        "extremeSoloPrice": 325,
         "requires": [
             {
                 "type": "enemy",
-                "name": "Bell"
+                "name": "Bell",
+                "count": 1
             },
             {
                 "type": "upgrade",
                 "name": "Double Jump",
                 "stack": 1
             }
-        ],
-        "maxStack": 1,
+        ]
     },
     {
         "name": "Ice Skates",
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
         "price": 350,
         "soloPrice": 325,
         "casualPrice": 300,
         "casualSoloPrice": 250,
         "extremePrice": 400,
-        "level": 8,
-        "category": "movement",
-        "maxStack": 1,
+        "extremeSoloPrice": 375
     },
     {
         "name": "Helmet",
+        "level": 8,
+        "category": "class",
+        "maxStack": 1,
         "price": 350,
         "soloPrice": 325,
         "casualPrice": 300,
         "casualSoloPrice": 275,
-        "extremeSoloPrice": 375,
-        "level": 8,
-        "category": "class",
-        "maxStack": 1,
+        "extremePrice": 400,
+        "extremeSoloPrice": 375
     },
     {
         "name": "Larger Grapple Points",
-        "price": 400,
-        "soloPrice": 300,
-        "extremeSoloPrice": 325,
         "level": 13,
         "category": "environment",
-        "requires": {
-            "type": "upgrade",
-            "name": "Grapple Points",
-            "stack": 1
-        },
         "maxStack": 1,
+        "price": 400,
+        "soloPrice": 300,
+        "casualPrice": 300,
+        "casualSoloPrice": 250,
+        "extremePrice": 500,
+        "extremeSoloPrice": 325
     },
     {
         "name": "Advanced Gravity Coil",
+        "level": 8,
+        "category": "movement",
+        "maxStack": 1,
         "price": 650,
         "soloPrice": 600,
         "casualPrice": 500,
         "casualSoloPrice": 500,
         "extremePrice": 725,
-        "level": 8,
-        "category": "movement",
-        "maxStack": 1,
+        "extremeSoloPrice": 650
     },
     {
         "name": "Birthday Pony",
-        "price": 350,
-        "soloPrice": 300,
-        "extremeSoloPrice": 400,
         "category": "eco",
         "level": 10,
         "maxStack": 1,
+        "summary": "Springer collects gifts where it lands.",
+        "price": 350,
+        "soloPrice": 300,
+        "casualPrice": 300,
+        "casualSoloPrice": 250,
+        "extremePrice": 450,
+        "extremeSoloPrice": 400,
         "requires": {
             "type": "enemy",
             "name": "Springer",
             "count": 1
-        },
-        "summary": "Springer collects gifts where it lands.",
+        }
     },
     {
         "name": "More Altars",
-        "price": 500,
-        "soloPrice": 450,
-        "extremeSoloPrice": 550,
         "level": 10,
         "category": "environment",
         "maxStack": 1,
+        "price": 500,
+        "soloPrice": 450,
+        "casualPrice": 450,
+        "casualSoloPrice": 400,
+        "extremePrice": 600,
+        "extremeSoloPrice": 550
     },
     {
         "name": "Subspacial Barrier",
-        "price": 1000,
-        "prices": [1000,3000],
-        "soloPrices": [500,1250],
-        "level": 10,
+        "level": 13,
         "casualLevel": 15,
         "maxStack": 2,
         "category": "survival",
+        "casualRequires": null,
+        "price": 750,
+        "prices": [750,1500,3000],
+        "soloPrices": [500,1250,2750],
+        "casualPrices": [600,1000,2000],
+        "casualSoloPrices": [400,1000,2000],
+        "extremePrices": [1000,1500,3750],
+        "extremeSoloPrices": [500,1500,3250],
         "requires": {
             "type": "upgrade",
             "name": "Defuse Kit",
             "stack": 3
-        },
-        "casualRequires": null,
+        }
     },
     {
         "name": "Ninja Belt",
-        "price": 600,
-        "soloPrice": 500,
-        "casualPrice": 500,
-        "extremeSoloPrice": 525,
         "level": 13,
         "category": "class",
         "maxStack": 1,
+        "price": 600,
+        "soloPrice": 500,
+        "casualPrice": 450,
+        "casualSoloPrice": 400,
+        "extremePrice": 750,
+        "extremeSoloPrice": 525
     },
     {
         "name": "Soul Tracers",
+        "category": "eco",
+        "level": 12,
+        "maxStack": 1,
+        "summary": "Deaths and collected soul orbs increase gift yield.",
         "price": 1000,
         "soloPrice": 600,
-        "casualSoloPrice": 400,
-        "category": "eco",
-        "level": 15,
-        "maxStack": 1,
-        "requires": {
-            "type": "upgrade",
-            "name": "Helmet",
-            "stack": 1
-        },
-        "summary": "Deaths and collected soul orbs increase gift yield.",
+        "casualPrice": 800,
+        "casualSoloPrice": 400
     },
     {
         "name": "Propeller Hat",
-        "price": 750,
-        "soloPrice": 650,
-        "casualSoloPrice": 550,
         "category": "movement",
         "level": 15,
         "maxStack": 1,
+        "summary": "Allows double jumps while bonked.",
+        "price": 750,
+        "soloPrice": 650,
+        "casualPrice": 650,
+        "casualSoloPrice": 550,
+        "extremePrice": 850,
+        "extremeSoloPrice": 750,
         "requires": {
             "type": "upgrade",
             "name": "Helmet",
             "stack": 1
-        },
-        "summary": "Allows double jumps while bonked.",
+        }
     },
     {
         "name": "Radar Module: Instruments",
-        "price": 1000,
-        "level": 15,
+        "level": 18,
         "category": "environment",
+        "maxStack": 1,
+        "price": 850,
+        "soloPrice": 750,
+        "casualPrice": 600,
+        "casualSoloPrice": 500,
+        "extremePrice": 1000,
+        "extremeSoloPrice": 900,
         "requires": [
             {
                 "type": "upgrade",
@@ -391,229 +442,288 @@ const upgradesList = [
                 "name": "Cadence",
                 "count": 1
             }
-        ],
-        "maxStack": 1,
+        ]
     },
     {
         "name": "Shark Tail",
-        "price": 1200,
-        "soloPrice": 1000,
-        "casualPrice": 800,
-        "extremePrice": 1500,
         "level": 15,
         "category": "class",
+        "maxStack": 1,
+        "price": 1200,
+        "soloPrice": 1000,
+        "casualPrice": 900,
+        "casualSoloPrice": 650,
+        "extremePrice": 1800,
+        "extremeSoloPrice": 1350,
         "requires": {
             "type": "upgrade",
             "name": "Ninja Belt",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Sport Shoes",
+        "level": 15,
+        "category": "movement",
+        "maxStack": 1,
         "price": 1350,
         "soloPrice": 1250,
         "casualPrice": 1000,
+        "casualSoloPrice": 750,
         "extremePrice": 1600,
-        "level": 15,
-        "category": "movement",
-        "maxStack": 1,
+        "extremeSoloPrice": 1401
     },
     {
         "name": "Gift Magnet",
-        "price": 1500,
-        "prices": [1500,2100,2700],
-        "soloPrices": [1250,2000,2500],
-        "casualPrices": [750,1050,1350],
         "level": 15,
         "maxStack": 3,
         "category": "eco",
+        "price": 1500,
+        "prices": [1500,2000,2500,6000],
+        "soloPrices": [1250,1750,2250,5000],
+        "casualPrices": [750,1000,1250,3250],
+        "casualSoloPrices": [500,800,1150,3000],
+        "extremePrices": [1800,2600,3400,7500],
+        "extremeSoloPrices": [1500,2500,3500,7000]
     },
     {
         "name": "Debuff Magnet",
-        "price": 2800,
-        "casualPrice": 1700,
         "category": "eco",
         "level": 15,
         "maxStack": 1,
+        "summary": "Debuffs increase gift pickup range.",
+        "price": 2800,
+        "soloPrice": 2500,
+        "casualPrice": 1700,
+        "casualSoloPrice": 1500,
+        "extremePrice": 3500,
+        "extremeSoloPrice": 3000,
         "requires": {
             "type": "upgrade",
             "name": "Gift Magnet",
             "stack": 1
-        },
-        "summary": "Debuffs increase gift pickup range.",
+        }
     },
     {
         "name": "Aggro Magnet",
-        "price": 2800,
-        "casualPrice": 1700,
         "category": "eco",
         "level": 15,
         "maxStack": 1,
+        "summary": "Targeting enemies increase gift pickup range.",
+        "price": 2800,
+        "soloPrice": 2500,
+        "casualPrice": 1700,
+        "casualSoloPrice": 1500,
+        "extremePrice": 3500,
+        "extremeSoloPrice": 3000,
         "requires": {
             "type": "upgrade",
             "name": "Gift Magnet",
             "stack": 1
-        },
-        "summary": "Targeting enemies increase gift pickup range.",
+        }
     },
     {
         "name": "Matrix Tetrahedron",
-        "price": 2250,
-        "soloPrice": 2000,
-        "casualPrice": 1500,
-        "extremePrice": 3000,
         "level": 15,
         "category": "movement",
         "maxStack": 1,
+        "price": 2250,
+        "soloPrice": 2000,
+        "casualPrice": 1500,
+        "casualSoloPrice": 1250,
+        "extremePrice": 2750,
+        "extremeSoloPrice": 2750
     },
     {
         "name": "Shadow Cloak",
-        "price": 2500,
         "category": "survival",
         "level": 20,
         "maxStack": 1,
         "summary": "Allows phasing through certain obstacles, players and airborne Springers.",
+        "price": 2500,
+        "soloPrice": 2000,
+        "casualPrice": 2000,
+        "casualSoloPrice": 1500,
+        "extremePrice": 3500,
+        "extremeSoloPrice": 2500
     },
     {
         "name": "Miniature Hourglass",
-        "price": 3000,
-        "casualPrice": 1500,
         "level": 20,
         "category": "class",
+        "maxStack": 1,
+        "price": 3000,
+        "extremePrice": 4000,
+        "extremeSoloPrice": 3000,
         "requires": {
             "type": "upgrade",
             "name": "Ninja Belt",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Fleeting Fate",
-        "price": 2500,
-        "casualPrice": 1750,
-        "casualSoloPrice": 1500,
         "category": "movement",
-        "level": 20,
+        "level": 18,
         "maxStack": 1,
         "summary": "Grants temporary movement and collection bonuses during collapse.",
+        "price": 2500,
+        "soloPrice": 2250,
+        "casualPrice": 1750,
+        "casualSoloPrice": 1500,
+        "extremePrice": 3000,
+        "extremeSoloPrice": 2750
     },
     {
         "name": "Panic Necklace",
-        "price": 3000,
-        "casualPrice": 1500,
         "level": 18,
         "category": "survival",
+        "maxStack": 1,
+        "price": 2500,
+        "soloPrice": 2250,
+        "casualPrice": 1750,
+        "casualSoloPrice": 1500,
+        "extremePrice": 3000,
+        "extremeSoloPrice": 2750,
         "requires": {
             "type": "upgrade",
             "name": "Shield",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Gift Idol",
-        "price": 4000,
-        "prices": [3500,7000,10500,14000,17500],
-        "casualPrices": [3000,6000,9000,12000,15000],
-        "extremePrices": [5000,10000,15000,20000,25000],
         "level": 20,
         "maxStack": 5,
         "category": "eco",
-        "requires": {
-            "type": "upgrade",
-            "name": "Gift Magnet",
-            "stack": 1
-        },
+        "price": 3500,
+        "prices": [3500,7000,10500,14000,17500,25000],
+        "soloPrices": [3000,6000,9000,12000,15000,22500],
+        "casualPrices": [2500,5000,8500,12000,14500,18000],
+        "casualSoloPrices": [2000,4000,6000,8000,10000,15000],
+        "extremePrices": [5000,8000,12000,16000,22500,28500],
+        "extremeSoloPrices": [4000,7000,10000,13000,16000,25000]
     },
     {
         "name": "Shield",
-        "price": 4000,
-        "soloPrice": 2000,
-        "casualPrice": 2000,
         "level": 15,
         "category": "survival",
         "maxStack": 1,
+        "price": 4000,
+        "soloPrice": 2000,
+        "casualPrice": 2000,
+        "casualSoloPrice": 1500,
+        "extremePrice": 6000,
+        "extremeSoloPrice": 3500
     },
     {
         "name": "Drowned Ægis",
-        "price": 6000,
-        "casualPrice": 4000,
         "level": 20,
         "category": "survival",
+        "maxStack": 1,
+        "price": 6000,
+        "soloPrice": 5499,
+        "casualPrice": 4000,
+        "casualSoloPrice": 3250,
+        "extremePrice": 7000,
+        "extremeSoloPrice": 6000,
         "requires": {
             "type": "upgrade",
             "name": "More Altars",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     },
     {
         "name": "Jet Boosters",
-        "price": 6750,
         "category": "movement",
         "level": 25,
         "maxStack": 1,
-        "requires": { "type": "enemy", "name": "Scrapmaw", "count": 1 },
         "summary": "Double jumps redirect momentum.",
+        "price": 6750,
+        "soloPrice": 6000,
+        "casualPrice": 4500,
+        "casualSoloPrice": 4000,
+        "extremePrice": 7000,
+        "extremeSoloPrice": 7000,
+        "requires": {
+            "type": "enemy",
+            "name": "Scrapmaw",
+            "count": 1
+        }
     },
     {
         "name": "Magnified Levels",
-        "price": 3000,
         "category": "environment",
         "level": 30,
-        "maxStack": 1,
+        "maxStack": 3,
         "summary": "Reduces level size.",
+        "price": 3000,
+        "prices": [3000,9000,15000,20000],
+        "soloPrices": [2000,5000,12500,17500],
+        "casualPrices": [2000,5000,12500,17500],
+        "casualSoloPrices": [1500,4500,10000,15000],
+        "extremePrices": [3000,9000,15000,25000],
+        "extremeSoloPrices": [3000,9000,15000,20000]
     },
     {
         "name": "Transient Pennon",
-        "price": 30000,
         "category": "class",
         "level": 30,
         "maxStack": 1,
         "summary": "Extends flight time.",
+        "price": 30000,
+        "casualPrice": 25000,
+        "casualSoloPrice": 25000,
+        "extremePrice": 35000,
+        "extremeSoloPrice": 35000
     },
     {
         "name": "Quixotic Wing",
-        "price": 30000,
         "category": "class",
         "level": 30,
         "maxStack": 1,
         "summary": "Extends flight time.",
+        "price": 30000,
+        "casualPrice": 25000,
+        "casualSoloPrice": 25000,
+        "extremePrice": 35000,
+        "extremeSoloPrice": 35000
     },
     {
         "name": "Defuse Kit",
-        "price": 30,
-        "level": 5,
+        "level": 3,
         "maxStack": 3,
         "category": "survival",
+        "price": 30
     },
     {
         "name": "Adrenaline",
-        "price": 50,
         "level": 3,
         "category": "movement",
         "maxStack": 1,
+        "price": 50
     },
     {
         "name": "Final Stand",
-        "price": 300,
         "level": 8,
         "category": "survival",
         "maxStack": 1,
+        "price": 300
     },
     {
         "name": "Radar Module: Tripmines",
-        "price": 400,
-        "soloPrice": 300,
         "level": 8,
         "category": "environment",
+        "maxStack": 1,
+        "price": 350,
+        "soloPrice": 300,
+        "extremePrice": 450,
+        "extremeSoloPrice": 400,
         "requires": {
             "type": "upgrade",
             "name": "Radar",
             "stack": 1
-        },
-        "maxStack": 1,
+        }
     }
 ];
 
@@ -678,10 +788,41 @@ const upgradeState = {
 
     pending: new Map(),
     owned: new Map(),
-    paycheckAutoOwnedDisabled: false
+    paycheckAutoOwnedDisabled: false,
+    arrogance: false,
+    conceit: false
 
 };
 
+
+function getMaxUpgradeStacks(item) {
+    const base = item.maxStack || 1;
+    const bonus = upgradeState.arrogance || upgradeState.conceit;
+    return base + (bonus && base > 1 && item.name !== "Defuse Kit" ? 1 : 0);
+}
+
+function setUpgradeDelusion(name, enabled) {
+    if (name !== "arrogance" && name !== "conceit") return;
+    upgradeState[name] = Boolean(enabled);
+    // Ending the last bonus-stack delusion trims excess tiers without a refund.
+    for (const entries of [upgradeState.owned, upgradeState.pending]) {
+        for (const [itemName, count] of entries) {
+            const item = upgradesList.find(candidate => candidate.name === itemName);
+            if (item) entries.set(itemName, Math.min(count, getMaxUpgradeStacks(item)));
+        }
+    }
+    for (const [itemName, count] of upgradeState.pending) {
+        if (count <= getOwnedStack(itemName)) upgradeState.pending.delete(itemName);
+    }
+    saveUpgradeState();
+    refreshUpgradePanel();
+}
+
+function setUpgradeBonusTier(enabled) {
+    // Both legacy selections map to this one shared effect.
+    upgradeState.conceit = false;
+    setUpgradeDelusion("arrogance", enabled);
+}
 
 const UPGRADE_STORAGE_KEY = "nullscapeUpgradeState";
 
@@ -700,6 +841,8 @@ function saveUpgradeState() {
             iconMode: upgradeState.iconMode,
             freeformSort: upgradeState.freeformSort,
             paycheckAutoOwnedDisabled: upgradeState.paycheckAutoOwnedDisabled,
+            arrogance: upgradeState.arrogance,
+            conceit: upgradeState.conceit,
 
             pending: Array.from(upgradeState.pending.entries()),
             owned: Array.from(upgradeState.owned.entries())
@@ -723,7 +866,7 @@ function migrateUpgradeEntries(entries) {
         const name = UPGRADE_NAME_ALIASES[oldName] || oldName;
         const item = upgradesList.find(candidate => candidate.name === name);
         if (!item || item.pricePending || !Number.isFinite(Number(count))) continue;
-        const stack = Math.max(0, Math.min(item.maxStack || 1, Math.floor(Number(count))));
+        const stack = Math.max(0, Math.min(getMaxUpgradeStacks(item), Math.floor(Number(count))));
         result.set(name, Math.max(result.get(name) || 0, stack));
     }
     return result;
@@ -752,6 +895,8 @@ function loadUpgradeState() {
         upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.freeformSort = Boolean(saved.freeformSort);
         upgradeState.paycheckAutoOwnedDisabled = Boolean(saved.paycheckAutoOwnedDisabled);
+        upgradeState.arrogance = Boolean(saved.arrogance);
+        upgradeState.conceit = Boolean(saved.conceit);
         upgradeState.pending = migrateUpgradeEntries(saved.pending);
         upgradeState.owned = migrateUpgradeEntries(saved.owned);
 
@@ -774,6 +919,8 @@ function resetUpgradeShopState() {
     upgradeState.pending.clear();
     upgradeState.owned.clear();
     upgradeState.paycheckAutoOwnedDisabled = false;
+    upgradeState.arrogance = false;
+    upgradeState.conceit = false;
     upgradeState.goldenGifts = 0;
     upgradeState.mode = "solo";
     upgradeState.progressive = true;
@@ -843,7 +990,7 @@ function isUpgradeContextHidden(item) {
 
     if (item.name === "Final Stand") {
 
-        const eligible = isPartyLikeMode();
+        const eligible = getScalingPlayerCount() > 2;
 
         if (!eligible) {
 
@@ -852,6 +999,10 @@ function isUpgradeContextHidden(item) {
         }
 
     }
+
+    if (item.name === "Health Insurance"
+        && (getScalingPlayerCount() <= 2 || difficultyKey === "extreme")) return true;
+    if (item.name === "Soul Tracers" && difficultyKey === "extreme") return true;
 
     if (item.name === "Radar Module : Players") {
 
@@ -923,14 +1074,7 @@ function computeBaseForStack(item, stack) {
 }
 
 
-/*
- * basePrice * sqrt(playerCount), with the Party+ multiplier divided
- * by 1.125 for actual parties (two or more players), and the
- * Nothing-curse -15% discount (if active) applied on top, then
- * rounded with a single ceil() at the very end -
- * rounding more than once along the way can throw the final number
- * off by a Golden Gift or two.
- */
+/* Apply player scaling and Nothing before rounding each individual purchase. */
 function computeStackPrice(item, stack) {
 
     if (stack <= 0) {
@@ -943,16 +1087,6 @@ function computeStackPrice(item, stack) {
     const playerCount = getScalingPlayerCount();
 
     let multiplier = Math.sqrt(playerCount);
-
-    // Although Party+ normally discounts upgrade prices, the game
-    // does not apply that discount when it has only one player.
-    // Keep that case on the ordinary non-Solo price path (for
-    // example, a Swiftness Ring remains 80 rather than 72).
-    if ((upgradeState.mode === "partyplus" || playerCount > 8) && playerCount > 1) {
-
-        multiplier = multiplier / 1.125;
-
-    }
 
     let scaled = base * multiplier;
 
@@ -1122,8 +1256,16 @@ function isUpgradeUnavailable(item) {
     }
 
     return isUpgradeLockedByLevel(item)
-        || !isUpgradeRequirementMet(item);
+        || !isUpgradeRequirementMet(item)
+        || Boolean(getUpgradeExclusiveRival(item));
 
+}
+
+function getUpgradeExclusiveRival(item) {
+    const pairs = [["Aggro Magnet", "Debuff Magnet"], ["Fleeting Fate", "Panic Necklace"]];
+    const pair = pairs.find(names => names.includes(item.name));
+    if (!pair) return null;
+    return pair.find(name => name !== item.name && getOwnedStack(name) > 0) || null;
 }
 
 
@@ -1314,7 +1456,7 @@ function setStackTarget(item, targetStack) {
     }
 
     const owned = getOwnedStack(item.name);
-    const maxStack = item.maxStack || 1;
+    const maxStack = getMaxUpgradeStacks(item);
 
     const target = Math.max(0, Math.min(maxStack, targetStack));
 
@@ -1432,7 +1574,7 @@ function cycleUpgradeSelection(item) {
     }
 
     const owned = getOwnedStack(item.name);
-    const maxStack = item.maxStack || 1;
+    const maxStack = getMaxUpgradeStacks(item);
 
     if (owned >= maxStack) {
 
@@ -1468,7 +1610,7 @@ function adjustOwnedStackWithShortcut(item) {
     if (item.pricePending) return;
 
     const owned = getOwnedStack(item.name);
-    const maxStack = item.maxStack || 1;
+    const maxStack = getMaxUpgradeStacks(item);
 
     if (owned >= maxStack) {
 
@@ -1518,7 +1660,7 @@ function ownAllUpgrades() {
 
     upgradesList.forEach(item => {
         if (item.pricePending) return;
-        upgradeState.owned.set(item.name, item.maxStack || 1);
+        upgradeState.owned.set(item.name, getMaxUpgradeStacks(item));
 
     });
 
@@ -1926,7 +2068,7 @@ function createStackStepper(item, locked) {
 
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
-    const maxStack = item.maxStack || 1;
+    const maxStack = getMaxUpgradeStacks(item);
 
     const wrapper = document.createElement("div");
 
@@ -2035,7 +2177,7 @@ function createUpgradeCard(item) {
     const locked = isUpgradeUnavailable(item);
     const owned = getOwnedStack(item.name);
     const pending = getPendingStack(item.name);
-    const maxStack = item.maxStack || 1;
+    const maxStack = getMaxUpgradeStacks(item);
 
     const isFullyOwned = owned >= maxStack;
     const isSelected = !locked && pending > owned;
@@ -2454,7 +2596,7 @@ function renderUpgradeGrid() {
             }
 
             const owned = getOwnedStack(item.name);
-            const maxStack = item.maxStack || 1;
+            const maxStack = getMaxUpgradeStacks(item);
 
             const row = createUpgradeCard(item);
 
@@ -2525,6 +2667,14 @@ function updateUpgradeTotals() {
     const remainingValueEl = document.getElementById("upgradeRemainingValue");
     const nothingIndicator = document.getElementById("upgradeNothingIndicator");
     const purchaseButton = document.getElementById("purchaseUpgradeButton");
+    const bonusToggle = document.getElementById("upgradeBonusTierToggle");
+    if (bonusToggle) {
+        const toggle = bonusToggle;
+        const active = Boolean(upgradeState.arrogance || upgradeState.conceit);
+        toggle.classList.toggle("active", active);
+        toggle.setAttribute("aria-checked", String(active));
+        toggle.querySelector(".upgrade-switch-label").textContent = active ? "ON" : "OFF";
+    }
 
     const total = computePendingTotal();
     const remaining = upgradeState.goldenGifts - total;
@@ -3340,6 +3490,13 @@ if (purchaseUpgradeButton) {
 
 
 const upgradeNothingIndicator = document.getElementById("upgradeNothingIndicator");
+const upgradeBonusTierToggle = document.getElementById("upgradeBonusTierToggle");
+if (upgradeBonusTierToggle) {
+    upgradeBonusTierToggle.addEventListener("click", () => {
+        setUpgradeBonusTier(!(upgradeState.arrogance || upgradeState.conceit));
+        playSelectSound();
+    });
+}
 
 if (upgradeNothingIndicator) {
 

@@ -5,6 +5,13 @@ const path = require('node:path');
 const http = require('node:http');
 const { createPreviewServer, previewHTML } = require('../scripts/private-preview.cjs');
 
+test('public landing and standalone toolkit are open without the maintenance gate', () => {
+    for (const name of ['index.html', 'Toolkits.html']) {
+        const html = fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+        assert.doesNotMatch(html.match(/<html\b[^>]*>/i)[0], /maintenance-active/);
+    }
+});
+
 test('preview removes a maintenance cover when one is enabled', () => {
     const source = '<html class="maintenance-active"><body><main id="maintenanceScreen">Maintenance</main><main id="toolkitView">Tools</main></body></html>';
     const result = previewHTML(source);

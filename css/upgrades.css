@@ -3230,3 +3230,107 @@
     .upgrade-panel:not(.icon-mode) .upgrade-row-price { font-size: 10px; padding: 3px; gap: 2px; }
     .upgrade-panel:not(.icon-mode) .upgrade-row-price-icon { width: 10px; height: 10px; }
 }
+
+/* A compact column of icon switches sits beside the existing run controls. */
+.upgrade-effect-toggles {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+.upgrade-effect-icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex: 0 0 32px;
+}
+.upgrade-toggle-group { flex-wrap: wrap; gap: 12px; min-width: 0; max-width: 100%; }
+.upgrade-effect-icon-pair,
+.upgrade-effect-icon-single { display: flex; align-items: center; justify-content: center; width: 96px; height: 44px; flex: 0 0 96px; gap: 4px; }
+.upgrade-effect-icon-pair img { display: block; width: 40px; height: 40px; object-fit: contain; }
+.upgrade-effect-separator { color: #93b6cd; font-size: 20px; line-height: 1; }
+.upgrade-effect-icon-single .upgrade-effect-icon { width: 44px; height: 44px; flex-basis: 44px; }
+@media (max-width: 1200px) {
+    .upgrade-effect-toggles { flex-direction: row; flex-wrap: wrap; gap: 8px 12px; }
+    .upgrade-toggle-group { margin-left: 0; padding-left: 0; border-left: 0; flex-basis: 100%; }
+}
+/* Keep all five categories readable in a narrow preview without adding
+   a second category row or an internal horizontal scrollbar. */
+@container (max-width: 150px) {
+    .upgrade-panel:not(.icon-mode) .upgrade-row {
+        grid-template-columns: minmax(0, 1fr) 16px;
+        grid-template-rows: 30px auto;
+        row-gap: 5px;
+        padding: 6px 4px 6px 8px;
+    }
+    .upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-row-info {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        align-items: center;
+    }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-name { font-size: 9px; text-align: center; }
+    .upgrade-panel:not(.icon-mode) .upgrade-row > .upgrade-row-level {
+        position: absolute;
+        grid-column: auto;
+        grid-row: auto;
+        top: 21px;
+        right: 22px;
+        transform: translateY(-50%);
+        font-size: 26px;
+        height: 30px;
+    }
+    .upgrade-panel:not(.icon-mode) .upgrade-row-stepper,
+    .upgrade-panel:not(.icon-mode) .upgrade-unown-button { grid-column: 2; }
+}
+
+/* Stable equal-size readouts keep the centered numbers from moving controls. */
+.upgrade-panel-controls { container-type: inline-size; }
+.upgrade-gift-summary {
+    display: grid;
+    grid-template-columns: minmax(70px, 0.85fr) repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: end;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+}
+.upgrade-gift-summary .upgrade-gifts-block { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.upgrade-gift-summary .upgrade-gifts-block input { min-height: 50px; font-size: 18px; text-align: center; box-sizing: border-box; }
+.upgrade-gift-summary .upgrade-panel-total {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 2px 4px;
+    min-height: 50px;
+    height: 50px;
+    min-width: 0;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: none;
+}
+.upgrade-gift-summary .upgrade-panel-total-value { font-size: clamp(26px, 4cqi, 30px); line-height: 1; font-variant-numeric: tabular-nums; }
+.upgrade-gift-summary .upgrade-panel-total-label { font-size: 11px; }
+.upgrade-purchase-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.upgrade-toggle-group { justify-content: flex-end; align-items: center; flex-wrap: nowrap; flex: none; margin-left: 0; padding-left: 12px; border-left: 1px solid #8fd9ff33; gap: 12px; max-width: none; }
+.upgrade-summary-purchase { grid-column: 1 / -1; min-height: 52px; padding: 12px 10px; font-size: 12px; }
+.upgrade-effect-toggles { flex-direction: column; flex-wrap: nowrap; }
+.upgrade-effect-toggles .upgrade-toggle-block { min-height: 44px; }
+@container (max-width: 1100px) {
+    .upgrade-toggle-group .upgrade-progressive-box { width: clamp(180px, 28cqi, 300px); flex: 0 0 auto; min-width: 0; box-sizing: border-box; padding: 8px; }
+    .upgrade-progressive-subtoggles { flex-direction: column; align-items: stretch; gap: 6px; }
+    .upgrade-progressive-subtoggle-row { justify-content: space-between; }
+    .upgrade-progressive-status-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 4px; }
+    .upgrade-progressive-status-row > * { min-width: 0; padding: 5px 3px; font-size: 9px; text-align: center; }
+}
+@container (max-width: 800px) {
+    .upgrade-effect-toggles .upgrade-toggle-block { flex-direction: column; gap: 3px; }
+    .upgrade-effect-icon-pair,
+    .upgrade-effect-icon-single { flex-basis: 44px; }
+    .upgrade-effect-toggles { gap: 8px; }
+    .upgrade-gift-summary .upgrade-panel-total-label { font-size: 9px; letter-spacing: 0.4px; }
+    .upgrade-gift-summary .upgrade-panel-total { padding-inline: 4px; }
+    .upgrade-gift-summary .upgrade-panel-total-value { font-size: 26px; }
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="maintenance-active">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,7 +44,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/tracker.css?v=20261026-dimmer-bg1">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261026-simple-counters1">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261027-summary-purchase1">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
@@ -411,6 +411,7 @@
 
                     <div class="upgrade-purchase-row">
 
+                        <div class="upgrade-gift-summary">
                         <div class="upgrade-gifts-block">
 
                             <label for="goldenGiftsInput" class="upgrade-control-label">GOLDEN GIFTS</label>
@@ -435,13 +436,21 @@
                         </div>
 
                         <div class="upgrade-panel-total upgrade-panel-remaining roll-pill">
-                            <span class="upgrade-panel-total-label">LEFT</span>
+                            <span class="upgrade-panel-total-label">LEFT GIFTS</span>
                             <span
                                 id="upgradeRemainingValue"
                                 class="upgrade-panel-total-value"
                             >
                                 0
                             </span>
+                        </div>
+                        <button
+                            id="purchaseUpgradeButton"
+                            class="purchase-upgrade-button upgrade-summary-purchase"
+                            type="button"
+                        >
+                            <span class="btn-label">PURCHASE UPGRADE</span>
+                        </button>
                         </div>
 
                         <!--
@@ -456,9 +465,10 @@
                         -->
                         <div id="upgradeToggleGroup" class="upgrade-toggle-group">
 
-                            <div class="upgrade-toggle-block">
+                            <div class="upgrade-effect-toggles" role="group" aria-label="Curse and delusion effects">
+                            <div class="upgrade-toggle-block" title="Nothing: 15% off upgrade prices">
 
-                                <span class="upgrade-control-label upgrade-toggle-block-label">Nothing &minus;15%</span>
+                                <span class="upgrade-effect-icon-single"><img class="upgrade-effect-icon" src="assets/curses/Nothing.png" alt="Nothing" width="44" height="44"></span>
 
                                 <button
                                     type="button"
@@ -466,6 +476,7 @@
                                     class="upgrade-switch upgrade-nothing-indicator"
                                     role="switch"
                                     aria-checked="false"
+                                    aria-label="Nothing: 15% off upgrade prices"
                                 >
                                     <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
                                     <span class="upgrade-switch-label">OFF</span>
@@ -473,36 +484,25 @@
 
                             </div>
 
+                            <div class="upgrade-toggle-block" title="Arrogance / Conceit: one extra tier for stackable upgrades, except Defuse Kit.">
+                                <span class="upgrade-effect-icon-pair" aria-hidden="true">
+                                    <img src="assets/delusions/Arrogance.png" alt="" width="40" height="40">
+                                    <span class="upgrade-effect-separator">/</span>
+                                    <img src="assets/delusions/Conceit.png" alt="" width="40" height="40">
+                                </span>
+                                <button type="button" id="upgradeBonusTierToggle" class="upgrade-switch" role="switch" aria-checked="false" aria-label="Arrogance / Conceit: one bonus upgrade tier">
+                                    <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
+                                    <span class="upgrade-switch-label">OFF</span>
+                                </button>
+                            </div>
+                            </div>
+
                         </div>
 
-                        <!--
-                            Purchase Upgrade now lives in its own row
-                            below (see .upgrade-purchase-row-bottom in
-                            upgrades.css) instead of sharing this flex
-                            row with Golden Gifts/Total/Left/the
-                            toggles. Those grow (Progressive adds a
-                            level badge + advance/revert buttons here
-                            once it's on), which used to shove the
-                            button sideways or onto a new line every
-                            time. Giving it a dedicated full-width
-                            spot means it always sits in the same
-                            place regardless of what this row is
-                            doing.
-                        -->
 
                     </div>
 
-                    <div class="upgrade-purchase-row-bottom">
 
-                        <button
-                            id="purchaseUpgradeButton"
-                            class="purchase-upgrade-button"
-                            type="button"
-                        >
-                            <span class="btn-label">PURCHASE UPGRADE</span>
-                        </button>
-
-                    </div>
 
                 </div>
 
@@ -1774,8 +1774,8 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261026-chaos2"></script>
-<script src="js/upgrades.js?v=20261026-simple-counters1"></script>
+<script src="js/tracker.js?v=20261027-number-tweens1"></script>
+<script src="js/upgrades.js?v=20261027-shared-delusion1"></script>
 <script src="js/tools.js?v=20261025-limited1"></script>
 <script src="js/card-reveals.js?v=20261026-reveal1"></script>
 <script src="js/curse-backgrounds.js?v=20261026-bgfix2"></script>
