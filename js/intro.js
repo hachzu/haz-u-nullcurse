@@ -253,7 +253,7 @@
         { x: 40, y: -70, r: 0, s: .97 }
     ];
     const SLANT = 5; // how far each cut leans, in % of the logo width
-    const ASSEMBLY_TONES = ['255, 0, 239', '255, 0, 239', '255, 0, 239', '255, 0, 239', '255, 0, 239'];
+    const ASSEMBLY_TONES = ['208, 112, 213', '208, 112, 213', '208, 112, 213', '208, 112, 213', '208, 112, 213'];
 
     features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index % 6));
     for (let index = 0; index < MOTIF.notes.length; index++) {

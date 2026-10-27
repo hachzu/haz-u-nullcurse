@@ -245,18 +245,18 @@ test('nil keeps the visualizer active without driving background bumps', async (
     assert.equal(h.frames.size, 0);
 });
 
-test('intro ripple colors follow the supplied pink wordmark', async () => {
+test('intro ripple colors follow the pink-purple wordmark', async () => {
     const h = harness(); await h.start();
     const burst = h.elements['.ns-logo-face'].children.find(node => node.className === 'logo-burst');
     h.advance(.5);
-    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
+    assert.equal(burst.style['--ns-ripple-tone'], '208, 112, 213');
     h.advance(1.204);
-    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
+    assert.equal(burst.style['--ns-ripple-tone'], '208, 112, 213');
     h.advance(3.08);
-    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
+    assert.equal(burst.style['--ns-ripple-tone'], '208, 112, 213');
     const effects = h.elements.landingView.children.find(node => node.className === 'logo-fx');
     const ring = effects.children.find(node => node.className === 'ns-assembly-ring');
-    assert.equal(ring.style['--ns-ripple-tone'], '255, 0, 239');
+    assert.equal(ring.style['--ns-ripple-tone'], '208, 112, 213');
     h.intro.finish();
 });
 

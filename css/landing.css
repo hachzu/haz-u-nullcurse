@@ -1385,7 +1385,7 @@ html.low-detail-mode .landing-features.is-copy { display: none; }
 .landing-view:is([data-intro-state='waiting'], [data-intro-state='playing']) .landing-logo-tinted::after { opacity: 0; }
 .landing-view .ns-toolkit-caption {
     color: transparent;
-    background: linear-gradient(180deg, #ff60e9 0%, #ff60e9 88%, #72d8a9 100%);
+    background: linear-gradient(180deg, #ce73d0 0%, #ce73d0 88%, #d98ada 100%);
     -webkit-background-clip: text;
     background-clip: text;
 }

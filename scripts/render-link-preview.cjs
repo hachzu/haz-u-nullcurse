@@ -9,8 +9,7 @@ async function render() {
     const logo = await sharp(path.join(root, 'assets/branding/NullscapeWordmark.svg'))
         .resize(width, height).png().toBuffer();
     const caption = Buffer.from(`<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-        <defs><linearGradient id="brand"><stop stop-color="#ff60e9"/><stop offset=".44" stop-color="#ff60e9"/>
-        <stop offset=".56" stop-color="#72d8a9"/><stop offset="1" stop-color="#a4efc4"/></linearGradient></defs>
+        <defs><linearGradient id="brand" x2="0" y2="1"><stop stop-color="#ce73d0"/><stop offset=".88" stop-color="#ce73d0"/><stop offset="1" stop-color="#d98ada"/></linearGradient></defs>
         <text x="600" y="475" text-anchor="middle" fill="url(#brand)" font-family="Georgia" font-size="57" letter-spacing="7">Toolkits</text>
         <path d="m600 518 8 8-8 8-8-8Z" fill="none" stroke="#e2c7f6"/></svg>`);
     await sharp(path.join(root, 'assets/branding/maintenance-5-1.png'))
