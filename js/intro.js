@@ -4,7 +4,7 @@
     'use strict';
     if (window.NullscapeMoved || document.documentElement.classList.contains('maintenance-active')) return;
     const CONFIG = {
-        notes: [ // Original 128 BPM motif, without the extra hold before note 5.
+        notes: [ // Original five accents at 128 BPM, now all assigned to the wordmark.
             { midi: 62, at: .5 }, { midi: 77, at: 1.203125 },
             { midi: 76, at: 1.90625 }, { midi: 70, at: 2.375 },
             { midi: 69, at: 3.078125 }
@@ -253,16 +253,16 @@
         { x: 40, y: -70, r: 0, s: .97 }
     ];
     const SLANT = 5; // how far each cut leans, in % of the logo width
-    const ASSEMBLY_TONES = ['231, 169, 208', '231, 169, 208', '231, 169, 208', '147, 201, 176', '183, 221, 199'];
+    const ASSEMBLY_TONES = ['255, 0, 239', '255, 0, 239', '255, 0, 239', '255, 0, 239', '255, 0, 239'];
 
     features.querySelectorAll('li').forEach((tag, index) => tag.style.setProperty('--tag-index', index % 6));
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < MOTIF.notes.length; index++) {
         const tile = document.createElement('span');
         tile.className = 'intro-piece';
         tile.style.setProperty('--ns-ripple-tone', ASSEMBLY_TONES[index]);
-        const first = index === 0, last = index === 4;
-        const a = first ? -2 * SLANT : index * 20;
-        const b = last ? 100 + 2 * SLANT : (index + 1) * 20 + .6; // tiny overlap hides hairline seams
+        const first = index === 0, last = index === MOTIF.notes.length - 1;
+        const a = first ? -2 * SLANT : index * (100 / MOTIF.notes.length);
+        const b = last ? 100 + 2 * SLANT : (index + 1) * (100 / MOTIF.notes.length) + .6; // tiny overlap hides hairline seams
         tile.style.clipPath = `polygon(${a + SLANT}% 0, ${b + SLANT}% 0, ${b - SLANT}% 100%, ${a - SLANT}% 100%)`;
         tile.dataset.fixOnBeat = String(index + 1);
         const artwork = document.createElement('span');
@@ -329,12 +329,12 @@
         burst.style.setProperty('--ns-ripple-tone', tone);
         restart(tiles[beat - 1], 'landed', late);
         burst.classList.toggle('final', final);
-        burst.style.left = final ? '50%' : `${(beat - 1) * 20 + 10}%`;
+        burst.style.left = final ? '50%' : `${(beat - .5) * (100 / tiles.length)}%`;
         restart(burst, 'hit', late);
         if (final && late < .65) {
             const rect = logoFace.getBoundingClientRect();
             const homeRect = home.getBoundingClientRect();
-            fx('ns-assembly-ring', rect.left + rect.width / 2 - homeRect.left,
+            fx('ns-assembly-ring', rect.left + rect.width * (435 / 850) - homeRect.left,
                 rect.top + rect.height / 2 - homeRect.top, { '--ns-ripple-tone': tone }, late);
             restart(stage, 'ns-assembly-impact', late);
         } else if (!final) {
@@ -779,7 +779,7 @@
         if (reducedMotion.matches || late > CONFIG.fx.background) return;
         const homeRect = home.getBoundingClientRect();
         const rect = logoFace.getBoundingClientRect();
-        const x = rect.left + rect.width / 2 - homeRect.left;
+        const x = rect.left + rect.width * (435 / 850) - homeRect.left;
         const y = rect.top + rect.height / 2 - homeRect.top;
         const beacon = document.createElement('i');
         beacon.className = 'ns-drop-beacon';

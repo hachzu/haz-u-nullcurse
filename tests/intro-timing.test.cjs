@@ -245,18 +245,18 @@ test('nil keeps the visualizer active without driving background bumps', async (
     assert.equal(h.frames.size, 0);
 });
 
-test('intro ripple colors follow the purple-to-jade logo sections', async () => {
+test('intro ripple colors follow the supplied pink wordmark', async () => {
     const h = harness(); await h.start();
     const burst = h.elements['.ns-logo-face'].children.find(node => node.className === 'logo-burst');
     h.advance(.5);
-    assert.equal(burst.style['--ns-ripple-tone'], '231, 169, 208');
+    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
     h.advance(1.204);
-    assert.equal(burst.style['--ns-ripple-tone'], '231, 169, 208');
+    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
     h.advance(3.08);
-    assert.equal(burst.style['--ns-ripple-tone'], '183, 221, 199');
+    assert.equal(burst.style['--ns-ripple-tone'], '255, 0, 239');
     const effects = h.elements.landingView.children.find(node => node.className === 'logo-fx');
     const ring = effects.children.find(node => node.className === 'ns-assembly-ring');
-    assert.equal(ring.style['--ns-ripple-tone'], '183, 221, 199');
+    assert.equal(ring.style['--ns-ripple-tone'], '255, 0, 239');
     h.intro.finish();
 });
 
@@ -359,7 +359,7 @@ test('drop, 100% and background share one cue; the full-size logo holds two seco
     assert.equal(h.elements['.landing-background'].classList.contains('ns-background'), true);
     assert.equal(beacon.children.length, 1);
     assert.equal(beacon.children[0].className, 'ns-drop-beacon');
-    assert.equal(beacon.children[0].style['--beacon-x'], '220px');
+    assert.equal(beacon.children[0].style['--beacon-x'], `${440 * (435 / 850)}px`);
     assert.ok(Math.abs(Number.parseFloat(beacon.children[0].style['--ns-late']) + .012) < 1e-9);
     const drop = h.logs.find(e => e[1].event === 'drop')[1];
     assert.ok(Math.abs(drop.scheduled - DROP) < 1e-6);
@@ -407,7 +407,7 @@ test('slow required assets extend loading; no fake completion or early audio', a
     h.intro.finish();
 });
 
-test('audio download can finish late without stalling the five-note logo or desynchronizing the drop', async () => {
+test('audio download can finish late without stalling the five-note wordmark or desynchronizing the drop', async () => {
     const h = harness({ deferSong: true }); await h.start();
     h.advance(4.2);
     assert.equal(h.logs.filter(e => /^note-/.test(e[1].event)).length, 5);

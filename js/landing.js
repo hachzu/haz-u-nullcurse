@@ -37,8 +37,8 @@
     }
     window.addEventListener('pointermove', event => {
         if (home.hidden || event.pointerType === 'touch' || reducedMotion.matches) return;
-        background.style.setProperty('--landing-x', `${-(event.clientX / innerWidth - .5) * 20}px`);
-        background.style.setProperty('--landing-y', `${-(event.clientY / innerHeight - .5) * 20}px`);
+        background.style.setProperty('--landing-x', `${-(event.clientX / innerWidth - .5) * 8}px`);
+        background.style.setProperty('--landing-y', `${-(event.clientY / innerHeight - .5) * 8}px`);
     }, { passive: true });
     document.addEventListener('pointerleave', resetParallax);
     reducedMotion.addEventListener('change', resetParallax);
@@ -240,9 +240,39 @@
     const CREDIT = { text: 'made by Hazu', url: '' };
     const credit = document.createElement(CREDIT.url ? 'a' : 'span');
     credit.className = 'landing-credit';
-    credit.textContent = CREDIT.text;
+    const author = document.createElement('span');
+    author.textContent = CREDIT.text;
+    const inspiration = document.createElement('span');
+    inspiration.className = 'landing-inspiration';
+    inspiration.append('inspired by ');
+    ['alireza1303', 'stickstetris'].forEach((name, index) => {
+        const handle = document.createElement('u');
+        handle.textContent = name;
+        if (index) inspiration.append(' and ');
+        inspiration.append(handle);
+    });
+    inspiration.append("' calculators.");
+    credit.append(author, inspiration);
     if (CREDIT.url) { credit.href = CREDIT.url; credit.target = '_blank'; credit.rel = 'noopener noreferrer'; }
     home.append(credit);
+
+    // Proportional lettering needs its l/k boundary aligned, not its bounding-box center.
+    function alignToolkitCaption() {
+        const caption = home.querySelector('.ns-toolkit-caption');
+        if (!caption?.firstChild || !document.createRange || !caption.offsetWidth) return;
+        caption.style.translate = '0px 0px';
+        const range = document.createRange();
+        range.setStart(caption.firstChild, 4);
+        range.setEnd(caption.firstChild, 4);
+        const parent = caption.parentElement.getBoundingClientRect();
+        const scale = caption.getBoundingClientRect().width / caption.offsetWidth;
+        const offset = (parent.left + parent.width / 2 - range.getBoundingClientRect().left) / (scale || 1);
+        caption.style.translate = `${offset}px 0px`;
+    }
+    window.addEventListener('resize', alignToolkitCaption);
+    window.addEventListener('hashchange', () => requestAnimationFrame(alignToolkitCaption));
+    document.fonts?.ready.then(alignToolkitCaption);
+    alignToolkitCaption();
 
     // Play the recorded game cue and fade the landing mix while navigation proceeds.
     home.querySelectorAll('a[href^="#/"]').forEach(link => link.addEventListener('click', event => {

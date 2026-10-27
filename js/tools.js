@@ -4009,8 +4009,8 @@ renderLobbyTagLog();
 
         if (shouldAnimate()) {
 
-            const parallaxX = ((mouseX / width) - 0.5) * 10;
-            const parallaxY = ((mouseY / height) - 0.5) * 10;
+            const parallaxX = ((mouseX / width) - 0.5) * 4;
+            const parallaxY = ((mouseY / height) - 0.5) * 4;
 
             for (const p of particles) {
 

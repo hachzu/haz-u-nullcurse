@@ -3337,3 +3337,17 @@
     .upgrade-gift-summary .upgrade-panel-total { padding-inline: 4px; }
     .upgrade-gift-summary .upgrade-panel-total-value { font-size: 26px; }
 }
+
+.upgrade-panel-header { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.upgrade-panel-heading-group { display: contents; }
+.upgrade-panel-header .toolkit-panel-back { position: absolute; top: 0; left: 0; }
+.upgrade-shortcut-legend { grid-column: 1; grid-row: 1; justify-self: start; align-self: start; padding-top: 38px; max-width: 100%; }
+.upgrade-panel-heading-group .tool-header-brand--upgrades { grid-column: 2; grid-row: 1; justify-self: center; }
+.upgrade-header-buttons { grid-column: 3; grid-row: 1; justify-self: end; flex-wrap: wrap; justify-content: flex-end; }
+.upgrade-row-price--unaffordable { background: #321116; border-color: #df6571; color: #ff9aa5; box-shadow: none; text-shadow: none; }
+@media (max-width: 650px) {
+    .upgrade-panel-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .upgrade-panel-heading-group .tool-header-brand--upgrades { grid-column: 1 / -1; grid-row: 1; }
+    .upgrade-shortcut-legend { grid-column: 1; grid-row: 2; padding-top: 0; }
+    .upgrade-header-buttons { grid-column: 2; grid-row: 2; }
+}

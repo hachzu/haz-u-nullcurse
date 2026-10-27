@@ -66,7 +66,9 @@ const curseVisibilityState = {
  */
 const medalDisplayState = {
     hideSection: false,
-    listMode: true
+    listMode: true,
+    showDelusions: false,
+    collapsedLevels: []
 };
 
 const MEDAL_DISPLAY_STORAGE_KEY = "nullscapeMedalDisplayState";
@@ -99,6 +101,8 @@ function loadMedalDisplayState() {
 
         medalDisplayState.hideSection = Boolean(saved.hideSection);
         medalDisplayState.listMode = typeof saved.listMode === 'boolean' ? saved.listMode : true;
+        medalDisplayState.showDelusions = saved.showDelusions === true;
+        medalDisplayState.collapsedLevels = Array.isArray(saved.collapsedLevels) ? saved.collapsedLevels.filter(key => typeof key === 'string') : [];
 
     } catch (error) {
 
@@ -2767,12 +2771,24 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
     const levels = [...new Set(curses.filter(curse => !curse.chaos).map(curse => getCurseUnlockLevel(curse) || 1))].sort((a, b) => a - b);
     levels.forEach(level => {
-        const divider = document.createElement('div');
+        const divider = document.createElement('button');
+        divider.type = 'button';
         divider.className = 'curse-level-divider';
         divider.style.setProperty('--level-order', level * 2 - 1);
-        divider.setAttribute('role', 'separator');
-        divider.setAttribute('aria-label', `Level ${level} curses`);
+        const key = `${containerId}:${level}`;
+        divider.setAttribute('aria-label', `Toggle level ${level} curses`);
+        divider.setAttribute('aria-expanded', String(!medalDisplayState.collapsedLevels.includes(key)));
         divider.textContent = `Level ${level}`;
+        divider.addEventListener('click', () => {
+            const collapsed = !medalDisplayState.collapsedLevels.includes(key);
+            medalDisplayState.collapsedLevels = medalDisplayState.collapsedLevels.filter(entry => entry !== key);
+            if (collapsed) medalDisplayState.collapsedLevels.push(key);
+            divider.setAttribute('aria-expanded', String(!collapsed));
+            container.querySelectorAll('.curse-card').forEach(card => {
+                if (Number(card.dataset.groupLevel) === level) card.toggleAttribute('data-level-collapsed', collapsed);
+            });
+            saveMedalDisplayState();
+        });
         container.appendChild(divider);
     });
 
@@ -2784,6 +2800,9 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
             isDedicatedMedalContainer,
             isDedicatedMedalContainer
         );
+        const level = getCurseUnlockLevel(curse) || 1;
+        card.dataset.groupLevel = level;
+        if (!curse.chaos && medalDisplayState.collapsedLevels.includes(`${containerId}:${level}`)) card.setAttribute('data-level-collapsed', '');
 
         container.appendChild(card);
 
@@ -3273,6 +3292,18 @@ attachClickAction(document.getElementById('chaosPlusModeToggle'), () => {
 
 const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
 const curseListModeToggle = document.getElementById('curseListModeToggle');
+const delusionsToggle = document.getElementById('delusionsToggle');
+function updateDelusionsDisplay() {
+    document.getElementById('delusionSection')?.classList.toggle('result-section--hidden', !medalDisplayState.showDelusions);
+    delusionsToggle?.classList.toggle('active', medalDisplayState.showDelusions);
+    delusionsToggle?.setAttribute('aria-checked', String(medalDisplayState.showDelusions));
+}
+delusionsToggle?.addEventListener('click', () => {
+    medalDisplayState.showDelusions = !medalDisplayState.showDelusions;
+    saveMedalDisplayState();
+    updateDelusionsDisplay();
+});
+updateDelusionsDisplay();
 
 function updateCurseListModeUI() {
     document.querySelectorAll('#cursePoolColumns .result-heading h2').forEach(heading => {
@@ -3319,6 +3350,7 @@ if (hideMedalCursesToggle) {
 }
 
 loadMedalDisplayState();
+updateDelusionsDisplay();
 updateMedalDisplayToggleUI();
 updateCurseListModeUI();
 
@@ -3575,7 +3607,7 @@ updateLeftPanelAccent();
 
 const bgLayer = document.getElementById("bgLayer");
 
-const BG_DRIFT_RANGE = 18;
+const BG_DRIFT_RANGE = 7.2;
 
 if (bgLayer) {
 
@@ -3747,119 +3779,87 @@ document.getElementById("levelInput").value = runState.level;
 
 render();
 
-/* Source: curse-help.js */
-/*
- * Curse Tracker help overlay
- * --------------------------
- * Wires up the small "?" trigger next to the CURSE POOLS title (see
- * the markup in Toolkits.html and the styles in curse-help.css) to a
- * full-screen overlay dialog explaining how the curse tracker works.
- * Purely presentational: no game state is read or written here, this
- * file only opens/closes the overlay.
- *
- * Unlike the sliding Upgrade/Death/Altars/Lobby panels, this overlay
- * deliberately does not remember being left open across page loads -
- * a help dialog popping up unasked on every visit would be worse
- * than not having it at all, so it always starts closed.
- *
- * Depends on globals defined in script.js: attachClickAction,
- * playUtilitySound. Both are optional - this still works with a
- * plain click and no sound if either is missing.
- */
-
-const curseHelpToggle = document.getElementById("curseHelpToggle");
-const curseHelpOverlay = document.getElementById("curseHelpOverlay");
-const curseHelpBackdrop = document.getElementById("curseHelpOverlayBackdrop");
-const curseHelpCloseButton = document.getElementById("curseHelpCloseButton");
-
-let curseHelpPreviousBodyOverflow = "";
-
-function setCurseHelpOpen(isOpen) {
-
-    if (!curseHelpToggle || !curseHelpOverlay) {
-
-        return;
-
+// Keep the notice outside the scrolling pools, clear of the sidebar and navigation.
+(() => {
+    const overlay = document.getElementById('editingOverlay');
+    if (!overlay) return;
+    document.querySelector('.app').append(overlay);
+    const notice = overlay.querySelector('.editing-notice');
+    function positionNotice() {
+        const sidebar = document.querySelector('.left-panel')?.getBoundingClientRect();
+        const main = document.querySelector('.right-panel')?.getBoundingClientRect();
+        const left = sidebar && sidebar.right < innerWidth - 80 ? Math.max(0, sidebar.right) : 0;
+        overlay.style.setProperty('--editing-left', `${left}px`);
+        overlay.style.setProperty('--editing-top', `${left ? 0 : Math.max(0, main?.top || 0)}px`);
     }
-
-    curseHelpOverlay.classList.toggle("curse-help-overlay--open", isOpen);
-    curseHelpOverlay.setAttribute("aria-hidden", isOpen ? "false" : "true");
-
-    curseHelpToggle.classList.toggle("active", isOpen);
-    curseHelpToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-
-    // Lock page scroll behind the overlay while it's open, same idea
-    // as any other modal - restores whatever inline overflow value
-    // (if any) was already on body rather than assuming it was
-    // empty, so this plays nicely if something else ever sets that
-    // property too.
-    if (isOpen) {
-
-        curseHelpPreviousBodyOverflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-
-        curseHelpOverlay.focus?.();
-
-    } else {
-
-        document.body.style.overflow = curseHelpPreviousBodyOverflow;
-
+    function fillRibbons() {
+        const unit = 'PLEASE BE PATIENT! \u00a0\u00a0 ';
+        notice.querySelectorAll('.editing-notice-ribbon').forEach(ribbon => {
+            const spans = ribbon.querySelectorAll('span');
+            if (spans.length !== 2) return;
+            spans[0].textContent = unit;
+            const unitWidth = spans[0].getBoundingClientRect().width;
+            if (!unitWidth) return;
+            const count = Math.max(2, Math.ceil(notice.clientWidth / unitWidth) + 1);
+            spans.forEach(span => { span.textContent = unit.repeat(count); });
+            ribbon.style.setProperty('--ribbon-duration', `${spans[0].getBoundingClientRect().width / 32}s`);
+        });
     }
+    const close = () => { overlay.hidden = true; };
+    overlay.querySelector('.editing-notice-close').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+    const refresh = () => { positionNotice(); fillRibbons(); };
+    window.addEventListener('resize', refresh);
+    window.addEventListener('scroll', () => { if (!overlay.hidden) positionNotice(); }, { passive: true });
+    window.addEventListener('hashchange', () => requestAnimationFrame(refresh));
+    new ResizeObserver(fillRibbons).observe(notice);
+    document.fonts?.ready.then(fillRibbons);
+    refresh();
+})();
 
-}
-
-function isCurseHelpOpen() {
-
-    return Boolean(curseHelpOverlay && curseHelpOverlay.classList.contains("curse-help-overlay--open"));
-
-}
-
-if (curseHelpToggle && curseHelpOverlay) {
-
-    const openHelp = () => setCurseHelpOpen(!isCurseHelpOpen());
-
-    if (typeof attachClickAction === "function") {
-
-        attachClickAction(curseHelpToggle, openHelp, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
-
-    } else {
-
-        curseHelpToggle.addEventListener("click", openHelp);
-
+(() => {
+    const toggle = document.getElementById('curseSettingsToggle');
+    const overlay = document.getElementById('curseSettingsOverlay');
+    if (!toggle || !overlay) return;
+    document.querySelector('.app').append(overlay);
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let closeTimer;
+    let openFrame;
+    function position() {
+        const sidebar = document.querySelector('.left-panel').getBoundingClientRect();
+        const main = document.querySelector('.right-panel').getBoundingClientRect();
+        const left = sidebar.right < innerWidth - 80 ? Math.max(0, sidebar.right) : 0;
+        overlay.style.setProperty('--curse-settings-left', `${left}px`);
+        overlay.style.setProperty('--curse-settings-top', `${left ? 0 : Math.max(0, main.top)}px`);
     }
-
-    if (curseHelpCloseButton) {
-
-        const closeHelp = () => setCurseHelpOpen(false);
-
-        if (typeof attachClickAction === "function") {
-
-            attachClickAction(curseHelpCloseButton, closeHelp, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
-
-        } else {
-
-            curseHelpCloseButton.addEventListener("click", closeHelp);
-
-        }
-
+    function close(immediate = false, restoreFocus = true) {
+        clearTimeout(closeTimer);
+        cancelAnimationFrame(openFrame);
+        overlay.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (restoreFocus && overlay.contains(document.activeElement)) toggle.focus({ preventScroll: true });
+        if (immediate || reducedMotion.matches) overlay.hidden = true;
+        else closeTimer = setTimeout(() => { overlay.hidden = true; }, 180);
     }
-
-    if (curseHelpBackdrop) {
-
-        curseHelpBackdrop.addEventListener("click", () => setCurseHelpOpen(false));
-
-    }
-
-    document.addEventListener("keydown", event => {
-
-        if (event.key === "Escape" && isCurseHelpOpen()) {
-
-            setCurseHelpOpen(false);
-
-        }
-
+    toggle.addEventListener('click', () => {
+        if (toggle.getAttribute('aria-expanded') === 'true') { close(); return; }
+        clearTimeout(closeTimer);
+        position();
+        overlay.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        openFrame = requestAnimationFrame(() => {
+            overlay.classList.add('is-open');
+            overlay.querySelector('button').focus({ preventScroll: true });
+        });
     });
-
-}
-
+    document.getElementById('curseSettingsClose').addEventListener('click', () => close());
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') close();
+    });
+    window.addEventListener('resize', () => { if (!overlay.hidden) position(); });
+    window.addEventListener('scroll', () => { if (!overlay.hidden) position(); }, { passive: true });
+    window.addEventListener('hashchange', () => close(true, false));
+})();
 

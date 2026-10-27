@@ -22,19 +22,19 @@
     <meta property="og:site_name" content="Nullscape Toolkits">
     <meta property="og:title" content="Nullscape Toolkits">
     <meta property="og:description" content="hey you! having trouble planning your runs and working out the numbers in nullscape? here's Nullscape Toolkits! it has a curse tracker, an upgrade calculator, lobby name RT editor, altars calculation, death tracker! go check it out nullscapers :]">
-    <meta property="og:image" content="https://nullkits.pages.dev/assets/branding/nullscape-logo-preview-v3.png">
+    <meta property="og:image" content="https://nullkits.pages.dev/assets/branding/nullscape-logo-preview-v4.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Nullscape Toolkits pink-to-jade logo on a dark abstract background.">
+    <meta property="og:image:alt" content="Nullscape Toolkits pink-to-jade logo over the jade game background.">
     <meta property="og:url" content="https://nullkits.pages.dev/">
     <meta property="og:type" content="website">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Nullscape Toolkits">
     <meta name="twitter:description" content="hey you! having trouble planning your runs and working out the numbers in nullscape? here's Nullscape Toolkits! it has a curse tracker, an upgrade calculator, lobby name RT editor, altars calculation, death tracker! go check it out nullscapers :]">
-    <meta name="twitter:image" content="https://nullkits.pages.dev/assets/branding/nullscape-logo-preview-v3.png">
-    <meta name="twitter:image:alt" content="Nullscape Toolkits pink-to-jade logo on a dark abstract background.">
+    <meta name="twitter:image" content="https://nullkits.pages.dev/assets/branding/nullscape-logo-preview-v4.png">
+    <meta name="twitter:image:alt" content="Nullscape Toolkits pink-to-jade logo over the jade game background.">
     <meta name="theme-color" content="#9b5de5">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,12 +43,12 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261026-dimmer-bg1">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261027-counter-labels1">
+    <link rel="stylesheet" href="css/tracker.css?v=20261027-cog-settings1">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261027-cog-settings1">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
-    <link rel="stylesheet" href="css/card-reveals.css?v=20261026-reveal1">
+    <link rel="stylesheet" href="css/card-reveals.css?v=20261027-cog-settings1">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
 
@@ -953,18 +953,29 @@
         </div>
 
         <header class="pool-header">
+            <div>
+                <div class="pool-title-row">
+                    <div class="tool-header-brand tool-header-brand--curses" role="heading" aria-level="1" aria-label="Curse tracker">
+                        <img src="assets/branding/CursesHeader.png" alt="Curses" width="2394" height="558">
+                    </div>
+                </div>
 
-            <!--
-                Deliberately first inside the header, ahead of the title text:
-                on wide screens this box floats to the top-right (see the
-                min-width: 1360px rule in style.css), and a float only sits
-                beside content that comes after it in the source. The heading
-                and the pools below simply wrap around it. On
-                narrower screens it stops floating and drops under the text
-                (style.css reorders it with "order").
-            -->
+            </div>
 
-            <div class="pool-controls">
+
+            <button type="button" id="curseSettingsToggle" class="curse-settings-cog" aria-label="Curse tracker settings" title="Curse tracker settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="curseSettingsOverlay">
+                <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+                    <path d="m27 7 10 0 1.5 7a20 20 0 0 1 4.5 2.6l6.8-2.2 5 8.6-5.3 4.8a20 20 0 0 1 0 5.2l5.3 4.8-5 8.6-6.8-2.2a20 20 0 0 1-4.5 2.6L37 54H27l-1.5-7a20 20 0 0 1-4.5-2.6l-6.8 2.2-5-8.6 5.3-4.8a20 20 0 0 1 0-5.2L9.2 23l5-8.6 6.8 2.2a20 20 0 0 1 4.5-2.6Z"/>
+                    <circle cx="32" cy="30.5" r="8"/>
+                </svg>
+            </button>
+        </header>
+
+
+        <div id="curseSettingsOverlay" class="curse-settings-overlay" hidden>
+            <section class="curse-settings-dialog" role="dialog" aria-label="Curse tracker settings" tabindex="-1">
+                <div class="curse-settings-title"><button type="button" id="curseSettingsClose" aria-label="Close curse settings">&times;</button></div>
+                <div class="pool-controls">
 
                 <div class="pool-control-group" role="group" aria-label="Reveal">
 
@@ -1023,6 +1034,11 @@
                         <span class="curse-visibility-label">LIST</span>
                     </button>
 
+<button type="button" id="delusionsToggle" class="curse-visibility-toggle" role="switch" aria-checked="false" aria-controls="delusionSection" title="Show Delusion placeholders">
+                        <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
+                        <span class="curse-visibility-label">DELUSIONS</span>
+                    </button>
+
                     <button
                         type="button"
                         id="hideMedalCursesToggle"
@@ -1038,570 +1054,19 @@
                 </div>
 
             </div>
-
-            <div>
-                <div class="pool-title-row">
-                    <div class="tool-header-brand tool-header-brand--curses" role="heading" aria-level="1" aria-label="Curse tracker">
-                        <img src="assets/branding/CursesHeader.png" alt="Curses" width="2394" height="558">
-                    </div>
-
-                    <button
-                        type="button"
-                        id="curseHelpToggle"
-                        class="curse-help-toggle"
-                        aria-haspopup="dialog"
-                        aria-expanded="false"
-                        aria-controls="curseHelpOverlay"
-                        title="How to use the curse tracker"
-                    >
-                        <span class="curse-help-toggle-icon" aria-hidden="true">?</span>
-                        <span class="curse-help-toggle-label">How To Use</span>
-                    </button>
-                </div>
-
-            </div>
-
-
-        </header>
-
-
-        <div class="curse-help-overlay" id="curseHelpOverlay" role="dialog" aria-modal="true" aria-labelledby="curseHelpOverlayTitle" aria-hidden="true" tabindex="-1">
-
-            <div class="curse-help-overlay-backdrop" id="curseHelpOverlayBackdrop"></div>
-
-            <div class="curse-help-card" role="document">
-
-                <div class="curse-help-card-header">
-
-                    <div class="curse-help-card-header-text">
-                        <div class="curse-help-card-eyebrow">CURSE TRACKER GUIDE</div>
-                        <h2 id="curseHelpOverlayTitle" class="curse-help-card-title">How To Use The Curse Tracker</h2>
-                    </div>
-
-                    <button
-                        type="button"
-                        id="curseHelpCloseButton"
-                        class="curse-help-close-button"
-                        aria-label="Close guide"
-                        title="Close"
-                    >
-                        &times;
-                    </button>
-
-                </div>
-
-                <div class="curse-help-card-body">
-
-                    <p class="curse-help-intro">
-                        The curse tracker reads your current level, player count, game mode,
-                        difficulty, and whichever enemies you have marked active, then shows you
-                        exactly which curses are available to pick at that combination of settings.
-                        Everything you click gets added to the Active Curses list in the sidebar,
-                        and the sidebar keeps a running Medal Payout total based on medal curses
-                        you pick from the dedicated Medal Curses pool.
-                    </p>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Quick Steps</h3>
-
-                        <ol class="curse-help-steps">
-
-                            <li>
-                                <div class="curse-help-step-visual">
-                                    <div class="curse-help-demo-level">
-                                        <span class="curse-help-demo-level-label">CURRENT LEVEL</span>
-                                        <div class="curse-help-demo-level-box">15</div>
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">1</span>Set your level</div>
-                                    <div class="curse-help-step-desc">
-                                        Type your current level into the <strong>CURRENT LEVEL</strong> box at the top
-                                        of the sidebar. Nearly everything else checks against that
-                                        number, so it is worth setting first. Curses and enemies each
-                                        have their own unlock level, and the pools will only show what
-                                        you actually qualify for unless you turn on Show Upcoming or Show All Curses
-                                        (Greater Curses are the one exception, covered further down).
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <div class="curse-help-step-visual">
-                                    <div class="curse-help-demo-row">
-                                        <div class="curse-help-demo-button">Solo</div>
-                                        <div class="curse-help-demo-button">Duo</div>
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">2</span>Set your player count and game mode</div>
-                                    <div class="curse-help-step-desc">
-                                        <strong>PLAYER COUNT</strong> and the <strong>GAME MODE</strong> buttons affect which curses are
-                                        allowed. A couple of curses, like Mart Infection and Deadly
-                                        Melody, are turned off entirely in Solo. Your player count also
-                                        feeds into the Medal Payout math and the Shop Upgrade
-                                        Calculator's prices, so it is worth keeping accurate even if
-                                        you never touch a curse.
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <div class="curse-help-step-visual">
-                                    <div class="curse-help-demo-row">
-                                        <div class="curse-help-demo-button">Casual</div>
-                                        <div class="curse-help-demo-button">Extreme</div>
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">3</span>Pick a difficulty</div>
-                                    <div class="curse-help-step-desc">
-                                        Standard and Extreme show you the exact same curse pool.
-                                        Extreme only changes prices over in the Shop Upgrade
-                                        Calculator, it does not touch curses at all. Casual is the one
-                                        that matters here: a handful of curses (things like Bigger
-                                        Tripmines, More Tripmines, Minefield, Barotrauma, and the
-                                        greater curse Run) are disabled outright on Casual. Switching
-                                        difficulty never removes a curse you already picked under a
-                                        different one, it only changes what you can add going forward.
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <div class="curse-help-step-visual">
-                                    <div class="curse-help-demo-enemy">
-                                        <span class="curse-help-demo-enemy-placeholder">Bell</span>
-                                        <img class="curse-help-demo-enemy-image" src="assets/enemies/Bell.png" alt="" onerror="this.remove()">
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">4</span>Mark your active enemies</div>
-                                    <div class="curse-help-step-desc">
-                                        Down in <strong>ACTIVE ENEMIES</strong>, click whichever enemies are currently
-                                        active. This unlocks every curse tied to that enemy. A few
-                                        enemies show a small badge in their own corner because they
-                                        need another enemy active first, Voidbound Baby needs two
-                                        Babys, Voidbound Guardian needs a Guardian, and Baby and Husk
-                                        specifically can be clicked again after that to stack up to two
-                                        active at once. Some curses, like Husk Express, actually
-                                        require that second stack.
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <div class="curse-help-step-visual curse-help-demo-card-mini-wrap">
-                                    <div class="curse-help-demo-card-mini">
-                                        <div class="curse-card">
-                                            <div class="card-media">
-                                                <span class="card-media-placeholder">Fake Count</span>
-                                                <img class="card-media-image" src="assets/curses/FakeCount.png" alt="" onerror="this.remove()">
-                                            </div>
-                                            <div class="curse-name-label">Fake Count</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">5</span>Browse the pools and click to add a curse</div>
-                                    <div class="curse-help-step-desc">
-                                        Scroll down to see four pools: Medal Curses at the very top
-                                        for anything that pays out a bonus, then Global Curses, Enemy
-                                        Curses, and Greater Curses. Under the default settings, only
-                                        curses you actually qualify for right now appear at all,
-                                        anything you are missing a level, an enemy, or a curse for
-                                        simply is not in the list yet. Click a card once to add that
-                                        curse; clicking it again does nothing unless the curse allows
-                                        more than one stack, shown as a small "x / max" readout on the
-                                        card.
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <div class="curse-help-step-visual">
-                                    <div class="curse-help-demo-active-curse">
-                                        <div class="active-curse">
-                                            <button class="active-curse-remove" tabindex="-1"><span class="btn-label">&times;</span></button>
-                                            <div class="active-curse-content">
-                                                <span class="active-curse-name">Random Spawn</span>
-                                            </div>
-                                            <div class="active-curse-icon">
-                                                <img class="active-curse-icon-image" src="assets/curses/RandomSpawn.png" alt="" onerror="this.remove()">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="curse-help-step-text">
-                                    <div class="curse-help-step-title"><span class="curse-help-step-number">6</span>Manage what you picked</div>
-                                    <div class="curse-help-step-desc">
-                                        Everything you add lands in the <strong>ACTIVE CURSES</strong> list in the
-                                        sidebar, with Greater Curses listed first, medal curses second,
-                                        and everything else after that. Use the search box there to
-                                        filter that list down by name (it only filters what you have
-                                        already added, it does not touch the pools below), click the
-                                        small &times; on an entry to remove just that one, use <strong>RESET RUN</strong> to wipe your level, difficulty, enemies, and curses back to
-                                        a fresh start, or use <strong>REMOVE ALL CURSES</strong> to clear only the
-                                        curses while leaving your level, mode, and enemies as they are.
-                                    </div>
-                                </div>
-                            </li>
-
-                        </ol>
-
-                    </div>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Reading A Curse Card</h3>
-
-                        <p>
-                            Every card in the pools below can carry a few small badges depending on
-                            the curse. Most of these lock badges only appear once you turn on Show
-                            Upcoming or Show All Curses, normally a curse you cannot use yet just is
-                            not shown at all, it does not sit there dimmed. Here is what each badge means when you do
-                            see one.
-                        </p>
-
-                        <div class="curse-help-card-grid">
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card">
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">Savory Ring</span>
-                                        <img class="card-media-image" src="assets/curses/SavoryRing.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">Savory Ring</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>No badge.</strong> Every requirement for this curse is currently met, so clicking it adds the curse.</p>
-                            </div>
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card curse-card--locked">
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">Beacon Mirage</span>
-                                        <img class="card-media-image" src="assets/curses/BeaconMirage.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">Beacon Mirage</div>
-                                    <div class="curse-lock-badge curse-lock-badge--level">Level 25</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>Level badge.</strong> The level you need before this curse can be picked. Global and Enemy curses only show this with Show Upcoming or Show All Curses on; Greater Curses show it any time you are below their level, no toggle needed.</p>
-                            </div>
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card curse-card--locked curse-card--removable">
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">More Tripmines</span>
-                                        <img class="card-media-image" src="assets/curses/MoreTripmines.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">More Tripmines</div>
-                                    <div class="curse-info stack-info">2 / 2</div>
-                                    <div class="curse-lock-badge curse-lock-badge--owned">OWNED</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>Owned badge.</strong> Shows on a curse you have already fully selected or maxed out. With Unlock All Curses on, a card showing this badge is still clickable, clicking it again removes the curse instead.</p>
-                            </div>
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card">
-                                    <div class="curse-enemy-badge">
-                                        <div class="curse-enemy-badge-inner">
-                                            <span class="curse-enemy-badge-placeholder">ICBM</span>
-                                            <img class="curse-enemy-badge-image" src="assets/enemies/ICBM.png" alt="" onerror="this.remove()">
-                                        </div>
-                                    </div>
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">Bigger Blast</span>
-                                        <img class="card-media-image" src="assets/curses/BiggerBlast.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">Bigger Blast</div>
-                                    <div class="curse-info stack-info">1 / 2</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>Enemy badge (red).</strong> Shows which enemy needs to be active first, occasionally with a count for curses that need two of that enemy. The small text near the bottom shows current stacks against the maximum.</p>
-                            </div>
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card">
-                                    <div class="curse-requirement-badge">
-                                        <div class="curse-enemy-badge-inner">
-                                            <span class="curse-enemy-badge-placeholder">Razorbloom</span>
-                                            <img class="curse-enemy-badge-image" src="assets/curses/Razorbloom.png" alt="" onerror="this.remove()">
-                                        </div>
-                                    </div>
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">Burning Bouquet</span>
-                                        <img class="card-media-image" src="assets/curses/BurningBouquet.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">Burning Bouquet</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>Requirement badge (violet).</strong> Needs another specific curse active first, not an enemy. A curse like Jackpot, which needs High Roller or Tweaked Odds, shows two of these side by side instead of one, having either curse active is enough.</p>
-                            </div>
-
-                            <div class="curse-help-card-demo">
-                                <div class="curse-card medal">
-                                    <div class="card-media">
-                                        <span class="card-media-placeholder">Lap 2</span>
-                                        <img class="card-media-image" src="assets/curses/Lap2.png" alt="" onerror="this.remove()">
-                                    </div>
-                                    <div class="curse-name-label">Lap 2</div>
-                                    <div class="curse-reward-badge">+ 320</div>
-                                </div>
-                                <p class="curse-help-card-caption"><strong>Reward badge.</strong> Only appears on medal curses and shows how much this one is currently adding to your Medal Payout total. It is also how many Golden Gifts you are rewarded for picking it from a medal curse pool.</p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Good To Know</h3>
-
-                        <div class="curse-help-info-grid">
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#9670;</div>
-                                <div class="curse-help-info-title">Greater Curses ignore level</div>
-                                <p>
-                                    The other three pools hide a curse completely the moment you fall
-                                    short of a requirement. Greater Curses do not follow that rule for
-                                    level: as long as an enemy-type Greater Curse's required enemy is
-                                    active, it always shows up in the pool, even far below the level
-                                    it unlocks at. It will just sit there dimmed with a level badge
-                                    until you reach it, instead of disappearing and reappearing later.
-                                    This lets you see and plan around Greater Curses well ahead of
-                                    time without needing Show All Curses on for that one pool.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#10005;</div>
-                                <div class="curse-help-info-title">Mutually exclusive curses</div>
-                                <p>
-                                    A handful of pairs can never both be active at once: High Roller
-                                    and Tweaked Odds, Lap 2 and Fragile Gifts, Mart Infection and Mart
-                                    Slide, Closer Husk and Further Husk, Ballet of Blades and Blade
-                                    Bombardment. Picking one side normally makes the other disappear
-                                    from its pool entirely. With Show All Curses on, the blocked side
-                                    still renders dimmed but carries <em>no badge</em> explaining why,
-                                    since the reason is not a level, an enemy, or another curse. With
-                                    Unlock All Curses on, this exclusivity check is skipped entirely,
-                                    the one dependency Unlock All does not enforce, so you can actually
-                                    select both sides of a pair at once for planning purposes.
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Picking Curses Efficiently</h3>
-
-                        <div class="curse-help-info-grid">
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#9889;</div>
-                                <div class="curse-help-info-title">Plan a level or two ahead</div>
-                                <p>
-                                    Turn on <strong>SHOW UPCOMING</strong> before you start picking. It lists
-                                    everything you would qualify for the moment your level ticks up,
-                                    sorted soonest-first, so you can see what is about to open up
-                                    instead of only reacting to what is available this second. This is
-                                    especially useful for enemy curses, since those only preview once
-                                    their enemy is already marked active.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#11088;</div>
-                                <div class="curse-help-info-title">Prioritize medal curses first</div>
-                                <p>
-                                    Medal curses picked from the dedicated <strong>MEDAL CURSES</strong> pool add
-                                    straight to your <strong>MEDAL PAYOUT</strong>. When two curses are otherwise
-                                    a toss-up, the one with the reward badge is usually the better pick.
-                                    That pool pulls the highest-value options from Global and Enemy Curses
-                                    together in one place instead of making you hunt through both.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#128260;</div>
-                                <div class="curse-help-info-title">Purify instead of removing</div>
-                                <p>
-                                    If a medal curse's payout is worth keeping but its actual effect is
-                                    making the run harder than you'd like, do not remove it outright -
-                                    open it in <strong>ACTIVE CURSES</strong> and hit <strong>Purify</strong>. You keep the
-                                    Medal Payout slice it was already contributing, while its gameplay
-                                    effect switches off. It costs Golden Gifts, so it is worth checking
-                                    the price shown before committing.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-info-card">
-                                <div class="curse-help-info-icon">&#128203;</div>
-                                <div class="curse-help-info-title">Sanity-check with Show All</div>
-                                <p>
-                                    Before locking in a run's curse pool, flip on <strong>SHOW ALL CURSES</strong>
-                                    once to see the full picture, including anything still locked
-                                    behind a level, enemy, or exclusive-group conflict. It's an easy
-                                    way to catch a stronger pick you would have otherwise missed simply
-                                    because it wasn't available yet.
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Show Upcoming, Show All, Unlock All, and Hide Medal Curses</h3>
-
-                        <p>
-                            Four switches sit above the pools and control how much you see. Show
-                            Upcoming, Show All Curses, and Unlock All Curses are grouped under
-                            Reveal, going from a small peek ahead to everything at once. Hide Medal
-                            Curses sits on its own under Display.
-                        </p>
-
-                        <div class="curse-help-switch-grid">
-
-                            <div class="curse-help-switch-card">
-                                <div class="curse-visibility-toggle">
-                                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
-                                    <span class="curse-visibility-label">SHOW UPCOMING</span>
-                                </div>
-                                <p>
-                                    Adds the curses that only your level is holding back, listed after
-                                    the ones you can pick right now, soonest first. An enemy curse only
-                                    previews once its enemy is active (with the right count, so Husk
-                                    Express needs two Husks), and a curse that needs another curse only
-                                    previews once that curse is active. They show dimmed with a level
-                                    badge and cannot be picked yet. Curses that will never appear on
-                                    your difficulty or game mode stay hidden.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-switch-card">
-                                <div class="curse-visibility-toggle">
-                                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
-                                    <span class="curse-visibility-label">SHOW ALL CURSES</span>
-                                </div>
-                                <p>
-                                    Reveals every curse in every pool, even ones you do not currently
-                                    qualify for, so you can plan several levels ahead instead of only
-                                    seeing what is available right now. This already includes
-                                    everything Show Upcoming would add.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-switch-card">
-                                <div class="curse-visibility-toggle active">
-                                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
-                                    <span class="curse-visibility-label">UNLOCK ALL CURSES</span>
-                                </div>
-                                <p>
-                                    Only does something once Show All Curses is on, and stays disabled
-                                    until then. Lets you select those locked curses with no level,
-                                    enemy, curse, or exclusive-group requirement enforced. It never
-                                    overrides a curse's own hard cap though, a curse already at its
-                                    maximum stack still cannot be added again, and a curse disabled for
-                                    your current game mode still cannot be selected either.
-                                </p>
-                            </div>
-
-                            <div class="curse-help-switch-card">
-                                <div class="curse-visibility-toggle active">
-                                    <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
-                                    <span class="curse-visibility-label">HIDE MEDAL CURSES</span>
-                                </div>
-                                <p>
-                                    Hides the dedicated Medal Curses section at the top of the page.
-                                    Curses that pay out a medal do not disappear, they just show up in
-                                    their normal Global or Enemy Curses section instead, with that
-                                    section’s colors and without a reward badge.
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="curse-help-block">
-
-                        <h3 class="curse-help-heading">Medal Curses And Medal Payout</h3>
-
-                        <p>
-                            Curses marked with the cyan and pink highlight pay out a medal bonus while
-                            they are active. The <strong>MEDAL PAYOUT</strong> number in the sidebar, just under the
-                            difficulty buttons, adds together a base amount plus the value of every
-                            medal curse you select from the dedicated Medal Curses pool, scaled up by
-                            your player count. Picking that same curse from a Global or Enemy Curses
-                            pool applies its gameplay effect and can still be purified, but does not
-                            add a medal payout.
-                            Each medal curse's own reward badge shows the specific slice of that total
-                            it is responsible for, and that same number is also how many Golden Gifts
-                            you are rewarded for picking it from a medal curse pool. If you would rather keep a medal curse's payout
-                            without living with its downside, open it in the Active Curses list and
-                            press <strong>Purify</strong>.
-                        </p>
-
-                        <div class="curse-help-purify-compare">
-
-                            <div class="curse-help-purify-sample">
-                                <span class="curse-help-purify-sample-label">ACTIVE</span>
-                                <div class="active-curse active-curse--medal">
-                                    <button class="active-curse-remove" tabindex="-1"><span class="btn-label">&times;</span></button>
-                                    <div class="active-curse-content">
-                                        <span class="active-curse-name">Pacifier</span>
-                                        <span class="purify-price">&minus;480</span>
-                                        <button class="purify-button" tabindex="-1"><span class="btn-label">Purify?</span></button>
-                                    </div>
-                                    <div class="active-curse-icon">
-                                        <img class="active-curse-icon-image" src="assets/curses/Pacifier.png" alt="" onerror="this.remove()">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="curse-help-purify-sample">
-                                <span class="curse-help-purify-sample-label">PURIFIED</span>
-                                <div class="active-curse active-curse--medal-purified">
-                                    <button class="active-curse-remove" tabindex="-1"><span class="btn-label">&times;</span></button>
-                                    <div class="active-curse-content">
-                                        <span class="active-curse-name">Pacifier</span>
-                                        <button class="purify-button purified" tabindex="-1"><span class="btn-label">Purified</span></button>
-                                    </div>
-                                    <div class="active-curse-icon">
-                                        <img class="active-curse-icon-image" src="assets/curses/Pacifier.png" alt="" onerror="this.remove()">
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <p class="curse-help-footnote">
-                            Purifying a curse marks its entry gray and drops its actual effect out of
-                            your run, while still counting toward your Medal Payout. The tracker also
-                            shows the Golden Gift price you would pay to purify it. Press Purify again
-                            on a purified entry to undo it and go back to the curse being fully active,
-                            just note that if you had stacked the curse more than once before purifying
-                            it, un-purifying brings it back at a single stack, not the higher count it
-                            had before.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+            </section>
         </div>
 
-
-
-
+        <!-- Animation reference: https://nullscape.wiki/Curses (editing banner). -->
+        <div class="editing-overlay" id="editingOverlay">
+        <aside class="editing-notice" role="dialog" aria-labelledby="editingNoticeTitle" tabindex="-1">
+            <button type="button" class="editing-notice-close" aria-label="Close editing notice">&times;</button>
+            <div class="editing-notice-ribbon editing-notice-ribbon--reverse" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></div>
+            <div class="editing-notice-copy" id="editingNoticeTitle">Nullscape Toolkits is under <strong>HEAVY EDITING!</strong></div>
+            <span class="sr-only">Please be patient!</span>
+            <div class="editing-notice-ribbon" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></div>
+        </aside>
+        </div>
 
         <div class="curse-pool-columns" id="cursePoolColumns">
         <section id="chaosCurseSection" class="result-section result-section--hidden">
@@ -1680,6 +1145,11 @@
                 class="result-grid"
             ></div>
 
+        </section>
+
+        <section id="delusionSection" class="result-section result-section--hidden">
+            <div class="result-heading"><h2 id="delusionHeading" class="animated-header-text">DELUSIONS</h2></div>
+            <div id="delusionContainer" class="result-grid"><div class="curse-card delusion-placeholder" title="Arrogance — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Arrogance.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Arrogance</span></div></div><div class="curse-card delusion-placeholder" title="Conceit — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Conceit.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Conceit</span></div></div><div class="curse-card delusion-placeholder" title="Assurance — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Assurance.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Assurance</span></div></div><div class="curse-card delusion-placeholder" title="Dependence — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Dependence.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Dependence</span></div></div><div class="curse-card delusion-placeholder" title="Corrosion — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Corrosion.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Corrosion</span></div></div><div class="curse-card delusion-placeholder" title="Hope — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Hope.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Hope</span></div></div><div class="curse-card delusion-placeholder" title="Gambling — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Gambling.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Gambling</span></div></div><div class="curse-card delusion-placeholder" title="Vandalism — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Vandalism.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Vandalism</span></div></div></div>
         </section>
 
         </div>
@@ -1778,10 +1248,10 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261027-number-tweens1"></script>
+<script src="js/tracker.js?v=20261027-cog-settings1"></script>
 <script src="js/upgrades.js?v=20261027-shared-delusion1"></script>
-<script src="js/tools.js?v=20261025-limited1"></script>
-<script src="js/card-reveals.js?v=20261026-reveal1"></script>
+<script src="js/tools.js?v=20261027-cog-settings1"></script>
+<script src="js/card-reveals.js?v=20261027-cog-settings1"></script>
 <script src="js/curse-backgrounds.js?v=20261026-bgfix2"></script>
 
 </body>
