@@ -43,18 +43,21 @@ test('room size guard blocks excessive snapshots', () => {
 function roomServer() {
     const rooms = new Map(); let writes = 0, connects = 0;
     return { rooms, get writes() { return writes; }, get connects() { return connects; },
-        async connect({ code, create, fields, onPatch, onStatus, onEnd }) {
+        async connect({ code, create, restore, fields, identity, onPatch, onStatus, onEnd, onMembers = () => {} }) {
             connects++;
-            if (create) rooms.set(code, { fields: { ...fields }, clients: new Set() });
+            if (create && !(restore && rooms.has(code))) rooms.set(code, { fields: { ...fields }, clients: new Set() });
             const room = rooms.get(code);
-            if (!room) throw new Error('Link not found');
-            const client = { onPatch, onEnd, onStatus }; room.clients.add(client); onStatus('live');
+            if (!room) throw Object.assign(new Error('Link not found'), { code: 'LINK_ROOM_ENDED' });
+            const client = { onPatch, onEnd, onStatus, onMembers, identity, creator: create }; room.clients.add(client); onStatus('live');
+            const broadcast = () => room.clients.forEach(peer => peer.onMembers([...room.clients].map(p => ({ ...p.identity, creator: p.creator }))));
+            broadcast();
             return { fields: { ...room.fields }, async send(patch) {
                 writes++; core.patchFields(room.fields, patch);
                 room.clients.forEach(peer => peer.onPatch(patch));
-            }, close() {
+            }, close({ preserveRoom = false } = {}) {
                 room.clients.delete(client);
-                if (create) { rooms.delete(code); room.clients.forEach(peer => peer.onEnd('This Link has ended.')); }
+                broadcast();
+                if (create && !preserveRoom) { rooms.delete(code); room.clients.forEach(peer => peer.onEnd('This Link has ended.', 'LINK_ROOM_ENDED')); }
             } };
         }
     };
@@ -66,7 +69,9 @@ function controller(server, initial) {
     function element(id) {
         if (elements.has(id)) return elements.get(id);
         const handlers = {};
-        const value = { value: '', hidden: false, disabled: false, dataset: {}, textContent: '',
+        const value = { value: '', hidden: false, disabled: false, dataset: {}, textContent: '', children: [], open: false,
+            append(...nodes) { this.children.push(...nodes); }, replaceChildren(...nodes) { this.children = nodes; },
+            showModal() { this.open = true; }, close() { this.open = false; },
             setAttribute() {}, closest: () => null, focus() {}, select() {},
             addEventListener(name, callback) { handlers[name] = callback; },
             fire(name, extra = {}) { return handlers[name]?.({ target: value, ...extra }); } };
@@ -76,7 +81,8 @@ function controller(server, initial) {
         NullscapeLinkState: { capture: () => core.flatten(state), apply: data => { state = JSON.parse(JSON.stringify(data)); } },
         NullscapeLinkTransportFactory: args => server.connect(args),
         addEventListener(name, fn) { events.set(name, fn); } };
-    const sandbox = { window, document: { getElementById: element, addEventListener(name, fn) { events.set(name, fn); } },
+    const sandbox = { window, document: { getElementById: element, createElement: () => element(`anonymous-${elements.size}`),
+        body: { append() {} }, addEventListener(name, fn) { events.set(name, fn); } },
         navigator: { onLine: true, clipboard: { writeText: async () => {} } },
         crypto: require('node:crypto').webcrypto, Uint8Array,
         Date: { now: () => now },
@@ -124,30 +130,60 @@ test('unlinked stays silent; create/join share edits, batch input, and leave det
     assert.equal(server.rooms.size, 0);
 });
 
-test('invalid codes never connect; creator leaving ends the guest Link', async () => {
+test('invalid codes never connect; creator leaving opens the guest disconnect panel', async () => {
     const server = roomServer(), host = controller(server, { run: { level: 1 } });
     const guest = controller(server, { run: { level: 8 } });
     guest.el('linkCode').value = 'BAD'; await guest.el('linkJoin').fire('click');
     assert.equal(server.connects, 0);
     await host.el('linkCreate').fire('click'); guest.el('linkCode').value = host.el('linkCode').value;
     await guest.el('linkJoin').fire('click'); await host.el('linkLeave').fire('click');
-    assert.equal(guest.el('linkBadge').dataset.state, 'error');
+    assert.equal(guest.el('linkBadge').dataset.state, 'reconnecting');
+    assert.equal(guest.el('linkDisconnectDialog').open, true);
+    assert.match(guest.el('linkDisconnectError').textContent, /LINK_ROOM_ENDED/);
     assert.equal(guest.state.run.level, 1);
+    await guest.el('linkDisconnectLocal').fire('click');
     assert.equal(guest.el('linkCreate').hidden, false);
+    assert.equal(guest.el('linkDisconnectDialog').open, false);
 });
 
-test('offline edits wait for reconnection without an idle write loop', async () => {
+test('sudden disconnect pauses writes and Relink recovers unsent edits without an idle loop', async () => {
     const server = roomServer(), host = controller(server, { run: { level: 1 } });
     const guest = controller(server, { run: { level: 8 } });
     await host.el('linkCreate').fire('click'); guest.el('linkCode').value = host.el('linkCode').value;
     await guest.el('linkJoin').fire('click');
     const room = [...server.rooms.values()][0], peer = [...room.clients][1];
-    peer.onStatus('reconnecting');
     guest.edit({ run: { level: 9 } }); await guest.tick(5000);
-    assert.equal(server.writes, 0); assert.equal(guest.timers.size, 0);
-    peer.onStatus('live'); await guest.tick(600); await host.tick(100);
-    assert.equal(host.state.run.level, 9); assert.equal(server.writes, 1);
+    const before = server.writes;
+    guest.edit({ run: { level: 10 } }); await guest.tick(0);
+    peer.onStatus('reconnecting'); await guest.tick(5000);
+    assert.equal(server.writes, before); assert.equal(guest.timers.size, 0);
+    assert.equal(guest.el('linkDisconnectDialog').open, true);
+    await guest.el('linkDisconnectRetry').fire('click');
+    await guest.tick(600); await host.tick(100);
+    assert.equal(host.state.run.level, 10); assert.equal(server.writes, before + 1);
+    assert.equal(guest.el('linkDisconnectDialog').open, false);
     await host.el('linkLeave').fire('click');
+});
+
+test('failed relink keeps the panel and error code; creator restoration lets guests retry', async () => {
+    const server = roomServer(), host = controller(server, { run: { level: 42 } }), guest = controller(server, { run: { level: 1 } });
+    await host.el('linkCreate').fire('click'); guest.el('linkCode').value = host.el('linkCode').value;
+    await guest.el('linkJoin').fire('click');
+    const room = [...server.rooms.values()][0];
+    assert.equal(guest.el('linkMembers').children.length, 2);
+    assert.equal(guest.el('linkMembers').children[0].children.at(-1).textContent, 'CREATOR');
+    server.rooms.clear();
+    room.clients.forEach(peer => peer.onEnd('The room has ended.', 'LINK_ROOM_ENDED'));
+    await guest.el('linkDisconnectRetry').fire('click');
+    assert.equal(guest.el('linkDisconnectDialog').open, true);
+    assert.match(guest.el('linkDisconnectError').textContent, /LINK_ROOM_ENDED/);
+    assert.equal(guest.el('linkDisconnectRetry').disabled, false);
+    await host.el('linkDisconnectRetry').fire('click');
+    assert.equal(host.el('linkDisconnectDialog').open, false);
+    await guest.el('linkDisconnectRetry').fire('click');
+    assert.equal(guest.el('linkDisconnectDialog').open, false);
+    assert.equal(guest.state.run.level, 42);
+    assert.equal(guest.el('linkMembers').children.length, 2);
 });
 
 test('cancelling an in-progress create closes its late connection', async () => {
@@ -170,12 +206,13 @@ function firebaseHarness({ denied = false } = {}) {
         serverTimestamp: () => Date.now(),
         async runTransaction(_, fn) {
             if (denied) throw new Error('PERMISSION_DENIED');
-            const value = fn(stored); if (value === undefined) return { committed: false };
+            const value = fn(stored); if (value === undefined) return { committed: false, snapshot: { val: () => stored } };
             stored = value; return { committed: true, snapshot: { val: () => stored } };
         },
         get: async () => ({ val: () => stored }),
+        set: async (path, value) => { stored.members ||= {}; stored.members[path.split('/').at(-1)] = value; },
         onDisconnect: () => ({ remove: async () => { cleaned++; }, cancel: async () => {} }),
-        remove: async () => { removes++; stored = null; },
+        remove: async path => { removes++; if (!path.includes('/members/')) stored = null; else if (stored?.members) delete stored.members[path.split('/').at(-1)]; },
         onValue(path, callback, error) { listeners.set(path, { callback, error }); return () => listeners.delete(path); },
         update: async (_, patch) => { stored.state = { ...stored.state }; core.patchFields(stored.state, patch); },
         setTimeout: (fn, delay) => { timers.set(1, { fn, delay }); return 1; }, clearTimeout: id => timers.delete(id)
@@ -190,21 +227,57 @@ function firebaseHarness({ denied = false } = {}) {
 test('Firebase transport scopes listeners and cleans up hosted rooms', async () => {
     const h = firebaseHarness(), patches = [], statuses = [];
     const options = { code: 'A'.repeat(20), create: true, fields: core.flatten({ run: { level: 1 } }),
+        identity: { id: 'a'.repeat(32), name: 'Creator' },
         onPatch: patch => patches.push(patch), onStatus: value => statuses.push(value), onEnd() {} };
     const transport = await h.connect(options);
-    assert.equal(h.cleaned, 1);
-    assert.deepEqual([...h.listeners.keys()], [`toolkitLinks/${options.code}/state`, '.info/connected']);
+    assert.equal(h.cleaned, 2);
+    assert.deepEqual([...h.listeners.keys()], [`toolkitLinks/${options.code}/state`, `toolkitLinks/${options.code}/members`, '.info/connected']);
     const next = core.flatten({ run: { level: 2 } }); await transport.send(next);
     h.listeners.get(`toolkitLinks/${options.code}/state`).callback({ val: () => next });
     assert.equal(core.expand(patches[0]).run.level, 2);
     h.listeners.get('.info/connected').callback({ val: () => true }); assert.deepEqual(statuses, ['live']);
-    transport.close(); await Promise.resolve();
+    await transport.close();
     assert.equal(h.removes, 1); assert.equal(h.listeners.size, 0); assert.equal(h.timers.size, 0);
     transport.close(); assert.equal(h.removes, 1);
 });
 
 test('Firebase denial leaves no claimed room or listeners', async () => {
     const h = firebaseHarness({ denied: true });
-    await assert.rejects(h.connect({ code: 'A'.repeat(20), create: true, fields: {} }), /PERMISSION_DENIED/);
+    await assert.rejects(h.connect({ code: 'A'.repeat(20), create: true, fields: {}, identity: { id: 'a'.repeat(32), name: 'Creator' } }), /PERMISSION_DENIED/);
     assert.equal(h.stored, null); assert.equal(h.listeners.size, 0); assert.equal(h.cleaned, 0);
+});
+
+test('Relink preserves an existing room; guest departure removes only that guest', async () => {
+    const h = firebaseHarness();
+    const options = { code: 'A'.repeat(20), create: true, fields: core.flatten({ run: { level: 5 } }),
+        identity: { id: 'a'.repeat(32), name: '<Creator>' }, onPatch() {}, onStatus() {}, onEnd() {} };
+    const first = await h.connect(options);
+    await first.close({ preserveRoom: true });
+    assert.equal(core.expand(h.stored.state).run.level, 5);
+    const restored = await h.connect({ ...options, restore: true, fields: core.flatten({ run: { level: 1 } }) });
+    assert.equal(core.expand(restored.fields).run.level, 5, 'restore never overwrites an existing room with a stale snapshot');
+    const guest = await h.connect({ ...options, create: false, identity: { id: 'b'.repeat(32), name: 'Guest' } });
+    assert.equal(Object.keys(h.stored.members).length, 2);
+    await guest.close();
+    assert.equal(Object.keys(h.stored.members).length, 1);
+    assert.equal(h.stored.members['a'.repeat(32)].creator, true);
+    await restored.close(); assert.equal(h.stored, null);
+});
+
+test('continuing locally after a preserved creator connection still ends its room', async () => {
+    const h = firebaseHarness();
+    const transport = await h.connect({ code: 'A'.repeat(20), create: true, fields: core.flatten({ run: { level: 5 } }),
+        identity: { id: 'a'.repeat(32), name: 'Creator' }, onPatch() {}, onStatus() {}, onEnd() {} });
+    await transport.close({ preserveRoom: true }); assert(h.stored);
+    await transport.close(); assert.equal(h.stored, null);
+});
+
+test('published rules retain existing counters and allow bounded member records', () => {
+    const rules = JSON.parse(fs.readFileSync(require.resolve('../docs/firebase-link-rules.json'), 'utf8')).rules;
+    assert.equal(rules.presence['.read'], true);
+    assert.match(rules.siteStats.visits['.write'], /data.val\(\) \+ 1/);
+    const member = rules.toolkitLinks.$code.members.$member;
+    assert.match(member['.validate'], /name.*creator.*joinedAt/);
+    assert.match(member.name['.validate'], /length <= 40/);
+    assert.equal(member.$other['.validate'], false);
 });

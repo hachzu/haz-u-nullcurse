@@ -4,6 +4,9 @@ const { chromium } = require('playwright');
 const { createPreviewServer } = require('./private-preview.cjs');
 const core = require('../js/link-core.js');
 const fs = require('node:fs');
+const path = require('node:path');
+const output = process.env.NULLSCAPE_TEST_OUTPUT || 'output';
+fs.mkdirSync(output, { recursive: true });
 
 (async () => {
     const server = createPreviewServer();
@@ -12,6 +15,11 @@ const fs = require('node:fs');
     let browser;
     const rooms = new Map(), errors = [];
     let writes = 0, externalRequests = 0;
+    let clientIndex = 0;
+    async function roster(room) {
+        const members = [...room.members.values()];
+        await Promise.all([...room.clients].map(peer => peer.evaluate(members => window.__linkMock.onMembers(members), members)));
+    }
     try {
         browser = await chromium.launch({ headless: true, channel: 'msedge' });
         async function client() {
@@ -23,11 +31,13 @@ const fs = require('node:fs');
             const page = await context.newPage();
             page.setDefaultTimeout(15000);
             page.on('pageerror', error => errors.push(error.message));
-            await page.exposeFunction('mockLinkConnect', ({ code, create, fields }) => {
-                if (create) rooms.set(code, { fields, clients: new Set(), host: page });
+            await page.exposeFunction('mockLinkConnect', async ({ code, create, restore, fields, identity }) => {
+                if (create && !(restore && rooms.has(code))) rooms.set(code, { fields, clients: new Set(), members: new Map(), host: page });
                 const room = rooms.get(code);
-                if (!room) throw Error('Link not found');
+                if (!room) return { error: { message: 'The creator is offline or this Link has ended.', code: 'LINK_ROOM_ENDED' } };
                 room.clients.add(page);
+                room.members.set(page, { ...identity, creator: create });
+                await roster(room);
                 return { fields: room.fields };
             });
             await page.exposeFunction('mockLinkSend', async ({ code, patch }) => {
@@ -35,28 +45,31 @@ const fs = require('node:fs');
                 writes++; core.patchFields(room.fields, patch);
                 await Promise.all([...room.clients].map(peer => peer.evaluate(patch => window.__linkMock.onPatch(patch), patch)));
             });
-            await page.exposeFunction('mockLinkClose', async code => {
+            await page.exposeFunction('mockLinkClose', async ({ code, preserveRoom }) => {
                 const room = rooms.get(code); if (!room) return;
                 room.clients.delete(page);
-                if (room.host === page) {
+                room.members.delete(page); await roster(room);
+                if (room.host === page && !preserveRoom) {
                     rooms.delete(code);
                     await Promise.all([...room.clients].map(peer => peer.evaluate(() => window.__linkMock.onEnd('This Link has ended.'))));
                 }
             });
-            await page.addInitScript(() => {
+            await page.addInitScript(name => {
+                localStorage.setItem('nullscape_username', name);
                 localStorage.setItem('nullscapeHideToolsSpotlight', 'true');
                 localStorage.setItem('nullscapeHideSettingsSpotlight', 'true');
                 localStorage.setItem('nullscapeLowDetailMode', 'true');
                 window.NullscapeLinkTransportFactory = async options => {
                     window.__linkMock = options;
-                    const result = await window.mockLinkConnect({ code: options.code, create: options.create, fields: options.fields });
+                    const result = await window.mockLinkConnect({ code: options.code, create: options.create, restore: options.restore, fields: options.fields, identity: options.identity });
+                    if (result.error) throw Object.assign(new Error(result.error.message), { code: result.error.code });
                     options.onStatus('live');
                     return { fields: result.fields,
                         send: patch => window.mockLinkSend({ code: options.code, patch }),
-                        close: () => { window.mockLinkClose(options.code).catch(() => {}); }
+                        close: (settings = {}) => window.mockLinkClose({ code: options.code, preserveRoom: settings.preserveRoom }).catch(() => {})
                     };
                 };
-            });
+            }, clientIndex++ === 0 ? 'Hazu' : 'Teammate <3');
             await page.goto(`${origin}/#/curses`);
             await page.waitForFunction(() => window.NullscapeLinkState && !document.getElementById('toolkitView').hidden);
             // Startup guidance is unrelated to these interaction checks.
@@ -74,6 +87,10 @@ const fs = require('node:fs');
         await guest.locator('#linkJoin').click();
         await guest.waitForFunction(() => document.getElementById('linkBadge').dataset.state === 'live');
         assert.equal(await guest.locator('#levelInput').inputValue(), '30');
+        assert.equal(await guest.locator('.link-member').count(), 2);
+        assert.match(await guest.locator('#linkMembers').innerText(), /Hazu\s+CREATOR/);
+        assert.match(await host.locator('#linkMembers').innerText(), /Hazu\s+YOU\s+CREATOR/);
+        assert.match(await host.locator('#linkMembers').innerText(), /Teammate <3/);
         await host.locator('.game-settings-bar').click();
         await guest.waitForFunction(() => !document.querySelector('.game-settings-disclosure').open);
         await guest.locator('.game-settings-bar').click();
@@ -120,21 +137,56 @@ const fs = require('node:fs');
         const baselineWrites = writes;
         await host.waitForTimeout(1200);
         assert.equal(writes, baselineWrites, 'no echoes or idle writes');
+        // Unexpected loss opens a true top-layer modal; unsent work survives Relink.
+        await guest.evaluate(() => {
+            upgradeState.goldenGifts = 777; saveUpgradeState();
+            window.__linkMock.onStatus('reconnecting');
+        });
+        await guest.locator('#linkDisconnectDialog').waitFor({ state: 'visible' });
+        assert.equal(await guest.locator('#linkDisconnectDialog').evaluate(dialog => dialog.matches(':modal')), true);
+        assert((await guest.locator('#linkDisconnectDialog').boundingBox()).y <= 32);
+        await guest.screenshot({ path: path.join(output, 'link-disconnected-desktop.png') });
+        await guest.setViewportSize({ width: 390, height: 844 });
+        await guest.screenshot({ path: path.join(output, 'link-disconnected-mobile.png') });
+        assert.equal(await guest.evaluate(() => document.getElementById('linkDisconnectDialog').scrollWidth > innerWidth), false);
+        await guest.locator('#linkDisconnectRetry').click();
+        await guest.locator('#linkDisconnectDialog').waitFor({ state: 'hidden' });
+        await host.waitForFunction(() => upgradeState.goldenGifts === 777);
+        assert.equal(await guest.locator('.link-member').count(), 2);
+
+        // A lost hosted room reports a code, then the creator restores that same code.
+        const roomCode = code.replaceAll('-', '');
+        const lost = rooms.get(roomCode); rooms.delete(roomCode);
+        await Promise.all([...lost.clients].map(peer => peer.evaluate(() => window.__linkMock.onEnd('The creator is offline or this Link has ended.', 'LINK_ROOM_ENDED'))));
+        await guest.locator('#linkDisconnectRetry').click();
+        await guest.waitForFunction(() => document.getElementById('linkDisconnectTitle').textContent === 'Unable to relink');
+        assert.match(await guest.locator('#linkDisconnectError').innerText(), /LINK_ROOM_ENDED/);
+        await guest.screenshot({ path: path.join(output, 'link-relink-error.png') });
+        await host.locator('#linkDisconnectRetry').click();
+        await host.locator('#linkDisconnectDialog').waitFor({ state: 'hidden' });
+        assert.equal(await host.locator('#linkCode').inputValue(), code);
+        await guest.locator('#linkDisconnectRetry').click();
+        await guest.locator('#linkDisconnectDialog').waitFor({ state: 'hidden' });
+        assert.equal(await guest.locator('.link-member').count(), 2);
+        assert.match(await guest.locator('#linkMembers').innerText(), /Hazu\s+CREATOR/);
+
         await host.evaluate(() => { location.hash = '#/curses'; });
         await host.locator('.game-settings-bar').scrollIntoViewIfNeeded();
-        await host.locator('.game-settings-bar').screenshot({ path: 'output/game-settings-divider.png' });
+        await host.locator('.game-settings-bar').screenshot({ path: path.join(output, 'game-settings-divider.png') });
         await host.locator('#toolkitLink').scrollIntoViewIfNeeded();
-        fs.mkdirSync('output', { recursive: true });
-        await host.screenshot({ path: 'output/link-desktop.png' });
+        await host.screenshot({ path: path.join(output, 'link-desktop.png') });
         await host.setViewportSize({ width: 390, height: 844 });
         await host.locator('#toolkitLink').scrollIntoViewIfNeeded();
-        await host.screenshot({ path: 'output/link-mobile.png' });
+        await host.screenshot({ path: path.join(output, 'link-mobile.png') });
         assert.equal(await host.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no mobile overflow');
         await host.locator('#linkLeave').click();
-        await guest.waitForFunction(() => document.getElementById('linkBadge').dataset.state === 'error');
+        await guest.locator('#linkDisconnectDialog').waitFor({ state: 'visible' });
+        assert.equal(await host.locator('#linkDisconnectDialog').isVisible(), false, 'voluntary leave does not warn its own user');
+        await guest.locator('#linkDisconnectLocal').click();
+        await guest.locator('#linkDisconnectDialog').waitFor({ state: 'hidden' });
         assert.equal(await guest.locator('#levelInput').inputValue(), '31');
         assert.deepEqual(errors, []);
-        console.log(`Browser Link checks passed; ${writes} change batches, ${externalRequests} external asset requests blocked, no production Firebase access. Screenshots: output/link-desktop.png, output/link-mobile.png`);
+        console.log(`Browser Link checks passed; ${writes} change batches, ${externalRequests} external asset requests blocked, no production Firebase access. Screenshots: ${output}`);
     } finally {
         await browser?.close();
         server.closePreviewClients();

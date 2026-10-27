@@ -29,6 +29,15 @@
           ".validate": "newData.hasChildren()",
           "$field": { ".validate": "$field.length <= 768 && newData.isString() && newData.val().length <= 16384" }
         },
+        "members": {
+          "$member": {
+            ".validate": "$member.matches(/^[a-f0-9]{32}$/) && newData.hasChildren(['name', 'creator', 'joinedAt'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+            "creator": { ".validate": "newData.isBoolean()" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
         "$other": { ".validate": false }
       }
     }

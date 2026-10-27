@@ -45,7 +45,7 @@
 
     <link rel="stylesheet" href="css/tracker.css?v=20261027-link1">
     <link rel="stylesheet" href="css/upgrades.css?v=20261027-pink-purple-logo1">
-    <link rel="stylesheet" href="css/link.css?v=20261027-link1">
+    <link rel="stylesheet" href="css/link.css?v=20261028-link2">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261020-2">
@@ -347,9 +347,24 @@
                 <button id="linkCreate" class="link-button" type="button">GENERATE CODE</button>
                 <button id="linkJoin" class="link-button" type="button">JOIN</button>
                 <button id="linkLeave" class="link-button" type="button" hidden>LEAVE LINK</button>
+                <button id="linkRelink" class="link-button" type="button" hidden>RELINK</button>
             </div>
+            <div id="linkMembers" class="link-members" aria-label="People in this Link" aria-live="polite" hidden></div>
             <p id="linkStatus" class="link-status" role="status" aria-live="polite">Local until you generate or join. Anyone with the code can edit.</p>
         </section>
+
+        <dialog id="linkDisconnectDialog" class="link-disconnect-dialog" aria-labelledby="linkDisconnectTitle" aria-describedby="linkDisconnectMessage linkDisconnectError">
+            <div class="link-disconnect-panel">
+                <span class="link-disconnect-eyebrow">TOOLKIT LINK</span>
+                <h2 id="linkDisconnectTitle">Link disconnected</h2>
+                <p id="linkDisconnectMessage">Your connection was interrupted. Your current toolkit is still here.</p>
+                <p id="linkDisconnectError" class="link-disconnect-error" role="status"></p>
+                <div class="link-actions">
+                    <button id="linkDisconnectRetry" class="link-button" type="button" autofocus>RELINK</button>
+                    <button id="linkDisconnectLocal" class="link-button" type="button">CONTINUE LOCALLY</button>
+                </div>
+            </div>
+        </dialog>
 
         <div class="run-controls">
 
@@ -1278,7 +1293,7 @@
 <script src="js/curse-backgrounds.js?v=20261026-bgfix2"></script>
 <script src="js/link-core.js?v=20261027-link1"></script>
 <script src="js/link-state.js?v=20261027-link1"></script>
-<script src="js/link.js?v=20261027-link1"></script>
+<script src="js/link.js?v=20261028-link2"></script>
 
 </body>
 </html>
