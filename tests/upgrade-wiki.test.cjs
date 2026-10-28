@@ -247,7 +247,7 @@ test('updated availability and mutually exclusive upgrades follow the reference 
     h.run(`upgradeState.owned.set('Shield',1); upgradeState.owned.set('Panic Necklace',1)`);
     assert.equal(h.run(`isUpgradeUnavailable(item('Fleeting Fate'))`), true);
     assert.equal(h.run(`item('Radar Module: Instruments').level`), 18);
-    assert.equal(h.run(`item('Defuse Kit').level`), 3);
+    assert.equal(h.run(`item('Defuse Kit').level`), 5);
     assert.equal(h.run(`item('Soul Tracers').level`), 12);
 });
 

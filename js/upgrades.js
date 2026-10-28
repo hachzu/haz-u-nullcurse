@@ -404,7 +404,7 @@ const upgradesList = [
     },
     {
         "name": "Propeller Hat",
-        "category": "movement",
+        "category": "survival",
         "level": 15,
         "maxStack": 1,
         "summary": "Allows double jumps while bonked.",
@@ -563,7 +563,7 @@ const upgradesList = [
     },
     {
         "name": "Fleeting Fate",
-        "category": "movement",
+        "category": "eco",
         "level": 18,
         "maxStack": 1,
         "summary": "Grants temporary movement and collection bonuses during collapse.",
@@ -667,7 +667,7 @@ const upgradesList = [
     },
     {
         "name": "Transient Pennon",
-        "category": "class",
+        "category": "movement",
         "level": 30,
         "maxStack": 1,
         "summary": "Extends flight time.",
@@ -679,7 +679,7 @@ const upgradesList = [
     },
     {
         "name": "Quixotic Wing",
-        "category": "class",
+        "category": "movement",
         "level": 30,
         "maxStack": 1,
         "summary": "Extends flight time.",
@@ -691,7 +691,7 @@ const upgradesList = [
     },
     {
         "name": "Defuse Kit",
-        "level": 3,
+        "level": 5,
         "maxStack": 3,
         "category": "survival",
         "price": 30
