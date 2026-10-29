@@ -58,11 +58,18 @@
     const DEBUG = new URLSearchParams(location.search).has('introdebug');
     const MOTIF = { notes: CONFIG.notes };
     const SONG_VISIT_KEY = 'nullscapeLandingSongVisit';
+    const INTRO_SEEN_KEY = 'nullscapeLandingIntroSeen';
     let songVisit = 0;
     try {
         const saved = Number(localStorage.getItem(SONG_VISIT_KEY));
         if (Number.isSafeInteger(saved) && saved >= 0) songVisit = saved;
     } catch (_) { /* With storage blocked, the original soundtrack remains available. */ }
+    const hasSeenIntro = () => {
+        try {
+            const marker = localStorage.getItem(INTRO_SEEN_KEY);
+            return marker === 'true' || (marker === null && songVisit > 0);
+        } catch (_) { return songVisit > 0; }
+    };
     const CUT = songVisit % 2 === 1 ? {
         ...CONFIG.song,
         url: 'assets/nil-landing.mp3?v=20261027-jade1',
@@ -380,6 +387,7 @@
         logoBuild.style.setProperty('--ns-build-scale', '1');
         stage.style.setProperty('--ns-toolkit-wipe', '102%');
         stage.style.setProperty('--ns-toolkit-visible', '1');
+        home.style.setProperty('--ns-toolkit-visible', '1');
     }
     function removeGate() {
         gate?.remove();
@@ -758,6 +766,7 @@
             (elapsed - revealAt - f.assemblySettle) / f.toolkitWipe));
         stage.style.setProperty('--ns-toolkit-wipe', `${102 * label}%`);
         stage.style.setProperty('--ns-toolkit-visible', label > 0 ? '1' : '0');
+        home.style.setProperty('--ns-toolkit-visible', String(label));
     }
     function updateBackground(elapsed) {
         backgroundKicks = backgroundKicks.filter(at => elapsed - at < CONFIG.fx.backgroundWindow);
@@ -876,6 +885,7 @@
         cancelAnimationFrame(frame);
         home.dataset.introState = 'waiting';
         home.dataset.introCharge = '0';
+        home.style.setProperty('--ns-toolkit-visible', '0');
         placeTiles(0);
         setControlsEnabled(false);
         const context = withAudio ? audio : null;
@@ -1079,6 +1089,7 @@
                 if (elapsed >= doneAt) {
                     uiComplete = true;
                     finished = true;
+                    try { localStorage.setItem(INTRO_SEEN_KEY, 'true'); } catch (_) {}
                     skipLabel.hidden = false;
                     slices.replaceChildren();
                     burst.remove();
@@ -1108,7 +1119,10 @@
         if (started || finished) return;
         started = true;
         // Count actual landing entries only, not direct toolkit links or aborted gates.
-        try { localStorage.setItem(SONG_VISIT_KEY, String(songVisit + 1)); } catch (_) {}
+        try {
+            localStorage.setItem(SONG_VISIT_KEY, String(songVisit + 1));
+            localStorage.setItem(INTRO_SEEN_KEY, 'false');
+        } catch (_) {}
         const leaving = gate;
         leaving.classList.add('is-leaving');
         // Gate removal is cosmetic; its fade is driven by the audio-clock tick.
@@ -1136,8 +1150,9 @@
     let savedLowDetail = false;
     prepareClips();
     try { savedLowDetail = localStorage.getItem('nullscapeLowDetailMode') === 'true'; } catch (_) {}
+    const directToolkitRoute = /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash);
     if (skipFuture.checked || reducedMotion.matches || savedLowDetail || document.documentElement.classList.contains('low-detail-mode') ||
-        /^#\/?(curses|upgrades|deaths|altars|lobby)\/?$/.test(location.hash)) {
+        (directToolkitRoute && hasSeenIntro())) {
         finish();
         return;
     }

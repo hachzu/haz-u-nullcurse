@@ -31,6 +31,27 @@
     } catch (_) { /* Storage is optional. */ }
 
     const background = $('landingBackground');
+    const editingNotice = home.querySelector('.landing-editing-notice');
+    function fillEditingRibbons() {
+        if (!editingNotice) return;
+        const unit = 'PLEASE BE PATIENT! \u00a0\u00a0 ';
+        editingNotice.querySelectorAll('.editing-notice-ribbon').forEach(ribbon => {
+            const spans = ribbon.querySelectorAll('span');
+            if (spans.length !== 2) return;
+            spans[0].textContent = unit;
+            const unitWidth = spans[0].getBoundingClientRect().width;
+            if (!unitWidth) return;
+            const count = Math.max(2, Math.ceil(editingNotice.clientWidth / unitWidth) + 1);
+            spans.forEach(span => { span.textContent = unit.repeat(count); });
+            ribbon.style.setProperty('--ribbon-duration', `${spans[0].getBoundingClientRect().width / 32}s`);
+        });
+    }
+    if (editingNotice) {
+        new ResizeObserver(fillEditingRibbons).observe(editingNotice);
+        window.addEventListener('resize', fillEditingRibbons, { passive: true });
+        document.fonts?.ready.then(fillEditingRibbons);
+        fillEditingRibbons();
+    }
     function resetParallax() {
         background.style.removeProperty('--landing-x');
         background.style.removeProperty('--landing-y');
@@ -68,7 +89,7 @@
         assetState = { loaded: 0, total: 1, ready: false, error: false };
         $('loadError').hidden = true;
         corePromise = (async () => {
-            const markup = await fetchResource('Toolkits.html');
+            const markup = await fetchResource('Toolkits.html?v=20261029-editing-notice2');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
             const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"]):not([src*="maintenance.js"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
             if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
@@ -144,6 +165,19 @@
         }
         return route;
     }
+    function routeFirstVisitThroughIntro() {
+        if (maintenance) return;
+        let introSeen = false;
+        try {
+            const marker = localStorage.getItem('nullscapeLandingIntroSeen');
+            introSeen = marker === 'true' || (marker === null && Number(localStorage.getItem('nullscapeLandingSongVisit')) > 0);
+        } catch (_) { /* Storage-blocked visitors still get the intro this visit. */ }
+        if (introSeen) return;
+        const firstVisitRoute = readRoute();
+        if (!firstVisitRoute) return;
+        history.replaceState(null, '', `${location.pathname}${location.search}#/`);
+        $('enterToolkit').href = `#/${firstVisitRoute}`;
+    }
     function syncPanelRoute() {
         if (toolkit.hidden || !initialized) return;
         const active = Object.entries(routes).find(([, route]) => route.panel && $(route.panel)?.classList.contains('open'));
@@ -160,6 +194,9 @@
     }
     function showToolRoute(route) {
         if (maintenance && !maintenanceRoutes.has(route)) return;
+        if (!maintenance) {
+            try { localStorage.setItem('nullscapeLandingIntroSeen', 'true'); } catch (_) {}
+        }
         if (maintenance) {
             document.documentElement.classList.add('maintenance-tool-open');
             document.getElementById('maintenanceScreen').inert = true;
@@ -269,6 +306,9 @@
         }
     }));
 
-    if (!maintenance) prepareAssets();
+    if (!maintenance) {
+        routeFirstVisitThroughIntro();
+        prepareAssets();
+    }
     if (readRoute() || maintenance) applyRoute();
 })();

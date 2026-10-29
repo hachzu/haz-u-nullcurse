@@ -3438,6 +3438,7 @@ function refreshUpgradePanel() {
     renderIconModeToggle();
     renderFreeformSortToggle();
     renderUpgradeGrid();
+    if (typeof renderDelusionCards === "function") renderDelusionCards();
 
 }
 
@@ -3626,3 +3627,4 @@ if (upgradeBackButton) {
 
 loadUpgradeState();
 refreshUpgradePanel();
+if (typeof syncDelusionUpgradeEffects === "function") syncDelusionUpgradeEffects();

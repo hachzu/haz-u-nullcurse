@@ -12,6 +12,8 @@ const runState = {
 
     activeCurses: new Set(),
 
+    activeDelusions: new Set(),
+
     curseStacks: new Map(),
 
     medalCurseValues: new Map(),
@@ -19,6 +21,26 @@ const runState = {
     medalPurified: new Set()
 
 };
+
+const DELUSIONS = [
+    { name: "Arrogance", level: 10, altText: "Most stackable upgrades gain +1 max stack, but having 4 stacks of a temporary enemy turns it into a permament enemy.", locks: ["Conceit"], achievement: "Overload" },
+    { name: "Assurance", level: 15, altText: "Gain 1 greater curse reroll, 4 enemy and curse rerolls upon picking. All future reroll gains are doubled, but gain the ??? enemy every 8th level." },
+    { name: "Burnout", level: 15, altText: "2 More Altars spawn and increases the cap of certain Altars, but every Altar used adds a random negative effect for the level.", locks: ["Dependence", "Gambling"], achievement: "Economic Recession" },
+    { name: "Conceit", level: 20, altText: "Most stackable upgrades gain +1 max stack, but all enemies and curses are rerolled upon picking.", locks: ["Arrogance"], achievement: "Middle Lane Champion" },
+    { name: "Corrosion", level: 15, altText: "Fanny Pack tiles are worth 4x more and take longer to collapse, but the collapse is faster, starts from the center and Fanny Pack tiles lose value over time.", requiresUpgrade: "Fanny Pack" },
+    { name: "Dependence", level: 20, altText: "Altar of Protection gives 3 shields, is cheaper to use, and has a larger bubble, but disables the Shield upgrade, and Altar of Protection can't be used until a percentage of gifts have been collected.", requiresUpgrade: "Shield", locks: ["Gambling", "Burnout"] },
+    { name: "Desire", level: 15, altText: "Gain the most expensive upgrade available, but gain 2 random curses." },
+    { name: "Gambling", level: 5, altText: "Spawns more Altars and using Altar of Chance echoes a random Altar, but all Altars are replaced by Altar of Chance.", requiresCurse: "High Roller", locks: ["Dependence", "Burnout"], achievement: "One More Time" },
+    { name: "Greed", level: 15, minPlayers: 2, altText: "Increases Altar of Purgatory's additive and multiplicative Golden Gift yield increases by +0.5x, but Altar of Purgatory has 1.75x more points, spawns higher leveled enemies earlier, and disables reviving." },
+    { name: "Hoarding", level: 15, altText: "Gain +0.8x Golden Gift yield for every enemy with 3 or more permament curses, but increases the max stack of certain curses." , achievement: "I bought a ticket to the zoo not this bro" },
+    { name: "Hope", level: 15, altText: "Gain a one-time use extra life, allowing you to retry a level once after losing, but this delusion cannot be removed by any means.", cannotRemove: true },
+    { name: "Ignorance", level: 15, altText: "Temporary curses go away twice as fast and Altar of Curses always spawns and gives 1.5x more Golden Gift yield, but gives an additional curse and Altar of Purification doesn't spawn anymore.", locks: ["Perseverance"], achievement: "Maximum Purification" },
+    { name: "Overconfidence", level: 10, altText: "Every temporary curse gives +0.3x Golden Gift yield, but every temporary curse turns into a permament curse.", achievement: "Heh.. this is nothing." },
+    { name: "Perseverance", level: 10, altText: "Medal curses give 1.5x more Golden Gifts, bringing back the Medal gives 2x more Golden Gifts, but temporary curses last 50% longer and carrying the Medal slows you down by 10%.", requiresUpgrade: "Medal", locks: ["Ignorance"] },
+    { name: "Vandalism", level: 15, altText: "Generates a large passage biome every level, but Altar of Passage doesn't spawn anymore and Guardian is always enraged.", achievement: "Level 25" }
+];
+
+const DELUSION_BY_NAME = new Map(DELUSIONS.map(delusion => [delusion.name, delusion]));
 
 
 /*
@@ -65,19 +87,23 @@ const curseVisibilityState = {
  * gives them, so the "this is worth a medal" signal isn't lost.
  */
 const medalDisplayState = {
-    hideSection: false,
+    hideSection: true,
     listMode: true,
-    showDelusions: false,
+    showDelusions: true,
     collapsedLevels: []
 };
 
 const MEDAL_DISPLAY_STORAGE_KEY = "nullscapeMedalDisplayState";
+const MEDAL_DISPLAY_DEFAULTS_VERSION = 1;
 
 function saveMedalDisplayState() {
 
     try {
 
-        localStorage.setItem(MEDAL_DISPLAY_STORAGE_KEY, JSON.stringify(medalDisplayState));
+        localStorage.setItem(MEDAL_DISPLAY_STORAGE_KEY, JSON.stringify({
+            ...medalDisplayState,
+            defaultsVersion: MEDAL_DISPLAY_DEFAULTS_VERSION
+        }));
 
     } catch (error) {
 
@@ -94,15 +120,24 @@ function loadMedalDisplayState() {
         const raw = localStorage.getItem(MEDAL_DISPLAY_STORAGE_KEY);
 
         if (!raw) {
+            saveMedalDisplayState();
             return;
         }
 
         const saved = JSON.parse(raw);
 
+        medalDisplayState.collapsedLevels = Array.isArray(saved.collapsedLevels) ? saved.collapsedLevels.filter(key => typeof key === 'string') : [];
+        if ((Number(saved.defaultsVersion) || 0) < MEDAL_DISPLAY_DEFAULTS_VERSION) {
+            medalDisplayState.hideSection = true;
+            medalDisplayState.listMode = true;
+            medalDisplayState.showDelusions = true;
+            saveMedalDisplayState();
+            return;
+        }
+
         medalDisplayState.hideSection = Boolean(saved.hideSection);
         medalDisplayState.listMode = typeof saved.listMode === 'boolean' ? saved.listMode : true;
         medalDisplayState.showDelusions = saved.showDelusions === true;
-        medalDisplayState.collapsedLevels = Array.isArray(saved.collapsedLevels) ? saved.collapsedLevels.filter(key => typeof key === 'string') : [];
 
     } catch (error) {
 
@@ -2867,6 +2902,8 @@ function persistRunState() {
 
             activeCurses: Array.from(runState.activeCurses),
 
+            activeDelusions: Array.from(runState.activeDelusions),
+
             curseStacks: Array.from(runState.curseStacks.entries()),
 
             // Older saved states could not distinguish a curse chosen
@@ -2947,6 +2984,7 @@ function loadRunState() {
             (saved.activeEnemies || []).map(entry => Array.isArray(entry) ? entry : [entry, 1])
         );
         runState.activeCurses = new Set((saved.activeCurses || []).map(canonicalCurseName));
+        runState.activeDelusions = sanitizeActiveDelusions(saved.activeDelusions || []);
         runState.curseStacks = new Map((saved.curseStacks || []).map(([name, count]) => [canonicalCurseName(name), count]));
         // The old format awarded payout to every selected medal curse,
         // so its saved values cannot reliably be carried forward.
@@ -3045,6 +3083,7 @@ function render() {
     renderPool("globalCurseContainer", getGlobalPool());
     renderPool("enemyCurseContainer", getEnemyPool());
     renderPool("greaterCurseContainer", getGreaterPool());
+    renderDelusionCards();
 
     if (typeof renderUpgradeGrid === "function") {
 
@@ -3227,6 +3266,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
 
     runState.activeEnemies.clear();
     runState.activeCurses.clear();
+    runState.activeDelusions.clear();
     runState.curseStacks.clear();
     runState.medalCurseValues.clear();
     runState.medalPurified.clear();
@@ -3326,10 +3366,159 @@ attachClickAction(document.getElementById('chaosPlusModeToggle'), () => {
 const hideMedalCursesToggle = document.getElementById("hideMedalCursesToggle");
 const curseListModeToggle = document.getElementById('curseListModeToggle');
 const delusionsToggle = document.getElementById('delusionsToggle');
+
+function sanitizeActiveDelusions(names) {
+    const selected = new Set();
+    for (const name of names || []) {
+        const next = DELUSION_BY_NAME.get(name);
+        if (!next || selected.size >= 3) continue;
+        if ([...selected].some(activeName => {
+            const active = DELUSION_BY_NAME.get(activeName);
+            return active?.locks?.includes(name) || next.locks?.includes(activeName);
+        })) continue;
+        selected.add(name);
+    }
+    return selected;
+}
+
+function getDelusionRequirementReason(delusion) {
+    if (runState.activeDelusions.has(delusion.name)) {
+        return delusion.cannotRemove ? "This delusion cannot be removed." : "";
+    }
+    if (runState.activeDelusions.size >= 3) return "Only 3 delusions can be active at once.";
+    if (!curseVisibilityState.unlockAll) {
+        if (runState.level < delusion.level) return `Requires level ${delusion.level}.`;
+        if (delusion.minPlayers && getPlayerCount() < delusion.minPlayers) return `Requires ${delusion.minPlayers} or more players.`;
+    }
+    for (const activeName of runState.activeDelusions) {
+        const active = DELUSION_BY_NAME.get(activeName);
+        if (active?.locks?.includes(delusion.name) || delusion.locks?.includes(activeName)) return `Cannot be picked with ${activeName}.`;
+    }
+    if (!curseVisibilityState.unlockAll) {
+        if (delusion.requiresUpgrade && typeof getOwnedStack === "function" && getOwnedStack(delusion.requiresUpgrade) < 1) {
+            return `Requires the ${delusion.requiresUpgrade} upgrade.`;
+        }
+        if (delusion.requiresCurse && !hasCurse(delusion.requiresCurse)) return `Requires ${delusion.requiresCurse}.`;
+    }
+    return "";
+}
+
+function syncDelusionUpgradeEffects() {
+    if (typeof setUpgradeDelusion !== "function") return;
+    setUpgradeDelusion("arrogance", runState.activeDelusions.has("Arrogance"));
+    setUpgradeDelusion("conceit", runState.activeDelusions.has("Conceit"));
+}
+
+function renderDelusionCards() {
+    const container = document.getElementById('delusionContainer');
+    const section = document.getElementById('delusionSection');
+    if (!container || !section || section.classList.contains('result-section--hidden')) return;
+
+    container.replaceChildren();
+    const levels = [...new Set(DELUSIONS.map(delusion => delusion.level))].sort((a, b) => a - b);
+    levels.forEach(level => {
+        const key = `delusionContainer:${level}`;
+        const divider = document.createElement('button');
+        divider.type = 'button';
+        divider.className = 'curse-level-divider';
+        divider.style.setProperty('--level-order', level * 2 - 1);
+        divider.setAttribute('aria-label', `Toggle level ${level} delusions`);
+        divider.setAttribute('aria-expanded', String(!medalDisplayState.collapsedLevels.includes(key)));
+        divider.textContent = `Level ${level}`;
+        divider.addEventListener('click', () => {
+            const collapsed = !medalDisplayState.collapsedLevels.includes(key);
+            medalDisplayState.collapsedLevels = medalDisplayState.collapsedLevels.filter(entry => entry !== key);
+            if (collapsed) medalDisplayState.collapsedLevels.push(key);
+            divider.setAttribute('aria-expanded', String(!collapsed));
+            container.querySelectorAll('.delusion-card').forEach(card => {
+                if (Number(card.dataset.groupLevel) === level) card.toggleAttribute('data-level-collapsed', collapsed);
+            });
+            saveMedalDisplayState();
+        });
+        container.appendChild(divider);
+    });
+
+    DELUSIONS.forEach(delusion => {
+        const selected = runState.activeDelusions.has(delusion.name);
+        const reason = getDelusionRequirementReason(delusion);
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'curse-card delusion-card';
+        card.style.setProperty('--level-order', delusion.level * 2);
+        card.dataset.groupLevel = delusion.level;
+        if (medalDisplayState.collapsedLevels.includes(`delusionContainer:${delusion.level}`)) card.setAttribute('data-level-collapsed', '');
+        card.classList.toggle('delusion-card--selected', selected);
+        card.classList.toggle('delusion-card--locked', Boolean(reason));
+        card.setAttribute('aria-pressed', String(selected));
+        card.setAttribute('aria-disabled', String(Boolean(reason)));
+        card.setAttribute('aria-label', `${delusion.name}${selected ? ', selected' : ''}${reason ? `, ${reason}` : ''}`);
+        card.title = delusion.altText;
+
+        const media = document.createElement('span');
+        media.className = 'card-media';
+        const image = document.createElement('img');
+        image.className = 'card-media-image';
+        image.src = `assets/delusions/${delusion.name}.png`;
+        image.alt = '';
+        image.width = 48;
+        image.height = 48;
+        image.loading = 'lazy';
+        media.appendChild(image);
+        card.appendChild(media);
+
+        const copy = document.createElement('span');
+        copy.className = 'curse-card-copy';
+        const label = document.createElement('span');
+        label.className = 'curse-name-label';
+        label.textContent = delusion.name;
+        copy.appendChild(label);
+        if (reason && !selected && !reason.startsWith('Requires level ')) {
+            const lock = document.createElement('span');
+            lock.className = 'delusion-lock-note';
+            lock.textContent = reason;
+            copy.appendChild(lock);
+        }
+        card.appendChild(copy);
+
+        const metadata = document.createElement('span');
+        metadata.className = 'curse-row-meta';
+        const level = document.createElement('span');
+        level.className = 'curse-row-level';
+        level.textContent = delusion.level;
+        level.setAttribute('aria-label', `Requires level ${delusion.level}`);
+        metadata.appendChild(level);
+        card.appendChild(metadata);
+        card.addEventListener('click', () => {
+            if (selected) {
+                if (delusion.cannotRemove) {
+                    document.getElementById('delusionSelectionFeedback').textContent = 'Hope cannot be removed once picked.';
+                    return;
+                }
+                runState.activeDelusions.delete(delusion.name);
+            } else {
+                const blocked = getDelusionRequirementReason(delusion);
+                if (blocked) {
+                    document.getElementById('delusionSelectionFeedback').textContent = blocked;
+                    return;
+                }
+                runState.activeDelusions.add(delusion.name);
+            }
+            syncDelusionUpgradeEffects();
+            document.getElementById('delusionSelectionFeedback').textContent = '';
+            render();
+        });
+        container.appendChild(card);
+    });
+
+    const count = document.getElementById('delusionSelectionCount');
+    if (count) count.textContent = `${runState.activeDelusions.size} of 3 selected`;
+}
+
 function updateDelusionsDisplay() {
     document.getElementById('delusionSection')?.classList.toggle('result-section--hidden', !medalDisplayState.showDelusions);
     delusionsToggle?.classList.toggle('active', medalDisplayState.showDelusions);
     delusionsToggle?.setAttribute('aria-checked', String(medalDisplayState.showDelusions));
+    renderDelusionCards();
 }
 delusionsToggle?.addEventListener('click', () => {
     medalDisplayState.showDelusions = !medalDisplayState.showDelusions;
@@ -3811,45 +4000,6 @@ window.addEventListener("pagehide", flushRunStateSave);
 document.getElementById("levelInput").value = runState.level;
 
 render();
-
-// Keep the notice outside the scrolling pools, clear of the sidebar and navigation.
-(() => {
-    const overlay = document.getElementById('editingOverlay');
-    if (!overlay) return;
-    document.querySelector('.app').append(overlay);
-    const notice = overlay.querySelector('.editing-notice');
-    function positionNotice() {
-        const sidebar = document.querySelector('.left-panel')?.getBoundingClientRect();
-        const main = document.querySelector('.right-panel')?.getBoundingClientRect();
-        const left = sidebar && sidebar.right < innerWidth - 80 ? Math.max(0, sidebar.right) : 0;
-        overlay.style.setProperty('--editing-left', `${left}px`);
-        overlay.style.setProperty('--editing-top', `${left ? 0 : Math.max(0, main?.top || 0)}px`);
-    }
-    function fillRibbons() {
-        const unit = 'PLEASE BE PATIENT! \u00a0\u00a0 ';
-        notice.querySelectorAll('.editing-notice-ribbon').forEach(ribbon => {
-            const spans = ribbon.querySelectorAll('span');
-            if (spans.length !== 2) return;
-            spans[0].textContent = unit;
-            const unitWidth = spans[0].getBoundingClientRect().width;
-            if (!unitWidth) return;
-            const count = Math.max(2, Math.ceil(notice.clientWidth / unitWidth) + 1);
-            spans.forEach(span => { span.textContent = unit.repeat(count); });
-            ribbon.style.setProperty('--ribbon-duration', `${spans[0].getBoundingClientRect().width / 32}s`);
-        });
-    }
-    const close = () => { overlay.hidden = true; };
-    overlay.querySelector('.editing-notice-close').addEventListener('click', close);
-    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
-    const refresh = () => { positionNotice(); fillRibbons(); };
-    window.addEventListener('resize', refresh);
-    window.addEventListener('scroll', () => { if (!overlay.hidden) positionNotice(); }, { passive: true });
-    window.addEventListener('hashchange', () => requestAnimationFrame(refresh));
-    new ResizeObserver(fillRibbons).observe(notice);
-    document.fonts?.ready.then(fillRibbons);
-    refresh();
-})();
 
 (() => {
     const toggle = document.getElementById('curseSettingsToggle');

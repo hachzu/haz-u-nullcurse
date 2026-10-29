@@ -5012,46 +5012,20 @@ body {
 .curse-pool-columns--list .curse-level-divider[aria-expanded='false'] { color: #e7c5ff; }
 .curse-pool-columns--list .curse-level-divider[aria-expanded='false']::after { opacity: .6; }
 .curse-pool-columns--list .curse-card[data-level-collapsed] { display: none; }
-/* Wiki editing-banner reference: nullscape.wiki/Curses. */
-.editing-notice { position: relative; overflow: hidden; margin: 0 0 18px; padding: 8px 0; border: 1px solid #bf54e4; color: #fff; background: linear-gradient(transparent, #2a0035), repeating-linear-gradient(45deg, transparent, #cc00ff50 80px); background-size: 114px 100%; animation: editing-stripes 8s linear infinite; text-align: center; }
-.editing-notice-copy { padding: 8px 12px; font-size: 13px; line-height: 1.15; }
-.editing-notice .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.editing-notice-copy strong { display: block; font: 700 clamp(24px, 3vw, 38px)/1.1 Georgia, serif; transform: perspective(350px) rotateX(20deg); animation: editing-text 2s ease-in-out infinite alternate; }
-.editing-notice-ribbon { display: flex; width: max-content; font-size: 9px; letter-spacing: 2px; opacity: .7; animation: editing-marquee 40s linear infinite; }
-.editing-notice-ribbon span { flex: none; white-space: nowrap; }
-.editing-notice-ribbon--reverse { animation-direction: reverse; }
-@keyframes editing-stripes { to { background-position: -114px 0; } }
-@keyframes editing-marquee { to { transform: translateX(-50%); } }
-@keyframes editing-text { to { text-shadow: 0 0 4px #ffffff80; } }
-body:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open) .editing-notice { display: none; }
 body:not(:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open)) .bg-layer { opacity: calc(var(--bg-opacity) * .85); }
-@media (prefers-reduced-motion: reduce) { .editing-notice, .editing-notice-ribbon, .editing-notice-copy strong { animation: none; } }
 
 #delusionHeading { background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; }
 #delusionContainer .curse-card { border-color: #76d4b4; background: linear-gradient(160deg, #150826 0%, #0d0416 100%); }
 #delusionContainer .curse-name-label { color: #b9ecda; }
-.editing-overlay { position: fixed; left: var(--editing-left, 0px); top: var(--editing-top, 0px); right: 0; bottom: 0; z-index: 40; display: grid; place-items: center; padding: 24px; background: #05010cb3; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: editing-overlay-enter 250ms ease-out both; }
-.editing-overlay[hidden], body.at-home .editing-overlay,
-body:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open) .editing-overlay { display: none; }
-.editing-overlay .editing-notice { width: min(760px, 100%); box-sizing: border-box; margin: 0; padding-top: 25px; box-shadow: 0 12px 60px #0008; container-type: inline-size; }
-.editing-notice-close { position: absolute; z-index: 2; right: 6px; top: 2px; width: 28px; height: 26px; padding: 0; border: 0; background: none; color: #f2d8ff; font: 22px/1 sans-serif; cursor: pointer; }
-.editing-notice-close:focus-visible { outline: 1px solid #f2d8ff; }
-.editing-notice-ribbon { display: flex; width: max-content; gap: 0; animation-duration: var(--ribbon-duration, 40s); }
-.editing-notice-ribbon span { flex: 0 0 auto; padding: 0; margin: 0; }
+.delusion-selection-status { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 20px; margin: -5px 0 15px; color: #a9d9ca; font-size: 11px; }
+.delusion-selection-status [role='status'] { color: #f0b1b8; text-align: right; }
+#delusionContainer .delusion-card { width: 100%; min-width: 0; appearance: none; color: #b9ecda; font: inherit; }
+#delusionContainer .delusion-card--selected { border-color: #70e9b5; background: linear-gradient(160deg, #123a31 0%, #0d1718 100%); box-shadow: 0 0 0 1px #70e9b577, 0 0 14px #34d99b33; }
+#delusionContainer .delusion-card--locked:not(.delusion-card--selected) { opacity: .58; filter: saturate(.72); }
+#delusionContainer .delusion-card:focus-visible { outline: 2px solid #a7ffdb; outline-offset: 2px; }
+.delusion-lock-note, .delusion-level-note { display: block; color: #91cbb5; font: 700 9px/1.15 var(--font-modern, sans-serif); }
+.delusion-lock-note { color: #ffb1b8; }
 #floatingToggleButtons { z-index: 60; }
-@keyframes editing-overlay-enter { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .editing-overlay { animation: none; } }
-
-.editing-overlay { padding: 24px 0; }
-.editing-overlay .editing-notice { width: 100%; overflow: visible; padding-top: 8px; }
-.editing-notice-copy { font-family: Georgia, serif; font-weight: 700; font-size: clamp(20px, 3vw, 32px); line-height: 1.1; transform: perspective(350px) rotateX(20deg); animation: editing-text 2s ease-in-out infinite alternate; }
-.editing-notice-copy strong { font: inherit; font-size: clamp(28px, 4vw, 46px); transform: none; animation: none; }
-.editing-notice-close { top: -32px; right: 8px; }
-.editing-notice-ribbon { clip-path: inset(0); width: 100%; overflow: hidden; animation: none; }
-.editing-notice-ribbon span { animation: editing-ribbon-block var(--ribbon-duration, 40s) linear infinite; }
-.editing-notice-ribbon--reverse span { animation-direction: reverse; }
-@keyframes editing-ribbon-block { to { transform: translateX(-100%); } }
-@media (prefers-reduced-motion: reduce) { .editing-notice-copy, .editing-notice-ribbon span { animation: none; } }
 
 /* The cog replaces the in-flow switch box; opening it never resizes the header. */
 .pool-header { position: relative; min-height: 95px; container-type: inline-size; }

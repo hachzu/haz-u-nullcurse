@@ -896,6 +896,52 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     mask-repeat: no-repeat;
 }
 .landing-view .ns-toolkit-wordmark { display: block; width: 100%; height: auto; }
+.landing-view .landing-editing-stack {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: calc(100% + 134px);
+    display: block;
+    width: 100vw;
+    zoom: .9090909;
+    transform: translateX(-50%);
+    opacity: calc(var(--ns-toolkit-visible, 0) * .6);
+    pointer-events: none;
+}
+.landing-view .landing-editing-notice {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 0;
+    overflow: visible;
+    border: 1px solid #bf54e4;
+    color: #fff;
+    background: linear-gradient(transparent, #2a0035), repeating-linear-gradient(45deg, transparent, #cc00ff50 80px);
+    background-size: 114px 100%;
+    text-align: center;
+    animation: editing-stripes 8s linear infinite;
+}
+.landing-editing-notice .editing-notice-copy { display: block; padding: 8px 12px; font: 700 clamp(20px, 3vw, 32px)/1.1 Georgia, serif; transform: perspective(350px) rotateX(20deg); animation: editing-text 2s ease-in-out infinite alternate; }
+.landing-editing-notice .editing-notice-copy strong { display: block; font: inherit; font-size: clamp(28px, 4vw, 46px); transform: none; animation: none; }
+.landing-editing-notice .editing-notice-ribbon { display: flex; width: 100%; overflow: hidden; clip-path: inset(0); font-size: 9px; letter-spacing: 2px; opacity: .7; }
+.landing-editing-notice .editing-notice-ribbon span { flex: 0 0 auto; white-space: nowrap; animation: editing-ribbon-block var(--ribbon-duration, 40s) linear infinite; }
+.landing-editing-notice .editing-notice-ribbon--reverse span { animation-direction: reverse; }
+.landing-view .landing-banner-caption {
+    display: block;
+    margin: 0 0 6px;
+    color: #d8beeccc;
+    font: 500 9px/1.3 var(--font-modern, sans-serif);
+    text-align: left;
+}
+.landing-view .landing-banner-caption a { color: inherit; text-decoration: underline; text-underline-offset: 2px; pointer-events: auto; }
+.landing-view .landing-banner-caption a:hover { color: #f2d8ff; }
+.landing-view:not([data-intro-state]) .landing-editing-stack { opacity: .6; }
+.intro-pending .landing-view .landing-editing-stack { opacity: 0; }
+@keyframes editing-stripes { to { background-position: -114px 0; } }
+@keyframes editing-text { to { text-shadow: 0 0 4px #ffffff80; } }
+@keyframes editing-ribbon-block { to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { .landing-editing-notice, .landing-editing-notice .editing-notice-copy, .landing-editing-notice .editing-notice-ribbon span { animation: none; } }
 .landing-view .ns-startup-load {
     position: absolute;
     left: 50%;
@@ -921,7 +967,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     will-change: transform;
 }
 .landing-view .landing-divider { bottom: -50px; }
-.landing-view .landing-brand { margin-bottom: 68px; }
+.landing-view .landing-brand { margin-top: 220px; margin-bottom: 68px; }
 /* Keep the wordmark and caption anchored to the divider's centerline. */
 .landing-view[data-intro-state='done'] .landing-logo-stage {
     animation: logo-sway 9s ease-in-out infinite, logo-bob 5.5s ease-in-out infinite;

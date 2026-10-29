@@ -13,6 +13,7 @@
         return {
             run: { ...runState, level: getLevel(), playerCount: getPlayerCount(),
                 activeEnemies: mapObject(runState.activeEnemies), activeCurses: setObject(runState.activeCurses),
+                activeDelusions: setObject(runState.activeDelusions),
                 curseStacks: mapObject(runState.curseStacks), medalCurseValues: mapObject(runState.medalCurseValues),
                 medalPurified: setObject(runState.medalPurified) },
             upgrades: { ...upgradeState, owned: mapObject(upgradeState.owned), pending: mapObject(upgradeState.pending) },
@@ -84,6 +85,7 @@
                 const validCurse = name => Boolean(findCurseByName(canonicalName(name)));
                 runState.activeEnemies = new Map(entries(data.activeEnemies).filter(([n]) => enemyNames.has(n)).map(([n,v]) => [n, Math.floor(bounded(v, 1, 1000))]));
                 runState.activeCurses = new Set(entries(data.activeCurses).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => canonicalName(n)));
+                runState.activeDelusions = sanitizeActiveDelusions(entries(data.activeDelusions).filter(([,v]) => v === true).map(([n]) => n));
                 for (const name of ['curseStacks', 'medalCurseValues']) {
                     runState[name] = new Map(entries(data[name]).filter(([n]) => validCurse(n)).map(([n,v]) => [canonicalName(n), bounded(v, 0, 1000000)]));
                 }
@@ -175,6 +177,7 @@
                 updateSearchClearVisibility();
             }
             if (roots.has('upgrades') || roots.has('run') || roots.has('settings')) {
+                if (roots.has('run') || roots.has('upgrades')) syncDelusionUpgradeEffects();
                 render();
                 refreshUpgradePanel();
             }

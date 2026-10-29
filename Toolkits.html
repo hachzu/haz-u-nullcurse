@@ -1071,7 +1071,7 @@
                         <span class="curse-visibility-label">LIST</span>
                     </button>
 
-<button type="button" id="delusionsToggle" class="curse-visibility-toggle" role="switch" aria-checked="false" aria-controls="delusionSection" title="Show Delusion placeholders">
+<button type="button" id="delusionsToggle" class="curse-visibility-toggle" role="switch" aria-checked="false" aria-controls="delusionSection" title="Show and pick Delusions">
                         <span class="curse-visibility-track"><span class="curse-visibility-thumb"></span></span>
                         <span class="curse-visibility-label">DELUSIONS</span>
                     </button>
@@ -1092,17 +1092,6 @@
 
             </div>
             </section>
-        </div>
-
-        <!-- Animation reference: https://nullscape.wiki/Curses (editing banner). -->
-        <div class="editing-overlay" id="editingOverlay">
-        <aside class="editing-notice" role="dialog" aria-labelledby="editingNoticeTitle" tabindex="-1">
-            <button type="button" class="editing-notice-close" aria-label="Close editing notice">&times;</button>
-            <div class="editing-notice-ribbon editing-notice-ribbon--reverse" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></div>
-            <div class="editing-notice-copy" id="editingNoticeTitle">Nullscape Toolkits is under <strong>HEAVY EDITING!</strong></div>
-            <span class="sr-only">Please be patient!</span>
-            <div class="editing-notice-ribbon" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></div>
-        </aside>
         </div>
 
         <div class="curse-pool-columns" id="cursePoolColumns">
@@ -1186,7 +1175,8 @@
 
         <section id="delusionSection" class="result-section result-section--hidden">
             <div class="result-heading"><h2 id="delusionHeading" class="animated-header-text">DELUSIONS</h2></div>
-            <div id="delusionContainer" class="result-grid"><div class="curse-card delusion-placeholder" title="Arrogance — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Arrogance.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Arrogance</span></div></div><div class="curse-card delusion-placeholder" title="Conceit — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Conceit.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Conceit</span></div></div><div class="curse-card delusion-placeholder" title="Assurance — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Assurance.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Assurance</span></div></div><div class="curse-card delusion-placeholder" title="Dependence — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Dependence.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Dependence</span></div></div><div class="curse-card delusion-placeholder" title="Corrosion — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Corrosion.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Corrosion</span></div></div><div class="curse-card delusion-placeholder" title="Hope — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Hope.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Hope</span></div></div><div class="curse-card delusion-placeholder" title="Gambling — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Gambling.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Gambling</span></div></div><div class="curse-card delusion-placeholder" title="Vandalism — placeholder"><div class="card-media"><img class="card-media-image" src="assets/delusions/Vandalism.png" alt="" width="48" height="48" loading="lazy"></div><div class="curse-card-copy"><span class="curse-name-label">Vandalism</span></div></div></div>
+            <div class="delusion-selection-status"><span id="delusionSelectionCount">0 of 3 selected</span><span id="delusionSelectionFeedback" role="status" aria-live="polite"></span></div>
+            <div id="delusionContainer" class="result-grid"></div>
         </section>
 
         </div>
@@ -1285,13 +1275,13 @@
 
 <script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261029-level-collapse3"></script>
-<script src="js/upgrades.js?v=20261029-curse-wiki1"></script>
+<script src="js/tracker.js?v=20261029-delusions2"></script>
+<script src="js/upgrades.js?v=20261029-delusions1"></script>
 <script src="js/tools.js?v=20261027-link1"></script>
 <script src="js/card-reveals.js?v=20261027-pink-purple-logo1"></script>
 <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1"></script>
 <script src="js/link-core.js?v=20261027-link1"></script>
-<script src="js/link-state.js?v=20261029-curse-wiki1"></script>
+<script src="js/link-state.js?v=20261029-delusions1"></script>
 <script src="js/link.js?v=20261028-link2"></script>
 
 </body>
