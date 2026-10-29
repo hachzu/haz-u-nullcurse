@@ -80,13 +80,14 @@
                 runState.chaosMode = data.chaosMode === true;
                 runState.chaosPlusMode = runState.chaosMode && data.chaosPlusMode === true;
                 const enemyNames = new Set(enemies.map(x => x.name));
-                const validCurse = name => Boolean(findCurseByName(name));
+                const canonicalName = name => typeof canonicalCurseName === 'function' ? canonicalCurseName(name) : name;
+                const validCurse = name => Boolean(findCurseByName(canonicalName(name)));
                 runState.activeEnemies = new Map(entries(data.activeEnemies).filter(([n]) => enemyNames.has(n)).map(([n,v]) => [n, Math.floor(bounded(v, 1, 1000))]));
-                runState.activeCurses = new Set(entries(data.activeCurses).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => n));
+                runState.activeCurses = new Set(entries(data.activeCurses).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => canonicalName(n)));
                 for (const name of ['curseStacks', 'medalCurseValues']) {
-                    runState[name] = new Map(entries(data[name]).filter(([n]) => validCurse(n)).map(([n,v]) => [n, bounded(v, 0, 1000000)]));
+                    runState[name] = new Map(entries(data[name]).filter(([n]) => validCurse(n)).map(([n,v]) => [canonicalName(n), bounded(v, 0, 1000000)]));
                 }
-                runState.medalPurified = new Set(entries(data.medalPurified).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => n));
+                runState.medalPurified = new Set(entries(data.medalPurified).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => canonicalName(n)));
                 byId('levelInput').value = runState.level;
                 byId('playerCountInput').value = Math.floor(bounded(data.playerCount, 1, 100));
             }
@@ -128,10 +129,10 @@
                 const data = object(s.altars);
                 if (protectionAltarGiftsInput) protectionAltarGiftsInput.value = bounded(data.gifts, 0, 1000000000, 0);
                 selectedProtectionAltarLevel = data.level === null ? null : bounded(data.level, 1, 100000);
-                selectedPurificationAltarCurse = findCurseByName(data.selected) ? data.selected : null;
-                pendingPurificationAltarCurse = findCurseByName(data.pending) ? data.pending : null;
+                selectedPurificationAltarCurse = findCurseByName(canonicalName(data.selected)) ? canonicalName(data.selected) : null;
+                pendingPurificationAltarCurse = findCurseByName(canonicalName(data.pending)) ? canonicalName(data.pending) : null;
                 purificationAltarCurses.clear();
-                entries(data.curses).forEach(([n,v]) => { if (v === true && findCurseByName(n)) purificationAltarCurses.add(n); });
+                entries(data.curses).forEach(([n,v]) => { const name = canonicalName(n); if (v === true && findCurseByName(name)) purificationAltarCurses.add(name); });
                 renderProtectionAltarCalculator();
                 renderPurificationAltarCalculator();
             }

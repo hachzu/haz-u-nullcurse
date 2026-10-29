@@ -961,7 +961,7 @@ function isPartyLikeMode() {
 
 function isNothingCurseActive() {
 
-    return typeof hasCurse === "function" && hasCurse("Nothing");
+    return typeof hasCurse === "function" && hasCurse("Nothing?");
 
 }
 
@@ -1850,7 +1850,7 @@ function toggleNothingCurse() {
 
     }
 
-    const nothingCurse = findCurseByName("Nothing");
+    const nothingCurse = findCurseByName("Nothing?");
 
     if (!nothingCurse) {
 
@@ -1860,7 +1860,7 @@ function toggleNothingCurse() {
 
     if (isNothingCurseActive()) {
 
-        removeCurse("Nothing");
+        removeCurse("Nothing?");
 
     } else if (isNothingCurseSelectable(nothingCurse)) {
 
@@ -2698,7 +2698,7 @@ function updateUpgradeTotals() {
         // styling as the Progressive toggle (see .upgrade-switch in
         // Upgrades.css) - just update its state and ON/OFF label.
         const active = isNothingCurseActive();
-        const nothingCurse = typeof findCurseByName === "function" ? findCurseByName("Nothing") : null;
+        const nothingCurse = typeof findCurseByName === "function" ? findCurseByName("Nothing?") : null;
         const canToggleOn = active || (nothingCurse && isNothingCurseSelectable(nothingCurse));
 
         nothingIndicator.classList.toggle("active", active);

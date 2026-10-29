@@ -338,7 +338,8 @@ const enemies = [
 
 const globalCurses = [
 
-    { name: "Lower Gravity", level: 1 },
+    { name: "Lower Gravity", level: 1, exclusiveGroup: "gravity-choice" },
+    { name: "Higher Gravity", level: 1, exclusiveGroup: "gravity-choice" },
     { name: "Random Spawn", level: 1 },
     { name: "Scattered Gifts", level: 1 },
     { name: "Weaker Jump Pads", level: 1 },
@@ -373,10 +374,8 @@ const globalCurses = [
         exclusiveGroup: "highroller-tweakedodds"
     },
 
-    { name: "Fake Count", level: 8 },
-
     {
-        name: "Lap 2",
+        name: "LAP 2",
         level: 8,
         medal: true,
         value: 400,
@@ -389,7 +388,7 @@ const globalCurses = [
         exclusiveGroup: "lap2-fragilegifts"
     },
 
-    { name: "Nothing", level: 8, medal: true, value: 325 },
+    { name: "Nothing?", level: 8, medal: true, value: 325 },
 
     {
         name: "Jackpot",
@@ -412,6 +411,9 @@ const globalCurses = [
         max: 2
     },
 
+    { name: "Run", level: 15, casualDisabled: true, requiresCurses: ["Barotrauma"] },
+    { name: "Volatile Implosions", level: 10, requiresCurses: ["Void Implosions"] },
+
     { name: "Beacon Mirage", level: 25, medal: true, value: 300 }
 
 ];
@@ -422,8 +424,11 @@ const enemyCurses = [
     { name: "More Ringing", enemy: "Bell" },
     { name: "Mighty Gong", enemy: "Bell", medal: true, value: 150 },
     { name: "Concussion", enemy: "Bell", medal: true, value: 200 },
+    { name: "Concussive Blast", enemy: "Bell", level: 10 },
 
     { name: "Bigger Marts", enemy: "Mart" },
+    { name: "Red Marts", enemy: "Mart" },
+    { name: "Beacon Imp", enemy: "Mart", level: 18 },
 
     {
         name: "Mart Infection",
@@ -433,17 +438,9 @@ const enemyCurses = [
         exclusiveGroup: "mart-infection-slide"
     },
 
-    {
-        name: "Mart Slide",
-        enemy: "Mart",
-        level: 8,
-        medal: true,
-        value: 330,
-        exclusiveGroup: "mart-infection-slide"
-    },
-
-    { name: "Pacifier", enemy: "Baby", medal: true, value: 230 },
     { name: "Problem Child", enemy: "Baby", level: 5, medal: true, value: 150 },
+    { name: "Big Baby", enemy: "Baby" },
+    { name: "Baby Steps", enemy: "Baby", level: 5, medal: true, value: 175 },
 
     {
         name: "Bigger Blast",
@@ -455,6 +452,8 @@ const enemyCurses = [
     },
 
     { name: "Scorched Earth", enemy: "ICBM", medal: true, value: 150 },
+    { name: "Magic Missile", enemy: "ICBM" },
+    { name: "Incendiary Shrapnel", enemy: "ICBM" },
 
     {
         name: "Closer Husk",
@@ -470,16 +469,15 @@ const enemyCurses = [
 
     { name: "Taller Husk", enemy: "Husk" },
     { name: "Husk Express", enemy: "Husk", enemyCount: 2, level: 5, medal: true, value: 200 },
-    { name: "Conga Line", enemy: "Husk", level: 8, medal: true, value: 200 },
-    { name: "Random Husk", enemy: "Husk", level: 15 },
-
     { name: "Resonating Shockwaves", enemy: "Springer", level: 5 },
     { name: "Springloaded", enemy: "Springer", level: 5, medal: true, value: 200 },
+    { name: "Seahorse", enemy: "Springer", level: 15 },
+    { name: "Horse Skipping", enemy: "Springer", level: 5 },
 
     { name: "Bloodier Meat", enemy: "Flesh", level: 5, medal: true, value: 300 },
-    { name: "Blighted Jump Pads", enemy: "Flesh", level: 5 },
+    { name: "Airborne Flesh", level: 5, requiresEnemies: ["Flesh", "Springer"] },
 
-    { name: "Camoflauge", enemy: "Guardian", level: 8 },
+    { name: "Camouflage", enemy: "Guardian", level: 8 },
     { name: "Shotgun", enemy: "Guardian", level: 5, medal: true, value: 200 },
 
     { name: "Ambush", enemy: "Telefragger" },
@@ -494,8 +492,23 @@ const enemyCurses = [
         value: 250,
         requiresCurses: ["Razorbloom"]
     },
+    { name: "Angry Bird", level: 1, requiresCurses: ["Razorbloom"] },
+    { name: "Smart Little Bird", requiresCurses: ["Razorbloom", "Oblivion"] },
+    { name: "Stronger Wings", requiresCurses: ["Razorbloom"] },
 
     { name: "Blade Carousel", enemy: "Voidbreaker", level: 5, medal: true, value: 290 },
+    { name: "Corrupted Blades", enemy: "Voidbreaker", level: 15 },
+
+    { name: "Jumping Instruments", enemy: "Cadence", level: 15 },
+    { name: "Encore", enemy: "Cadence", level: 15 },
+    { name: "Alluring Arrangement", level: 1, requiresEnemies: ["Cadence", "Bell"] },
+
+    { name: "Blueprint: Cross Beams", enemy: "Scrapmaw", level: 20 },
+    { name: "Blueprint: Supersonic Lasers", enemy: "Scrapmaw", level: 15 },
+    { name: "Blueprint: Efficient Coolant", enemy: "Scrapmaw", level: 20, medal: true, value: 250 },
+
+    { name: "Leo", enemy: "Sigil" },
+    { name: "Sagittarius", enemy: "Sigil" },
 
     { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280, disabledModes: ["solo"] }
 
@@ -507,7 +520,7 @@ const DIVINE_CURSE_NAMES = new Set(["They're Here", "Water Pad", "Aura", "Bloody
 
 // Chaos+ extends the same Chaos pool; both bypass ordinary unlock requirements.
 const chaosCurses = [
-    ...["They're Here", "Water Pad", "Aura", "Bloody Bell", "Limitless", "Flip Switch", "Less Stairs", "Tripnuke", "Missile Silo", "Mighty Cavalry", "Teledancer", "Mart Slide", "Pacifier", "Conga Line", "Random Husk", "Aries", "Supernova", "Void Explosions", "Stop Sign"].map(name => ({ name, chaos: true, divine: DIVINE_CURSE_NAMES.has(name) })),
+    ...["They're Here", "Water Pad", "Aura", "Bloody Bell", "Limitless", "Flip Switch", "Less Stairs", "Tripnuke", "Missile Silo", "Mighty Cavalry", "Teledancer", "Mart Slide", "Pacifier", "Conga Line", "Random Husk", "Aries", "Supernova", "Void Explosions", "Stop Sign"].map(name => ({ name, chaos: true, divine: DIVINE_CURSE_NAMES.has(name), ...(name === "Mart Slide" ? { exclusiveGroup: "mart-infection-slide" } : {}) })),
     ...["Nuclear Bomb", "Legion", "Where’s Husk?", "Three Sixteenths", "Accurate Bell", "Husk Block", "Don’t Touch Me", "Muted", "Soy Retro", "Spreadshot", "Googolpede", "Reversed Convergence", "Stairs... Stairs...", "Husk Presence", "Fake Count"].map(name => ({ name, chaos: true, chaosPlus: true, divine: DIVINE_CURSE_NAMES.has(name) }))
 ];
 
@@ -515,25 +528,20 @@ const chaosCurses = [
 const greaterCurses = [
 
     { name: "One Less Choice", type: "Global" },
-    { name: "Inverse Destruction", type: "Global", level: 15 },
     { name: "Void Implosions", type: "Global" },
     { name: "Oblivion", type: "Global" },
     { name: "Razorbloom", type: "Global" },
     { name: "Trap Card", type: "Global", level: 15 },
-
-    {
-        name: "Run",
-        type: "Global",
-        level: 15,
-        casualDisabled: true,
-        requiresCurses: ["Barotrauma"]
-    },
+    { name: "Mania", type: "Global", level: 20 },
 
     {
         name: "Tantrum",
         type: "Enemy",
         requiresEnemies: ["Baby"]
     },
+
+    { name: "Destroyer", type: "Enemy", level: 10, requiresEnemies: ["Husk"] },
+    { name: "Ouroboros", type: "Enemy", level: 10, requiresEnemies: [{ name: "Husk", count: 2 }] },
 
     {
         name: "Hollow Tiles",
@@ -554,6 +562,14 @@ const greaterCurses = [
     },
 
     {
+        name: "Water Planet",
+        type: "Enemy",
+        level: 20,
+        requiresEnemies: ["Mart"],
+        requiresCurses: ["Bigger Marts"]
+    },
+
+    {
         name: "Ballet of Blades",
         type: "Enemy",
         requiresEnemies: ["Voidbreaker"],
@@ -565,6 +581,15 @@ const greaterCurses = [
         type: "Enemy",
         requiresEnemies: ["Voidbreaker"],
         exclusiveGroup: "blade-choice"
+    },
+
+    { name: "Joined Symphony", type: "Enemy", level: 20, requiresEnemies: ["Cadence"] },
+
+    {
+        name: "Blueprint: Dimensional Beams",
+        type: "Enemy",
+        level: 25,
+        requiresEnemies: ["Scrapmaw"]
     }
 
 ];
@@ -879,7 +904,7 @@ function getAssetPath(assetType, name) {
 
     const assetName = assetType === "curses" && chaosCurses.some(curse => curse.name === name)
         ? name.replace(/['’]/g, "")
-        : name;
+        : (assetType === "curses" && name === "LAP 2" ? "Lap 2" : name);
     return `assets/${assetType}/${slugify(assetName)}.png`;
 
 }
@@ -2405,18 +2430,16 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     const dependencies = document.createElement("div");
     dependencies.className = "card-dependencies";
 
-    const dependentEnemyRaw = curse.enemy || (curse.requiresEnemies && curse.requiresEnemies[0]);
-    const dependentEnemy = typeof dependentEnemyRaw === "string" ? dependentEnemyRaw : (dependentEnemyRaw && dependentEnemyRaw.name);
+    const requiredEnemyBadges = curse.enemy
+        ? [{ name: curse.enemy, count: curse.enemyCount || 1 }]
+        : (curse.requiresEnemies || []).map(requirement => typeof requirement === "string"
+            ? { name: requirement, count: 1 }
+            : { name: requirement.name, count: requirement.count || 1 });
+    const hasDependentEnemy = requiredEnemyBadges.length > 0;
 
-    const dependentEnemyCount = curse.enemy
-        ? (curse.enemyCount || 1)
-        : (dependentEnemyRaw && typeof dependentEnemyRaw === "object" ? (dependentEnemyRaw.count || 1) : 1);
-
-    if (dependentEnemy) {
-
-        dependencies.appendChild(createCurseEnemyBadge(dependentEnemy, dependentEnemyCount));
-
-    }
+    requiredEnemyBadges.forEach(({ name, count }) => {
+        dependencies.appendChild(createCurseEnemyBadge(name, count));
+    });
 
     const requiredCurses = curse.requiresCurses || [];
     const anyRequiredCurses = curse.requiresAnyCurses || [];
@@ -2432,7 +2455,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
         let position = "center";
 
-        if (dependentEnemy) {
+        if (hasDependentEnemy) {
 
             position = "right";
 
@@ -2771,11 +2794,11 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
     const levels = [...new Set(curses.filter(curse => !curse.chaos).map(curse => getCurseUnlockLevel(curse) || 1))].sort((a, b) => a - b);
     levels.forEach(level => {
+        const key = `${containerId}:${level}`;
         const divider = document.createElement('button');
         divider.type = 'button';
         divider.className = 'curse-level-divider';
         divider.style.setProperty('--level-order', level * 2 - 1);
-        const key = `${containerId}:${level}`;
         divider.setAttribute('aria-label', `Toggle level ${level} curses`);
         divider.setAttribute('aria-expanded', String(!medalDisplayState.collapsedLevels.includes(key)));
         divider.textContent = `Level ${level}`;
@@ -2812,6 +2835,16 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 
 
 const STORAGE_KEY = "nullscapeRunState";
+const LEGACY_CURSE_NAMES = Object.freeze({
+    "Nothing": "Nothing?",
+    "Lap 2": "LAP 2",
+    "Camoflauge": "Camouflage",
+    "Stairs... Stairs": "Stairs... Stairs..."
+});
+
+function canonicalCurseName(name) {
+    return LEGACY_CURSE_NAMES[name] || name;
+}
 
 let runStateSaveTimer = null;
 
@@ -2913,16 +2946,16 @@ function loadRunState() {
         runState.activeEnemies = new Map(
             (saved.activeEnemies || []).map(entry => Array.isArray(entry) ? entry : [entry, 1])
         );
-        runState.activeCurses = new Set((saved.activeCurses || []).map(name => name === 'Stairs... Stairs' ? 'Stairs... Stairs...' : name));
-        runState.curseStacks = new Map(saved.curseStacks || []);
+        runState.activeCurses = new Set((saved.activeCurses || []).map(canonicalCurseName));
+        runState.curseStacks = new Map((saved.curseStacks || []).map(([name, count]) => [canonicalCurseName(name), count]));
         // The old format awarded payout to every selected medal curse,
         // so its saved values cannot reliably be carried forward.
         const tracksMedalPayoutSources = saved.medalPayoutSourcesTracked === true;
         runState.medalCurseValues = tracksMedalPayoutSources
-            ? new Map(saved.medalCurseValues || [])
+            ? new Map((saved.medalCurseValues || []).map(([name, value]) => [canonicalCurseName(name), value]))
             : new Map();
         runState.medalPurified = tracksMedalPayoutSources
-            ? new Set(saved.medalPurified || [])
+            ? new Set((saved.medalPurified || []).map(canonicalCurseName))
             : new Set();
 
         if (saved.playerCount) {
