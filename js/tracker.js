@@ -375,7 +375,7 @@ const globalCurses = [
 
     { name: "Lower Gravity", level: 1, exclusiveGroup: "gravity-choice" },
     { name: "Higher Gravity", level: 1, exclusiveGroup: "gravity-choice" },
-    { name: "Random Spawn", level: 1 },
+    { name: "Random Spawn", level: 5 },
     { name: "Scattered Gifts", level: 1 },
     { name: "Weaker Jump Pads", level: 1 },
     { name: "Savory Ring", level: 5 },
