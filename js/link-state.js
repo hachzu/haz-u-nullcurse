@@ -69,6 +69,9 @@
         }
     }
     function apply(snapshot, changed) {
+        // Shared altars can arrive without a run-field change, so this helper
+        // must be available to every root branch below.
+        const canonicalName = name => typeof canonicalCurseName === 'function' ? canonicalCurseName(name) : name;
         const roots = new Set(Object.keys(changed).map(key => {
             try { return JSON.parse(decodeURIComponent(key))[0]; } catch (_) { return ''; }
         }));
@@ -81,7 +84,6 @@
                 runState.chaosMode = data.chaosMode === true;
                 runState.chaosPlusMode = runState.chaosMode && data.chaosPlusMode === true;
                 const enemyNames = new Set(enemies.map(x => x.name));
-                const canonicalName = name => typeof canonicalCurseName === 'function' ? canonicalCurseName(name) : name;
                 const validCurse = name => Boolean(findCurseByName(canonicalName(name)));
                 runState.activeEnemies = new Map(entries(data.activeEnemies).filter(([n]) => enemyNames.has(n)).map(([n,v]) => [n, Math.floor(bounded(v, 1, 1000))]));
                 runState.activeCurses = new Set(entries(data.activeCurses).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => canonicalName(n)));

@@ -11,7 +11,9 @@
     document.body.append(dialog);
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const normalize = text => text.toUpperCase().replace(/[\s-]/g, '');
-    const format = code => code.match(/.{1,4}/g)?.join('-') || '';
+    const format = code => code.length === 6
+        ? code.match(/.{1,3}/g)?.join('-') || ''
+        : code.match(/.{1,4}/g)?.join('-') || '';
     let transport = null, merge = null, writing = false, applying = false, connected = false;
     let busy = false, closed = false, flushTimer = null, captureTimer = null, renderTimer = null;
     let pendingRoots = {}, operation = 0, lastWriteAt = 0, composing = false;
@@ -178,13 +180,13 @@
     }
     async function start(create, resume = false) {
         if (busy || (transport && !resume) || (resume && !session)) return;
-        const bytes = new Uint8Array(20);
+        const bytes = new Uint8Array(6);
         let code = resume ? session.code : normalize(codeInput.value);
         if (create && !resume) {
             crypto.getRandomValues(bytes);
             code = Array.from(bytes, byte => alphabet[byte % alphabet.length]).join('');
-        } else if (!/^[A-HJ-NP-Z2-9]{20}$/.test(code)) {
-            status('error', 'Enter the full 20-character code from the other toolkit.'); codeInput.focus(); return;
+        } else if (!/^(?:[A-HJ-NP-Z2-9]{6}|[A-HJ-NP-Z2-9]{20})$/.test(code)) {
+            status('error', 'Enter the 6-character code from the other toolkit.'); codeInput.focus(); return;
         }
         if (!navigator.onLine) {
             if (resume) disconnect('You’re offline. Check your connection, then try Relink again.', 'LINK_OFFLINE');
@@ -216,7 +218,7 @@
             const initial = adapter.capture();
             core.validateFields(initial);
             const connecting = (async () => {
-                const factory = window.NullscapeLinkTransportFactory || (await import('./link-firebase.js?v=20261102-link-diagnostics1')).connect;
+                const factory = window.NullscapeLinkTransportFactory || (await import('./link-firebase.js?v=20261102-link-short6-1')).connect;
                 if (resume) await previousTransport?.close({ preserveRoom: true });
                 if (operation !== token) throw Object.assign(new Error('Link cancelled.'), { code: 'LINK_CANCELLED' });
                 return factory({ code, create, restore: resume && create, fields: initial, identity: session.identity,
