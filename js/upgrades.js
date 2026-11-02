@@ -122,7 +122,7 @@ const upgradesList = [
         "name": "Altar Boons",
         "category": "eco",
         "level": 8,
-        "maxStack": 2,
+        "maxStack": 1,
         "summary": "Altar use increases Paycheck rewards.",
         "price": 525,
         "prices": [525,1250,3000],
@@ -422,7 +422,7 @@ const upgradesList = [
     },
     {
         "name": "Radar Module: Instruments",
-        "level": 18,
+        "level": 15,
         "category": "environment",
         "maxStack": 1,
         "price": 850,
@@ -543,7 +543,7 @@ const upgradesList = [
         "price": 2500,
         "soloPrice": 2000,
         "casualPrice": 2000,
-        "casualSoloPrice": 1500,
+        "casualSoloPrice": 1250,
         "extremePrice": 3500,
         "extremeSoloPrice": 2500
     },
