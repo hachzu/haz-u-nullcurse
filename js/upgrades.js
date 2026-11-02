@@ -537,7 +537,7 @@ const upgradesList = [
     {
         "name": "Shadow Cloak",
         "category": "survival",
-        "level": 20,
+        "level": 15,
         "maxStack": 1,
         "summary": "Allows phasing through certain obstacles, players and airborne Springers.",
         "price": 2500,
