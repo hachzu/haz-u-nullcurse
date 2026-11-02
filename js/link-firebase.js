@@ -47,7 +47,13 @@ export async function connect({ code, create, restore = false, fields, identity,
     let previous = value.state;
     let closed = false;
     const unsubscribers = [];
-    const finish = (message, code) => { if (!closed) { close(); onEnd(message, code); } };
+    const finish = (message, code, error = null) => {
+        if (!closed) {
+            close();
+            const detail = error?.message ? String(error.message).replace(/[\r\n\t]+/g, ' ').slice(0, 240) : '';
+            onEnd(message, code, detail);
+        }
+    };
     let closing;
     let preserved = false;
     function close({ preserveRoom = false } = {}) {
@@ -85,13 +91,13 @@ export async function connect({ code, create, restore = false, fields, identity,
             previous = next;
             if (Object.keys(patch).length) onPatch(patch);
         } catch (error) { finish(error.message, 'LINK_INVALID_DATA'); }
-    }, () => finish('Link access was denied or expired. Your toolkit is still here.', 'LINK_ACCESS_DENIED')));
+    }, error => finish('Link access was denied or expired. Your toolkit is still here.', 'LINK_ACCESS_DENIED', error)));
     unsubscribers.push(onValue(members, snapshot => {
         if (closed) return;
         const people = Object.entries(snapshot.val() || {}).filter(([, person]) => person && typeof person.name === 'string')
             .map(([id, person]) => ({ id, name: person.name.slice(0, 40), creator: person.creator === true }));
         onMembers(people);
-    }, () => finish('Could not load the people in this Link. Check the updated Firebase rules.', 'LINK_ACCESS_DENIED')));
+    }, error => finish('Could not load the people in this Link. Check the updated Firebase rules.', 'LINK_ACCESS_DENIED', error)));
     unsubscribers.push(onValue(ref(db, '.info/connected'), snapshot => {
         if (!closed) onStatus(snapshot.val() === true ? 'live' : 'reconnecting');
     }));

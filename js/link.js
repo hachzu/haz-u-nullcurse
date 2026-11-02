@@ -42,7 +42,13 @@
             list.append(row);
         });
     }
-    function disconnect(message, code = 'LINK_CONNECTION_LOST') {
+    function safeErrorMessage(error) {
+        let message = typeof error === 'string' ? error : error?.detail || error?.message || String(error || 'Unknown error');
+        // Room codes are bearer credentials. Never copy them into diagnostics.
+        if (session?.code) message = message.split(session.code).join('[redacted link code]');
+        return message.replace(/[\r\n\t]+/g, ' ').slice(0, 240);
+    }
+    function disconnect(message, code = 'LINK_CONNECTION_LOST', detail = '') {
         if (!session) return;
         session.paused = true;
         clearTimeout(flushTimer); clearTimeout(captureTimer); clearTimeout(renderTimer);
@@ -51,18 +57,22 @@
         el('linkMembers').dataset.paused = 'true';
         el('linkDisconnectTitle').textContent = 'Link disconnected';
         el('linkDisconnectMessage').textContent = message;
-        el('linkDisconnectError').textContent = `Error code: ${code}`;
+        el('linkDisconnectError').textContent = `Error code: ${code}${detail ? ` · ${safeErrorMessage(detail)}` : ''}`;
         controls();
         if (!dialog.open) dialog.showModal();
     }
     function connectionError(error) {
         const code = String(error?.code || '');
-        if (code.startsWith('LINK_')) return { code, message: error.message };
+        const detail = safeErrorMessage(error);
+        if (typeof console !== 'undefined' && console.error) {
+            console.error('[Toolkit Link] Connection failed:', { name: error?.name || 'Error', code: code || '(none)', message: detail });
+        }
+        if (code.startsWith('LINK_')) return { code, message: error.message, detail };
         if (/permission|denied/i.test(`${code} ${error?.message}`)) return {
-            code: 'LINK_ACCESS_DENIED', message: 'Link access was denied. Check the updated Firebase rules, then try again.' };
-        if (!navigator.onLine || /network|offline|unavailable/i.test(`${code} ${error?.message}`)) return {
-            code: 'LINK_OFFLINE', message: 'You’re offline. Check your connection, then try Relink again.' };
-        return { code: 'LINK_RELINK_FAILED', message: 'Could not reconnect to this Link. Your current toolkit is still here. Try again shortly.' };
+            code: 'LINK_ACCESS_DENIED', message: 'Link access was denied. Check the updated Firebase rules, then try again.', detail };
+        if (!navigator.onLine || /network|offline|unavailable|failed to fetch|websocket|timeout/i.test(`${code} ${error?.message}`)) return {
+            code: 'LINK_OFFLINE', message: 'You’re offline or Firebase could not be reached. Check your connection, then try again.', detail };
+        return { code: 'LINK_RELINK_FAILED', message: 'Could not reconnect to this Link. Your current toolkit is still here.', detail };
     }
     function status(state, text) {
         const badge = el('linkBadge');
@@ -115,7 +125,7 @@
             if (transport === active) {
                 activeMerge.retry(patch);
                 const reason = connectionError(error);
-                disconnect(reason.message, reason.code === 'LINK_RELINK_FAILED' ? 'LINK_WRITE_FAILED' : reason.code);
+                disconnect(reason.message, reason.code === 'LINK_RELINK_FAILED' ? 'LINK_WRITE_FAILED' : reason.code, reason.detail);
             }
         } finally {
             if (transport === active) { writing = false; scheduleFlush(); }
@@ -206,7 +216,7 @@
             const initial = adapter.capture();
             core.validateFields(initial);
             const connecting = (async () => {
-                const factory = window.NullscapeLinkTransportFactory || (await import('./link-firebase.js?v=20261028-link2')).connect;
+                const factory = window.NullscapeLinkTransportFactory || (await import('./link-firebase.js?v=20261102-link-diagnostics1')).connect;
                 if (resume) await previousTransport?.close({ preserveRoom: true });
                 if (operation !== token) throw Object.assign(new Error('Link cancelled.'), { code: 'LINK_CANCELLED' });
                 return factory({ code, create, restore: resume && create, fields: initial, identity: session.identity,
@@ -220,10 +230,10 @@
                         else if (!session.paused) { status('live', 'Linked · changes shared. The creator keeps this code online.'); scheduleFlush(); }
                     }
                 },
-                onEnd: (message, code = 'LINK_ROOM_ENDED') => {
+                onEnd: (message, code = 'LINK_ROOM_ENDED', detail = '') => {
                     if (operation !== token) return;
-                    if (transport) disconnect(message, code);
-                    else ended = Object.assign(new Error(message), { code });
+                    if (transport) disconnect(message, code, detail);
+                    else ended = Object.assign(new Error(message), { code, detail });
                 }
                 });
             })();
@@ -272,9 +282,9 @@
             if (resume) {
                 operation++;
                 transport?.close({ preserveRoom: true }); transport = null;
-                disconnect(reason.message, reason.code);
+                disconnect(reason.message, reason.code, reason.detail);
                 el('linkDisconnectTitle').textContent = 'Unable to relink';
-            } else leave(`${reason.message} (${reason.code})`, 'error');
+            } else leave(`${reason.message} (${reason.code})${reason.detail ? ` · ${safeErrorMessage(reason.detail)}` : ''}`, 'error');
         }
     }
     createButton.addEventListener('click', () => start(true));
