@@ -2210,7 +2210,7 @@ body {
 
 
 .medal-payout-indicator {
-    display: flex;
+    display: none;
 
     align-items: center;
     justify-content: space-between;
@@ -4857,6 +4857,11 @@ body {
     color: #edf5fc;
     box-shadow: none;
 }
+
+.curse-card.medal .curse-reward-badge {
+    display: none;
+}
+
 .active-curse--medal:not(.active-curse--medal-purified) {
     background: linear-gradient(90deg, #1c3852, #32678f);
     border-color: #6c98b8;
