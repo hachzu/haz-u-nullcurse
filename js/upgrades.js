@@ -36,6 +36,16 @@ const CASUAL_OVERRIDES = {
 
 const EXTREME_OVERRIDES = {};
 
+const UPGRADE_PRICE_DISCOUNTS = {
+    nothing: 0.15,
+    wish: 0.10,
+    both: 0.25
+};
+
+const PARTY_PLUS_PRICE_DIVISOR = 1.125;
+const BIG_PARTY_PRICE_DIVISOR = 1.125;
+const BIG_PARTY_MIN_PLAYERS = 8;
+
 
 // Prices synced with stickstetris.github.io/NullscapeShopCalculator/ on 2026-10-27.
 // Unconfirmed sentinel prices are deliberately excluded from calculations.
@@ -123,14 +133,15 @@ const upgradesList = [
         "category": "eco",
         "level": 8,
         "maxStack": 1,
+        "bonusStackable": true,
         "summary": "Altar use increases Paycheck rewards.",
         "price": 525,
-        "prices": [525,1250,3000],
-        "soloPrices": [525,1001,2750],
-        "casualPrices": [475,1000,2750],
-        "casualSoloPrices": [450,1000,2500],
-        "extremePrices": [600,1500,4500],
-        "extremeSoloPrices": [600,1250,3999],
+        "prices": [525,2500],
+        "soloPrices": [525,1750],
+        "casualPrices": [475,2000],
+        "casualSoloPrices": [450,1500],
+        "extremePrices": [600,2750],
+        "extremeSoloPrices": [600,2250],
         "requires": {
             "type": "upgrade",
             "name": "Paycheck",
@@ -540,12 +551,12 @@ const upgradesList = [
         "level": 15,
         "maxStack": 1,
         "summary": "Allows phasing through certain obstacles, players and airborne Springers.",
-        "price": 2500,
-        "soloPrice": 2000,
-        "casualPrice": 2000,
+        "price": 2250,
+        "soloPrice": 1850,
+        "casualPrice": 1750,
         "casualSoloPrice": 1250,
-        "extremePrice": 3500,
-        "extremeSoloPrice": 2500
+        "extremePrice": 3000,
+        "extremeSoloPrice": 2250
     },
     {
         "name": "Miniature Hourglass",
@@ -789,6 +800,7 @@ const upgradeState = {
     pending: new Map(),
     owned: new Map(),
     paycheckAutoOwnedDisabled: false,
+    wishPerfectionDiscount: false,
     arrogance: false,
     conceit: false
 
@@ -798,7 +810,10 @@ const upgradeState = {
 function getMaxUpgradeStacks(item) {
     const base = item.maxStack || 1;
     const bonus = upgradeState.arrogance || upgradeState.conceit;
-    return base + (bonus && base > 1 && item.name !== "Defuse Kit" ? 1 : 0);
+    const bonusStack = bonus && (base > 1 || item.bonusStackable) && item.name !== "Defuse Kit" ? 1 : 0;
+    const priceTable = getEffectivePrices(item).prices;
+    const pricedStackLimit = priceTable ? priceTable.length : Infinity;
+    return Math.min(base + bonusStack, pricedStackLimit);
 }
 
 function setUpgradeDelusion(name, enabled) {
@@ -841,6 +856,7 @@ function saveUpgradeState() {
             iconMode: upgradeState.iconMode,
             freeformSort: upgradeState.freeformSort,
             paycheckAutoOwnedDisabled: upgradeState.paycheckAutoOwnedDisabled,
+            wishPerfectionDiscount: upgradeState.wishPerfectionDiscount,
             arrogance: upgradeState.arrogance,
             conceit: upgradeState.conceit,
 
@@ -895,6 +911,7 @@ function loadUpgradeState() {
         upgradeState.iconMode = Boolean(saved.iconMode);
         upgradeState.freeformSort = Boolean(saved.freeformSort);
         upgradeState.paycheckAutoOwnedDisabled = Boolean(saved.paycheckAutoOwnedDisabled);
+        upgradeState.wishPerfectionDiscount = Boolean(saved.wishPerfectionDiscount);
         upgradeState.arrogance = Boolean(saved.arrogance);
         upgradeState.conceit = Boolean(saved.conceit);
         upgradeState.pending = migrateUpgradeEntries(saved.pending);
@@ -919,6 +936,7 @@ function resetUpgradeShopState() {
     upgradeState.pending.clear();
     upgradeState.owned.clear();
     upgradeState.paycheckAutoOwnedDisabled = false;
+    upgradeState.wishPerfectionDiscount = false;
     upgradeState.arrogance = false;
     upgradeState.conceit = false;
     upgradeState.goldenGifts = 0;
@@ -962,6 +980,13 @@ function isPartyLikeMode() {
 function isNothingCurseActive() {
 
     return typeof hasCurse === "function" && hasCurse("Nothing?");
+
+}
+
+
+function isWishPerfectionActive() {
+
+    return Boolean(upgradeState.wishPerfectionDiscount);
 
 }
 
@@ -1074,7 +1099,7 @@ function computeBaseForStack(item, stack) {
 }
 
 
-/* Apply player scaling and Nothing before rounding each individual purchase. */
+/* Apply player scaling and the active upgrade-price discounts per purchase. */
 function computeStackPrice(item, stack) {
 
     if (stack <= 0) {
@@ -1088,11 +1113,32 @@ function computeStackPrice(item, stack) {
 
     let multiplier = Math.sqrt(playerCount);
 
-    let scaled = base * multiplier;
+    let scaled = Math.ceil(base * multiplier);
 
-    if (isNothingCurseActive()) {
+    if (upgradeState.mode === "partyplus") {
 
-        scaled *= 0.85;
+        scaled = Math.ceil(scaled / PARTY_PLUS_PRICE_DIVISOR);
+
+    } else if (upgradeState.mode === "party" && playerCount > BIG_PARTY_MIN_PLAYERS) {
+
+        scaled = Math.ceil(scaled / BIG_PARTY_PRICE_DIVISOR);
+
+    }
+
+    const nothingActive = isNothingCurseActive();
+    const wishActive = isWishPerfectionActive();
+
+    if (nothingActive && wishActive) {
+
+        scaled *= 1 - UPGRADE_PRICE_DISCOUNTS.both;
+
+    } else if (nothingActive) {
+
+        scaled *= 1 - UPGRADE_PRICE_DISCOUNTS.nothing;
+
+    } else if (wishActive) {
+
+        scaled *= 1 - UPGRADE_PRICE_DISCOUNTS.wish;
 
     }
 
@@ -2666,6 +2712,7 @@ function updateUpgradeTotals() {
     const totalValueEl = document.getElementById("upgradeTotalValue");
     const remainingValueEl = document.getElementById("upgradeRemainingValue");
     const nothingIndicator = document.getElementById("upgradeNothingIndicator");
+    const wishIndicator = document.getElementById("upgradeWishPerfectionIndicator");
     const purchaseButton = document.getElementById("purchaseUpgradeButton");
     const bonusToggle = document.getElementById("upgradeBonusTierToggle");
     if (bonusToggle) {
@@ -2712,6 +2759,16 @@ function updateUpgradeTotals() {
             nothingLabelEl.textContent = active ? "ON" : "OFF";
 
         }
+
+    }
+
+    if (wishIndicator) {
+
+        const active = isWishPerfectionActive();
+        wishIndicator.classList.toggle("active", active);
+        wishIndicator.setAttribute("aria-checked", String(active));
+        const wishLabelEl = wishIndicator.querySelector(".upgrade-switch-label");
+        if (wishLabelEl) wishLabelEl.textContent = active ? "ON" : "OFF";
 
     }
 
@@ -3491,6 +3548,7 @@ if (purchaseUpgradeButton) {
 
 
 const upgradeNothingIndicator = document.getElementById("upgradeNothingIndicator");
+const upgradeWishPerfectionIndicator = document.getElementById("upgradeWishPerfectionIndicator");
 const upgradeBonusTierToggle = document.getElementById("upgradeBonusTierToggle");
 if (upgradeBonusTierToggle) {
     upgradeBonusTierToggle.addEventListener("click", () => {
@@ -3504,6 +3562,19 @@ if (upgradeNothingIndicator) {
     upgradeNothingIndicator.addEventListener("click", () => {
 
         toggleNothingCurse();
+
+    });
+
+}
+
+if (upgradeWishPerfectionIndicator) {
+
+    upgradeWishPerfectionIndicator.addEventListener("click", () => {
+
+        upgradeState.wishPerfectionDiscount = !upgradeState.wishPerfectionDiscount;
+        saveUpgradeState();
+        refreshUpgradePanel();
+        playSelectSound();
 
     });
 

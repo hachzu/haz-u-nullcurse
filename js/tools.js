@@ -483,10 +483,16 @@ function getProtectionAltarCost(level, goldenGifts, playerCount, mode) {
         ? playerCount
         : Math.sqrt(playerCount) / 1.75;
 
-    return Math.floor(
+    const baseCost = Math.floor(
         (goldenGifts * percent)
         + (basePrice * levelMultiplier * playerMultiplier)
     );
+
+    const dependenceActive = typeof runState !== "undefined"
+        && runState.activeDelusions instanceof Set
+        && runState.activeDelusions.has("Dependence");
+
+    return dependenceActive ? Math.floor(baseCost * 0.8) : baseCost;
 
 }
 
@@ -548,9 +554,15 @@ function renderProtectionAltarCalculator() {
         { label: "Mode", value: formatAltarMode(mode) }
     ]);
 
-    protectionAltarFormula.textContent = soloOrDuo
+    const baseFormula = soloOrDuo
         ? "5% of Gifts + 12.5 × (level − 4) × players"
         : "10% of Gifts + 50 × (level − 4) × √players ÷ 1.75";
+    const dependenceActive = typeof runState !== "undefined"
+        && runState.activeDelusions instanceof Set
+        && runState.activeDelusions.has("Dependence");
+    protectionAltarFormula.textContent = dependenceActive
+        ? `${baseFormula} × 0.8 (Dependence)`
+        : baseFormula;
 
     protectionAltarLevels.innerHTML = "";
 
