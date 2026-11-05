@@ -50,10 +50,10 @@
             flash: .1, rgb: .2, glitch: .15, punch: .52, ring: 1.1,
             ringDelay: .10, background: 1.5,
             preDropGlint: .85, preDropGlintLead: 1,
-            backgroundAttack: .012, backgroundRelease: .38, backgroundWindow: 1.4,
-            backgroundScale: .055, backgroundTravel: 14,
+            backgroundAttack: .06, backgroundRelease: .42, backgroundWindow: 1.4,
+            backgroundScale: .036, backgroundTravel: 8,
             assemblyStartScale: 1.08, assemblyPeakScale: 1.25, assemblySettle: 1,
-            toolkitRevealDelay: .4, toolkitWipe: .9
+            toolkitRevealDelay: .85, toolkitWipe: 1.25
         }
     };
     const DEBUG = new URLSearchParams(location.search).has('introdebug');
@@ -104,7 +104,7 @@
         title: "Won't you hear my Symphony?", artist: 'DIGITAL DESCENDANT & Key After Key'
     };
     const CUT = theme === 'symphony' ? {
-        ...symphony, endAt: 75.035, preroll: 1.4, fadeIn: 5,
+        ...symphony, endAt: 84.7, preroll: 1.4, fadeIn: 5,
         beatGrid: { bpm: 96, firstBeat: .035 },
         url: "assets/audio/won't you hear my symphony if it was an intermission theme.mp3",
         source: 'https://www.tiktok.com/@therealzyaxyl',
@@ -830,13 +830,13 @@
         const f = CONFIG.fx;
         const clamp = value => Math.min(1, Math.max(0, value));
         const ease = value => value * value * (3 - 2 * value);
-        // Fill the available screen without cutting the enlarged logo off on phones.
-        const zoom = Number.parseFloat(getComputedStyle(content).zoom) || 1;
-        const peak = Math.max(1, Math.min(f.assemblyPeakScale,
-            ((home.clientWidth || innerWidth) - 32) / ((stage.offsetWidth || 440) * zoom)));
-        const start = Math.min(f.assemblyStartScale, 1 + (peak - 1) * .35);
         let scale = 1;
         if (!reducedMotion.matches && elapsed < revealAt + f.assemblySettle) {
+            // Fill the available screen without cutting the enlarged logo off on phones.
+            const zoom = Number.parseFloat(getComputedStyle(content).zoom) || 1;
+            const peak = Math.max(1, Math.min(f.assemblyPeakScale,
+                ((home.clientWidth || innerWidth) - 32) / ((stage.offsetWidth || 440) * zoom)));
+            const start = Math.min(f.assemblyStartScale, 1 + (peak - 1) * .35);
             if (elapsed < impactAt) {
                 const progress = clamp((elapsed - (noteTimes[0] - LEAD)) / (impactAt - noteTimes[0] + LEAD));
                 scale = start + (peak - start) * ease(progress);
@@ -867,12 +867,11 @@
             const age = Math.max(0, elapsed - at);
             const mainSymphonyBeat = at >= followupAt;
             const intermissionBeat = CUT.beatGrid && !mainSymphonyBeat;
-            const attack = mainSymphonyBeat ? .075 : CONFIG.fx.backgroundAttack;
-            const release = mainSymphonyBeat ? .29 : CONFIG.fx.backgroundRelease;
+            const attack = mainSymphonyBeat ? .1 : CONFIG.fx.backgroundAttack;
+            const release = mainSymphonyBeat ? .38 : CONFIG.fx.backgroundRelease;
             const value = (1 - Math.exp(-age / attack)) * Math.exp(-age / release);
             envelope = Math.max(envelope, value * (mainSymphonyBeat ? .38 : intermissionBeat ? .45 : 1));
-            const lightPeak = intermissionBeat ? .009 : mainSymphonyBeat ? .012 : .072;
-            light = Math.max(light, lightPeak * (1 - Math.exp(-age / .065)) * Math.exp(-age / .22));
+            light = Math.max(light, .072 * (1 - Math.exp(-age / .065)) * Math.exp(-age / .22));
         }
         if (light !== previousLight) {
             previousLight = light;
@@ -1039,6 +1038,7 @@
         let eventIndex = 0;
         let flyIndex = 0;
         let uiComplete = false;
+        let logoComplete = false;
         let lastState = 'waiting';
         let pagePaused = false;
         let pauseStarted = 0;
@@ -1178,8 +1178,11 @@
             const assets = requiredAssets();
             if (assets.error) { finish(); return; }
             scheduleFinalPhase(rendered, assets);
-            updateLogoBuild(elapsed);
-            updateLoading(elapsed, assets);
+            if (!logoComplete) {
+                updateLogoBuild(elapsed);
+                logoComplete = elapsed >= revealAt + CONFIG.fx.toolkitRevealDelay + CONFIG.fx.toolkitWipe;
+            }
+            if (!uiComplete) updateLoading(elapsed, assets);
             if (hasCut) updateMusic(context, rendered, elapsed, songEndAt);
             if (gate && elapsed >= CONFIG.timing.gateFade) removeGate();
             while (flyIndex < noteTimes.length && elapsed >= noteTimes[flyIndex] - LEAD) {
@@ -1213,7 +1216,7 @@
                     burst.remove();
                 }
             }
-            if (uiComplete && !ambienceSource && (!hasCut || songEnded) && elapsed >= Math.max(motifTailEnd, songEndAt)) {
+            if (uiComplete && logoComplete && !ambienceSource && (!hasCut || songEnded) && elapsed >= Math.max(motifTailEnd, songEndAt)) {
                 stopSound();
                 return;
             }

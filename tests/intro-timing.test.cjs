@@ -182,8 +182,8 @@ test('Symphony fades in at 35%, ends at the earlier cue, and switches audio and 
     assert.equal(fade[3], 5);
     assert.equal(fade[1][0], 0);
     assert.ok(Math.abs(fade[1].at(-1) - .35) < 1e-7);
-    assert.equal(intermission.started[2], 75.035);
-    assert.equal(main.started[0], intermission.started[0] + 75.035);
+    assert.equal(intermission.started[2], 84.7);
+    assert.equal(main.started[0], intermission.started[0] + 84.7);
     const credit = h.elements.landingView.children.find(node => node.className === 'ns-now-playing');
     h.advance(intermission.started[0] - .05);
     assert.equal(percent(h), 35);
@@ -213,7 +213,7 @@ test('the Symphony intermission pulses at 96 BPM without revealing the landing e
     const scale = Number(background['--ns-beat-scale']);
     const light = Number(background['--ns-beat-light']);
     assert.ok(scale > tail && scale < 1.025);
-    assert.ok(light > 0 && light <= .009);
+    assert.ok(light > .012 && light <= .072);
     h.intro.finish();
 });
 
@@ -230,7 +230,7 @@ test('the main Symphony track uses a smooth 120 BPM grid', async () => {
     const scale = Number(background['--ns-beat-scale']);
     const light = Number(background['--ns-beat-light']);
     assert.ok(scale > tail && scale < 1.02);
-    assert.ok(light > 0 && light <= .012);
+    assert.ok(light > .012 && light <= .072);
     h.intro.finish();
 });
 
@@ -523,10 +523,12 @@ test('one glint precedes the drop and the Toolkits wordmark rises and settles du
     assert.equal(h.elements.logoStage.style['--ns-toolkit-visible'], '0');
     assert.equal(Number(h.elements['.ns-logo-build'].style['--ns-build-scale']), 1.25);
     h.advance(DROP + 2.8);
+    assert.equal(h.elements.logoStage.style['--ns-toolkit-visible'], '0');
+    h.advance(DROP + 3.5);
     const wipe = Number.parseFloat(h.elements.logoStage.style['--ns-toolkit-wipe']);
     assert.ok(wipe > 0 && wipe < 56);
     assert.ok(Number.parseFloat(h.elements.logoStage.style['--ns-toolkit-rise']) > 0);
-    h.advance(DROP + 3.4);
+    h.advance(DROP + 4.2);
     assert.equal(h.elements.logoStage.style['--ns-toolkit-wipe'], '56%');
     assert.equal(h.elements.logoStage.style['--ns-toolkit-rise'], '0px');
     assert.equal(h.logs.filter(e => e[1].event === 'pre-drop-glint').length, 1);

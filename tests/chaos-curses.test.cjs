@@ -60,6 +60,15 @@ test('temporary curses count for exclusivity and return to the pool on expiry', 
  assert.equal(run('isCurseSelectable(findCurseByName("Tweaked Odds"))'), true);
 });
 
+test('greater curses can be permanent but cannot be added or restored as temporary', () => {
+ const run = harness();
+ run('render = () => {}; runState.level = 10; selectCurse(findCurseByName("Void Implosions"), false, false, 10)');
+ assert.equal(run('hasCurse("Void Implosions")'), false);
+ assert.equal(run('loadTemporaryCurseExpiries([["Void Implosions", [20]]]).size'), 0);
+ run('selectCurse(findCurseByName("Void Implosions"))');
+ assert.equal(run('hasCurse("Void Implosions")'), true);
+});
+
 test('temporary stacks expire independently and preserve a permanent medal stack', () => {
  const run = harness();
  run(`render = () => {}; runState.level = 5; curseVisibilityState.unlockAll = true;
@@ -93,4 +102,24 @@ test('the requested medals retain their normal pools and sort by unlock level', 
  }
  const levels = Array.from(run('getMedalPool().map(curse => getCurseUnlockLevel(curse) || 1)'));
  assert.deepEqual(levels, levels.slice().sort((a, b) => a - b));
+});
+
+test('delusions follow the current level, upcoming dependencies, and the three-pick cap', () => {
+ const run = harness();
+ run(source.slice(source.indexOf('function getDelusionConflict('), source.indexOf('function syncDelusionUpgradeEffects(')));
+ run('getPlayerCount = () => 1; runState.level = 10; var getOwnedStack = () => 0;');
+ const visible = () => Array.from(run('getVisibleDelusions().map(delusion => delusion.name)'));
+ assert.deepEqual(visible(), ['Arrogance', 'Overconfidence', 'Perseverance']);
+ run('curseVisibilityState.showUpcoming = true');
+ assert.ok(visible().includes('Hope'));
+ assert.ok(!visible().includes('Corrosion'));
+ assert.ok(!visible().includes('Gambling'));
+ run('curseVisibilityState.showAll = true');
+ assert.equal(visible().length, 15);
+ run('runState.activeDelusions = new Set(["Hope", "Arrogance", "Overconfidence"])');
+ assert.deepEqual(visible(), ['Arrogance', 'Hope', 'Overconfidence']);
+ assert.equal(run('getDelusionRequirementReason(DELUSION_BY_NAME.get("Hope"))'), '');
+ run('runState.activeDelusions.delete("Hope")');
+ assert.equal(visible().length, 15);
+ assert.match(run('getDelusionRequirementReason(DELUSION_BY_NAME.get("Conceit"))'), /Cannot be picked with Arrogance/);
 });

@@ -13,6 +13,9 @@
 
 /* Bare floating controls: compact squares, expanding labels, and a quiet chevron above. */
 #floatingToggleButtons {
+    --panel-button-size: clamp(46px, calc((100vw - 48px) / 4), 69px);
+    --panel-icon-size: 30px;
+    --panel-button-padding: calc((var(--panel-button-size) - var(--panel-icon-size)) / 2);
     right: max(20px, env(safe-area-inset-right));
     bottom: max(16px, env(safe-area-inset-bottom));
     flex-direction: column; align-items: center; gap: 3px;
@@ -20,7 +23,7 @@
     padding: 0; border: 0; background: none; box-shadow: none; pointer-events: none;
     transition: transform .45s cubic-bezier(.22, 1, .36, 1);
 }
-#floatingToggleButtons.collapsed { transform: translateY(49px); }
+#floatingToggleButtons.collapsed { transform: translateY(calc(var(--panel-button-size) + 3px)); }
 #floatingToggleButtons .floating-toggle-buttons-inner {
     display: flex; align-items: center; gap: 8px;
     width: max-content; max-width: calc(100vw - 40px);
@@ -35,7 +38,7 @@
 #floatingToggleButtons .floating-toggle-buttons-inner > button {
     --nav-a: #174e79; --nav-b: #54b4e3; --nav-border: #91d5fa;
     display: flex; flex: none; align-items: center; justify-content: center; gap: 0;
-    min-width: 46px; min-height: 46px; padding: 13px;
+    min-width: var(--panel-button-size); min-height: var(--panel-button-size); padding: var(--panel-button-padding);
     border: 0; border-radius: 2px; clip-path: none;
     background-image: repeating-conic-gradient(#ffffff18 0 25%, transparent 0 50%),
         linear-gradient(90deg, var(--nav-a), var(--nav-b) 25%, var(--nav-a) 50%, var(--nav-b) 75%, var(--nav-a));
@@ -50,7 +53,7 @@
 #floatingToggleButtons #altarsToggleButton { --nav-a: #39383e; --nav-b: #8a8791; --nav-border: #bdb8c9; }
 #floatingToggleButtons #lobbyToggleButton { --nav-a: #695331; --nav-b: #b79a59; --nav-border: #e0c98b; }
 #floatingToggleButtons .floating-toggle-buttons-inner > button:is(:hover, :focus-visible) {
-    padding: 13px; transform: translateY(-2px); filter: brightness(1.08);
+    transform: translateY(-2px); filter: brightness(1.08);
     box-shadow: 0 6px 16px #0006, 0 0 16px color-mix(in srgb, var(--nav-border) 35%, transparent);
 }
 #floatingToggleButtons .floating-toggle-buttons-inner > button.active {
@@ -67,7 +70,7 @@
 }
 #floatingToggleButtons :is(.upgrade-toggle-key, .death-toggle-key, .altars-toggle-key, .lobby-toggle-key) { display: none; }
 #floatingToggleButtons :is(.upgrade-toggle-icon, .death-toggle-icon, .altars-toggle-icon, .lobby-toggle-icon) {
-    display: flex; flex: none; width: 20px; height: 20px; transform: none;
+    display: flex; flex: none; width: var(--panel-icon-size); height: var(--panel-icon-size); transform: none;
 }
 #floatingToggleButtons svg { display: block; width: 100%; height: 100%; }
 #floatingToggleButtons .floating-buttons-hide-toggle {

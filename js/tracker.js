@@ -35,7 +35,7 @@ const DELUSIONS = [
     { name: "Gambling", level: 5, altText: "Spawns more Altars and using Altar of Chance echoes a random Altar, but all Altars are replaced by Altar of Chance.", requiresCurse: "High Roller", locks: ["Dependence", "Burnout"], achievement: "One More Time" },
     { name: "Greed", level: 15, minPlayers: 2, altText: "Increases Altar of Purgatory's additive and multiplicative Golden Gift yield increases by +0.5x, but Altar of Purgatory has 1.75x more points, spawns higher leveled enemies earlier, and disables reviving." },
     { name: "Hoarding", level: 15, altText: "Gain +0.8x Golden Gift yield for every enemy with 3 or more permament curses, but increases the max stack of certain curses." , achievement: "I bought a ticket to the zoo not this bro" },
-    { name: "Hope", level: 15, altText: "Gain a one-time use extra life, allowing you to retry a level once after losing, but this delusion cannot be removed by any means.", cannotRemove: true },
+    { name: "Hope", level: 15, altText: "Gain a one-time use extra life, allowing you to retry a level once after losing." },
     { name: "Ignorance", level: 15, altText: "Temporary curses go away twice as fast and Altar of Curses always spawns and gives 1.5x more Golden Gift yield, but gives an additional curse and Altar of Purification doesn't spawn anymore.", locks: ["Perseverance"], achievement: "Maximum Purification" },
     { name: "Overconfidence", level: 10, altText: "Every temporary curse gives +0.3x Golden Gift yield, but every temporary curse turns into a permament curse.", achievement: "Heh.. this is nothing." },
     { name: "Perseverance", level: 10, altText: "Medal curses give 1.5x more Golden Gifts, bringing back the Medal gives 2x more Golden Gifts, but temporary curses last 50% longer and carrying the Medal slows you down by 10%.", requiresUpgrade: "Medal", locks: ["Ignorance"] },
@@ -817,7 +817,7 @@ function loadTemporaryCurseExpiries(entries) {
     for (const [savedName, expiries] of Array.isArray(entries) ? entries.filter(Array.isArray) : []) {
         const name = canonicalCurseName(savedName);
         const curse = findCurseByName(name);
-        if (!curse || !Array.isArray(expiries)) continue;
+        if (!curse || isGreaterCurse(curse) || !Array.isArray(expiries)) continue;
         const valid = expiries.filter(expiry => Number.isSafeInteger(expiry) && expiry > runState.level)
             .slice(0, Math.max(0, (curse.max || 1) - (runState.curseStacks.get(name) || 0)));
         if (valid.length) temporary.set(name, valid);
@@ -1165,7 +1165,7 @@ function createCurseEnemyBadge(enemyName, count = 1) {
 }
 
 
-function createCurseRequirementBadge(curseName, title, position) {
+function createCurseRequirementBadge(curseName, title, position, assetType = "curses") {
 
     const badge = document.createElement("div");
 
@@ -1190,7 +1190,7 @@ function createCurseRequirementBadge(curseName, title, position) {
     inner.appendChild(placeholder);
     badge.appendChild(inner);
 
-    resolveAsset("curses", curseName, path => {
+    resolveAsset(assetType, curseName, path => {
 
         if (!path) {
 
@@ -1864,6 +1864,7 @@ function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false, temp
     }
 
     if (temporaryLevels > 0) {
+        if (isGreaterCurse(curse)) return;
         const expiries = runState.temporaryCurseExpiries.get(curse.name) || [];
         expiries.push(Math.floor(getLevel()) + temporaryLevels);
         runState.temporaryCurseExpiries.set(curse.name, expiries);
@@ -2456,6 +2457,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     const card = document.createElement("button");
 
     card.className = "curse-card";
+    if (isGreaterCurse(curse)) card.disabled = temporaryCurseMode;
     card.dataset.revealKey = `curse:${curse.name}`;
     if (curse.divine) card.classList.add("curse-card--divine");
     card.style.setProperty("--level-order", (getCurseUnlockLevel(curse) || 1) * 2);
@@ -2467,10 +2469,9 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     }
 
     const selectable = isCurseSelectable(curse);
-    if (temporaryCurseMode && selectable) card.classList.add("curse-card--temporary-pick");
     const locked = !selectable;
     const capped = isCurseAtCap(curse);
-    const removableViaCard = !temporaryCurseMode && curseVisibilityState.unlockAll && capped;
+    const removableViaCard = curseVisibilityState.unlockAll && capped;
 
     if (locked) {
 
@@ -2565,7 +2566,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     // locked medal curse shows only the lock badge - previewing a
     // reward for something you can't select yet would be misleading
     // anyway.
-    if (awardsMedalPayout && !locked && !temporaryCurseMode && Number.isFinite(curse.value)) {
+    if (awardsMedalPayout && !locked && Number.isFinite(curse.value)) {
 
         const reward = document.createElement("div");
 
@@ -2622,7 +2623,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
         // Unlock All Curses: reclicking an already-owned/maxed card
         // removes it right from the pool, instead of making the user
         // hunt it down in the Active Curses list to hit its × button.
-        if (removableViaCard) {
+        if (!temporaryCurseMode && removableViaCard) {
 
             removeCurse(curse.name);
 
@@ -2661,6 +2662,10 @@ function renderActiveCurses() {
     }
 
     let orderedNames = allNames.sort((a, b) => {
+
+        const temporaryOrder = Number(runState.temporaryCurseExpiries.has(b)) -
+            Number(runState.temporaryCurseExpiries.has(a));
+        if (temporaryOrder) return temporaryOrder;
 
         const curseA = findCurseByName(a);
         const curseB = findCurseByName(b);
@@ -2779,15 +2784,6 @@ function renderActiveCurses() {
         }
 
         content.appendChild(name);
-        const expiries = runState.temporaryCurseExpiries.get(curseName);
-        if (expiries?.length) {
-            const remaining = Math.max(0, Math.min(...expiries) - Math.floor(runState.level));
-            const badge = document.createElement("span");
-            badge.className = "temporary-curse-badge";
-            badge.textContent = expiries.length > 1 ? `TEMP ×${expiries.length} · ${remaining} LV` : `TEMP · ${remaining} LV`;
-            badge.title = "Levels until the next temporary stack expires";
-            content.appendChild(badge);
-        }
 
         if (isMedalCurse && Number.isFinite(curse.value) && (purified || runState.activeCurses.has(curseName))) {
 
@@ -2838,8 +2834,25 @@ function renderActiveCurses() {
         item.appendChild(content);
 
         const icon = createActiveCurseIcon("curses", curse.name);
-
-        item.appendChild(icon);
+        const expiries = runState.temporaryCurseExpiries.get(curseName);
+        if (expiries?.length) {
+            const expiry = Math.min(...expiries);
+            const remaining = Math.max(0, expiry - Math.floor(runState.level));
+            const tail = document.createElement("div");
+            tail.className = "active-curse-temporary-tail";
+            const countdown = document.createElement("span");
+            countdown.className = "temporary-curse-badge temporary-curse-badge--countdown";
+            countdown.textContent = String(remaining);
+            countdown.title = `${remaining} levels until the next temporary stack expires`;
+            const expiresAt = document.createElement("span");
+            expiresAt.className = "temporary-curse-badge temporary-curse-badge--expiry";
+            expiresAt.textContent = String(expiry);
+            expiresAt.title = `Next temporary stack expires at level ${expiry}`;
+            tail.append(icon, countdown, expiresAt);
+            item.appendChild(tail);
+        } else {
+            item.appendChild(icon);
+        }
 
         container.appendChild(item);
 
@@ -3118,12 +3131,9 @@ function render() {
 
     if (medalSectionEl) {
         medalSectionEl.classList.toggle("result-section--hidden", medalDisplayState.hideSection);
-        const controls = document.getElementById("temporaryCurseControls");
-        const row = document.querySelector(medalDisplayState.hideSection ? ".pool-title-row" : ".medal-curse-heading");
-        if (controls && row && controls.parentElement !== row) {
-            if (medalDisplayState.hideSection) row.append(controls);
-            else row.prepend(controls);
-        }
+        const controls = document.querySelector(".temporary-curse-controls");
+        const host = document.querySelector(medalDisplayState.hideSection ? ".pool-title-row" : ".medal-curse-title");
+        if (controls && host && controls.parentElement !== host) host.prepend(controls);
     }
     const chaosToggle = document.getElementById("chaosModeToggle");
     chaosToggle.classList.toggle("active", runState.chaosMode);
@@ -3239,10 +3249,16 @@ document.getElementById("levelInput").addEventListener("change", () => {
 
 const temporaryCurseToggle = document.getElementById("temporaryCurseToggle");
 const temporaryCurseDuration = document.getElementById("temporaryCurseDuration");
+function setTemporaryCurseMode(enabled) {
+    temporaryCurseMode = enabled;
+    temporaryCurseToggle.setAttribute("aria-pressed", String(enabled));
+    document.getElementById("cursePoolColumns").classList.toggle("temporary-curses-enabled", enabled);
+    document.querySelectorAll("#greaterCurseContainer .curse-card").forEach(card => {
+        card.disabled = enabled;
+    });
+}
 temporaryCurseToggle.addEventListener("click", () => {
-    temporaryCurseMode = !temporaryCurseMode;
-    temporaryCurseToggle.setAttribute("aria-pressed", String(temporaryCurseMode));
-    render();
+    setTemporaryCurseMode(!temporaryCurseMode);
 });
 temporaryCurseDuration.addEventListener("change", () => {
     temporaryCurseDuration.value = getTemporaryCurseDuration();
@@ -3351,8 +3367,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
     runState.medalCurseValues.clear();
     runState.medalPurified.clear();
 
-    temporaryCurseMode = false;
-    temporaryCurseToggle.setAttribute("aria-pressed", "false");
+    setTemporaryCurseMode(false);
     temporaryCurseDuration.value = 10;
     document.getElementById("levelInput").value = 1;
     document.getElementById("playerCountInput").value = 1;
@@ -3464,26 +3479,55 @@ function sanitizeActiveDelusions(names) {
     return selected;
 }
 
-function getDelusionRequirementReason(delusion) {
-    if (runState.activeDelusions.has(delusion.name)) {
-        return delusion.cannotRemove ? "This delusion cannot be removed." : "";
-    }
-    if (runState.activeDelusions.size >= 3) return "Only 3 delusions can be active at once.";
-    if (!curseVisibilityState.unlockAll) {
-        if (runState.level < delusion.level) return `Requires level ${delusion.level}.`;
-        if (delusion.minPlayers && getPlayerCount() < delusion.minPlayers) return `Requires ${delusion.minPlayers} or more players.`;
-    }
+function getDelusionConflict(delusion) {
     for (const activeName of runState.activeDelusions) {
         const active = DELUSION_BY_NAME.get(activeName);
-        if (active?.locks?.includes(delusion.name) || delusion.locks?.includes(activeName)) return `Cannot be picked with ${activeName}.`;
-    }
-    if (!curseVisibilityState.unlockAll) {
-        if (delusion.requiresUpgrade && typeof getOwnedStack === "function" && getOwnedStack(delusion.requiresUpgrade) < 1) {
-            return `Requires the ${delusion.requiresUpgrade} upgrade.`;
-        }
-        if (delusion.requiresCurse && !hasCurse(delusion.requiresCurse)) return `Requires ${delusion.requiresCurse}.`;
+        if (active?.locks?.includes(delusion.name) || delusion.locks?.includes(activeName)) return activeName;
     }
     return "";
+}
+
+function getDelusionDependencies(delusion) {
+    const dependencies = [];
+    if (delusion.requiresUpgrade) {
+        dependencies.push({
+            name: delusion.requiresUpgrade, assetType: "upgrades",
+            met: typeof getOwnedStack !== "function" || getOwnedStack(delusion.requiresUpgrade) > 0
+        });
+    }
+    if (delusion.requiresCurse) {
+        dependencies.push({
+            name: delusion.requiresCurse, assetType: "curses", met: hasCurse(delusion.requiresCurse)
+        });
+    }
+    if (delusion.minPlayers) {
+        dependencies.push({
+            name: `${delusion.minPlayers}+ players`, players: delusion.minPlayers,
+            met: getPlayerCount() >= delusion.minPlayers
+        });
+    }
+    return dependencies;
+}
+
+function getDelusionRequirementReason(delusion, dependencies = getDelusionDependencies(delusion)) {
+    if (runState.activeDelusions.has(delusion.name)) return "";
+    if (runState.activeDelusions.size >= 3) return "Only 3 delusions can be active at once.";
+    const conflict = getDelusionConflict(delusion);
+    if (conflict) return `Cannot be picked with ${conflict}.`;
+    if (curseVisibilityState.unlockAll) return "";
+    if (runState.level < delusion.level) return `Requires level ${delusion.level}.`;
+    const missing = dependencies.find(dependency => !dependency.met);
+    return missing ? `Requires ${missing.name}.` : "";
+}
+
+function getVisibleDelusions() {
+    return DELUSIONS.filter(delusion => {
+        if (runState.activeDelusions.has(delusion.name)) return true;
+        if (runState.activeDelusions.size >= 3) return false;
+        if (curseVisibilityState.showAll || delusion.level === runState.level) return true;
+        return curseVisibilityState.showUpcoming && delusion.level > runState.level &&
+            !getDelusionConflict(delusion) && getDelusionDependencies(delusion).every(dependency => dependency.met);
+    });
 }
 
 function syncDelusionUpgradeEffects() {
@@ -3498,7 +3542,8 @@ function renderDelusionCards() {
     if (!container || !section || section.classList.contains('result-section--hidden')) return;
 
     container.replaceChildren();
-    const levels = [...new Set(DELUSIONS.map(delusion => delusion.level))].sort((a, b) => a - b);
+    const visible = getVisibleDelusions();
+    const levels = [...new Set(visible.map(delusion => delusion.level))].sort((a, b) => a - b);
     levels.forEach(level => {
         const key = `delusionContainer:${level}`;
         const divider = document.createElement('button');
@@ -3514,22 +3559,25 @@ function renderDelusionCards() {
             if (collapsed) medalDisplayState.collapsedLevels.push(key);
             divider.setAttribute('aria-expanded', String(!collapsed));
             container.querySelectorAll('.delusion-card').forEach(card => {
-                if (Number(card.dataset.groupLevel) === level) card.toggleAttribute('data-level-collapsed', collapsed);
+                if (Number(card.dataset.groupLevel) === level && card.getAttribute('aria-pressed') !== 'true') {
+                    card.toggleAttribute('data-level-collapsed', collapsed);
+                }
             });
             saveMedalDisplayState();
         });
         container.appendChild(divider);
     });
 
-    DELUSIONS.forEach(delusion => {
+    visible.forEach(delusion => {
         const selected = runState.activeDelusions.has(delusion.name);
-        const reason = getDelusionRequirementReason(delusion);
+        const dependencies = getDelusionDependencies(delusion);
+        const reason = getDelusionRequirementReason(delusion, dependencies);
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'curse-card delusion-card';
         card.style.setProperty('--level-order', delusion.level * 2);
         card.dataset.groupLevel = delusion.level;
-        if (medalDisplayState.collapsedLevels.includes(`delusionContainer:${delusion.level}`)) card.setAttribute('data-level-collapsed', '');
+        if (!selected && medalDisplayState.collapsedLevels.includes(`delusionContainer:${delusion.level}`)) card.setAttribute('data-level-collapsed', '');
         card.classList.toggle('delusion-card--selected', selected);
         card.classList.toggle('delusion-card--locked', Boolean(reason));
         card.setAttribute('aria-pressed', String(selected));
@@ -3555,7 +3603,7 @@ function renderDelusionCards() {
         label.className = 'curse-name-label';
         label.textContent = delusion.name;
         copy.appendChild(label);
-        if (reason && !selected && !reason.startsWith('Requires level ')) {
+        if (reason.startsWith('Cannot be picked with ')) {
             const lock = document.createElement('span');
             lock.className = 'delusion-lock-note';
             lock.textContent = reason;
@@ -3563,38 +3611,61 @@ function renderDelusionCards() {
         }
         card.appendChild(copy);
 
-        const metadata = document.createElement('span');
+        const metadata = document.createElement('div');
         metadata.className = 'curse-row-meta';
         const level = document.createElement('span');
         level.className = 'curse-row-level';
+        level.classList.toggle('delusion-level--upcoming', delusion.level > runState.level);
         level.textContent = delusion.level;
         level.setAttribute('aria-label', `Requires level ${delusion.level}`);
         metadata.appendChild(level);
+        if (dependencies.length) {
+            const badges = document.createElement('div');
+            badges.className = 'card-dependencies';
+            for (const dependency of dependencies) {
+                let badge;
+                if (dependency.players) {
+                    badge = document.createElement('div');
+                    badge.className = 'curse-requirement-badge delusion-player-badge';
+                    badge.innerHTML = '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="6" r="2.5"/><path d="M2 16v-2a5 5 0 0 1 10 0v2m1-12a2.5 2.5 0 0 1 0 5m2 2a4 4 0 0 1 3 4v1"/></svg>';
+                    const count = document.createElement('span');
+                    count.textContent = `${dependency.players}+`;
+                    badge.append(count);
+                } else {
+                    badge = createCurseRequirementBadge(dependency.name, `Requires ${dependency.name}`, undefined, dependency.assetType);
+                }
+                badge.title = `Requires ${dependency.name} · ${dependency.met ? 'met' : 'unmet'}`;
+                badge.classList.toggle('delusion-dependency--missing', !dependency.met);
+                badges.append(badge);
+            }
+            card.classList.add('curse-card--dependencies');
+            metadata.append(badges);
+        }
         card.appendChild(metadata);
         card.addEventListener('click', () => {
             if (selected) {
-                if (delusion.cannotRemove) {
-                    document.getElementById('delusionSelectionFeedback').textContent = 'Hope cannot be removed once picked.';
-                    return;
-                }
                 runState.activeDelusions.delete(delusion.name);
             } else {
-                const blocked = getDelusionRequirementReason(delusion);
-                if (blocked) {
-                    document.getElementById('delusionSelectionFeedback').textContent = blocked;
-                    return;
-                }
+                if (getDelusionRequirementReason(delusion)) return;
                 runState.activeDelusions.add(delusion.name);
             }
             syncDelusionUpgradeEffects();
-            document.getElementById('delusionSelectionFeedback').textContent = '';
             render();
         });
         container.appendChild(card);
     });
 
+    if (!visible.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-pool';
+        empty.textContent = 'No delusions available at this level';
+        container.append(empty);
+    }
     const count = document.getElementById('delusionSelectionCount');
-    if (count) count.textContent = `${runState.activeDelusions.size} of 3 selected`;
+    if (count) {
+        count.textContent = `${runState.activeDelusions.size}/3`;
+        count.setAttribute('aria-label', `${runState.activeDelusions.size} of 3 delusions selected`);
+    }
 }
 
 function updateDelusionsDisplay() {

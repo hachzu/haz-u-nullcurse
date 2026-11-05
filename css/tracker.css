@@ -3907,12 +3907,12 @@ body {
    removes it), so the cursor and hover feedback need to read as
    interactive rather than dead-ended. Declared after
    .curse-card--locked:hover so it wins on the properties both set. */
-.curse-card--removable {
+.curse-pool-columns:not(.temporary-curses-enabled) .curse-card--removable {
     cursor: pointer;
 }
 
 
-.curse-card--removable:hover {
+.curse-pool-columns:not(.temporary-curses-enabled) .curse-card--removable:hover {
     background: linear-gradient(160deg, #3a0a0a 0%, #150826 100%);
 
     border-color: #ff9d9d;
@@ -3975,14 +3975,6 @@ body {
 .curse-card.medal {
     border-color: #00c8ff;
     box-shadow: 0 0 14px rgba(0, 200, 255, 0.3), 0 0 10px rgba(255, 92, 200, 0.22);
-}
-
-
-#medalCurseContainer .curse-card:hover {
-    background: linear-gradient(160deg, #002738 0%, #380726 100%);
-
-    border-color: #00c8ff;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3), 0 0 14px rgba(255, 92, 200, 0.28);
 }
 
 
@@ -4837,7 +4829,6 @@ body {
     text-shadow: none;
 }
 #medalCurseContainer .curse-card,
-#medalCurseContainer .curse-card:hover,
 #globalCurseContainer .curse-card.medal,
 #globalCurseContainer .curse-card.medal:hover,
 #enemyCurseContainer .curse-card.medal,
@@ -4845,6 +4836,12 @@ body {
     background: linear-gradient(160deg, #150826 0%, #0d0416 100%);
     border-color: #3f7399;
     box-shadow: none;
+}
+#medalCurseContainer .curse-card:not(.curse-card--locked):is(:hover, :focus-visible) {
+    background: linear-gradient(160deg, #17334b 0%, #150826 100%);
+    border-color: #9bcee9;
+    box-shadow: 0 0 22px #75bceb4d;
+    transform: translateY(-2px);
 }
 #medalCurseContainer .curse-card .curse-name-label,
 #globalCurseContainer .curse-card.medal .curse-name-label,
@@ -5018,21 +5015,30 @@ body {
 .curse-pool-columns--list .curse-level-divider[aria-expanded='false']::after { opacity: .6; }
 .curse-pool-columns--list .curse-card[data-level-collapsed] { display: none; }
 
-.result-heading.medal-curse-heading {
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
+.medal-curse-title {
+    position: relative;
+    display: grid;
 }
-.medal-curse-heading #medalHeading {
-    width: auto;
-    margin: 0;
-    text-align: center;
+.medal-curse-title .temporary-curse-controls {
+    position: absolute;
+    z-index: 1;
+    bottom: calc(100% + 46px);
+    left: 50%;
+    transform: translateX(-50%);
 }
+.curse-pool-columns--list .medal-curse-title { width: 100%; }
+.curse-pool-columns--list .medal-curse-title .temporary-curse-controls { bottom: calc(100% + 64px); }
+/* Keep the controls inside the scrolling strip without moving the pool headings. */
+.curse-pool-columns--list:has(.medal-curse-title .temporary-curse-controls) {
+    padding-top: 100px;
+    margin-top: -82px;
+}
+
 .temporary-curse-controls {
     display: flex;
     flex: none;
     align-items: center;
-    gap: 5px;
+    gap: 12px;
 }
 .temporary-curse-controls :is(#temporaryCurseToggle, input) {
     min-height: 34px;
@@ -5042,11 +5048,14 @@ body {
     color: #e9d8fc;
     font: 700 11px/1.2 var(--font-modern, sans-serif);
 }
-#temporaryCurseToggle {
+.temporary-curse-controls #temporaryCurseToggle {
+    background: linear-gradient(155deg, #2c183d, #1b1127 64%);
     padding: 0 7px;
     letter-spacing: .05em;
     cursor: pointer;
 }
+.temporary-curse-controls #temporaryCurseToggle:hover { border-color: #bb92d9; }
+.temporary-curse-controls .number-increment-control:focus-within input { border-color: #bb92d9; }
 .temporary-curse-controls .number-increment-control input {
     width: 82px;
     padding: 0 38px 0 4px !important;
@@ -5065,35 +5074,105 @@ body {
     outline: 2px solid #ead0ff;
     outline-offset: 2px;
 }
-.temporary-curse-controls button[aria-pressed='true'] {
+.temporary-curse-controls #temporaryCurseToggle[aria-pressed='true'] {
     border-color: #e5baff;
-    background: #44245a;
-    box-shadow: 0 0 12px #cf91ff60;
+    background: linear-gradient(155deg, #684481, #352048 66%);
+    box-shadow: 0 0 9px #cf91ff50, inset 0 1px #f4dcff42;
 }
-.result-grid .curse-card.curse-card--temporary-pick {
-    outline: 1px solid #e5baff;
+.temporary-curses-enabled .curse-card:not(:disabled, .curse-card--locked, .delusion-card) {
+    outline: 1px solid #d5a1f6b3;
     outline-offset: -2px;
-    box-shadow: 0 0 8px #cf91ff45;
 }
+.temporary-curses-enabled .curse-card:not(:disabled, .curse-card--locked, .delusion-card):is(:hover, :focus-visible) {
+    outline-color: #f0d3ff;
+    box-shadow: 0 0 7px #cf91ff55;
+}
+.temporary-curses-enabled .curse-card .curse-reward-badge { display: none; }
+.temporary-curses-enabled #greaterCurseContainer .curse-card:disabled { opacity: .55; cursor: not-allowed; }
+.active-curse-temporary-tail {
+    position: relative;
+    display: grid;
+    grid-template-rows: repeat(2, 1fr);
+    flex: none;
+    align-self: stretch;
+}
+.active-curse-temporary-tail .active-curse-icon { right: 100%; }
 .temporary-curse-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 34px;
+    padding-inline: 5px;
+    border-inline-start: 1px solid #c98feb63;
+    background: #241233;
     color: #efcaff;
-    font: 700 10px/1.2 var(--font-modern, sans-serif);
-    letter-spacing: .05em;
+    font: 700 13px/1.2 var(--font-modern, sans-serif);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+.temporary-curse-badge::before {
+    content: "";
+    width: 8px;
+    height: 9px;
+    flex: none;
+    background: currentColor;
+}
+.temporary-curse-badge--countdown::before {
+    clip-path: polygon(0 0, 100% 0, 65% 50%, 100% 100%, 0 100%, 35% 50%);
+}
+.temporary-curse-badge--expiry {
+    border-top: 1px solid #c98feb38;
+    background: #16243a;
+    color: #bfeaff;
+}
+.temporary-curse-badge--expiry::before {
+    clip-path: polygon(0 0, 100% 0, 75% 30%, 100% 60%, 22% 60%, 22% 100%, 0 100%);
 }
 body:not(:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open)) .bg-layer { opacity: calc(var(--bg-opacity) * .85); }
 
 #delusionHeading { background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; }
 #delusionContainer .curse-card { border-color: #76d4b4; background: linear-gradient(160deg, #150826 0%, #0d0416 100%); }
 #delusionContainer .curse-name-label { color: #b9ecda; }
-.delusion-selection-status { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 20px; margin: -5px 0 15px; color: #a9d9ca; font-size: 11px; }
-.delusion-selection-status [role='status'] { color: #f0b1b8; text-align: right; }
+#delusionHeading .delusion-heading-label {
+    position: relative;
+    display: inline-block;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+}
+#delusionSelectionCount {
+    position: absolute;
+    inset-inline-start: calc(100% + 9px);
+    top: 0;
+    color: #a9d9ca;
+    font: inherit;
+    letter-spacing: inherit;
+    white-space: nowrap;
+}
+.curse-pool-columns:not(.curse-pool-columns--list) .delusion-level--upcoming {
+    display: inline-block;
+    color: #b9ecda;
+    font: 700 10px/1.2 var(--font-modern, sans-serif);
+    padding: 2px 5px;
+    border: 1px solid #76d4b47a;
+    border-radius: 4px;
+}
 #delusionContainer .delusion-card { width: 100%; min-width: 0; appearance: none; color: #b9ecda; font: inherit; }
 #delusionContainer .delusion-card--selected { border-color: #70e9b5; background: linear-gradient(160deg, #123a31 0%, #0d1718 100%); box-shadow: 0 0 0 1px #70e9b577, 0 0 14px #34d99b33; }
 #delusionContainer .delusion-card--locked:not(.delusion-card--selected) { opacity: .58; filter: saturate(.72); }
+#delusionContainer .delusion-card:not(.delusion-card--locked):is(:hover, :focus-visible) {
+    background: linear-gradient(160deg, #1a3e35 0%, #150826 100%);
+    border-color: #8be4c1;
+    box-shadow: 0 0 22px #65d6ad4d;
+    transform: translateY(-2px);
+}
+#delusionContainer .delusion-card--locked:hover { transform: none; box-shadow: none; }
 #delusionContainer .delusion-card:focus-visible { outline: 2px solid #a7ffdb; outline-offset: 2px; }
-.delusion-lock-note, .delusion-level-note { display: block; color: #91cbb5; font: 700 9px/1.15 var(--font-modern, sans-serif); }
-.delusion-lock-note { color: #ffb1b8; }
+.delusion-lock-note { display: block; color: #ffb1b8; font: 700 9px/1.15 var(--font-modern, sans-serif); }
+.delusion-dependency--missing { opacity: .65; }
+.delusion-player-badge { display: flex; align-items: center; justify-content: center; color: #b9ecda; }
+.delusion-player-badge span { font-size: 8px; }
 #floatingToggleButtons { z-index: 60; }
 
 /* The cog replaces the in-flow switch box; opening it never resizes the header. */

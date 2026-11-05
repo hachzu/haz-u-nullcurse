@@ -63,7 +63,7 @@
         assetState = { loaded: 0, total: 1, ready: false, error: false };
         $('loadError').hidden = true;
         corePromise = (async () => {
-            const markup = await fetchResource('Toolkits.html?v=20261106-temporary-row');
+            const markup = await fetchResource('Toolkits.html?v=20261106-delusion-pools');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
             const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
             if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
