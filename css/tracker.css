@@ -5017,6 +5017,70 @@ body {
 .curse-pool-columns--list .curse-level-divider[aria-expanded='false'] { color: #e7c5ff; }
 .curse-pool-columns--list .curse-level-divider[aria-expanded='false']::after { opacity: .6; }
 .curse-pool-columns--list .curse-card[data-level-collapsed] { display: none; }
+
+.result-heading.medal-curse-heading {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.medal-curse-heading #medalHeading {
+    width: auto;
+    margin: 0;
+    text-align: center;
+}
+.temporary-curse-controls {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 5px;
+}
+.temporary-curse-controls :is(#temporaryCurseToggle, input) {
+    min-height: 34px;
+    border: 1px solid #8e6ead80;
+    border-radius: 6px;
+    background: #1b1127;
+    color: #e9d8fc;
+    font: 700 11px/1.2 var(--font-modern, sans-serif);
+}
+#temporaryCurseToggle {
+    padding: 0 7px;
+    letter-spacing: .05em;
+    cursor: pointer;
+}
+.temporary-curse-controls .number-increment-control input {
+    width: 82px;
+    padding: 0 38px 0 4px !important;
+    text-align: center;
+}
+.temporary-curse-controls .number-increment-button { width: 17px; height: 26px; right: 19px; }
+.temporary-curse-controls .number-increment-button--down { right: 2px; }
+.pool-title-row:has(.temporary-curse-controls) {
+    align-items: center;
+    gap: 8px;
+    padding-inline-end: clamp(52px, 12cqi, 100px);
+    box-sizing: border-box;
+}
+.pool-title-row:has(.temporary-curse-controls) .tool-header-brand { flex-shrink: 1; }
+.temporary-curse-controls :is(button, input):focus-visible {
+    outline: 2px solid #ead0ff;
+    outline-offset: 2px;
+}
+.temporary-curse-controls button[aria-pressed='true'] {
+    border-color: #e5baff;
+    background: #44245a;
+    box-shadow: 0 0 12px #cf91ff60;
+}
+.result-grid .curse-card.curse-card--temporary-pick {
+    outline: 1px solid #e5baff;
+    outline-offset: -2px;
+    box-shadow: 0 0 8px #cf91ff45;
+}
+.temporary-curse-badge {
+    color: #efcaff;
+    font: 700 10px/1.2 var(--font-modern, sans-serif);
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
 body:not(:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open)) .bg-layer { opacity: calc(var(--bg-opacity) * .85); }
 
 #delusionHeading { background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; }

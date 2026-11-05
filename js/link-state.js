@@ -15,6 +15,7 @@
                 activeEnemies: mapObject(runState.activeEnemies), activeCurses: setObject(runState.activeCurses),
                 activeDelusions: setObject(runState.activeDelusions),
                 curseStacks: mapObject(runState.curseStacks), medalCurseValues: mapObject(runState.medalCurseValues),
+                temporaryCurseExpiries: mapObject(runState.temporaryCurseExpiries),
                 medalPurified: setObject(runState.medalPurified) },
             upgrades: { ...upgradeState, owned: mapObject(upgradeState.owned), pending: mapObject(upgradeState.pending) },
             deaths: { startLevel: deathState.startLevel, currentLevel: deathState.currentLevel,
@@ -91,6 +92,7 @@
                 for (const name of ['curseStacks', 'medalCurseValues']) {
                     runState[name] = new Map(entries(data[name]).filter(([n]) => validCurse(n)).map(([n,v]) => [canonicalName(n), bounded(v, 0, 1000000)]));
                 }
+                runState.temporaryCurseExpiries = loadTemporaryCurseExpiries(entries(data.temporaryCurseExpiries));
                 runState.medalPurified = new Set(entries(data.medalPurified).filter(([n,v]) => v === true && validCurse(n)).map(([n]) => canonicalName(n)));
                 byId('levelInput').value = runState.level;
                 byId('playerCountInput').value = Math.floor(bounded(data.playerCount, 1, 100));

@@ -195,21 +195,6 @@
     0% { opacity: .9; transform: scale(.2); }
     100% { opacity: 0; transform: scale(11); }
 }
-.ns-drop-spark {
-    position: absolute;
-    left: var(--fx-x);
-    top: var(--fx-y);
-    width: 3px;
-    height: 9px;
-    opacity: 0;
-    background: #e2c7f6;
-    border-radius: 0 !important;
-    animation: ns-spark var(--ns-spark, .85s) cubic-bezier(.1,.8,.25,1) both;
-}
-@keyframes ns-spark {
-    0% { opacity: 1; transform: translate(0,0) rotate(45deg); }
-    100% { opacity: 0; transform: translate(var(--dx),var(--dy)) rotate(135deg) scale(.1); }
-}
 .ns-chroma, .ns-glitch {
     position: absolute;
     inset: 0;
@@ -236,7 +221,7 @@
 }
 /* Cleanup is event-driven; no repeating effects accumulate on each kick. */
 @media (prefers-reduced-motion: reduce) {
-    .landing-view :is(.ns-drop-flash,.ns-drop-ring,.ns-drop-spark,.ns-chroma,.ns-glitch) { display: none !important; }
+    .landing-view :is(.ns-drop-flash,.ns-drop-ring,.ns-chroma,.ns-glitch) { display: none !important; }
     .landing-view *, .landing-view *::before, .landing-view *::after { animation: none !important; transition: none !important; }
 }
 html.low-detail-mode .landing-view *,
@@ -417,30 +402,6 @@ html.low-detail-mode .ns-beacon-layer { display: none; }
 
 
 /* Sparse pinpricks of violet, revealed with the background. */
-.ns-dust-layer {
-    position: absolute; inset: 0; z-index: -1; overflow: hidden;
-    pointer-events: none; opacity: 0; transition: opacity 1.8s ease;
-}
-.landing-view:is([data-intro-drop='1'], [data-intro-state='done']) .ns-dust-layer { opacity: 1; }
-.ns-dust-layer i {
-    position: absolute; left: var(--dust-x); top: var(--dust-y);
-    width: 1.5px; height: 1.5px; border-radius: 50% !important;
-    background: #e3b9ff; box-shadow: 0 0 3px 1px #bc80ef38;
-    opacity: .3;
-    animation: ns-dust-drift var(--dust-duration) ease-in-out var(--dust-delay) infinite alternate;
-    animation-play-state: paused;
-}
-.ns-dust-layer i:nth-child(3n) { width: 2.25px; height: 2.25px; }
-.landing-view:is([data-intro-drop='1'], [data-intro-state='done']):not([hidden]) .ns-dust-layer i { animation-play-state: running; }
-@keyframes ns-dust-drift {
-    0% { transform: translate3d(0, 18px, 0); opacity: .12; }
-    40% { opacity: .42; }
-    100% { transform: translate3d(var(--dust-drift), -42px, 0); opacity: .2; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .landing-view .ns-dust-layer i { animation: none; opacity: .22; }
-}
-html.low-detail-mode .ns-dust-layer { display: none; }
 
 
 .ns-startup-quote {

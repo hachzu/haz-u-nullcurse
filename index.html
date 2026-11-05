@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nullscape Toolkits</title>
-    <script src="js/site-move.js?v=20261023-4"></script>
+    <script src="js/site-move.js?v=20261105-cleanup"></script>
     <meta name="description" content="hey you! having trouble planning your runs and working out the numbers in nullscape? here's Nullscape Toolkits! it has a curse tracker, an upgrade calculator, lobby name RT editor, altars calculation, death tracker! go check it out nullscapers :]">
     <link rel="canonical" href="https://nullkits.pages.dev/">
     <meta property="og:site_name" content="Nullscape Toolkits">
@@ -30,88 +30,22 @@
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
     <link rel="preload" as="image" href="assets/branding/NullscapeWordmark.svg">
     <link rel="preload" as="image" href="assets/branding/ToolkitsWordmark.png">
-    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261029-editing-notice10">
-    <script src="js/intro.js?v=20261029-first-visit1" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
-    <script src="js/landing.js?v=20261029-editing-notice2" defer></script>
+    <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261106-intermission-grid">
+    <script src="js/intro.js?v=20261106-symphony-grids" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
+    <script src="js/landing.js?v=20261106-temporary-row" defer></script>
     <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1" defer></script>
     <script type="module" src="js/site-visits.js?v=20261022-1" onerror="document.getElementById('siteVisitsCount').textContent='—'"></script>
-    <link rel="stylesheet" href="css/maintenance.css?v=20261025-limited1">
-    <script src="js/maintenance.js?v=20261025-limited1" defer></script>
 </head>
 <body class="at-home">
-    <main id="maintenanceScreen" aria-labelledby="maintenanceTitle">
-        <div class="maintenance-background" aria-hidden="true"></div>
-        <div class="ns-dust-layer" aria-hidden="true"><i style="--dust-x:9%;--dust-y:17%;--dust-duration:18s;--dust-delay:-0s;--dust-drift:8px"></i><i style="--dust-x:46%;--dust-y:78%;--dust-duration:19s;--dust-delay:-2s;--dust-drift:9px"></i><i style="--dust-x:83%;--dust-y:39%;--dust-duration:20s;--dust-delay:-4s;--dust-drift:10px"></i><i style="--dust-x:20%;--dust-y:0%;--dust-duration:21s;--dust-delay:-6s;--dust-drift:11px"></i><i style="--dust-x:57%;--dust-y:61%;--dust-duration:22s;--dust-delay:-8s;--dust-drift:12px"></i><i style="--dust-x:94%;--dust-y:22%;--dust-duration:23s;--dust-delay:-10s;--dust-drift:13px"></i><i style="--dust-x:31%;--dust-y:83%;--dust-duration:24s;--dust-delay:-12s;--dust-drift:14px"></i><i style="--dust-x:68%;--dust-y:44%;--dust-duration:25s;--dust-delay:-14s;--dust-drift:15px"></i><i style="--dust-x:5%;--dust-y:5%;--dust-duration:26s;--dust-delay:-16s;--dust-drift:16px"></i><i style="--dust-x:42%;--dust-y:66%;--dust-duration:27s;--dust-delay:-18s;--dust-drift:17px"></i><i style="--dust-x:79%;--dust-y:27%;--dust-duration:28s;--dust-delay:-20s;--dust-drift:18px"></i><i style="--dust-x:16%;--dust-y:88%;--dust-duration:29s;--dust-delay:-22s;--dust-drift:19px"></i><i style="--dust-x:53%;--dust-y:49%;--dust-duration:18s;--dust-delay:-24s;--dust-drift:20px"></i><i style="--dust-x:90%;--dust-y:10%;--dust-duration:19s;--dust-delay:-26s;--dust-drift:21px"></i><i style="--dust-x:27%;--dust-y:71%;--dust-duration:20s;--dust-delay:-28s;--dust-drift:22px"></i><i style="--dust-x:64%;--dust-y:32%;--dust-duration:21s;--dust-delay:-30s;--dust-drift:23px"></i><i style="--dust-x:1%;--dust-y:93%;--dust-duration:22s;--dust-delay:-32s;--dust-drift:24px"></i><i style="--dust-x:38%;--dust-y:54%;--dust-duration:23s;--dust-delay:-34s;--dust-drift:25px"></i></div>
-        <div class="maintenance-gate" hidden role="button" tabindex="0" aria-label="Click anywhere to enter with music"><span>Click to enter</span></div>
-        <canvas class="maintenance-visualizer" aria-hidden="true"></canvas>
-        <div class="maintenance-player" hidden><span class="maintenance-disc" aria-hidden="true"></span><span>Subspace Lucidity (B-SIDE)<br><strong>Graphyre</strong></span></div>
-        <p class="maintenance-audio-status" role="status"></p>
-        <div class="maintenance-content">
-            <div class="maintenance-loader" aria-hidden="true"><svg class="ns-spawn-svg" viewBox="0 0 100 100" fill="none"><path d="M50 6 57 39 90 50 57 57 50 94 43 57 10 50 43 39Z" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="28" stroke="currentColor" stroke-opacity=".3"/></svg></div>
-            <p class="maintenance-label">PATCH 5.1</p>
-            <h1 id="maintenanceTitle">Nullscape Toolkits will remain under maintenance until the new content update arrives and we finish syncing the tools with it. See you soon!</h1>
-        </div>
-    <nav class="maintenance-tools" aria-label="Available during maintenance"><a href="./#/deaths">Death Tracker</a><a href="./#/lobby">Lobby Name Maker</a><p class="maintenance-tool-status" role="status"></p></nav>
-    </main>
     <main id="landingView" class="landing-view">
         <div class="landing-visits" id="siteVisits" role="group" aria-label="Site visits">
             <span class="landing-visits-total"><span aria-hidden="true">VISITS</span> <span id="siteVisitsCount">600</span></span>
         </div>
         <div class="landing-background" id="landingBackground" aria-hidden="true"></div>
         <div class="landing-vignette" aria-hidden="true"></div>
-        <div class="ns-dust-layer" aria-hidden="true">
-            <i style="--dust-x:9%;--dust-y:17%;--dust-duration:18s;--dust-delay:0s;--dust-drift:8px"></i>
-            <i style="--dust-x:46%;--dust-y:78%;--dust-duration:25s;--dust-delay:-11s;--dust-drift:17px"></i>
-            <i style="--dust-x:83%;--dust-y:39%;--dust-duration:32s;--dust-delay:-22s;--dust-drift:26px"></i>
-            <i style="--dust-x:20%;--dust-y:0%;--dust-duration:22s;--dust-delay:-2s;--dust-drift:10px"></i>
-            <i style="--dust-x:57%;--dust-y:61%;--dust-duration:29s;--dust-delay:-13s;--dust-drift:19px"></i>
-            <i style="--dust-x:94%;--dust-y:22%;--dust-duration:19s;--dust-delay:-24s;--dust-drift:28px"></i>
-            <i style="--dust-x:31%;--dust-y:83%;--dust-duration:26s;--dust-delay:-4s;--dust-drift:12px"></i>
-            <i style="--dust-x:68%;--dust-y:44%;--dust-duration:33s;--dust-delay:-15s;--dust-drift:21px"></i>
-            <i style="--dust-x:5%;--dust-y:5%;--dust-duration:23s;--dust-delay:-26s;--dust-drift:30px"></i>
-            <i style="--dust-x:42%;--dust-y:66%;--dust-duration:30s;--dust-delay:-6s;--dust-drift:14px"></i>
-            <i style="--dust-x:79%;--dust-y:27%;--dust-duration:20s;--dust-delay:-17s;--dust-drift:23px"></i>
-            <i style="--dust-x:16%;--dust-y:88%;--dust-duration:27s;--dust-delay:-28s;--dust-drift:32px"></i>
-            <i style="--dust-x:53%;--dust-y:49%;--dust-duration:34s;--dust-delay:-8s;--dust-drift:16px"></i>
-            <i style="--dust-x:90%;--dust-y:10%;--dust-duration:24s;--dust-delay:-19s;--dust-drift:25px"></i>
-            <i style="--dust-x:27%;--dust-y:71%;--dust-duration:31s;--dust-delay:-30s;--dust-drift:9px"></i>
-            <i style="--dust-x:64%;--dust-y:32%;--dust-duration:21s;--dust-delay:-10s;--dust-drift:18px"></i>
-            <i style="--dust-x:1%;--dust-y:93%;--dust-duration:28s;--dust-delay:-21s;--dust-drift:27px"></i>
-            <i style="--dust-x:38%;--dust-y:54%;--dust-duration:18s;--dust-delay:-1s;--dust-drift:11px"></i>
-            <i style="--dust-x:75%;--dust-y:15%;--dust-duration:25s;--dust-delay:-12s;--dust-drift:20px"></i>
-            <i style="--dust-x:12%;--dust-y:76%;--dust-duration:32s;--dust-delay:-23s;--dust-drift:29px"></i>
-            <i style="--dust-x:49%;--dust-y:37%;--dust-duration:22s;--dust-delay:-3s;--dust-drift:13px"></i>
-            <i style="--dust-x:86%;--dust-y:98%;--dust-duration:29s;--dust-delay:-14s;--dust-drift:22px"></i>
-            <i style="--dust-x:23%;--dust-y:59%;--dust-duration:19s;--dust-delay:-25s;--dust-drift:31px"></i>
-            <i style="--dust-x:60%;--dust-y:20%;--dust-duration:26s;--dust-delay:-5s;--dust-drift:15px"></i>
-            <i style="--dust-x:97%;--dust-y:81%;--dust-duration:33s;--dust-delay:-16s;--dust-drift:24px"></i>
-            <i style="--dust-x:34%;--dust-y:42%;--dust-duration:23s;--dust-delay:-27s;--dust-drift:8px"></i>
-            <i style="--dust-x:71%;--dust-y:3%;--dust-duration:30s;--dust-delay:-7s;--dust-drift:17px"></i>
-            <i style="--dust-x:8%;--dust-y:64%;--dust-duration:20s;--dust-delay:-18s;--dust-drift:26px"></i>
-            <i style="--dust-x:45%;--dust-y:25%;--dust-duration:27s;--dust-delay:-29s;--dust-drift:10px"></i>
-            <i style="--dust-x:82%;--dust-y:86%;--dust-duration:34s;--dust-delay:-9s;--dust-drift:19px"></i>
-            <i style="--dust-x:19%;--dust-y:47%;--dust-duration:24s;--dust-delay:-20s;--dust-drift:28px"></i>
-            <i style="--dust-x:56%;--dust-y:8%;--dust-duration:31s;--dust-delay:0s;--dust-drift:12px"></i>
-            <i style="--dust-x:93%;--dust-y:69%;--dust-duration:21s;--dust-delay:-11s;--dust-drift:21px"></i>
-            <i style="--dust-x:30%;--dust-y:30%;--dust-duration:28s;--dust-delay:-22s;--dust-drift:30px"></i>
-            <i style="--dust-x:67%;--dust-y:91%;--dust-duration:18s;--dust-delay:-2s;--dust-drift:14px"></i>
-            <i style="--dust-x:4%;--dust-y:52%;--dust-duration:25s;--dust-delay:-13s;--dust-drift:23px"></i>
-            <i style="--dust-x:41%;--dust-y:13%;--dust-duration:32s;--dust-delay:-24s;--dust-drift:32px"></i>
-            <i style="--dust-x:78%;--dust-y:74%;--dust-duration:22s;--dust-delay:-4s;--dust-drift:16px"></i>
-            <i style="--dust-x:15%;--dust-y:35%;--dust-duration:29s;--dust-delay:-15s;--dust-drift:25px"></i>
-            <i style="--dust-x:52%;--dust-y:96%;--dust-duration:19s;--dust-delay:-26s;--dust-drift:9px"></i>
-            <i style="--dust-x:89%;--dust-y:57%;--dust-duration:26s;--dust-delay:-6s;--dust-drift:18px"></i>
-            <i style="--dust-x:26%;--dust-y:18%;--dust-duration:33s;--dust-delay:-17s;--dust-drift:27px"></i>
-            <i style="--dust-x:63%;--dust-y:79%;--dust-duration:23s;--dust-delay:-28s;--dust-drift:11px"></i>
-            <i style="--dust-x:0%;--dust-y:40%;--dust-duration:30s;--dust-delay:-8s;--dust-drift:20px"></i>
-            <i style="--dust-x:37%;--dust-y:1%;--dust-duration:20s;--dust-delay:-19s;--dust-drift:29px"></i>
-            <i style="--dust-x:74%;--dust-y:62%;--dust-duration:27s;--dust-delay:-30s;--dust-drift:13px"></i>
-            <i style="--dust-x:11%;--dust-y:23%;--dust-duration:34s;--dust-delay:-10s;--dust-drift:22px"></i>
-            <i style="--dust-x:48%;--dust-y:84%;--dust-duration:24s;--dust-delay:-21s;--dust-drift:31px"></i>
-        </div>
         <div class="landing-content">
             <h1 class="landing-brand" aria-label="Nullscape Toolkits">
-                <span class="landing-editing-stack">
+                <!-- <span class="landing-editing-stack">
                     <span class="landing-banner-caption">marquee banner is inspired by the <a href="https://nullscape.wiki/" target="_blank" rel="noopener noreferrer">Nullscape Wiki</a>.</span>
                     <span class="landing-editing-notice" role="note" aria-label="Please be patient. Nullscape Toolkits is under heavy editing.">
                         <span class="editing-notice-ribbon editing-notice-ribbon--reverse" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></span>
@@ -119,6 +53,7 @@
                         <span class="editing-notice-ribbon" aria-hidden="true"><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span><span>PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp; PLEASE BE PATIENT! &nbsp;</span></span>
                     </span>
                 </span>
+                -->
                 <span class="ns-logo-build">
                     <span class="landing-logo-stage" id="logoStage">
                         <span class="ns-logo-face">
@@ -136,7 +71,6 @@
                 <ul class="landing-features" aria-label="Toolkit features">
                     <li><a class="landing-feature-tag landing-feature-tag--curses" href="#/curses">CURSE TRACKER</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--deaths" href="#/deaths">DEATH TRACKER</a></li>
-                    <li><span class="landing-feature-tag landing-feature-tag--players" aria-disabled="true"><span class="player-tracker-label"><small>SOON</small><span>PLAYER TRACKER</span></span></span></li>
                     <li><a class="landing-feature-tag landing-feature-tag--upgrades" href="#/upgrades">UPGRADE CALCULATOR</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--altars" href="#/altars">ALTARS CALCULATOR</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--lobby" href="#/lobby">LOBBY NAME MAKER</a></li>
@@ -144,7 +78,6 @@
                 <ul class="landing-features is-copy" aria-hidden="true">
                     <li><a class="landing-feature-tag landing-feature-tag--curses" href="#/curses" tabindex="-1">CURSE TRACKER</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--deaths" href="#/deaths" tabindex="-1">DEATH TRACKER</a></li>
-                    <li><span class="landing-feature-tag landing-feature-tag--players" aria-disabled="true"><span class="player-tracker-label"><small>SOON</small><span>PLAYER TRACKER</span></span></span></li>
                     <li><a class="landing-feature-tag landing-feature-tag--upgrades" href="#/upgrades" tabindex="-1">UPGRADE CALCULATOR</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--altars" href="#/altars" tabindex="-1">ALTARS CALCULATOR</a></li>
                     <li><a class="landing-feature-tag landing-feature-tag--lobby" href="#/lobby" tabindex="-1">LOBBY NAME MAKER</a></li>
@@ -153,10 +86,10 @@
                 </div>
             </div>
             <a class="continue-button" id="enterToolkit" href="#/curses"><svg class="enter-spawn" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M32.00 3.00 L34.22 15.15 L36.92 13.65 L38.51 16.29 L46.50 6.89 L42.35 18.51 L45.44 18.56 L45.49 21.65 L57.11 17.50 L47.71 25.49 L50.35 27.08 L48.85 29.78 L61.00 32.00 L48.85 34.22 L50.35 36.92 L47.71 38.51 L57.11 46.50 L45.49 42.35 L45.44 45.44 L42.35 45.49 L46.50 57.11 L38.51 47.71 L36.92 50.35 L34.22 48.85 L32.00 61.00 L29.78 48.85 L27.08 50.35 L25.49 47.71 L17.50 57.11 L21.65 45.49 L18.56 45.44 L18.51 42.35 L6.89 46.50 L16.29 38.51 L13.65 36.92 L15.15 34.22 L3.00 32.00 L15.15 29.78 L13.65 27.08 L16.29 25.49 L6.89 17.50 L18.51 21.65 L18.56 18.56 L21.65 18.51 L17.50 6.89 L25.49 16.29 L27.08 13.65 L29.78 15.15 Z M32 20 A12 12 0 1 0 32 44 A12 12 0 1 0 32 20 Z"/><path fill="currentColor" d="M27 27h10v10H27z"/></svg><span>Enter</span></a>
-            <p class="landing-patch-label">PATCH 5.1</p>
             <span id="assetStatus" class="landing-sr-only" role="status"></span>
             <div id="loadError" class="landing-error" hidden><p id="errorMessage"></p><button type="button" id="retryAssets">Try again</button></div>
         </div>
+        <a class="landing-credit" href="https://discord.com/users/805105039953362975" target="_blank" rel="noopener noreferrer">made by Hazu</a>
         <noscript><p class="landing-error">Enable JavaScript to open the toolkit.</p></noscript>
     </main>
     <section id="toolkitView" hidden aria-label="Nullscape toolkit" tabindex="-1">

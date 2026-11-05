@@ -628,8 +628,8 @@ function getActiveMedalCurses() {
 
     return getDisplayedCurseNames()
         .map(name => findCurseByName(name))
-        .filter(curse => curse && curse.medal && typeof curse.value === "number")
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(curse => curse?.medal)
+        .sort(compareMedalCurseLevels);
 
 }
 
@@ -639,11 +639,15 @@ function getAllMedalCurses() {
     if (typeof globalCurses === "undefined" || typeof enemyCurses === "undefined") return [];
 
     return [...globalCurses, ...enemyCurses]
-        .filter(curse => curse.medal && typeof curse.value === "number")
-        .sort((a, b) => (b.value - a.value) || a.name.localeCompare(b.name));
+        .filter(curse => curse.medal)
+        .sort(compareMedalCurseLevels);
 
 }
 
+
+function formatPurificationCurseValue(curse) {
+    return Number.isFinite(curse.value) ? `${curse.value} curse value` : "Curse value unknown";
+}
 
 function renderPurificationAltarCalculator() {
 
@@ -663,11 +667,11 @@ function renderPurificationAltarCalculator() {
     }
 
     const curse = selectedCurses.find(item => item.name === selectedPurificationAltarCurse) || null;
-    const curseValue = curse && typeof curse.value === "number" ? curse.value : 0;
+    const curseValue = Number.isFinite(curse?.value) ? curse.value : null;
     const level = typeof getLevel === "function" ? getLevel() : 1;
     const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
     const levelMultiplier = getPurificationAltarLevelMultiplier(level);
-    const cost = getPurificationAltarCost(curseValue, level, playerCount);
+    const cost = curseValue === null ? null : getPurificationAltarCost(curseValue, level, playerCount);
 
     purificationAltarFormula.textContent = "curse value × level multiplier × √players";
 
@@ -684,7 +688,7 @@ function renderPurificationAltarCalculator() {
     if (purificationAltarPickerValue) {
 
         purificationAltarPickerValue.innerHTML = nextCurse
-            ? `<img src="assets/curses/${slugify(nextCurse.name)}.png" alt=""><span><strong>${nextCurse.name}</strong><small>${nextCurse.value} curse value</small></span>`
+            ? `<img src="${getAssetPath("curses", nextCurse.name)}" alt=""><span><strong>${nextCurse.name}</strong><small>${formatPurificationCurseValue(nextCurse)}</small></span>`
             : "All medal curses added";
 
     }
@@ -704,7 +708,7 @@ function renderPurificationAltarCalculator() {
             option.disabled = isAdded;
             option.setAttribute("role", "option");
             option.setAttribute("aria-selected", medalCurse.name === pendingPurificationAltarCurse ? "true" : "false");
-            option.innerHTML = `<img src="assets/curses/${slugify(medalCurse.name)}.png" alt=""><span><strong>${medalCurse.name}</strong><small>${medalCurse.value} curse value</small></span>${isAdded ? "<em>ADDED</em>" : ""}`;
+            option.innerHTML = `<img src="${getAssetPath("curses", medalCurse.name)}" alt=""><span><strong>${medalCurse.name}</strong><small>${formatPurificationCurseValue(medalCurse)}</small></span>${isAdded ? "<em>ADDED</em>" : ""}`;
 
             attachClickAction(option, () => {
 
@@ -753,8 +757,8 @@ function renderPurificationAltarCalculator() {
             selectTarget.className = "purification-altar-target-select";
             selectTarget.setAttribute("aria-pressed", activeCurse.name === selectedPurificationAltarCurse ? "true" : "false");
             selectTarget.innerHTML = `
-                <img src="assets/curses/${slugify(activeCurse.name)}.png" alt="">
-                <span class="purification-altar-target-copy"><strong>${activeCurse.name}</strong><small>${activeCurse.value} curse value</small></span>
+                <img src="${getAssetPath("curses", activeCurse.name)}" alt="">
+                <span class="purification-altar-target-copy"><strong>${activeCurse.name}</strong><small>${formatPurificationCurseValue(activeCurse)}</small></span>
                 <span class="purification-altar-target-source ${isPayoutCurse ? "payout" : "normal"}">${isPayoutCurse ? "PAYOUT" : "NO PAYOUT"}</span>
             `;
             removeTarget.type = "button";
@@ -787,11 +791,11 @@ function renderPurificationAltarCalculator() {
         { label: "Level", value: level },
         { label: "Party", value: `${playerCount} player${playerCount === 1 ? "" : "s"}` },
         { label: "Multiplier", value: `×${levelMultiplier}` },
-        { label: "Curse value", value: curseValue }
+        { label: "Curse value", value: curseValue ?? "—" }
     ]);
 
     purificationAltarSummary.innerHTML = curse
-        ? `<span>${curse.name}</span><strong>${cost.toLocaleString()} <small>Golden Gifts</small></strong>`
+        ? `<span>${curse.name}</span><strong>${cost === null ? "—" : cost.toLocaleString()} <small>Golden Gifts</small></strong>`
         : `<span>Select a curse</span><strong>— <small>Golden Gifts</small></strong>`;
 
 }
@@ -864,7 +868,6 @@ if (purificationAltarPickerToggle && purificationAltarPickerMenu) {
 
 
 function setAltarsPanelOpen(isOpen) {
-    if (isOpen && document.documentElement.classList.contains('maintenance-active')) return;
 
     if (!altarsPanel || !altarsToggleButton) {
 

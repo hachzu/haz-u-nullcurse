@@ -34,4 +34,4 @@ Images already exist under the sibling folder's `assets/patch-5-1/icons/`. Its p
 3. For Dependence: observed altar prices with full level/mode/player/balance context and what happens to Shield ownership.
 4. For Arrogance and Conceit: eligible upgrades, new caps, extra-tier prices and what happens to excess stacks after a delusion ends.
 
-Keep unknowns explicit. This reference does not alter public maintenance mode or enable unverified mechanics in the toolkit.
+Keep unknowns explicit. This reference does not enable unverified mechanics in the toolkit.

@@ -9,7 +9,6 @@
     window.NullscapeMoved = true;
     document.documentElement.classList.add('site-moved');
     // The retired host always directs visitors to the current site.
-    document.documentElement.classList.remove('maintenance-active');
     const style = document.createElement('style');
     style.textContent = `
         html.site-moved body { margin: 0; background: #090510; color: #eee6f7; }

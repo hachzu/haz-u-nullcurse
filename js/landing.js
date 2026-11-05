@@ -3,8 +3,6 @@
 (() => {
     'use strict';
     if (window.NullscapeMoved) return;
-    const maintenance = document.documentElement.classList.contains('maintenance-active');
-    const maintenanceRoutes = new Set(['deaths', 'lobby']);
     const $ = id => document.getElementById(id);
     const home = $('landingView');
     const toolkit = $('toolkitView');
@@ -31,27 +29,6 @@
     } catch (_) { /* Storage is optional. */ }
 
     const background = $('landingBackground');
-    const editingNotice = home.querySelector('.landing-editing-notice');
-    function fillEditingRibbons() {
-        if (!editingNotice) return;
-        const unit = 'PLEASE BE PATIENT! \u00a0\u00a0 ';
-        editingNotice.querySelectorAll('.editing-notice-ribbon').forEach(ribbon => {
-            const spans = ribbon.querySelectorAll('span');
-            if (spans.length !== 2) return;
-            spans[0].textContent = unit;
-            const unitWidth = spans[0].getBoundingClientRect().width;
-            if (!unitWidth) return;
-            const count = Math.max(2, Math.ceil(editingNotice.clientWidth / unitWidth) + 1);
-            spans.forEach(span => { span.textContent = unit.repeat(count); });
-            ribbon.style.setProperty('--ribbon-duration', `${spans[0].getBoundingClientRect().width / 32}s`);
-        });
-    }
-    if (editingNotice) {
-        new ResizeObserver(fillEditingRibbons).observe(editingNotice);
-        window.addEventListener('resize', fillEditingRibbons, { passive: true });
-        document.fonts?.ready.then(fillEditingRibbons);
-        fillEditingRibbons();
-    }
     function resetParallax() {
         background.style.removeProperty('--landing-x');
         background.style.removeProperty('--landing-y');
@@ -65,9 +42,6 @@
     reducedMotion.addEventListener('change', resetParallax);
 
     function showError(message) {
-        if (maintenance) {
-            document.querySelector('.maintenance-tool-status').textContent = message + ' Reload this page to retry.';
-        }
         window.NullscapeIntro?.finish();
         $('errorMessage').textContent = message;
         $('loadError').hidden = false;
@@ -89,9 +63,9 @@
         assetState = { loaded: 0, total: 1, ready: false, error: false };
         $('loadError').hidden = true;
         corePromise = (async () => {
-            const markup = await fetchResource('Toolkits.html?v=20261029-editing-notice2');
+            const markup = await fetchResource('Toolkits.html?v=20261106-temporary-row');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
-            const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"]):not([src*="maintenance.js"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
+            const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
             if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
             // Preload silently; optional images never hold up the Continue button.
             fetchResource('assets/preload.json', 'json').then(assets => {
@@ -133,12 +107,8 @@
             styles.filter(node => !node.getAttribute('href').startsWith('css/')).forEach(node => document.head.append(node.cloneNode()));
             const body = toolDocument.body.cloneNode(true);
             body.querySelectorAll('script').forEach(node => node.remove());
-            body.querySelector('#maintenanceScreen')?.remove();
             $('toolkitContent').replaceChildren(...body.childNodes);
-            if (maintenance) {
-                document.querySelectorAll('#toolkitContent .left-panel > :not(.site-header), #toolkitContent .right-panel > :not(#deathPanel):not(#lobbyPanel), #upgradeToggleButton, #altarsToggleButton').forEach(node => { node.inert = true; });
-            }
-            for (const source of toolDocument.querySelectorAll('script[src]:not([type="module"]):not([src*="maintenance.js"])')) {
+            for (const source of toolDocument.querySelectorAll('script[src]:not([type="module"])')) {
                 const script = document.createElement('script');
                 script.src = source.getAttribute('src');
                 await loadElement(script);
@@ -146,7 +116,7 @@
             const presence = document.createElement('script');
             presence.type = 'module';
             presence.src = 'js/presence.js?v=20261022-shared-config1';
-            if (!maintenance) document.head.append(presence);
+            document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);
             Object.values(routes).forEach(route => {
@@ -159,19 +129,19 @@
     }
     function readRoute() {
         const route = location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
-        if (route && (!routes[route] || (maintenance && !maintenanceRoutes.has(route)))) {
+        if (route && !routes[route]) {
             history.replaceState(null, '', `${location.pathname}${location.search}#/`);
             return '';
         }
         return route;
     }
     function routeFirstVisitThroughIntro() {
-        if (maintenance) return;
         let introSeen = false;
         try {
             const marker = localStorage.getItem('nullscapeLandingIntroSeen');
             introSeen = marker === 'true' || (marker === null && Number(localStorage.getItem('nullscapeLandingSongVisit')) > 0);
         } catch (_) { /* Storage-blocked visitors still get the intro this visit. */ }
+        try { if (localStorage.getItem('nullscapeSkipIntro') === 'true') return; } catch (_) {}
         if (introSeen) return;
         const firstVisitRoute = readRoute();
         if (!firstVisitRoute) return;
@@ -181,27 +151,14 @@
     function syncPanelRoute() {
         if (toolkit.hidden || !initialized) return;
         const active = Object.entries(routes).find(([, route]) => route.panel && $(route.panel)?.classList.contains('open'));
-        if (maintenance && !active) {
-            if (readRoute()) { history.replaceState(null, '', '#/'); applyRoute(); }
-            return;
-        }
         const route = active ? active[0] : 'curses';
-        if (maintenance && !maintenanceRoutes.has(route)) { location.hash = '#/'; return; }
         // Update the shareable URL without replaying navigation, resetting
         // scroll, or adding a browser-history entry for every panel toggle.
         if (readRoute() !== route) history.replaceState(null, '', `#/${route}`);
         document.title = `${routes[route].title} · Nullscape Toolkits`;
     }
     function showToolRoute(route) {
-        if (maintenance && !maintenanceRoutes.has(route)) return;
-        if (!maintenance) {
-            try { localStorage.setItem('nullscapeLandingIntroSeen', 'true'); } catch (_) {}
-        }
-        if (maintenance) {
-            document.documentElement.classList.add('maintenance-tool-open');
-            document.getElementById('maintenanceScreen').inert = true;
-            document.querySelector('.maintenance-tool-status').textContent = '';
-        }
+        try { localStorage.setItem('nullscapeLandingIntroSeen', 'true'); } catch (_) {}
         window.NullscapeIntro?.finish();
         const entering = toolkit.hidden;
         home.hidden = true;
@@ -225,7 +182,6 @@
         const route = readRoute();
         if (route) {
             if (!corePromise) prepareAssets();
-            if (maintenance) document.querySelector('.maintenance-tool-status').textContent = 'Loading ' + routes[route].title + '…';
             // Once initialized, tool links switch synchronously with no overlay.
             if (initialized) { showToolRoute(route); return; }
             $('assetStatus').textContent = 'Loading toolkit';
@@ -238,17 +194,6 @@
                 showToolRoute(route);
             } catch (error) { console.warn('Toolkit startup:', error); }
         } else {
-            if (maintenance) {
-                document.documentElement.classList.remove('maintenance-tool-open');
-                document.getElementById('maintenanceScreen').inert = false;
-                toolkit.hidden = true;
-                home.hidden = true;
-                document.body.classList.add('at-home');
-                document.title = 'Maintenance · Nullscape Toolkits';
-                document.querySelector('.maintenance-tools a')?.focus({ preventScroll: true });
-                window.dispatchEvent(new CustomEvent('nullscape-route-change', { detail: { route: 'home' } }));
-                return;
-            }
             const returning = home.hidden;
             toolkit.hidden = true;
             home.hidden = false;
@@ -273,42 +218,84 @@
     }, true);
     window.addEventListener('hashchange', applyRoute);
 
-    // Credit in the bottom-right corner. Edit the name (and optional link) here.
-    const CREDIT = { text: 'made by Hazu', url: '' };
-    const credit = document.createElement(CREDIT.url ? 'a' : 'span');
-    credit.className = 'landing-credit';
-    const author = document.createElement('span');
-    author.textContent = CREDIT.text;
-    const inspiration = document.createElement('span');
-    inspiration.className = 'landing-inspiration';
-    inspiration.append('inspired by ');
-    ['alireza1303', 'stickstetris'].forEach((name, index) => {
-        const handle = document.createElement('u');
-        handle.textContent = name;
-        if (index) inspiration.append(' and ');
-        inspiration.append(handle);
-    });
-    inspiration.append("' calculators.");
-    credit.append(author, inspiration);
-    if (CREDIT.url) { credit.href = CREDIT.url; credit.target = '_blank'; credit.rel = 'noopener noreferrer'; }
-    home.append(credit);
-
     // Play the recorded game cue and fade the landing mix while navigation proceeds.
     home.querySelectorAll('a[href^="#/"]').forEach(link => link.addEventListener('click', event => {
         if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        if (link.hash === location.hash) return;
         window.NullscapeIntro?.enterToolkit();
     }));
     const featureViewport = home.querySelector('.landing-features-viewport');
-    featureViewport.addEventListener('focusout', () => queueMicrotask(() => {
-        if (!featureViewport.contains(document.activeElement)) {
-            featureViewport.scrollLeft = 0;
-            featureViewport.querySelector('.landing-conveyor-window').scrollLeft = 0;
-        }
-    }));
+    const featureScroller = featureViewport.querySelector('.landing-conveyor-window');
+    const mobile = matchMedia('(max-width: 760px)');
+    let carouselFrame;
+    let carouselTimer;
+    let carouselTime = 0;
+    let lastAutoScroll = 0;
+    let touchActive = false;
+    let carouselVisible = false;
 
-    if (!maintenance) {
-        routeFirstVisitThroughIntro();
-        prepareAssets();
+    function pauseCarousel() {
+        cancelAnimationFrame(carouselFrame);
+        carouselFrame = null;
+        carouselTime = 0;
+        clearTimeout(carouselTimer);
     }
-    if (readRoute() || maintenance) applyRoute();
+    function canScrollFeatures() {
+        return mobile.matches && carouselVisible && !home.hidden && !document.hidden &&
+            !reducedMotion.matches && !document.documentElement.classList.contains('low-detail-mode') &&
+            !touchActive && !featureViewport.matches(':focus-visible, :has(:focus-visible)') &&
+            !['waiting', 'playing', 'assembled'].includes(home.dataset.introState);
+    }
+    function advanceCarousel(time) {
+        carouselFrame = null;
+        if (!canScrollFeatures()) return;
+        if (!carouselTime) carouselTime = time;
+        const elapsed = time - carouselTime;
+        if (elapsed >= 32) {
+            const loopWidth = featureScroller.scrollWidth / 2;
+            if (loopWidth <= featureScroller.clientWidth) return;
+            const next = featureScroller.scrollLeft + Math.max(1, Math.round(Math.min(elapsed, 66) * .032));
+            featureScroller.scrollLeft = next % loopWidth;
+            lastAutoScroll = featureScroller.scrollLeft;
+            carouselTime = time;
+        }
+        carouselFrame = requestAnimationFrame(advanceCarousel);
+    }
+    function resumeCarousel(delay = 0) {
+        pauseCarousel();
+        if (canScrollFeatures()) {
+            carouselTimer = setTimeout(() => { carouselFrame = requestAnimationFrame(advanceCarousel); }, delay);
+        }
+    }
+    const observeFeatures = new IntersectionObserver(([entry]) => {
+        carouselVisible = entry.isIntersecting;
+        resumeCarousel();
+    });
+    observeFeatures.observe(featureViewport);
+    new MutationObserver(() => resumeCarousel()).observe(home, {
+        attributes: true, attributeFilter: ['data-intro-state', 'hidden']
+    });
+    featureScroller.addEventListener('touchstart', () => {
+        touchActive = true;
+        pauseCarousel();
+    }, { passive: true });
+    for (const event of ['touchend', 'touchcancel']) {
+        featureScroller.addEventListener(event, () => {
+            touchActive = false;
+            resumeCarousel(1500);
+        }, { passive: true });
+    }
+    featureScroller.addEventListener('scroll', () => {
+        if (featureScroller.scrollLeft !== lastAutoScroll) resumeCarousel(1500);
+    }, { passive: true });
+    featureViewport.addEventListener('focusin', () => { if (!canScrollFeatures()) pauseCarousel(); });
+    featureViewport.addEventListener('focusout', () => queueMicrotask(() => resumeCarousel(1500)));
+    mobile.addEventListener('change', () => resumeCarousel());
+    reducedMotion.addEventListener('change', () => resumeCarousel());
+    document.addEventListener('visibilitychange', () => resumeCarousel());
+    window.addEventListener('nullscape-low-detail-change', () => resumeCarousel());
+
+    routeFirstVisitThroughIntro();
+    prepareAssets();
+    if (readRoute()) applyRoute();
 })();

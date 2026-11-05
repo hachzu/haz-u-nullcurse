@@ -16,6 +16,8 @@ const runState = {
 
     curseStacks: new Map(),
 
+    temporaryCurseExpiries: new Map(),
+
     medalCurseValues: new Map(),
 
     medalPurified: new Set()
@@ -376,7 +378,7 @@ const globalCurses = [
     { name: "Lower Gravity", level: 1, exclusiveGroup: "gravity-choice" },
     { name: "Higher Gravity", level: 1, exclusiveGroup: "gravity-choice" },
     { name: "Random Spawn", level: 5 },
-    { name: "Scattered Gifts", level: 1 },
+    { name: "Scattered Gifts", medal: true, level: 1 },
     { name: "Weaker Jump Pads", level: 1 },
     { name: "Savory Ring", level: 5 },
 
@@ -440,14 +442,14 @@ const globalCurses = [
     },
 
     {
-        name: "Minefield",
+        name: "Minefield", medal: true,
         level: 15,
         casualDisabled: true,
         max: 2
     },
 
-    { name: "Run", level: 15, casualDisabled: true, requiresCurses: ["Barotrauma"] },
-    { name: "Volatile Implosions", level: 10, requiresCurses: ["Void Implosions"] },
+    { name: "Run", medal: true, level: 15, casualDisabled: true, requiresCurses: ["Barotrauma"] },
+    { name: "Volatile Explosions", level: 10, requiresCurses: ["Void Implosions"], medal: true },
 
     { name: "Beacon Mirage", level: 25, medal: true, value: 300 }
 
@@ -459,11 +461,12 @@ const enemyCurses = [
     { name: "More Ringing", enemy: "Bell" },
     { name: "Mighty Gong", enemy: "Bell", medal: true, value: 150 },
     { name: "Concussion", enemy: "Bell", medal: true, value: 200 },
-    { name: "Concussive Blast", enemy: "Bell", level: 10 },
+    { name: "Concussive Blast", medal: true, enemy: "Bell", level: 10 },
 
     { name: "Bigger Marts", enemy: "Mart" },
     { name: "Red Marts", enemy: "Mart" },
-    { name: "Beacon Imp", enemy: "Mart", level: 18 },
+    { name: "Beacon Imp", medal: true, enemy: "Mart", level: 18 },
+    { name: "Beacon Mart", enemy: "Mart", medal: true },
 
     {
         name: "Mart Infection",
@@ -474,7 +477,7 @@ const enemyCurses = [
     },
 
     { name: "Problem Child", enemy: "Baby", level: 5, medal: true, value: 150 },
-    { name: "Big Baby", enemy: "Baby" },
+    { name: "Big Baby", medal: true, enemy: "Baby" },
     { name: "Baby Steps", enemy: "Baby", level: 5, medal: true, value: 175 },
 
     {
@@ -487,8 +490,8 @@ const enemyCurses = [
     },
 
     { name: "Scorched Earth", enemy: "ICBM", medal: true, value: 150 },
-    { name: "Magic Missile", enemy: "ICBM" },
-    { name: "Incendiary Shrapnel", enemy: "ICBM" },
+    { name: "Magic Missile", medal: true, enemy: "ICBM" },
+    { name: "Incendiary Shrapnel", medal: true, enemy: "ICBM" },
 
     {
         name: "Closer Husk",
@@ -510,12 +513,12 @@ const enemyCurses = [
     { name: "Horse Skipping", enemy: "Springer", level: 5 },
 
     { name: "Bloodier Meat", enemy: "Flesh", level: 5, medal: true, value: 300 },
-    { name: "Airborne Flesh", level: 5, requiresEnemies: ["Flesh", "Springer"] },
+    { name: "Airborne Flesh", medal: true, level: 5, requiresEnemies: ["Flesh", "Springer"] },
 
     { name: "Camouflage", enemy: "Guardian", level: 8 },
     { name: "Shotgun", enemy: "Guardian", level: 5, medal: true, value: 200 },
 
-    { name: "Ambush", enemy: "Telefragger" },
+    { name: "Ambush", medal: true, enemy: "Telefragger" },
     { name: "Accurate Telefragger", enemy: "Telefragger", medal: true, value: 150 },
 
     { name: "Lost Embers", enemy: "Kolona" },
@@ -529,21 +532,21 @@ const enemyCurses = [
     },
     { name: "Angry Bird", level: 1, requiresCurses: ["Razorbloom"] },
     { name: "Smart Little Bird", requiresCurses: ["Razorbloom", "Oblivion"] },
-    { name: "Stronger Wings", requiresCurses: ["Razorbloom"] },
+    { name: "Stronger Wings", medal: true, requiresCurses: ["Razorbloom"] },
 
     { name: "Blade Carousel", enemy: "Voidbreaker", level: 5, medal: true, value: 290 },
     { name: "Corrupted Blades", enemy: "Voidbreaker", level: 15 },
 
-    { name: "Jumping Instruments", enemy: "Cadence", level: 15 },
+    { name: "Jumping Instruments", medal: true, enemy: "Cadence", level: 15 },
     { name: "Encore", enemy: "Cadence", level: 15 },
     { name: "Alluring Arrangement", level: 1, requiresEnemies: ["Cadence", "Bell"] },
 
-    { name: "Blueprint: Cross Beams", enemy: "Scrapmaw", level: 20 },
+    { name: "Blueprint: Cross Beams", medal: true, enemy: "Scrapmaw", level: 20 },
     { name: "Blueprint: Supersonic Lasers", enemy: "Scrapmaw", level: 15 },
-    { name: "Blueprint: Efficient Coolant", enemy: "Scrapmaw", level: 20, medal: true, value: 250 },
+    { name: "Blueprint: Efficient Cooling", enemy: "Scrapmaw", level: 20, medal: true, value: 250 },
 
-    { name: "Leo", enemy: "Sigil" },
-    { name: "Sagittarius", enemy: "Sigil" },
+    { name: "Leo", medal: true, enemy: "Sigil" },
+    { name: "Sagittarius", medal: true, enemy: "Sigil" },
 
     { name: "Deadly Melody", enemy: "Cadence", medal: true, value: 280, disabledModes: ["solo"] }
 
@@ -792,10 +795,35 @@ function hasCurse(name) {
 
 function getCurseStackCount(name) {
 
-    return runState.curseStacks.get(name) || 0;
+    return (runState.curseStacks.get(name) || 0) + (runState.temporaryCurseExpiries.get(name)?.length || 0);
 
 }
 
+
+function getActiveCurseNames() {
+    return new Set([...runState.activeCurses, ...runState.temporaryCurseExpiries.keys()]);
+}
+
+function expireTemporaryCurses(level) {
+    for (const [name, expiries] of runState.temporaryCurseExpiries) {
+        const remaining = expiries.filter(expiry => expiry > level);
+        if (remaining.length) runState.temporaryCurseExpiries.set(name, remaining);
+        else runState.temporaryCurseExpiries.delete(name);
+    }
+}
+
+function loadTemporaryCurseExpiries(entries) {
+    const temporary = new Map();
+    for (const [savedName, expiries] of Array.isArray(entries) ? entries.filter(Array.isArray) : []) {
+        const name = canonicalCurseName(savedName);
+        const curse = findCurseByName(name);
+        if (!curse || !Array.isArray(expiries)) continue;
+        const valid = expiries.filter(expiry => Number.isSafeInteger(expiry) && expiry > runState.level)
+            .slice(0, Math.max(0, (curse.max || 1) - (runState.curseStacks.get(name) || 0)));
+        if (valid.length) temporary.set(name, valid);
+    }
+    return temporary;
+}
 
 function getTotalMedalCurseValue() {
 
@@ -904,7 +932,7 @@ function togglePurify(curseName) {
 
 function getDisplayedCurseNames() {
 
-    const names = new Set(runState.activeCurses);
+    const names = getActiveCurseNames();
 
     for (const name of runState.medalPurified) {
 
@@ -937,6 +965,11 @@ function slugify(name) {
 
 function getAssetPath(assetType, name) {
 
+    if (assetType === "curses") {
+        if (name === "Beacon Mart") return "assets/enemies/Mart.png";
+        if (name === "Volatile Explosions") return "assets/curses/VolatileImplosions.png";
+        if (name === "Blueprint: Efficient Cooling") return "assets/curses/BlueprintEfficientCoolant.png";
+    }
     const assetName = assetType === "curses" && chaosCurses.some(curse => curse.name === name)
         ? name.replace(/['’]/g, "")
         : (assetType === "curses" && name === "LAP 2" ? "Lap 2" : name);
@@ -1295,7 +1328,7 @@ function exclusiveGroupAvailable(curse) {
 
     }
 
-    for (const activeCurse of runState.activeCurses) {
+    for (const activeCurse of getActiveCurseNames()) {
 
         if (activeCurse === curse.name) {
 
@@ -1685,33 +1718,14 @@ function getGreaterPool() {
 }
 
 
-function getMedalPool() {
-
-    const global = getGlobalPool();
-    const enemy = getEnemyPool();
-
-    const medals = [...global, ...enemy].filter(curse => curse.medal);
-
-    const byValue = (a, b) => (b.value || 0) - (a.value || 0);
-
-    if (!curseVisibilityState.showUpcoming || curseVisibilityState.showAll) {
-
-        return medals.sort(byValue);
-
-    }
-
-    // Show Upcoming: available medal curses first (highest value
-    // first, as always), then the upcoming ones soonest-unlock first.
-    const available = medals.filter(curse => !isCurseUpcoming(curse)).sort(byValue);
-
-    const upcoming = medals
-        .filter(curse => isCurseUpcoming(curse))
-        .sort((a, b) => ((a.level || 0) - (b.level || 0)) || byValue(a, b));
-
-    return [...available, ...upcoming];
-
+function compareMedalCurseLevels(a, b) {
+    return (getCurseUnlockLevel(a) || 1) - (getCurseUnlockLevel(b) || 1) ||
+        a.name.localeCompare(b.name);
 }
 
+function getMedalPool() {
+    return [...getGlobalPool(), ...getEnemyPool()].filter(curse => curse.medal).sort(compareMedalCurseLevels);
+}
 
 function isEnemyLevelMet(enemy) {
 
@@ -1841,7 +1855,7 @@ function toggleEnemy(enemy) {
 }
 
 
-function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
+function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false, temporaryLevels = 0) {
 
     if (!isCurseSelectable(curse, ignoreLevel)) {
 
@@ -1849,11 +1863,19 @@ function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
 
     }
 
+    if (temporaryLevels > 0) {
+        const expiries = runState.temporaryCurseExpiries.get(curse.name) || [];
+        expiries.push(Math.floor(getLevel()) + temporaryLevels);
+        runState.temporaryCurseExpiries.set(curse.name, expiries);
+        render();
+        return;
+    }
+
     runState.activeCurses.add(curse.name);
 
     runState.curseStacks.set(
         curse.name,
-        getCurseStackCount(curse.name) + 1
+        (runState.curseStacks.get(curse.name) || 0) + 1
     );
 
     // A medal curse can also appear in its usual Global/Enemy pool.
@@ -1865,7 +1887,7 @@ function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
 
     }
 
-    if (curse.medal && awardsMedalPayout) {
+    if (curse.medal && awardsMedalPayout && Number.isFinite(curse.value)) {
 
         runState.medalCurseValues.set(curse.name, curse.value || 0);
 
@@ -1879,7 +1901,14 @@ function selectCurse(curse, ignoreLevel = false, awardsMedalPayout = false) {
 function removeCurse(curseName) {
 
     const curse = findCurseByName(curseName);
-    const currentCount = getCurseStackCount(curseName);
+    const expiries = runState.temporaryCurseExpiries.get(curseName);
+    if (expiries?.length) {
+        expiries.pop();
+        if (!expiries.length) runState.temporaryCurseExpiries.delete(curseName);
+        render();
+        return;
+    }
+    const currentCount = runState.curseStacks.get(curseName) || 0;
 
     if (currentCount <= 1) {
 
@@ -1908,6 +1937,7 @@ function removeAllCurses() {
 
     runState.activeCurses.clear();
     runState.curseStacks.clear();
+    runState.temporaryCurseExpiries.clear();
     runState.medalCurseValues.clear();
     runState.medalPurified.clear();
 
@@ -2437,9 +2467,10 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     }
 
     const selectable = isCurseSelectable(curse);
+    if (temporaryCurseMode && selectable) card.classList.add("curse-card--temporary-pick");
     const locked = !selectable;
     const capped = isCurseAtCap(curse);
-    const removableViaCard = curseVisibilityState.unlockAll && capped;
+    const removableViaCard = !temporaryCurseMode && curseVisibilityState.unlockAll && capped;
 
     if (locked) {
 
@@ -2534,7 +2565,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
     // locked medal curse shows only the lock badge - previewing a
     // reward for something you can't select yet would be misleading
     // anyway.
-    if (awardsMedalPayout && !locked) {
+    if (awardsMedalPayout && !locked && !temporaryCurseMode && Number.isFinite(curse.value)) {
 
         const reward = document.createElement("div");
 
@@ -2591,7 +2622,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
         // Unlock All Curses: reclicking an already-owned/maxed card
         // removes it right from the pool, instead of making the user
         // hunt it down in the Active Curses list to hit its × button.
-        if (curseVisibilityState.unlockAll && isCurseAtCap(curse)) {
+        if (removableViaCard) {
 
             removeCurse(curse.name);
 
@@ -2599,7 +2630,7 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
         }
 
-        selectCurse(curse, false, awardsMedalPayout);
+        selectCurse(curse, false, awardsMedalPayout, temporaryCurseMode ? getTemporaryCurseDuration() : 0);
 
     });
 
@@ -2748,8 +2779,17 @@ function renderActiveCurses() {
         }
 
         content.appendChild(name);
+        const expiries = runState.temporaryCurseExpiries.get(curseName);
+        if (expiries?.length) {
+            const remaining = Math.max(0, Math.min(...expiries) - Math.floor(runState.level));
+            const badge = document.createElement("span");
+            badge.className = "temporary-curse-badge";
+            badge.textContent = expiries.length > 1 ? `TEMP ×${expiries.length} · ${remaining} LV` : `TEMP · ${remaining} LV`;
+            badge.title = "Levels until the next temporary stack expires";
+            content.appendChild(badge);
+        }
 
-        if (isMedalCurse) {
+        if (isMedalCurse && Number.isFinite(curse.value) && (purified || runState.activeCurses.has(curseName))) {
 
             if (!purified) {
 
@@ -2869,16 +2909,27 @@ function renderPool(containerId, curses, isDedicatedMedalContainer = false) {
 }
 
 
+let temporaryCurseMode = false;
+let levelEditPending = false;
+
+function getTemporaryCurseDuration() {
+    const value = Math.trunc(Number(document.getElementById("temporaryCurseDuration").value));
+    return Number.isSafeInteger(value) && value > 0 ? Math.min(value, 100000) : 10;
+}
+
 const STORAGE_KEY = "nullscapeRunState";
 const LEGACY_CURSE_NAMES = Object.freeze({
     "Nothing": "Nothing?",
+    "Volatile Implosions": "Volatile Explosions",
+    "Blueprint: Efficient Coolant": "Blueprint: Efficient Cooling",
+    "Blueprint: Effecient Cooling": "Blueprint: Efficient Cooling",
     "Lap 2": "LAP 2",
     "Camoflauge": "Camouflage",
     "Stairs... Stairs": "Stairs... Stairs..."
 });
 
 function canonicalCurseName(name) {
-    return LEGACY_CURSE_NAMES[name] || name;
+    return Object.hasOwn(LEGACY_CURSE_NAMES, name) ? LEGACY_CURSE_NAMES[name] : name;
 }
 
 let runStateSaveTimer = null;
@@ -2905,6 +2956,7 @@ function persistRunState() {
             activeDelusions: Array.from(runState.activeDelusions),
 
             curseStacks: Array.from(runState.curseStacks.entries()),
+            temporaryCurseExpiries: Array.from(runState.temporaryCurseExpiries),
 
             // Older saved states could not distinguish a curse chosen
             // from a normal pool from one chosen from Medal Curses.
@@ -2986,6 +3038,7 @@ function loadRunState() {
         runState.activeCurses = new Set((saved.activeCurses || []).map(canonicalCurseName));
         runState.activeDelusions = sanitizeActiveDelusions(saved.activeDelusions || []);
         runState.curseStacks = new Map((saved.curseStacks || []).map(([name, count]) => [canonicalCurseName(name), count]));
+        runState.temporaryCurseExpiries = loadTemporaryCurseExpiries(saved.temporaryCurseExpiries || []);
         // The old format awarded payout to every selected medal curse,
         // so its saved values cannot reliably be carried forward.
         const tracksMedalPayoutSources = saved.medalPayoutSourcesTracked === true;
@@ -3015,6 +3068,7 @@ function loadRunState() {
 function render() {
 
     runState.level = getLevel();
+    if (!levelEditPending) expireTemporaryCurses(runState.level);
     pruneActiveEnemyStacks();
 
     const difficultyContainer = document.getElementById("difficultyContainer");
@@ -3063,9 +3117,13 @@ function render() {
     }
 
     if (medalSectionEl) {
-
         medalSectionEl.classList.toggle("result-section--hidden", medalDisplayState.hideSection);
-
+        const controls = document.getElementById("temporaryCurseControls");
+        const row = document.querySelector(medalDisplayState.hideSection ? ".pool-title-row" : ".medal-curse-heading");
+        if (controls && row && controls.parentElement !== row) {
+            if (medalDisplayState.hideSection) row.append(controls);
+            else row.prepend(controls);
+        }
     }
     const chaosToggle = document.getElementById("chaosModeToggle");
     chaosToggle.classList.toggle("active", runState.chaosMode);
@@ -3156,10 +3214,20 @@ function pruneInvalidActiveEnemies() {
 }
 
 
-document.getElementById("levelInput").addEventListener("input", scheduleRender);
+document.getElementById("levelInput").addEventListener("input", () => {
+    levelEditPending = true;
+    scheduleRender();
+});
+
+document.getElementById("levelInput").addEventListener("blur", () => {
+    if (!levelEditPending) return;
+    levelEditPending = false;
+    render();
+});
 
 document.getElementById("levelInput").addEventListener("change", () => {
 
+    levelEditPending = false;
     runState.level = getLevel();
 
     pruneInvalidActiveEnemies();
@@ -3168,6 +3236,17 @@ document.getElementById("levelInput").addEventListener("change", () => {
 
 });
 
+
+const temporaryCurseToggle = document.getElementById("temporaryCurseToggle");
+const temporaryCurseDuration = document.getElementById("temporaryCurseDuration");
+temporaryCurseToggle.addEventListener("click", () => {
+    temporaryCurseMode = !temporaryCurseMode;
+    temporaryCurseToggle.setAttribute("aria-pressed", String(temporaryCurseMode));
+    render();
+});
+temporaryCurseDuration.addEventListener("change", () => {
+    temporaryCurseDuration.value = getTemporaryCurseDuration();
+});
 
 const playerCountInputEl = document.getElementById("playerCountInput");
 
@@ -3268,9 +3347,13 @@ attachHoldAction(document.getElementById("resetButton"), () => {
     runState.activeCurses.clear();
     runState.activeDelusions.clear();
     runState.curseStacks.clear();
+    runState.temporaryCurseExpiries.clear();
     runState.medalCurseValues.clear();
     runState.medalPurified.clear();
 
+    temporaryCurseMode = false;
+    temporaryCurseToggle.setAttribute("aria-pressed", "false");
+    temporaryCurseDuration.value = 10;
     document.getElementById("levelInput").value = 1;
     document.getElementById("playerCountInput").value = 1;
 

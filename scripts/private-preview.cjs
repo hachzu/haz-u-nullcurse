@@ -18,9 +18,7 @@ const RELOAD = `<script>
 </script>`;
 
 function previewHTML(source) {
-    return source.replace('class="maintenance-active"', '')
-        .replace(/\s*<main id="maintenanceScreen"[\s\S]*?<\/main>/, '')
-        .replace('</body>', RELOAD + '\n</body>');
+    return source.replace('</body>', RELOAD + '\n</body>');
 }
 
 function createPreviewServer() {

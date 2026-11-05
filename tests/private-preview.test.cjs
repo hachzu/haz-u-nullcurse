@@ -3,21 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
-const { createPreviewServer, previewHTML } = require('../scripts/private-preview.cjs');
-
-test('public landing and standalone toolkit are open without the maintenance gate', () => {
-    for (const name of ['index.html', 'Toolkits.html']) {
-        const html = fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
-        assert.doesNotMatch(html.match(/<html\b[^>]*>/i)[0], /maintenance-active/);
-    }
-});
-
-test('preview removes a maintenance cover when one is enabled', () => {
-    const source = '<html class="maintenance-active"><body><main id="maintenanceScreen">Maintenance</main><main id="toolkitView">Tools</main></body></html>';
-    const result = previewHTML(source);
-    assert.doesNotMatch(result, /maintenance-active|maintenanceScreen/);
-    assert.match(result, /id="toolkitView">Tools/);
-});
+const { createPreviewServer } = require('../scripts/private-preview.cjs');
 
 test('private preview opens tools without altering public HTML or contacting Firebase', async () => {
     const root = path.resolve(__dirname, '..');
@@ -36,7 +22,6 @@ test('private preview opens tools without altering public HTML or contacting Fir
         for (const url of ['/', '/Toolkits.html', '/contributors/']) {
             const response = await request(url);
             assert.equal(response.status, 200);
-            assert.doesNotMatch(response.body, /class="maintenance-active"|<main id="maintenanceScreen"/);
             assert.match(response.body, /PRIVATE LOCAL PREVIEW/);
         }
         assert.equal(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), original);

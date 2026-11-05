@@ -3599,7 +3599,6 @@ const upgradeBackButton = document.getElementById("upgradeBackButton");
 const activeEnemiesSection = document.getElementById("activeEnemiesSection");
 
 function setUpgradePanelOpen(isOpen) {
-    if (isOpen && document.documentElement.classList.contains('maintenance-active')) return;
 
     if (!upgradePanel || !upgradeToggleButton) {
 

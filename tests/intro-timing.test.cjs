@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../js/intro.js'), 'utf8');
 
-function harness({ reduced = false, failSong = false, deferSong = false, failClips = false, assetsReady = true, noAudio = false, latency = .1, storage = {}, blockedStorage = false } = {}) {
+function harness({ reduced = false, failSong = false, deferSong = false, failClips = false, assetsReady = true, noAudio = false, latency = .1, storage = {}, blockedStorage = false, random = .25 } = {}) {
     const listeners = {};
     const frames = new Map();
     const contexts = [];
@@ -25,6 +25,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
                 contains: name => classes.has(name), toggle: (name, on) => on ? classes.add(name) : classes.delete(name) };
         }
         addEventListener(name, handler) { (this.listeners ||= {})[name] = handler; }
+        removeEventListener(name) { delete this.listeners?.[name]; }
         dispatch(name) { this.listeners?.[name]?.({ target: this }); }
         append(...nodes) { this.children.push(...nodes); }
         prepend(...nodes) { this.children.unshift(...nodes); }
@@ -69,7 +70,9 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
                 frequencyBinCount: 1024,
                 connect(target) { return target; }, disconnect() {},
                 start(...args) { this.started = args; }, stop() { this.stopped = true; },
-                getFloatFrequencyData(data) { data.fill(this.db ?? -80); } };
+                getFloatFrequencyData(data) {
+                    data.fill(this.db ?? -80);
+                } };
             this.nodes.push(node); return node;
         }
         createGain() { return this.node('gain'); }
@@ -90,7 +93,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         close() { this.state = 'closed'; return Promise.resolve(); }
     }
     const sandbox = {
-        console: { debug: (...args) => logs.push(args), table() {} }, Float32Array, Math, URLSearchParams,
+        console: { debug: (...args) => logs.push(args), table() {} }, Float32Array, Math: Object.assign(Object.create(Math), { random: () => random }), URLSearchParams,
         AbortController, setTimeout, clearTimeout, localStorage: {
             getItem: key => { if (blockedStorage) throw new Error('blocked'); return storage[key] ?? null; },
             setItem: (key, value) => { if (blockedStorage) throw new Error('blocked'); storage[key] = value; }
@@ -102,6 +105,8 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
         cancelAnimationFrame: id => frames.delete(id),
         fetch: async (url, { signal } = {}) => (requests.push(url), { ok: url.includes('/audio/') ? !failClips : !failSong, arrayBuffer: async () => {
             signal?.throwIfAborted();
+            if (url.includes('intermission theme')) return Uint8Array.of(4).buffer;
+            if (url.includes('symphony.mp3')) return Uint8Array.of(5).buffer;
             if (url.includes('/audio/')) return Uint8Array.of(url.includes('beat-drop') ? 1 : url.includes('ambience') ? 2 : 3).buffer;
             if (!deferSong) return new ArrayBuffer(1);
             return new Promise((resolve, reject) => {
@@ -116,7 +121,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
             NullscapeAssets: { getState: () => ({ ...assetState }) },
             OfflineAudioContext: class { decodeAudioData(data) {
                 const id = new Uint8Array(data)[0];
-                const duration = [153.554286, 7.793, 34.81, 2.198][id];
+                const duration = [153.554286, 7.793, 34.81, 2.198, 86, 460][id];
                 const sampleRate = 48000, length = Math.round(duration * sampleRate);
                 return Promise.resolve({ id, duration, sampleRate, length, numberOfChannels: 2,
                     getChannelData: () => new Float32Array(length) });
@@ -128,6 +133,7 @@ function harness({ reduced = false, failSong = false, deferSong = false, failCli
     vm.runInNewContext(code, sandbox);
     return { elements, contexts, logs, frames, requests, assets: assetState,
         intro: sandbox.window.NullscapeIntro,
+        flush,
         async start() { sandbox.window.NullscapeIntro.start(); await flush(); this.advance(0); },
         async releaseSong() { releaseAudio?.(); await flush(); },
         async visibility(hidden) { sandbox.document.hidden = hidden; this.dispatch('visibilitychange'); await flush(); },
@@ -150,29 +156,92 @@ const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source'
 
 const preference = h => h.elements.enterToolkit.following[0];
 
-test('actual landing entries alternate Delightful, nil, Delightful; an abandoned gate does not count', async () => {
-    const storage = {};
-    const abandoned = harness({ storage });
-    abandoned.intro.finish();
-    assert.equal(storage.nullscapeLandingSongVisit, undefined);
-    for (const [index, song] of ['delightful', 'nil', 'delightful'].entries()) {
-        const h = harness({ storage });
-        assert.equal(h.elements.landingView.dataset.landingSong, song);
-        await h.start();
-        assert.equal(storage.nullscapeLandingSongVisit, String(index + 1));
-        assert.equal(h.requests.some(url => url.includes('nil-landing')), song === 'nil');
-        h.intro.finish();
+test('both full-intro rotation orders play the other theme next and nil third', async () => {
+    for (const [random, order] of [[.25, ['delightful', 'symphony']], [.75, ['symphony', 'delightful']]]) {
+        const storage = {};
+        harness({ storage, random }).intro.finish();
+        assert.equal(storage.nullscapeLandingSongVisit, undefined);
+        for (const [index, song] of [...order, 'nil', order[0]].entries()) {
+            const h = harness({ storage, random });
+            assert.equal(h.elements.landingView.dataset.landingSong, song);
+            await h.start();
+            assert.equal(storage.nullscapeLandingSongVisit, String(index + 1));
+            h.intro.finish();
+        }
     }
 });
 
-test('nil fades in at 90 percent, then reveals controls without a drop, glint or beacon audio', async () => {
-    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+test('Symphony fades in at 35%, ends at the earlier cue, and switches audio and credits', async () => {
+    const h = harness({ random: .75 });
+    await h.start();
+    const sources = h.contexts[0].nodes.filter(node => [4, 5].includes(node.buffer?.id));
+    const [intermission, main] = sources;
+    const fade = h.contexts[0].nodes.flatMap(node => node.gain.events)
+        .find(event => event[0] === 'curve' && event[2] === intermission.started[0]);
+    assert.ok(Math.abs(intermission.started[0] - .05 - 5.528125) < 1e-8);
+    assert.equal(fade[3], 5);
+    assert.equal(fade[1][0], 0);
+    assert.ok(Math.abs(fade[1].at(-1) - .35) < 1e-7);
+    assert.equal(intermission.started[2], 75.035);
+    assert.equal(main.started[0], intermission.started[0] + 75.035);
+    const credit = h.elements.landingView.children.find(node => node.className === 'ns-now-playing');
+    h.advance(intermission.started[0] - .05);
+    assert.equal(percent(h), 35);
+    assert.match(credit.children[0].href, /tiktok/);
+    assert.equal(credit.children[1].textContent, 'Zyx');
+    assert.equal(h.requests.some(url => /beat-drop|beacon-ambience/.test(url)), false);
+    h.advance(main.started[0] - .04);
+    assert.equal(credit.children[0].textContent, "Won't you hear my Symphony?");
+    assert.match(credit.children[0].href, /svPMjdCvuSQ/);
+    h.intro.finish();
+});
+
+test('the Symphony intermission pulses at 96 BPM without revealing the landing early', async () => {
+    const h = harness({ random: .75 });
+    await h.start();
+    const context = h.contexts[0];
+    const intermission = context.nodes.find(node => node.buffer?.id === 4);
+    const start = intermission.started[0] - .05;
+    h.advance(start + .1);
+    assert.equal(h.elements.landingView.dataset.introState, 'assembled');
+    assert.notEqual(h.elements.landingView.dataset.introDrop, '1');
+    const beat = start + .035 + 10 * (60 / 96);
+    const background = h.elements['.landing-background'].style;
+    h.advance(beat - .025);
+    const tail = Number(background['--ns-beat-scale']);
+    h.advance(beat + .075);
+    const scale = Number(background['--ns-beat-scale']);
+    const light = Number(background['--ns-beat-light']);
+    assert.ok(scale > tail && scale < 1.025);
+    assert.ok(light > 0 && light <= .009);
+    h.intro.finish();
+});
+
+test('the main Symphony track uses a smooth 120 BPM grid', async () => {
+    const h = harness({ random: .75 });
+    await h.start();
+    const context = h.contexts[0];
+    const main = context.nodes.find(node => node.buffer?.id === 5);
+    const beat = main.started[0] - .05 + .09 + 10 * (60 / 120);
+    const background = h.elements['.landing-background'].style;
+    h.advance(beat - .025);
+    const tail = Number(background['--ns-beat-scale']);
+    h.advance(beat + .1);
+    const scale = Number(background['--ns-beat-scale']);
+    const light = Number(background['--ns-beat-light']);
+    assert.ok(scale > tail && scale < 1.02);
+    assert.ok(light > 0 && light <= .012);
+    h.intro.finish();
+});
+
+test('nil fades in at 50 percent, then reveals controls without a drop, glint or beacon audio', async () => {
+    const h = harness({ storage: { nullscapeLandingRotation: 'nil' } });
     await h.start();
     const source = songSource(h);
     const startsAt = source.started[0] - .05;
     assert.ok(Math.abs(startsAt - 6.928125) < 1e-8);
     h.advance(startsAt);
-    assert.equal(percent(h), 90);
+    assert.equal(percent(h), 50);
     const fade = h.contexts[0].nodes.flatMap(node => node.gain.events).find(event => event[0] === 'curve');
     assert.equal(fade[3], 3.5);
     assert.equal(fade[1][0], 0);
@@ -191,18 +260,18 @@ test('nil fades in at 90 percent, then reveals controls without a drop, glint or
 });
 
 test('slow nil loading waits for real assets; a missing file still produces usable controls', async () => {
-    const h = harness({ storage: { nullscapeLandingSongVisit: '1' }, assetsReady: false });
+    const h = harness({ storage: { nullscapeLandingRotation: 'nil' }, assetsReady: false });
     await h.start();
     h.advance(8);
     assert.equal(songSource(h), undefined);
-    assert.ok(percent(h) < 90);
+    assert.ok(percent(h) < 50);
     h.assets.ready = true; h.assets.progress = 1;
     h.advance(10);
     assert.ok(songSource(h).started[0] > h.contexts[0].currentTime);
     h.advance(10.2);
-    assert.equal(percent(h), 90);
+    assert.equal(percent(h), 50);
     h.intro.finish();
-    const missing = harness({ storage: { nullscapeLandingSongVisit: '1' }, failSong: true });
+    const missing = harness({ storage: { nullscapeLandingRotation: 'nil' }, failSong: true });
     await missing.start(); missing.advance(20);
     assert.equal(songSource(missing), undefined);
     assert.equal(missing.elements.landingView.dataset.introState, 'done');
@@ -210,7 +279,7 @@ test('slow nil loading waits for real assets; a missing file still produces usab
 });
 
 test('nil remains tied to the paused audio clock when the tab is hidden', async () => {
-    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+    const h = harness({ storage: { nullscapeLandingRotation: 'nil' } });
     await h.start(); h.advance(6);
     const before = percent(h);
     await h.visibility(true); h.advance(30);
@@ -222,7 +291,7 @@ test('nil remains tied to the paused audio clock when the tab is hidden', async 
 });
 
 test('nil keeps the visualizer active without driving background bumps', async () => {
-    const h = harness({ storage: { nullscapeLandingSongVisit: '1' } });
+    const h = harness({ storage: { nullscapeLandingRotation: 'nil' } });
     const canvas = h.elements.landingView.children.find(node => node.className === 'ns-audio-visualizer');
     canvas.clientWidth = 480; canvas.clientHeight = 60;
     await h.start();
@@ -233,8 +302,8 @@ test('nil keeps the visualizer active without driving background bumps', async (
     assert.equal(Number(h.elements['.landing-background'].style['--ns-beat-scale']), 1);
     assert.equal(canvas.hidden, false);
     assert.equal(canvas.paint.bars.length, 96);
-    assert.ok(canvas.paint.bars.every(bar => bar[2] === 1.5));
-    assert.equal(canvas.paint.fillStyle, '#93d9bd');
+    assert.ok(canvas.paint.bars.every(bar => bar[2] === 2));
+    assert.equal(canvas.paint.fillStyle, '#ad70ed');
     const clears = canvas.paint.clears;
     h.advance(7.36);
     assert.equal(canvas.paint.clears, clears, 'drawing is capped at 30fps');
@@ -275,7 +344,7 @@ test('finishing at the gate or during playback cancels pending audio and frames'
     }
 });
 
-test('future-visit preference skips on reload and can be turned off again', () => {
+test('future-visit preference skips on reload and rotates Symphony and nil', async () => {
     const storage = {};
     const first = harness({ storage });
     assert.equal(preference(first).hidden, true);
@@ -288,8 +357,15 @@ test('future-visit preference skips on reload and can be turned off again', () =
     assert.equal(first.elements.landingView.dataset.introState, 'done');
     const next = harness({ storage });
     assert.equal(next.elements.landingView.dataset.introState, 'done');
-    assert.equal(next.contexts.length, 0);
-    assert.equal(next.frames.size, 0);
+    await next.flush();
+    assert.equal(next.contexts[0].nodes.find(node => node.buffer?.id === 4).started[0], 1);
+    assert.equal(storage.nullscapeLandingSkipRotation, 'nil');
+    next.intro.finish();
+    const nil = harness({ storage });
+    await nil.flush();
+    assert.equal(songSource(nil).started[0], 1);
+    assert.equal(storage.nullscapeLandingSkipRotation, 'symphony');
+    nil.intro.finish();
     assert.equal(preference(next).hidden, false);
     const nextCheckbox = preference(next).children[0];
     nextCheckbox.checked = false;
@@ -436,7 +512,7 @@ test('leaving the landing cancels scheduled audio, loading UI and future drop cu
     assert.ok(h.contexts[0].nodes.filter(n => n.started).every(n => n.stopped));
 });
 
-test('one glint precedes the drop and the clean Toolkits wipe follows button reveal', async () => {
+test('one glint precedes the drop and the Toolkits wordmark rises and settles during reveal', async () => {
     const h = harness(); await h.start();
     h.advance(DROP - 1.01);
     assert.ok(!h.logs.some(e => e[1].event === 'pre-drop-glint'));
@@ -446,11 +522,13 @@ test('one glint precedes the drop and the clean Toolkits wipe follows button rev
     h.advance(DROP + .5);
     assert.equal(h.elements.logoStage.style['--ns-toolkit-visible'], '0');
     assert.equal(Number(h.elements['.ns-logo-build'].style['--ns-build-scale']), 1.25);
-    h.advance(DROP + 3.3);
+    h.advance(DROP + 2.8);
     const wipe = Number.parseFloat(h.elements.logoStage.style['--ns-toolkit-wipe']);
-    assert.ok(wipe > 0 && wipe < 102);
-    h.advance(DROP + 3.8);
-    assert.equal(h.elements.logoStage.style['--ns-toolkit-wipe'], '102%');
+    assert.ok(wipe > 0 && wipe < 56);
+    assert.ok(Number.parseFloat(h.elements.logoStage.style['--ns-toolkit-rise']) > 0);
+    h.advance(DROP + 3.4);
+    assert.equal(h.elements.logoStage.style['--ns-toolkit-wipe'], '56%');
+    assert.equal(h.elements.logoStage.style['--ns-toolkit-rise'], '0px');
     assert.equal(h.logs.filter(e => e[1].event === 'pre-drop-glint').length, 1);
     assert.equal(Number(h.elements['.ns-logo-build'].style['--ns-build-scale']), 1);
     h.intro.finish();
@@ -460,7 +538,7 @@ test('song credit still appears three seconds after audible playback', async () 
     const h = harness(); await h.start();
     const credit = h.elements.landingView.children.find(n => n.className === 'ns-now-playing');
     assert.equal(credit.children[0].textContent, 'A Delightful New Death');
-    assert.equal(credit.children[1].textContent, 'by Digital Descendant');
+    assert.equal(credit.children[1].textContent, 'DIGITAL DESCENDANT');
     h.advance(SONG + 2.99);
     assert.equal(credit.hidden, true);
     h.advance(SONG + 3.01);
@@ -501,6 +579,9 @@ test('detected music kicks compensate speaker latency and leave logo float untou
     assert.equal(Number(h.elements['.landing-background'].style['--ns-beat-scale']), 1);
     h.advance(21.31);
     assert.ok(Number(h.elements['.landing-background'].style['--ns-beat-scale']) > 1);
+    h.advance(21.4);
+    const light = Number(h.elements['.landing-background'].style['--ns-beat-light']);
+    assert.ok(light > .012 && light <= .072);
     assert.equal(h.elements.logoStage.classList.contains('ns-kick'), false);
     h.advance(23);
     assert.equal(Number(h.elements['.landing-background'].style['--ns-beat-scale']), 1);
@@ -553,7 +634,7 @@ test('Enter cue survives tool navigation while the entire landing mix fades out'
     const h = harness(); await h.start(); h.advance(DROP + 4);
     const context = h.contexts[0];
     const bus = context.nodes[0];
-    const now = context.currentTime + .005;
+    const now = context.currentTime;
     h.intro.enterToolkit();
     const cue = context.nodes.find(n => n.buffer?.id === 3);
     assert.equal(cue.started[0], now);

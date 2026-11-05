@@ -207,6 +207,6 @@ Unknowns:
 2. We check dependencies and identify any missing facts needed for correct calculations.
 3. Implement the confirmed change and check its unlock, blocked, maximum-stack, and pricing cases.
 4. Review it in your private local preview. Save changes and the preview refreshes automatically.
-5. Keep the public maintenance screen until you explicitly want to reopen it. Local edits do not publish themselves; pushing to a deployment branch may publish through your hosting setup.
+5. Local edits do not publish themselves; pushing to a deployment branch may publish through your hosting setup.
 
 Start with shared rule changes (modes, difficulty, scaling, shop levels), then enemies, curses/delusions, and upgrades. A small dependency group can be sent together. Existing saved selections may need migration when names, caps, or dependencies change.
