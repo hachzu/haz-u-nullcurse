@@ -3516,7 +3516,6 @@ body {
     transition:
         background 0.12s,
         border-color 0.12s,
-        transform 0.12s,
         box-shadow 0.12s;
 }
 
@@ -3727,7 +3726,6 @@ body {
     border-color: #b866ff;
     box-shadow: 0 0 22px rgba(184, 102, 255, 0.3);
 
-    transform: translateY(-2px);
 }
 
 
@@ -3936,8 +3934,6 @@ body {
 
     border-color: #ff9d9d;
     box-shadow: 0 0 18px rgba(174, 19, 19, 0.35);
-
-    transform: translateY(-2px);
 
     opacity: 0.7;
 }
@@ -4860,7 +4856,6 @@ body {
     background: linear-gradient(160deg, #17334b 0%, #150826 100%);
     border-color: #9bcee9;
     box-shadow: 0 0 22px #75bceb4d;
-    transform: translateY(-2px);
 }
 #medalCurseContainer .curse-card .curse-name-label,
 #globalCurseContainer .curse-card.medal .curse-name-label,
@@ -5211,7 +5206,6 @@ body:not(:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open)) 
     background: linear-gradient(160deg, #1a3e35 0%, #150826 100%);
     border-color: #8be4c1;
     box-shadow: 0 0 22px #65d6ad4d;
-    transform: translateY(-2px);
 }
 #delusionContainer .delusion-card--locked:hover { transform: none; box-shadow: none; }
 #delusionContainer .delusion-card:focus-visible { outline: 2px solid #a7ffdb; outline-offset: 2px; }

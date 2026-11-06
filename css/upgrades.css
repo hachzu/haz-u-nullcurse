@@ -231,7 +231,7 @@
 
     z-index: 10;
 
-    display: flex;
+    display: none;
 
     align-items: stretch;
     justify-content: stretch;
@@ -241,27 +241,29 @@
     background:
         linear-gradient(160deg, rgba(3, 17, 28, 0.82), rgba(6, 11, 21, 0.9)),
         url('../assets/background/UpgradeShop.png') center / cover no-repeat;
-    background-attachment: scroll, fixed;
 
     border-left: 1px solid rgba(143, 217, 255, 0.35);
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(143, 217, 255, 0.05);
-
-    transform: translateX(100%);
-    opacity: 0;
-
-    transition:
-        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.4s ease-out;
-
-    pointer-events: none;
 }
 
 
 .upgrade-panel.open {
-    transform: none;
-    opacity: 1;
+    display: flex;
+}
 
-    pointer-events: auto;
+@media (prefers-reduced-motion: no-preference) {
+    .upgrade-panel.open {
+        animation: upgrade-panel-slide-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+@keyframes upgrade-panel-slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inner > button {
+    animation-play-state: paused;
 }
 
 
@@ -1036,8 +1038,6 @@
         #ff9d3d 75%,
         #ffd074 100%
     );
-    background-size: 260% auto;
-
     border: 1px solid #ffe3a8;
     border-radius: 999px;
 
@@ -1053,30 +1053,7 @@
 
     box-shadow: 0 0 12px rgba(255, 157, 61, 0.35);
 
-    animation: upgrade-advance-gradient-shift 5.7s linear infinite;
-
     transition: transform 0.15s, box-shadow 0.15s;
-}
-
-
-/* Loop fix: this button's gradient is 260% of its width, so one full
-   tile is 2.6x the button. With background-position percentages the
-   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
-   only slid it 1.6x - short of a whole tile, which made the colors
-   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
-   tile, so the end frame equals the start frame and the loop is
-   seamless. Durations were stretched by the same 1.625 factor to keep
-   the original pace. */
-@keyframes upgrade-advance-gradient-shift {
-
-    0% {
-        background-position: 0% 50%;
-    }
-
-    100% {
-        background-position: 162.5% 50%;
-    }
-
 }
 
 
@@ -1105,8 +1082,6 @@
         #4a7a91 75%,
         #8fd9ff 100%
     );
-    background-size: 260% auto;
-
     border: 1px solid #c7ecff;
     border-radius: 999px;
 
@@ -1122,30 +1097,7 @@
 
     box-shadow: 0 0 12px rgba(143, 217, 255, 0.35);
 
-    animation: upgrade-revert-gradient-shift 5.7s linear infinite;
-
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-}
-
-
-/* Loop fix: this button's gradient is 260% of its width, so one full
-   tile is 2.6x the button. With background-position percentages the
-   shift is (container - image) * pct = -1.6x * pct, so ending at 100%
-   only slid it 1.6x - short of a whole tile, which made the colors
-   snap back at the loop point. 162.5% (= 260 / 160) slides exactly one
-   tile, so the end frame equals the start frame and the loop is
-   seamless. Durations were stretched by the same 1.625 factor to keep
-   the original pace. */
-@keyframes upgrade-revert-gradient-shift {
-
-    0% {
-        background-position: 0% 50%;
-    }
-
-    100% {
-        background-position: 162.5% 50%;
-    }
-
 }
 
 
@@ -1680,7 +1632,6 @@
     cursor: not-allowed;
 
     opacity: 0.4;
-    filter: grayscale(0.6);
 }
 
 
@@ -1690,10 +1641,7 @@
 }
 
 
-/* No boxed background/border anymore - the icon sits directly in
-   the row's own gradient so it reads as part of the row instead of
-   a separate tile stuck inside it. A soft drop-shadow keeps it from
-   visually flattening into that background. */
+/* The icon sits directly on the row's gradient. */
 .upgrade-icon {
     grid-column: 2;
 
@@ -1708,8 +1656,6 @@
     justify-content: center;
 
     overflow: hidden;
-
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 

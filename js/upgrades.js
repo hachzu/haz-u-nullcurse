@@ -1434,7 +1434,7 @@ function computePendingTotal() {
 
     for (const item of upgradesList) {
 
-        if (isUpgradeContextHidden(item)) {
+        if (!upgradeState.pending.has(item.name) || isUpgradeContextHidden(item)) {
 
             continue;
 
@@ -2204,7 +2204,7 @@ function createPendingUpgradeCard(item) {
     return row;
 }
 
-function createUpgradeCard(item) {
+function createUpgradeCard(item, remaining) {
     if (item.pricePending) return createPendingUpgradeCard(item);
 
     if (isUpgradeContextHidden(item)) {
@@ -2228,7 +2228,6 @@ function createUpgradeCard(item) {
     const isFullyOwned = owned >= maxStack;
     const isSelected = !locked && pending > owned;
 
-    const remaining = computeRemainingGifts();
     const variablePricing = hasVariablePricing(item);
 
     // Flat-priced upgrades (Swiftness Ring, Paycheck, Defuse Kit, and
@@ -2605,15 +2604,11 @@ function renderUpgradeGrid() {
 
     }
 
-    activeContainer.innerHTML = "";
-
-    if (ownedContainer) {
-
-        ownedContainer.innerHTML = "";
-
-    }
-
     const freeform = upgradeState.freeformSort;
+    const total = computePendingTotal();
+    const remaining = upgradeState.goldenGifts - total;
+    const activeContent = document.createDocumentFragment();
+    const ownedContent = document.createDocumentFragment();
 
     activeContainer.classList.toggle("upgrade-categories--freeform", freeform);
 
@@ -2644,7 +2639,7 @@ function renderUpgradeGrid() {
             const owned = getOwnedStack(item.name);
             const maxStack = getMaxUpgradeStacks(item);
 
-            const row = createUpgradeCard(item);
+            const row = createUpgradeCard(item, remaining);
 
             if (!row) {
 
@@ -2672,13 +2667,13 @@ function renderUpgradeGrid() {
 
         }
 
-        activeContainer.appendChild(
+        activeContent.appendChild(
             buildUpgradeCategoryColumn(category, sortAvailableUpgradeEntries(activeRows).map(entry => entry.row), "All owned")
         );
 
         if (ownedContainer) {
 
-            ownedContainer.appendChild(
+            ownedContent.appendChild(
                 buildUpgradeCategoryColumn(category, ownedRows, "Nothing owned yet", "upgrade-category-heading--owned")
             );
 
@@ -2688,13 +2683,13 @@ function renderUpgradeGrid() {
 
     if (freeform) {
 
-        activeContainer.appendChild(
+        activeContent.appendChild(
             buildFreeformUpgradeGrid(sortAvailableUpgradeEntries(allActiveEntries), "All owned")
         );
 
         if (ownedContainer) {
 
-            ownedContainer.appendChild(
+            ownedContent.appendChild(
                 buildFreeformUpgradeGrid(sortUpgradeEntriesByLevel(allOwnedEntries), "Nothing owned yet")
             );
 
@@ -2702,12 +2697,14 @@ function renderUpgradeGrid() {
 
     }
 
-    updateUpgradeTotals();
+    activeContainer.replaceChildren(activeContent);
+    ownedContainer?.replaceChildren(ownedContent);
+    updateUpgradeTotals(total);
 
 }
 
 
-function updateUpgradeTotals() {
+function updateUpgradeTotals(total) {
 
     const totalValueEl = document.getElementById("upgradeTotalValue");
     const remainingValueEl = document.getElementById("upgradeRemainingValue");
@@ -2723,7 +2720,6 @@ function updateUpgradeTotals() {
         toggle.querySelector(".upgrade-switch-label").textContent = active ? "ON" : "OFF";
     }
 
-    const total = computePendingTotal();
     const remaining = upgradeState.goldenGifts - total;
 
     if (totalValueEl) {
@@ -2981,8 +2977,10 @@ function createProgressiveSubToggle(id, stateKey, title) {
         upgradeState[stateKey] = !upgradeState[stateKey];
 
         saveUpgradeState();
-        renderProgressiveToggle();
-        renderUpgradeGrid();
+        syncProgressiveSubToggle(id, stateKey);
+        if (stateKey !== "progressiveAutoSkip") {
+            renderUpgradeGrid();
+        }
 
     }, playUtilitySound);
 
