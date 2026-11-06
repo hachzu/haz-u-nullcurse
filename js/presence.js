@@ -72,6 +72,8 @@ function ensureUsername() {
                 <button type="button" id="usernameGateSubmit" class="username-gate-pop" style="animation-delay: 0.38s;">
                     CONTINUE
                 </button>
+                <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
+                CONTINUE ANONYMOUSLY
             </div>
 
                 
