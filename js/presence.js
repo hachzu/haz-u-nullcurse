@@ -73,8 +73,8 @@ function ensureUsername() {
                     CONTINUE
                 </button>
             </div>
-            <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
-                CONTINUE ANONYMOUSLY
+
+                
             </button>
         `;
         document.body.appendChild(overlay);
