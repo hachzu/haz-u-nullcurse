@@ -4558,7 +4558,7 @@ body {
 
 .number-increment-button--down { right: 5px; }
 
-.game-settings-disclosure { margin-bottom: 28px; }
+.tracker-disclosure { margin-bottom: 28px; }
 .game-settings-bar {
     display: flex;
     align-items: center;
@@ -4582,22 +4582,22 @@ body {
 .game-settings-bar svg { flex: 0 0 14px; }
 .game-settings-bar:hover { background: rgba(143, 217, 255, 0.04); }
 .game-settings-bar:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.game-settings-disclosure > .control-section:first-of-type { padding-top: 18px; }
+.tracker-disclosure > .control-section:first-of-type { padding-top: 18px; }
 .game-settings-bar svg { transform: rotate(-90deg); transition: transform 220ms ease; }
-.game-settings-disclosure[open] > .game-settings-bar svg { transform: rotate(0); }
-.game-settings-disclosure > .control-section:last-child { margin-bottom: 0; }
+.tracker-disclosure[open] > .game-settings-bar svg { transform: rotate(0); }
+.tracker-disclosure > .control-section:last-child { margin-bottom: 0; }
 
 /* Native disclosure animation needs no timers or per-frame scripts. */
 @supports (interpolate-size: allow-keywords) and selector(details::details-content) {
-    .game-settings-disclosure { interpolate-size: allow-keywords; }
-    .game-settings-disclosure::details-content {
+    .tracker-disclosure { interpolate-size: allow-keywords; }
+    .tracker-disclosure::details-content {
         block-size: 0;
         overflow: hidden;
         opacity: 0;
         transition: block-size 220ms ease, opacity 180ms ease,
             content-visibility 220ms allow-discrete;
     }
-    .game-settings-disclosure[open]::details-content {
+    .tracker-disclosure[open]::details-content {
         block-size: auto;
         opacity: 1;
     }
@@ -4605,7 +4605,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
     .game-settings-bar svg,
-    .game-settings-disclosure::details-content { transition: none; }
+    .tracker-disclosure::details-content { transition: none; }
 }
 
 /* Dependency icons have their own footer so names, rewards and locks stay clear. */

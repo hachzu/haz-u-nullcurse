@@ -43,7 +43,7 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261106-death-colors">
+    <link rel="stylesheet" href="css/tracker.css?v=20261106-enemy-disclosure">
     <link rel="stylesheet" href="css/upgrades.css?v=20261106-death-rankings">
     <link rel="stylesheet" href="css/link.css?v=20261106-link-info">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
@@ -145,7 +145,7 @@
         </section>
 
 
-        <details class="game-settings-disclosure" open>
+        <details class="game-settings-disclosure tracker-disclosure" open>
             <summary class="game-settings-bar" aria-label="Show or hide game mode and difficulty">
                 <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <span class="game-settings-rule" aria-hidden="true"></span>
@@ -202,20 +202,21 @@
 
         </details>
 
-        <section id="activeEnemiesSection" class="control-section hide-when-upgrades-open">
+        <details id="activeEnemiesSection" class="tracker-disclosure hide-when-upgrades-open" open>
+            <summary class="game-settings-bar">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="game-settings-rule" aria-hidden="true"></span>
+                <span>ACTIVE ENEMIES</span>
+                <span class="game-settings-rule" aria-hidden="true"></span>
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
+            <section class="control-section" aria-label="Enemy controls and list">
 
             <div class="section-heading">
 
-                <span>ACTIVE ENEMIES</span>
+                <span id="enemyCount" class="count" aria-label="Active enemy count">0</span>
 
                 <div class="section-heading-controls">
-
-                    <span
-                        id="enemyCount"
-                        class="count"
-                    >
-                        0
-                    </span>
 
                     <button
                         type="button"
@@ -262,7 +263,8 @@
                 class="button-grid enemy-grid"
             ></div>
 
-        </section>
+            </section>
+        </details>
 
 
         <section class="control-section active-section">
@@ -1293,7 +1295,7 @@
 <script src="js/startup.js"></script>
 <script src="js/tracker.js?v=20261106-death-rankings"></script>
 <script src="js/upgrades.js?v=20261105-cleanup"></script>
-<script src="js/tools.js?v=20261106-unlimited-deaths"></script>
+<script src="js/tools.js?v=20261106-tools-tip"></script>
 <script src="js/card-reveals.js?v=20261027-pink-purple-logo1"></script>
 <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1"></script>
 <script src="js/link-core.js?v=20261027-link1"></script>

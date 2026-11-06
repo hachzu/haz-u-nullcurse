@@ -23,7 +23,29 @@
     <meta name="twitter:image" content="https://nullkits.pages.dev/assets/branding/nullscape-logo-preview-v8.png">
     <meta name="twitter:image:alt" content="Nullscape Toolkits logo with pink glow over a curse-tracker scene in its original colors.">
     <meta name="theme-color" content="#9b5de5">
-    <script>document.documentElement.classList.add('intro-pending');</script>
+    <script>
+        document.documentElement.classList.add('intro-pending');
+
+        // Replay onboarding once per browser before the intro or toolkit reads its saved state.
+        (() => {
+            const resetKey = 'nullscapeOnboardingReset';
+            const resetVersion = '20261106';
+            try {
+                if (localStorage.getItem(resetKey) === resetVersion) return;
+                for (const key of [
+                    'nullscape_username',
+                    'nullscapeLandingIntroSeen',
+                    'nullscapeSkipIntro',
+                    'nullscapeLandingSongVisit',
+                    'nullscapeLandingRotation',
+                    'nullscapeLandingSkipRotation',
+                    'nullscapeHideToolsSpotlight',
+                    'nullscapeHideSettingsSpotlight'
+                ]) localStorage.removeItem(key);
+                localStorage.setItem(resetKey, resetVersion);
+            } catch (_) { /* Onboarding can still run when storage is unavailable. */ }
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -32,7 +54,7 @@
     <link rel="preload" as="image" href="assets/branding/ToolkitsWordmark.png">
     <link id="landingStyles" rel="stylesheet" href="css/landing.css?v=20261106-intermission-grid">
     <script src="js/intro.js?v=20261106-soft-reveal" defer onerror="document.documentElement.classList.remove('intro-pending')"></script>
-    <script src="js/landing.js?v=20261106-link-info" defer></script>
+    <script src="js/landing.js?v=20261106-enemy-disclosure" defer></script>
     <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1" defer></script>
     <script type="module" src="js/site-visits.js?v=20261022-1" onerror="document.getElementById('siteVisitsCount').textContent='—'"></script>
 </head>

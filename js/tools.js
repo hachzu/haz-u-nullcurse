@@ -4649,10 +4649,7 @@ renderLobbyTagLog();
  * exactly around those buttons, and shows a small callout explaining
  * what they are.
  *
- * Shows again on every page load by design (not just once ever) -
- * that's what was asked for - until the person dismisses it with
- * "Don't show again", which is the only thing that persists via
- * localStorage. Plain "Got it" only closes it for this visit.
+ * "Got it" saves the dismissal in localStorage.
  *
  * Fully self-contained: no dependency on script.js globals, so load
  * order relative to the other feature scripts doesn't matter.
@@ -4846,15 +4843,9 @@ renderLobbyTagLog();
         callout.className = "tools-spotlight-callout";
         callout.innerHTML = ""
             + '<div class="tools-spotlight-callout-arrow"></div>'
-            + '<div class="tools-spotlight-callout-title">More tools live down here</div>'
-            + '<div class="tools-spotlight-callout-body">'
-            + "The curse tracker isn't the only thing on this page - the "
-            + "Upgrade Calculator, Death Tracker, and Altars buttons are "
-            + "right there too."
-            + "</div>"
+            + '<div class="tools-spotlight-callout-title">Tools are located here!</div>'
             + '<div class="tools-spotlight-callout-actions">'
             + '<button type="button" class="tools-spotlight-dismiss-button" id="toolsSpotlightGotIt">Got it</button>'
-            + '<button type="button" class="tools-spotlight-neveragain-button" id="toolsSpotlightNeverAgain">Don\'t show again</button>'
             + "</div>";
 
         overlay.append(top, bottom, left, right, ring, callout);
@@ -4878,8 +4869,7 @@ renderLobbyTagLog();
 
         });
 
-        callout.querySelector("#toolsSpotlightGotIt").addEventListener("click", () => close(false));
-        callout.querySelector("#toolsSpotlightNeverAgain").addEventListener("click", () => close(true));
+        callout.querySelector("#toolsSpotlightGotIt").addEventListener("click", () => close(true));
 
     }
 
@@ -5794,10 +5784,8 @@ renderLobbyTagLog();
  *
  * Behaviour mirrors tools-spotlight.js:
  *   - Shows on every page load until permanently dismissed.
- *   - "Got it"          → closes for this visit only.
- *   - "Don't show again" → closes and sets localStorage so it never
- *                          appears again.
- *   - Clicking the dim panels or pressing Escape → same as "Got it".
+ *   - "Got it" saves the dismissal in localStorage.
+ *   - Clicking the dim panels or pressing Escape closes it for this visit.
  *   - If the user opens the settings panel themselves before
  *     dismissing, the spotlight closes automatically (they found it!).
  *
@@ -5966,26 +5954,16 @@ renderLobbyTagLog();
         callout.className = "settings-spotlight-callout";
         callout.innerHTML =
             '<div class="settings-spotlight-callout-arrow"></div>'
-            + '<div class="settings-spotlight-callout-icon" aria-hidden="true">⚙</div>'
-            + '<div class="settings-spotlight-callout-title">Low Detail Mode has been added!</div>'
+            + '<div class="settings-spotlight-callout-title">Low Detail Mode</div>'
             + '<div class="settings-spotlight-callout-body">'
             +   '<p>Since this website has a lot of animations and effects, it\'s recommended '
             +   'to turn this on if you\'re on a low-end device or deep into a '
             +   'CPU/GPU-intensive late-game run, since it can cause a lot of delayed clicks '
             +   'and lag without it.</p>'
-            +   '<p class="settings-spotlight-callout-tip">'
-            +     '⚙ You can find it in Settings anytime if you need it later.'
-            +   '</p>'
             + '</div>'
             + '<div class="settings-spotlight-callout-actions">'
-            +   '<button type="button" class="settings-spotlight-open-button" id="settingsSpotlightOpen">'
-            +     'Open Settings'
-            +   '</button>'
             +   '<button type="button" class="settings-spotlight-dismiss-button" id="settingsSpotlightGotIt">'
             +     'Got it'
-            +   '</button>'
-            +   '<button type="button" class="settings-spotlight-neveragain-button" id="settingsSpotlightNeverAgain">'
-            +     "Don't show again"
             +   '</button>'
             + '</div>';
 
@@ -6006,15 +5984,7 @@ renderLobbyTagLog();
             });
         });
 
-        // "Open Settings" → open the panel and close the spotlight
-        callout.querySelector("#settingsSpotlightOpen").addEventListener("click", () => {
-            close(false);
-            const settingsBtn = document.getElementById("settingsToggleButton");
-            if (settingsBtn) settingsBtn.click();
-        });
-
-        callout.querySelector("#settingsSpotlightGotIt").addEventListener("click", () => close(false));
-        callout.querySelector("#settingsSpotlightNeverAgain").addEventListener("click", () => close(true));
+        callout.querySelector("#settingsSpotlightGotIt").addEventListener("click", () => close(true));
     }
 
     // ─── open / init ──────────────────────────────────────────────
@@ -6037,7 +6007,7 @@ renderLobbyTagLog();
 
         // If the user opens the settings panel themselves (by clicking
         // the button directly, underneath the spotlight ring), treat
-        // that as a "Got it" and close so the spotlight doesn't linger
+        // that as a dismissal for this visit so the spotlight doesn't linger
         // on top of the open panel.
         panelOpenHandler = () => close(false);
         document.addEventListener("nullscape-settings-opened", panelOpenHandler);
