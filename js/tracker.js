@@ -466,7 +466,6 @@ const enemyCurses = [
     { name: "Bigger Marts", enemy: "Mart" },
     { name: "Red Marts", enemy: "Mart" },
     { name: "Beacon Imp", medal: true, enemy: "Mart", level: 18 },
-    { name: "Beacon Mart", enemy: "Mart", medal: true },
 
     {
         name: "Mart Infection",
@@ -966,7 +965,6 @@ function slugify(name) {
 function getAssetPath(assetType, name) {
 
     if (assetType === "curses") {
-        if (name === "Beacon Mart") return "assets/enemies/Mart.png";
         if (name === "Volatile Explosions") return "assets/curses/VolatileImplosions.png";
         if (name === "Blueprint: Efficient Cooling") return "assets/curses/BlueprintEfficientCoolant.png";
     }
