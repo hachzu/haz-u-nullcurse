@@ -412,8 +412,14 @@
 }
 
 
+.death-panel-results {
+    flex: 0 0 min(48%, 500px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: 16px;
+}
+
 .death-panel-log-side {
-    flex: 0 0 280px;
     min-width: 0;
 
     display: flex;
@@ -482,6 +488,43 @@
     font-family: var(--font-modern);
     font-size: 11px;
     line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.death-player-identity,
+.death-rank-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.death-rank-entry {
+    justify-content: space-between;
+}
+
+.death-rank-name {
+    min-width: 0;
+}
+
+.death-player-badge {
+    display: inline-block;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-right: 5px;
+    border-radius: 2px;
+    background: var(--death-player-color);
+    transform: rotate(45deg);
+}
+
+.death-player-badge[hidden] {
+    display: none;
+}
+
+#deathStartLevelInput:disabled,
+.death-next-level-button:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 
@@ -612,13 +655,7 @@
 }
 
 
-/* ---- Unlimited Deaths toggle ----
-   Small label + track/thumb switch, matching the shape of the
-   Nothing Curse / Progressive Mode toggles in the Upgrade panel but
-   themed to this panel's red palette. Lives in the same
-   .death-level-controls row as the Next Level button, since turning
-   it on is what removes the need to keep clicking that button just
-   to reset a player's per-level cap. */
+/* ---- Level sync toggle ---- */
 .death-toggle-block {
     flex-shrink: 0;
 
@@ -858,26 +895,6 @@
 }
 
 
-.death-player-hint {
-    flex: 1 1 220px;
-    min-width: 180px;
-
-    padding: 9px 12px;
-
-    color: #a96a6a;
-
-    font-size: 10px;
-    line-height: 1.5;
-
-    border-left: 1px solid rgba(255, 109, 109, 0.25);
-}
-
-
-.death-player-hint strong {
-    color: #ffb0b0;
-}
-
-
 /* ---- Player list: max 3 per row, boxes capped so they don't stretch ---- */
 
 .death-player-list {
@@ -1037,9 +1054,11 @@
         flex-direction: column;
     }
 
-    .death-panel-log-side {
+    .death-panel-results {
         flex-basis: auto;
+    }
 
+    .death-panel-log-side {
         padding-left: 0;
         padding-top: 16px;
 
@@ -1062,13 +1081,6 @@
         align-items: stretch;
     }
 
-    .death-player-hint {
-        border-left: 0;
-        border-top: 1px solid rgba(255, 109, 109, 0.2);
-
-        padding: 10px 0 0;
-    }
-
     .death-player-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1083,6 +1095,10 @@
     }
 
     .death-player-list {
+        grid-template-columns: 1fr;
+    }
+
+    .death-panel-results {
         grid-template-columns: 1fr;
     }
 
@@ -2036,8 +2052,11 @@ body {
 }
 
 #usernameGateAnonymous {
-    display: block;
-    margin: 14px auto 0;
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    width: max-content;
+    margin-inline: auto;
     font-size: 11px;
     letter-spacing: 1px;
 }
@@ -4894,11 +4913,13 @@ body {
 .curse-level-divider { display: none; }
 .right-panel:has(.curse-pool-columns--list) { padding-inline: 16px; }
 .curse-pool-columns--list {
+    --pool-gap: 16px;
+    --pool-min-width: 190px;
     width: 100%;
     max-width: 1280px;
     margin-inline: auto;
     padding-top: 18px;
-    column-gap: 16px;
+    column-gap: var(--pool-gap);
 }
 .curse-pool-columns--list .curse-card { order: var(--level-order); }
 .curse-pool-columns--list .curse-level-divider {
@@ -4936,7 +4957,7 @@ body {
     scrollbar-width: thin;
     scrollbar-color: #9147d6 transparent;
 }
-.curse-pool-columns--list > .result-section { flex: 1 0 190px; }
+.curse-pool-columns--list > .result-section { flex: 1 0 var(--pool-min-width); }
 .curse-pool-columns--list .curse-row-level--chaos { display: none; }
 .curse-pool-columns--list .curse-row-level--chaos-plus { display: block; font-size: 60px; }
 .difficulty-mode-toggles { display: inline-flex; gap: 6px; flex-wrap: nowrap; }
@@ -5019,6 +5040,12 @@ body {
     position: relative;
     display: grid;
 }
+.medal-pool--hidden #medalHeading { visibility: hidden; }
+.medal-pool--hidden #medalCurseContainer { display: none; }
+.medal-pool--hidden:has(.medal-curse-title) {
+    height: 0;
+    margin-bottom: 0;
+}
 .medal-curse-title .temporary-curse-controls {
     position: absolute;
     z-index: 1;
@@ -5030,9 +5057,35 @@ body {
 .curse-pool-columns--list .medal-curse-title .temporary-curse-controls { bottom: calc(100% + 64px); }
 /* Keep the controls inside the scrolling strip without moving the pool headings. */
 .curse-pool-columns--list:has(.medal-curse-title .temporary-curse-controls) {
-    padding-top: 100px;
+    position: relative;
+    --temporary-strip-padding: 100px;
+    padding-top: var(--temporary-strip-padding);
     margin-top: -82px;
 }
+.right-panel:has(.curse-pool-columns--list) .pool-header {
+    z-index: 3;
+    pointer-events: none;
+}
+.right-panel:has(.curse-pool-columns--list) .curse-settings-cog { pointer-events: auto; }
+/* Anchor the controls to the Medal column's former position outside the flex layout. */
+.curse-pool-columns--list:has(> .medal-pool--hidden) {
+    --chaos-column: 0;
+    --delusion-column: 0;
+    --full-column-count: calc(4 + var(--chaos-column) + var(--delusion-column));
+    --medal-column-width: max(var(--pool-min-width),
+        calc((100% - (var(--full-column-count) - 1) * var(--pool-gap)) / var(--full-column-count)));
+}
+.curse-pool-columns--list:has(> #chaosCurseSection:not(.result-section--hidden)) { --chaos-column: 1; }
+.curse-pool-columns--list:has(> #delusionSection:not(.result-section--hidden)) { --delusion-column: 1; }
+.curse-pool-columns--list > .medal-pool--hidden {
+    position: absolute;
+    inset-block-start: var(--temporary-strip-padding);
+    inset-inline-start: calc(var(--chaos-column) * (var(--medal-column-width) + var(--pool-gap)));
+    width: var(--medal-column-width);
+    z-index: 2;
+    pointer-events: none;
+}
+.medal-pool--hidden .temporary-curse-controls { pointer-events: auto; }
 
 .temporary-curse-controls {
     display: flex;
@@ -5063,13 +5116,6 @@ body {
 }
 .temporary-curse-controls .number-increment-button { width: 17px; height: 26px; right: 19px; }
 .temporary-curse-controls .number-increment-button--down { right: 2px; }
-.pool-title-row:has(.temporary-curse-controls) {
-    align-items: center;
-    gap: 8px;
-    padding-inline-end: clamp(52px, 12cqi, 100px);
-    box-sizing: border-box;
-}
-.pool-title-row:has(.temporary-curse-controls) .tool-header-brand { flex-shrink: 1; }
 .temporary-curse-controls :is(button, input):focus-visible {
     outline: 2px solid #ead0ff;
     outline-offset: 2px;

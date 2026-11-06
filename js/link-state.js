@@ -19,8 +19,9 @@
                 medalPurified: setObject(runState.medalPurified) },
             upgrades: { ...upgradeState, owned: mapObject(upgradeState.owned), pending: mapObject(upgradeState.pending) },
             deaths: { startLevel: deathState.startLevel, currentLevel: deathState.currentLevel,
+                syncLevel: deathState.syncLevel,
                 unlimitedDeaths: deathState.unlimitedDeaths,
-                players: Object.fromEntries(deathState.players.map(p => [p.id, { id: p.id, name: p.name }])),
+                players: Object.fromEntries(deathState.players.map(p => [p.id, { id: p.id, name: p.name, hex: p.hex }])),
                 log: Object.fromEntries(deathState.log.map(p => [p.id, p])) },
             altars: { gifts: protectionAltarGiftsInput?.value || '0', level: selectedProtectionAltarLevel,
                 selected: selectedPurificationAltarCurse, pending: pendingPurificationAltarCurse,
@@ -109,25 +110,18 @@
             if (roots.has('deaths')) {
                 const data = object(s.deaths);
                 deathState.startLevel = Math.floor(bounded(data.startLevel, 1, 100000));
-                deathState.currentLevel = Math.floor(bounded(data.currentLevel, 1, 100000));
+                deathState.syncLevel = data.syncLevel === true;
                 deathState.unlimitedDeaths = data.unlimitedDeaths === true;
+                deathState.currentLevel = deathState.syncLevel ? getLevel() : bounded(data.currentLevel, 1, 100000);
                 deathState.players = entries(data.players).slice(0, 50).sort(([a], [b]) => a.localeCompare(b)).map(([id, p]) => ({
-                    id, name: String(p.name || '').slice(0, 100), deaths: bounded(p.deaths, 0, 1000000),
-                    levelDeaths: {}
+                    id, name: String(p.name || '').slice(0, 100), hex: p.hex
                 }));
                 const playerIds = new Set(deathState.players.map(p => p.id));
                 deathState.log = entries(data.log).filter(([,p]) => p && playerIds.has(p.playerId)).map(([id,p]) => ({
-                    id, playerId: p.playerId, playerName: String(p.playerName || '').slice(0, 100),
+                    id, playerId: p.playerId, playerName: String(p.playerName || '').slice(0, 100), hex: p.hex,
                     level: bounded(p.level, 1, 100000), timestamp: bounded(p.timestamp, 0, Number.MAX_SAFE_INTEGER)
                 })).sort((a,b) => a.timestamp - b.timestamp);
-                // Log IDs merge independently, so simultaneous deaths are both counted.
-                deathState.players.forEach(player => {
-                    player.deaths = 0;
-                    deathState.log.filter(entry => entry.playerId === player.id).forEach(entry => {
-                        player.deaths++;
-                        player.levelDeaths[entry.level] = (player.levelDeaths[entry.level] || 0) + 1;
-                    });
-                });
+                normalizeDeathRecords();
                 saveDeathState();
                 renderDeathTracker();
             }

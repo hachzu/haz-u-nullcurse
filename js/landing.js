@@ -63,7 +63,7 @@
         assetState = { loaded: 0, total: 1, ready: false, error: false };
         $('loadError').hidden = true;
         corePromise = (async () => {
-            const markup = await fetchResource('Toolkits.html?v=20261106-delusion-pools');
+            const markup = await fetchResource('Toolkits.html?v=20261106-link-info');
             toolDocument = new DOMParser().parseFromString(markup, 'text/html');
             const core = [...toolDocument.querySelectorAll('link[rel="stylesheet"][href^="css/"], script[src]:not([type="module"])')].map(node => node.getAttribute('href') || node.getAttribute('src'));
             if (revision === loadRevision) assetState = { loaded: 1, total: core.length + 1, ready: false, error: false };
@@ -115,7 +115,7 @@
             }
             const presence = document.createElement('script');
             presence.type = 'module';
-            presence.src = 'js/presence.js?v=20261022-shared-config1';
+            presence.src = 'js/presence.js?v=20261106-welcome-layout';
             document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);

@@ -3190,7 +3190,7 @@
 .upgrade-panel:not(.icon-mode) .upgrade-category:not(:first-child) {
     padding-top: 0;
     margin-top: 0;
-    padding-left: 0;
+    padding-left: 10px;
     border-top: 0;
     border-left: 1px solid rgba(143, 217, 255, 0.16);
 }

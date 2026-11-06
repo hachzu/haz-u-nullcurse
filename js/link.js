@@ -121,7 +121,7 @@
             await inFlight;
             if (transport === active && !session?.paused) {
                 sendingPatch = {};
-                status('live', 'Linked · changes shared. The creator keeps this code online.');
+                status('live', '');
             }
         } catch (error) {
             if (transport === active) {
@@ -163,7 +163,7 @@
         Object.assign(pendingRoots, merge.remote(patch));
         if (renderTimer === null && !composing) renderTimer = setTimeout(renderRemote, 40);
     }
-    function leave(message = 'Link left. Your current toolkit is saved locally.', state = 'offline') {
+    function leave(message = 'Link left.', state = 'offline') {
         operation++;
         closed = true;
         clearTimeout(flushTimer); clearTimeout(captureTimer); clearTimeout(renderTimer);
@@ -229,7 +229,7 @@
                     networkState = state; connected = state === 'live';
                     if (transport) {
                         if (!connected) disconnect('Your connection to Link was interrupted. Relink to resume sharing. Your current toolkit is still here.');
-                        else if (!session.paused) { status('live', 'Linked · changes shared. The creator keeps this code online.'); scheduleFlush(); }
+                        else if (!session.paused) { status('live', ''); scheduleFlush(); }
                     }
                 },
                 onEnd: (message, code = 'LINK_ROOM_ENDED', detail = '') => {
@@ -273,7 +273,7 @@
             if (dialog.open) dialog.close();
             incoming.forEach(receive); incoming = [];
             busy = false; controls(); codeInput.focus();
-            status(networkState, connected ? 'Linked · changes shared. The creator keeps this code online.' : 'Connecting. Your changes will sync when connected.');
+            status(networkState, connected ? '' : 'Connecting…');
             scheduleFlush();
         } catch (error) {
             clearTimeout(connectTimeout);
@@ -310,8 +310,8 @@
         } finally { leave(); leaveButton.disabled = false; }
     });
     copyButton.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(codeInput.value); status('live', 'Code copied. Send it to the person joining your toolkit.'); }
-        catch (_) { codeInput.focus(); codeInput.select(); status('live', 'Copy the selected code to share your toolkit.'); }
+        try { await navigator.clipboard.writeText(codeInput.value); status('live', 'Code copied.'); }
+        catch (_) { codeInput.focus(); codeInput.select(); status('live', 'Copy the selected code.'); }
     });
     for (const name of ['input', 'change', 'click', 'pointerup', 'keyup', 'toggle']) document.addEventListener(name, changed, true);
     for (const name of ['nullscape-sound-change', 'nullscape-low-detail-change']) window.addEventListener(name, changed);

@@ -3081,6 +3081,9 @@ function loadRunState() {
 function render() {
 
     runState.level = getLevel();
+    if (!levelEditPending && typeof syncDeathTrackerLevel === "function") {
+        syncDeathTrackerLevel(runState.level);
+    }
     if (!levelEditPending) expireTemporaryCurses(runState.level);
     pruneActiveEnemyStacks();
 
@@ -3129,12 +3132,7 @@ function render() {
 
     }
 
-    if (medalSectionEl) {
-        medalSectionEl.classList.toggle("result-section--hidden", medalDisplayState.hideSection);
-        const controls = document.querySelector(".temporary-curse-controls");
-        const host = document.querySelector(medalDisplayState.hideSection ? ".pool-title-row" : ".medal-curse-title");
-        if (controls && host && controls.parentElement !== host) host.prepend(controls);
-    }
+    medalSectionEl?.classList.toggle("medal-pool--hidden", medalDisplayState.hideSection);
     const chaosToggle = document.getElementById("chaosModeToggle");
     chaosToggle.classList.toggle("active", runState.chaosMode);
     chaosToggle.setAttribute("aria-checked", String(runState.chaosMode));
@@ -3683,8 +3681,10 @@ updateDelusionsDisplay();
 
 function updateCurseListModeUI() {
     document.querySelectorAll('#cursePoolColumns .result-heading h2').forEach(heading => {
-        const label = heading.textContent.replace(/^•\s*/, '');
-        heading.textContent = medalDisplayState.listMode ? label : `• ${label}`;
+        const label = (heading.querySelector('.delusion-heading-label') || heading).firstChild;
+        if (label?.nodeType !== Node.TEXT_NODE) return;
+        const text = label.textContent.replace(/^•\s*/, '');
+        label.textContent = medalDisplayState.listMode ? text : `• ${text}`;
     });
     document.getElementById('cursePoolColumns')?.classList.toggle('curse-pool-columns--list', medalDisplayState.listMode);
     curseListModeToggle?.classList.toggle('active', medalDisplayState.listMode);

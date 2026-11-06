@@ -1,13 +1,13 @@
 /* Source: run-trackers.js */
 /* Source: death-tracker.js */
 const DEATH_STORAGE_KEY = "nullscapeDeathState";
-const MAX_DEATHS_PER_LEVEL = 3;
 
 const deathState = {
     startLevel: 1,
     currentLevel: 1,
     players: [],
     log: [],
+    syncLevel: false,
     unlimitedDeaths: false
 };
 
@@ -33,34 +33,84 @@ function loadDeathState() {
         deathState.startLevel = Number(saved.startLevel) || 1;
         deathState.currentLevel = Number(saved.currentLevel) || deathState.startLevel;
         deathState.players = Array.isArray(saved.players) ? saved.players : [];
-        deathState.players.forEach(player => {
-            player.deaths = Number(player.deaths) || 0;
-            player.levelDeaths = player.levelDeaths || {};
-        });
         deathState.log = Array.isArray(saved.log) ? saved.log : [];
-        deathState.unlimitedDeaths = Boolean(saved.unlimitedDeaths);
+        deathState.syncLevel = saved.syncLevel === true;
+        deathState.unlimitedDeaths = saved.unlimitedDeaths === true;
+        normalizeDeathRecords();
 
     } catch (error) {
         console.warn("couldn't load saved death state:", error);
     }
 }
 
-function getPlayerLevelDeaths(player, level) {
-    return (player.levelDeaths && player.levelDeaths[level]) || 0;
+function normalizeDeathRecords() {
+    const players = new Map(deathState.players.map(player => [player.id, player]));
+    const records = [...deathState.players, ...deathState.log];
+    const codes = new Map();
+    const used = new Set();
+    for (const record of records) {
+        const id = record.playerId ?? record.id;
+        const hex = typeof record.hex === "string" ? record.hex.toUpperCase() : "";
+        if (codes.has(id) || !/^#[0-9A-F]{6}$/.test(hex) || used.has(hex)) continue;
+        codes.set(id, hex);
+        used.add(hex);
+    }
+
+    for (const id of [...new Set(records.map(record => record.playerId ?? record.id))].sort()) {
+        if (codes.has(id)) continue;
+        // Derive colors for older saves and probe for the next free color on a collision.
+        let color = 0;
+        for (const character of id) color = (Math.imul(color, 31) + character.charCodeAt(0)) >>> 0;
+        let hex;
+        do {
+            hex = "#" + (0x808080 | (color & 0x7f7f7f)).toString(16).toUpperCase();
+            color++;
+        } while (used.has(hex));
+        codes.set(id, hex);
+        used.add(hex);
+    }
+
+    for (const player of deathState.players) {
+        player.hex = codes.get(player.id);
+        player.deaths = 0;
+        player.levelDeaths = {};
+    }
+    for (const entry of deathState.log) {
+        entry.hex = codes.get(entry.playerId);
+        const player = players.get(entry.playerId);
+        if (player) {
+            player.deaths++;
+            player.levelDeaths[entry.level] = (player.levelDeaths[entry.level] || 0) + 1;
+        }
+    }
 }
 
-function getPlayerName(playerId, fallback) {
-    const player = deathState.players.find(p => p.id === playerId);
-    if (player) return player.name || "Unnamed";
-    return fallback || "Unknown player";
+function makeDeathBadge(hex) {
+    const badge = document.createElement("span");
+    badge.className = "death-player-badge";
+    badge.style.setProperty("--death-player-color", hex);
+    badge.setAttribute("aria-hidden", "true");
+    return badge;
 }
 
-/*
- * Death log entries render as flat text lines - "Name died on
- * level X" - newest first, inside their own internally-scrolling
- * list (see .death-log-list / .death-panel-log-side in
- * DeathTracker.css). No per-level grouping or headings anymore.
- */
+function renderDeathLeaderboard() {
+    const list = document.getElementById("deathLeaderboard");
+    if (!list) return;
+
+    const ranked = [...deathState.players].sort((a, b) => b.deaths - a.deaths);
+    list.replaceChildren(...ranked.map(player => {
+        const row = document.createElement("div");
+        row.className = "death-log-entry death-rank-entry";
+        const name = document.createElement("span");
+        name.className = "death-rank-name";
+        name.append(makeDeathBadge(player.hex), player.name.trim() || "Unnamed");
+        const count = document.createElement("strong");
+        count.textContent = player.deaths;
+        row.append(name, count);
+        return row;
+    }));
+}
+
 function renderDeathLog() {
     const listEl = document.getElementById("deathLogList");
     if (!listEl) return;
@@ -75,37 +125,30 @@ function renderDeathLog() {
         return;
     }
 
-    const ordered = [...deathState.log].sort((a, b) => b.timestamp - a.timestamp);
-
-    ordered.forEach(entry => {
-        const name = getPlayerName(entry.playerId, entry.playerName);
-
+    const players = new Map(deathState.players.map(player => [player.id, player]));
+    const ordered = [...deathState.log].reverse().sort((a, b) => b.timestamp - a.timestamp);
+    for (const entry of ordered) {
+        const name = players.get(entry.playerId)?.name || entry.playerName || "Unnamed";
         const line = document.createElement("div");
         line.className = "death-log-entry";
-        line.textContent = `${name} died on level ${entry.level}`;
-
+        line.append(makeDeathBadge(entry.hex), `${name} died on level ${entry.level}`);
         listEl.appendChild(line);
-    });
+    }
 }
 
-function updateDeathHint() {
-    const hintEl = document.getElementById("deathPlayerHint");
-    if (!hintEl) return;
-
-    hintEl.innerHTML = deathState.unlimitedDeaths
-        ? `Add a player, type their name, then use <strong>+</strong> when they die. No death cap right now.`
-        : `Add a player, type their name, then use <strong>+</strong> when they die. Max ${MAX_DEATHS_PER_LEVEL} deaths per player per level.`;
-}
-
-function updateDeathUnlimitedToggleUI() {
-    const toggle = document.getElementById("deathUnlimitedToggle");
+function updateDeathSwitch(id, enabled) {
+    const toggle = document.getElementById(id);
     if (!toggle) return;
 
-    toggle.classList.toggle("active", deathState.unlimitedDeaths);
-    toggle.setAttribute("aria-checked", deathState.unlimitedDeaths ? "true" : "false");
+    toggle.classList.toggle("active", enabled);
+    toggle.setAttribute("aria-checked", String(enabled));
 
     const label = toggle.querySelector(".death-switch-label");
-    if (label) label.textContent = deathState.unlimitedDeaths ? "ON" : "OFF";
+    if (label) label.textContent = enabled ? "ON" : "OFF";
+}
+
+function isDeathLevelCapped(player) {
+    return !deathState.unlimitedDeaths && Boolean(player.levelDeaths[deathState.currentLevel]);
 }
 
 function renderDeathTracker() {
@@ -122,8 +165,10 @@ function renderDeathTracker() {
     if (countEl && Number(countEl.value) !== deathState.players.length) countEl.value = deathState.players.length;
     if (nextButton) nextButton.textContent = `NEXT LEVEL \u2192 Lv${deathState.currentLevel + 1}`;
 
-    updateDeathUnlimitedToggleUI();
-    updateDeathHint();
+    if (startEl) startEl.disabled = deathState.syncLevel;
+    if (nextButton) nextButton.disabled = deathState.syncLevel;
+    updateDeathSwitch("deathSyncToggle", deathState.syncLevel);
+    updateDeathSwitch("deathUnlimitedToggle", deathState.unlimitedDeaths);
 
     if (listEl) {
 
@@ -152,10 +197,18 @@ function renderDeathTracker() {
                 name.placeholder = "player name";
                 name.value = player.name || "";
                 name.classList.toggle("death-player-name-input--filled", name.value.trim().length > 0);
+                const identity = document.createElement("div");
+                identity.className = "death-player-identity";
+                const badge = makeDeathBadge(player.hex);
+                badge.hidden = !name.value.trim();
+                identity.append(badge, name);
                 name.addEventListener("input", () => {
                     player.name = name.value;
                     name.classList.toggle("death-player-name-input--filled", name.value.trim().length > 0);
+                    badge.hidden = !name.value.trim();
                     saveDeathState();
+                    renderDeathLeaderboard();
+                    renderDeathLog();
                 });
 
                 const controls = document.createElement("div");
@@ -178,23 +231,16 @@ function renderDeathTracker() {
                 plus.className = "death-count-button";
                 plus.textContent = "+";
 
-                // Deaths are normally capped at MAX_DEATHS_PER_LEVEL
-                // per player per level - once a player hits that cap
-                // on the currently-recording level, the + button
-                // disables until the run advances to the next level.
-                // The Unlimited Deaths toggle skips this entirely.
-                const atLevelCap = !deathState.unlimitedDeaths
-                    && getPlayerLevelDeaths(player, deathState.currentLevel) >= MAX_DEATHS_PER_LEVEL;
-
+                const atLevelCap = isDeathLevelCapped(player);
                 plus.disabled = atLevelCap;
                 plus.title = atLevelCap
-                    ? `Max ${MAX_DEATHS_PER_LEVEL} deaths already logged for level ${deathState.currentLevel}`
+                    ? `Death already logged for level ${deathState.currentLevel}`
                     : "Log a death";
                 plus.setAttribute("aria-label", `Record a death for ${player.name || "this player"}`);
                 plus.addEventListener("click", () => recordDeath(player.id));
 
                 controls.append(minus, count, plus);
-                main.append(name, controls);
+                main.append(identity, controls);
                 row.appendChild(main);
 
                 listEl.appendChild(row);
@@ -205,6 +251,7 @@ function renderDeathTracker() {
 
     }
 
+    renderDeathLeaderboard();
     renderDeathLog();
 }
 
@@ -212,26 +259,17 @@ function recordDeath(playerId) {
 
     const player = deathState.players.find(p => p.id === playerId);
 
-    if (!player) return;
+    if (!player || isDeathLevelCapped(player)) return;
 
     const level = deathState.currentLevel;
-    const currentLevelDeaths = getPlayerLevelDeaths(player, level);
 
-    if (!deathState.unlimitedDeaths && currentLevelDeaths >= MAX_DEATHS_PER_LEVEL) {
-
-        if (typeof playRemoveSound === "function") playRemoveSound();
-
-        return;
-
-    }
-
-    player.deaths += 1;
-    player.levelDeaths[level] = currentLevelDeaths + 1;
-
+    player.deaths++;
+    player.levelDeaths[level] = (player.levelDeaths[level] || 0) + 1;
     deathState.log.push({
-        id: makeId(),
+        id: deathState.unlimitedDeaths ? makeId() : `${player.id}:${level}`,
         playerId: player.id,
         playerName: player.name || "Unnamed",
+        hex: player.hex,
         level,
         timestamp: Date.now()
     });
@@ -249,33 +287,11 @@ function undoLastDeath(playerId) {
 
     if (!player || player.deaths <= 0) return;
 
-    const levels = Object.keys(player.levelDeaths || {}).map(Number).sort((a, b) => b - a);
-    const level = levels[0];
-
-    if (level !== undefined) {
-
-        player.levelDeaths[level] = Math.max(0, (player.levelDeaths[level] || 0) - 1);
-
-        if (!player.levelDeaths[level]) delete player.levelDeaths[level];
-
-        // Remove the matching most-recent log entry for this
-        // player/level so the log and the counts stay in sync.
-        for (let i = deathState.log.length - 1; i >= 0; i--) {
-
-            const entry = deathState.log[i];
-
-            if (entry.playerId === playerId && entry.level === level) {
-
-                deathState.log.splice(i, 1);
-                break;
-
-            }
-
-        }
-
-    }
-
-    player.deaths -= 1;
+    const index = deathState.log.findLastIndex(entry => entry.playerId === playerId);
+    if (index < 0) return;
+    const [{ level }] = deathState.log.splice(index, 1);
+    player.levelDeaths[level]--;
+    player.deaths--;
 
     saveDeathState();
     renderDeathTracker();
@@ -288,6 +304,7 @@ function setPlayerCount(count) {
         deathState.players.push({ id: makeId(), name: "", deaths: 0, levelDeaths: {} });
     }
     while (deathState.players.length > count) deathState.players.pop();
+    normalizeDeathRecords();
     saveDeathState();
     renderDeathTracker();
 }
@@ -297,6 +314,7 @@ function changePlayerCount(delta) {
 }
 
 function setStartLevel(value) {
+    if (deathState.syncLevel) return;
     const level = Math.max(1, Number(value) || 1);
     deathState.startLevel = level;
     deathState.currentLevel = level;
@@ -305,20 +323,29 @@ function setStartLevel(value) {
 }
 
 function nextDeathLevel() {
+    if (deathState.syncLevel) return;
     deathState.currentLevel += 1;
     saveDeathState();
     renderDeathTracker();
 }
 
-function setUnlimitedDeaths(enabled) {
-    deathState.unlimitedDeaths = Boolean(enabled);
+function setDeathLevelSync(enabled) {
+    deathState.syncLevel = enabled;
+    if (enabled) deathState.currentLevel = getLevel();
+    saveDeathState();
+    renderDeathTracker();
+}
+
+function syncDeathTrackerLevel(level) {
+    if (!deathState.syncLevel || deathState.currentLevel === level) return;
+    deathState.currentLevel = level;
     saveDeathState();
     renderDeathTracker();
 }
 
 function resetDeaths() {
     deathState.startLevel = 1;
-    deathState.currentLevel = 1;
+    deathState.currentLevel = deathState.syncLevel ? getLevel() : 1;
     deathState.players = [];
     deathState.log = [];
     saveDeathState();
@@ -402,14 +429,24 @@ if (playerCountMinus) playerCountMinus.addEventListener("click", () => changePla
 const nextLevelButton = document.getElementById("deathNextLevelButton");
 if (nextLevelButton) nextLevelButton.addEventListener("click", nextDeathLevel);
 
+const deathSyncToggle = document.getElementById("deathSyncToggle");
+if (deathSyncToggle) {
+    attachClickAction(deathSyncToggle, () => {
+        setDeathLevelSync(!deathState.syncLevel);
+    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
+}
+
 const deathUnlimitedToggle = document.getElementById("deathUnlimitedToggle");
 if (deathUnlimitedToggle) {
     attachClickAction(deathUnlimitedToggle, () => {
-        setUnlimitedDeaths(!deathState.unlimitedDeaths);
+        deathState.unlimitedDeaths = !deathState.unlimitedDeaths;
+        saveDeathState();
+        renderDeathTracker();
     }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
 }
 
 loadDeathState();
+if (deathState.syncLevel) deathState.currentLevel = getLevel();
 renderDeathTracker();
 
 /* Source: altars.js */

@@ -43,9 +43,9 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261106-delusion-pools">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261027-pink-purple-logo1">
-    <link rel="stylesheet" href="css/link.css?v=20261028-link2">
+    <link rel="stylesheet" href="css/tracker.css?v=20261106-death-colors">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261106-death-rankings">
+    <link rel="stylesheet" href="css/link.css?v=20261106-link-info">
     <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
     <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
     <link rel="stylesheet" href="css/toolkit-polish.css?v=20261106-delusion-pools">
@@ -317,10 +317,15 @@
 
         <section id="toolkitLink" class="control-section toolkit-link" aria-labelledby="toolkitLinkHeading">
             <div class="section-heading">
-                <span id="toolkitLinkHeading">LINK</span>
+                <div class="link-heading">
+                    <span id="toolkitLinkHeading">LINK</span>
+                    <span class="link-info">
+                        <button type="button" class="link-info-button" aria-label="About Link" aria-describedby="linkInfoTooltip">i</button>
+                        <span id="linkInfoTooltip" class="link-info-tooltip" role="tooltip">This is a feature that lets you link your toolkit with other players live! You work together in shared workspace.</span>
+                    </span>
+                </div>
                 <span id="linkBadge" class="link-badge" data-state="offline">LOCAL</span>
             </div>
-            <p class="link-hint">Share a code. Edit the same toolkit together.</p>
             <label class="link-sr-only" for="linkCode">Link code</label>
             <div class="link-code-row">
                 <input id="linkCode" class="link-code-input" type="text" placeholder="enter a 6-character code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="linkStatus">
@@ -333,7 +338,7 @@
                 <button id="linkRelink" class="link-button" type="button" hidden>RELINK</button>
             </div>
             <div id="linkMembers" class="link-members" aria-label="People in this Link" aria-live="polite" hidden></div>
-            <p id="linkStatus" class="link-status" role="status" aria-live="polite">Local until you generate or join. Anyone with the code can edit.</p>
+            <p id="linkStatus" class="link-status" role="status" aria-live="polite"></p>
         </section>
 
         <dialog id="linkDisconnectDialog" class="link-disconnect-dialog" aria-labelledby="linkDisconnectTitle" aria-describedby="linkDisconnectMessage linkDisconnectError">
@@ -623,30 +628,30 @@
                                 NEXT LEVEL &rarr;
                             </button>
 
-                            <!--
-                                Lets a level's death count climb past
-                                the normal 3-per-player cap - and, in
-                                turn, removes any need to click Next
-                                Level just to reset that cap. Same
-                                track+thumb switch shape as the
-                                Nothing? Curse / Progressive Mode
-                                toggles in the Upgrade panel.
-                            -->
                             <div class="death-toggle-block">
 
-                                <span class="death-control-label death-toggle-block-label">Unlimited Deaths</span>
+                                <span id="deathSyncLabel" class="death-control-label death-toggle-block-label">Sync Tracker Level</span>
 
                                 <button
                                     type="button"
-                                    id="deathUnlimitedToggle"
+                                    id="deathSyncToggle"
                                     class="death-switch"
                                     role="switch"
+                                    aria-labelledby="deathSyncLabel"
                                     aria-checked="false"
                                 >
                                     <span class="death-switch-track"><span class="death-switch-thumb"></span></span>
                                     <span class="death-switch-label">OFF</span>
                                 </button>
 
+                            </div>
+                            <div class="death-toggle-block">
+                                <span id="deathUnlimitedLabel" class="death-control-label death-toggle-block-label">Unlimited Deaths</span>
+                                <button type="button" id="deathUnlimitedToggle" class="death-switch" role="switch"
+                                    aria-labelledby="deathUnlimitedLabel" aria-checked="false">
+                                    <span class="death-switch-track"><span class="death-switch-thumb"></span></span>
+                                    <span class="death-switch-label">OFF</span>
+                                </button>
                             </div>
                         </div>
 
@@ -660,24 +665,21 @@
                                 </div>
                             </div>
 
-                            <div class="death-player-hint" id="deathPlayerHint">
-                                Add a player, type their name, then use <strong>+</strong> when they die.
-                                Max 3 deaths per player per level.
-                            </div>
                         </div>
 
                         <div id="deathPlayerList" class="death-player-list"></div>
 
                     </div>
 
-                    <div class="death-panel-log-side">
-
-                        <div class="death-log-heading">
-                            <span>RUN DEATH LOG</span>
-                        </div>
-
-                        <div id="deathLogList" class="death-log-list"></div>
-
+                    <div class="death-panel-results">
+                        <section class="death-panel-log-side" aria-labelledby="deathLeaderboardHeading">
+                            <div id="deathLeaderboardHeading" class="death-log-heading">Deaths</div>
+                            <div id="deathLeaderboard" class="death-log-list"></div>
+                        </section>
+                        <section class="death-panel-log-side" aria-labelledby="deathLogHeading">
+                            <div id="deathLogHeading" class="death-log-heading">RUN DEATH LOG</div>
+                            <div id="deathLogList" class="death-log-list"></div>
+                        </section>
                     </div>
 
                 </div>
@@ -1287,16 +1289,16 @@
 </div>
 
 
-<script type="module" src="js/presence.js?v=20261022-shared-config1"></script>
+<script type="module" src="js/presence.js?v=20261106-welcome-layout"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261106-delusion-pools"></script>
+<script src="js/tracker.js?v=20261106-death-rankings"></script>
 <script src="js/upgrades.js?v=20261105-cleanup"></script>
-<script src="js/tools.js?v=20261106-temporary-curses"></script>
+<script src="js/tools.js?v=20261106-unlimited-deaths"></script>
 <script src="js/card-reveals.js?v=20261027-pink-purple-logo1"></script>
 <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1"></script>
 <script src="js/link-core.js?v=20261027-link1"></script>
-<script src="js/link-state.js?v=20261106-temporary-curses"></script>
-<script src="js/link.js?v=20261102-link-short6-1"></script>
+<script src="js/link-state.js?v=20261106-unlimited-deaths"></script>
+<script src="js/link.js?v=20261106-link-info"></script>
 
 </body>
 </html>

@@ -57,7 +57,7 @@ function ensureUsername() {
             <div class="username-gate-box">
                 <div class="username-gate-title username-gate-pop" style="animation-delay: 0.05s;">WELCOME</div>
                 <div class="username-gate-subtitle username-gate-pop" style="animation-delay: 0.16s;">
-                    Choose a Roblox username or alias, or continue anonymously.
+                    Choose a Roblox username or alias.
                 </div>
                 <input
                     type="text"
@@ -72,10 +72,10 @@ function ensureUsername() {
                 <button type="button" id="usernameGateSubmit" class="username-gate-pop" style="animation-delay: 0.38s;">
                     CONTINUE
                 </button>
-                <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
-                    CONTINUE ANONYMOUSLY
-                </button>
             </div>
+            <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
+                CONTINUE ANONYMOUSLY
+            </button>
         `;
         document.body.appendChild(overlay);
 
