@@ -109,7 +109,10 @@ test('delusions follow the current level, upcoming dependencies, and the three-p
  run(source.slice(source.indexOf('function getDelusionConflict('), source.indexOf('function syncDelusionUpgradeEffects(')));
  run('getPlayerCount = () => 1; runState.level = 10; var getOwnedStack = () => 0;');
  const visible = () => Array.from(run('getVisibleDelusions().map(delusion => delusion.name)'));
- assert.deepEqual(visible(), ['Arrogance', 'Overconfidence', 'Perseverance']);
+ assert.deepEqual(visible(), []);
+ for (const name of ['Arrogance', 'Gambling', 'Overconfidence', 'Perseverance']) {
+  assert.equal(run(`DELUSION_BY_NAME.get("${name}").level`), 15);
+ }
  run('curseVisibilityState.showUpcoming = true');
  assert.ok(visible().includes('Hope'));
  assert.ok(!visible().includes('Corrosion'));

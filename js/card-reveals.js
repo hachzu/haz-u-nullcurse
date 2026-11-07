@@ -1,8 +1,9 @@
 (() => {
     function findReveals(previous, current) {
         if (!previous) return [];
-        return [...current.keys()].filter(key => !previous.has(key)
+        const reveals = [...current.keys()].filter(key => !previous.has(key)
             || (previous.get(key).locked && !current.get(key).locked));
+        return reveals.length >= 7 ? [] : reveals;
     }
 
     if (typeof module !== 'undefined' && module.exports) {
@@ -16,7 +17,7 @@
     const lockedSelector = '.curse-card--locked, .enemy-button--locked, .upgrade-row--locked, .upgrade-row--pending';
     const containerSelector = '.result-grid, #enemyContainer, #activeCurseContainer, #upgradeCategories, #upgradeOwnedCategories';
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    const lifetime = 10000;
+    const lifetime = 40000;
     const highlights = new Map();
     let previous = null;
     let frame = 0;

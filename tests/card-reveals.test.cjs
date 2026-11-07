@@ -17,3 +17,8 @@ test('newly revealed cards and previously locked cards becoming available highli
 test('removals, locking and replacing DOM nodes do not trigger new-card effects', () => {
     assert.deepEqual(findReveals(cards(['enemy:Baby', false], ['enemy:Bell', false]), cards(['enemy:Baby', true])), []);
 });
+test('six new indicators are allowed but seven are suppressed', () => {
+    const entries = Array.from({ length: 7 }, (_, index) => [`curse:${index}`, false]);
+    assert.equal(findReveals(cards(), cards(...entries.slice(0, 6))).length, 6);
+    assert.deepEqual(findReveals(cards(), cards(...entries)), []);
+});

@@ -1311,6 +1311,24 @@ html.low-detail-mode:has(body:not(.at-home)) .enemy-button:hover {
     }
 
 }
+/* Shared text and surface styling for the toolkit's hover tooltips. */
+.altar-help > [role="tooltip"],
+.link-info-tooltip {
+    box-sizing: border-box;
+    width: 190px;
+    max-width: 70vw;
+    padding: 10px;
+    border: 1px solid #8fd9ff66;
+    background: #101b27;
+    color: #dcecf5;
+    font: 600 11px/1.5 var(--font-modern);
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: justify;
+    text-align-last: left;
+    overflow-wrap: break-word;
+}
+
 /* Source: sharp.css */
 :where(*, *::before, *::after) {
     border-radius: 2px !important;

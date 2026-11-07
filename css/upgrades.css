@@ -1,9 +1,3 @@
-/* Source: upgrade-calculator-foundation.css */
-.upgrade-toggle-button .upgrade-toggle-key {
-    max-width: 30px !important;
-    margin-left: 6px !important;
-    opacity: 1 !important;
-}
 /* Source: upgrades.css */
 /*
  * Upgrade Calculator styles
@@ -2635,8 +2629,7 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
 
     background:
         linear-gradient(160deg, rgba(10, 10, 10, 0.76), rgba(22, 22, 22, 0.85)),
-        url('../assets/background/Altars.png') center top / auto 100vh no-repeat;
-    background-attachment: scroll, fixed;
+        url('../assets/background/Altars.png') center / cover no-repeat;
 
     border-left: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: -24px 0 50px rgba(0, 0, 0, 0.5), inset 0 0 90px rgba(255, 255, 255, 0.05);
@@ -2659,6 +2652,7 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     pointer-events: auto;
 }
 
+.right-panel:has(> .altars-panel.open) { scrollbar-width: none; }
 
 .altars-panel-inner {
     width: 100%;
@@ -2671,39 +2665,20 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     overflow-y: auto;
     overflow-x: hidden;
 
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    scrollbar-width: none;
+    container-type: inline-size;
 }
 
 
 .altars-panel-inner::-webkit-scrollbar {
-    width: 6px;
-}
-
-
-.altars-panel-inner::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-.altars-panel-inner::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 999px;
-}
-
-
-.altars-panel-inner::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.55);
+    display: none;
 }
 
 
 .altars-panel-header {
-    display: flex;
-
-    align-items: center;
-    flex-wrap: wrap;
-
-    gap: 16px;
+    position: relative;
+    display: grid;
+    justify-items: center;
 
     margin-bottom: 20px;
     padding-bottom: 18px;
@@ -2711,35 +2686,43 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.altars-panel-header .toolkit-panel-back { position: absolute; top: 0; left: 0; }
 
-.altars-panel-heading {
-    margin-right: auto;
-
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-
-    background: linear-gradient(
-        90deg,
-        #ffffff 0%,
-        #bfbfbf 25%,
-        #ffffff 50%,
-        #bfbfbf 75%,
-        #ffffff 100%
-    );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+.tool-header-brand--altars {
+    width: 118px;
+    height: 114px;
 }
 
+.tool-header-brand--altars img {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
 
 /* ---- Protection Altar calculator ---- */
 
 .altars-panel-body {
-    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    align-content: start;
+    gap: 12px;
+}
+
+.altar-column {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-width: 0;
+}
+
+@container (max-width: 560px) {
+    .altars-panel-body { grid-template-columns: minmax(0, 1fr); }
+    .altar-column { display: contents; }
+    .altar-calculator--purification { order: 1; }
+    .altar-calculator--duality { order: 2; }
+    .altar-calculator--purgatory { order: 3; }
 }
 
 .altar-calculator {
@@ -2748,17 +2731,12 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     --altar-muted: #a8dff5;
     --altar-glow: rgba(94, 205, 255, 0.28);
 
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 24px;
+    min-width: 0;
+    container-type: inline-size;
     border: 1px solid rgba(139, 219, 255, 0.4);
-    border-radius: 16px;
+    border-radius: 8px;
     background: linear-gradient(145deg, rgba(74, 183, 234, 0.19), rgba(57, 108, 148, 0.06));
     box-shadow: inset 0 1px 0 rgba(218, 249, 255, 0.18), 0 18px 40px rgba(0, 0, 0, 0.2);
-}
-
-.altar-calculator + .altar-calculator {
-    margin-top: 18px;
 }
 
 .altar-calculator--purification {
@@ -2772,87 +2750,248 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     box-shadow: inset 0 1px 0 rgba(255, 223, 241, 0.18), 0 18px 40px rgba(0, 0, 0, 0.2);
 }
 
+.altar-calculator--duality {
+    --altar-accent: #68d6ad;
+    --altar-bright: #e0fff1;
+    --altar-muted: #9ce2c6;
+    --altar-glow: #4ac29645;
+
+    border-color: #68d6ad70;
+    background: linear-gradient(145deg, #2874584d, #173e3026);
+}
+
+.altar-calculator--purgatory {
+    --altar-accent: #e8cb67;
+    --altar-bright: #fff3c4;
+    --altar-muted: #dcca8c;
+    --altar-glow: #e8cb6745;
+    border-color: #e8cb6770;
+    background: linear-gradient(145deg, #7561254d, #3c321526);
+}
+.altar-calculator--predictor .altar-gifts-field :is(input, select) {
+    border-color: color-mix(in srgb, var(--altar-accent) 44%, transparent);
+    background: color-mix(in srgb, var(--altar-accent) 8%, #04120d);
+}
+.altar-calculator--purgatory .altar-gifts-field :is(input, select) {
+    background: #1b1709;
+}
+.altar-calculator--predictor .upgrade-switch {
+    border-color: color-mix(in srgb, var(--altar-accent) 44%, transparent);
+    background: color-mix(in srgb, var(--altar-accent) 6%, transparent);
+}
+.altar-calculator--predictor .upgrade-switch.active {
+    border-color: var(--altar-accent);
+    background: color-mix(in srgb, var(--altar-accent) 16%, transparent);
+    box-shadow: 0 0 12px var(--altar-glow);
+}
+.altar-calculator--predictor .upgrade-switch-track { border-color: var(--altar-accent); }
+.altar-calculator--predictor .upgrade-switch.active .upgrade-switch-track {
+    border-color: var(--altar-accent);
+    background: color-mix(in srgb, var(--altar-accent) 55%, #07111b);
+}
+.altar-calculator--predictor .upgrade-switch-label { color: var(--altar-bright); }
+.altar-predictor-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 150px));
+    align-items: end;
+    gap: 12px;
+    padding-top: 12px;
+}
+.altar-prediction {
+    display: grid;
+    grid-template-columns: minmax(0, 180px);
+    gap: 8px;
+    margin-top: 12px;
+}
+.altar-calculator--predictor .altar-help > [role="tooltip"] {
+    border-color: color-mix(in srgb, var(--altar-accent) 55%, transparent);
+    background: color-mix(in srgb, var(--altar-accent) 12%, #07111b);
+    color: var(--altar-bright);
+}
+.altar-predictor-note { margin: 10px 0 0; color: var(--altar-muted); font: 500 11px/1.5 var(--font-modern); }
 .altar-calculator-intro {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: inherit;
+    color: var(--altar-bright);
+    cursor: pointer;
 }
 
-.altar-calculator-icon {
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    flex: 0 0 auto;
-    border: 1px solid var(--altar-accent);
-    border-radius: 14px;
-    background: linear-gradient(145deg, var(--altar-bright), var(--altar-accent));
-    color: #18242a;
-    font-size: 27px;
-    box-shadow: 0 0 18px var(--altar-glow);
+.altar-calculator-intro::-webkit-details-marker { display: none; }
+
+.altar-calculator-intro:is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--altar-accent) 12%, transparent);
 }
 
-.altar-calculator-icon img {
-    width: 38px;
-    height: 38px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+.altar-calculator-intro::after {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-inline: auto 4px;
+    border-right: 2px solid var(--altar-accent);
+    border-bottom: 2px solid var(--altar-accent);
+    transform: rotate(45deg);
 }
 
-.altar-calculator-kicker {
-    margin: 0 0 3px;
-    color: var(--altar-muted);
-    font-family: var(--font-modern);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.6px;
-}
+.altar-calculator[open] > .altar-calculator-intro::after { transform: rotate(225deg); }
+.altar-type-icon { width: 32px; height: 32px; flex: none; object-fit: contain; color: var(--altar-accent); }
+.altar-icon--pink { filter: hue-rotate(145deg); }
+.altar-icon--jade { filter: hue-rotate(-40deg); }
+.altar-icon--yellow { filter: hue-rotate(-120deg); }
+.altar-calculator-content { padding: 0 16px 16px; color: var(--altar-muted); }
 
 .altar-calculator h2 {
     margin: 0;
     color: var(--altar-bright);
     font-family: var(--font-modern);
-    font-size: 23px;
+    font-size: clamp(16px, 3vw, 22px);
     letter-spacing: 0.3px;
 }
 
-.altar-calculator-intro p:not(.altar-calculator-kicker) {
-    margin: 5px 0 0;
-    color: var(--altar-muted);
-    font-size: 13px;
+.altar-calculator-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 12px;
+    padding-top: 12px;
 }
 
-.altar-calculator-controls {
-    display: flex;
+.altar-range-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 120px));
     align-items: end;
-    gap: 10px;
-    margin-top: 24px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
+
+.altar-modifiers {
+    display: grid;
+    grid-template-columns: minmax(0, 220px);
+    gap: 6px;
+    margin: 12px 0 16px;
+}
+
+.altar-switch-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    color: var(--altar-bright);
+    font: 700 12px var(--font-modern);
+}
+
+.altar-balance-action {
+    position: relative;
+}
+.altar-balance-action .altar-balance-button {
+    box-sizing: border-box;
+    width: 100%;
+    height: 44px;
+    padding: 6px 34px 6px 10px;
+}
+.altar-balance-action .altar-help {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    translate: 0 -50%;
+}
+.altar-switch-group .upgrade-switch { justify-content: center; min-width: 62px; min-height: 28px; }
+.altar-switch-group .upgrade-switch[aria-disabled="true"] { opacity: .52; cursor: not-allowed; }
+.altar-switch-name { display: inline-flex; align-items: center; gap: 6px; }
+.altar-switch-name img { width: 18px; height: 18px; flex: none; object-fit: contain; }
+.altar-help { position: relative; }
+.altar-help > button:not(.altar-sync-button) {
+    box-sizing: border-box;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--altar-accent);
+    border-radius: 50% !important;
+    background: transparent;
+    color: var(--altar-accent);
+    font: 700 12px var(--font-modern);
+    cursor: help;
+}
+.altar-help > [role="tooltip"] {
+    position: absolute;
+    z-index: 2;
+    top: 100%;
+    right: 0;
+    width: min(170px, 60cqi);
+    padding: 9px;
+    border: 1px solid var(--altar-accent);
+    border-radius: 8px;
+    background: #101b27;
+    font: 600 11px/1.4 var(--font-modern);
+    letter-spacing: normal;
+    text-transform: none;
+    visibility: hidden;
+}
+.altar-help:is(:hover, :has(> button:focus-visible)) > [role="tooltip"] { visibility: visible; }
+.altar-gift-amount { display: inline-flex; align-items: center; gap: 4px; }
+.altar-gift-amount img { width: 16px; height: 16px; flex: none; object-fit: contain; }
 
 .altar-gifts-field {
     display: grid;
-    flex: 1 1 180px;
-    gap: 6px;
-    color: var(--altar-muted);
+    min-width: 0;
+    gap: 5px;
+    color: var(--altar-accent);
     font-family: var(--font-modern);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.7px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.altar-gifts-field > span { min-height: 18px; line-height: 18px; }
+
+.altar-level-caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 18px;
+}
+.upgrade-switch.altar-sync-button {
+    padding: 1px 5px;
+    gap: 4px;
+}
+.altar-sync-button .upgrade-switch-label {
+    text-transform: none;
+}
+.altar-level-sync > [role="tooltip"] {
+    left: 0;
+    right: auto;
 }
 
-.altar-gifts-field input {
+#protectionAltarFormula,
+#purificationAltarFormula { margin: 8px 0 0; text-align: left; }
+
+.altar-gifts-field :is(input, select) {
+    box-sizing: border-box;
+    width: 100%;
     min-width: 0;
-    padding: 10px 12px;
-    border: 1px solid color-mix(in srgb, var(--altar-accent) 55%, transparent);
-    border-radius: 9px;
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid #8fd9ff59;
     outline: none;
-    background: rgba(0, 0, 0, 0.35);
+    background: #071620;
     color: var(--altar-bright);
     font: inherit;
     font-size: 16px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    appearance: textfield;
 }
+.altar-gifts-field input::-webkit-inner-spin-button,
+.altar-gifts-field input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 
-.altar-gifts-field input:focus {
+.altar-gifts-field :is(input, select):focus {
     border-color: var(--altar-bright);
     box-shadow: 0 0 0 3px var(--altar-glow);
 }
@@ -2862,10 +3001,10 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     border: 1px solid color-mix(in srgb, var(--altar-accent) 55%, transparent);
     color: var(--altar-bright);
     font-family: var(--font-modern);
-    cursor: pointer;
 }
 
 .altar-balance-button {
+    cursor: pointer;
     padding: 11px 14px;
     border-radius: 9px;
     background: rgba(255, 255, 255, 0.1);
@@ -2880,9 +3019,9 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
 }
 
 .altar-context {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     margin: 16px 0 23px;
 }
 
@@ -2890,10 +3029,6 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     display: grid;
     gap: 3px;
     min-width: 0;
-    padding: 9px 10px;
-    border: 1px solid color-mix(in srgb, var(--altar-accent) 30%, transparent);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.22);
     font-family: var(--font-modern);
 }
 
@@ -2934,7 +3069,7 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
 
 .altar-level-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 110px), 1fr));
     gap: 8px;
 }
 
@@ -2946,21 +3081,67 @@ body:has(#upgradePanel.open) #floatingToggleButtons .floating-toggle-buttons-inn
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.25);
     text-align: left;
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.altar-level-card:hover,
-.altar-level-card:focus-visible {
-    border-color: var(--altar-bright);
-    background: color-mix(in srgb, var(--altar-accent) 18%, transparent);
-    transform: translateY(-2px);
+.altar-level-card .altar-level-label {
+    font-size: 11px;
+    font-weight: 900;
 }
 
-.altar-level-card.selected {
-    border-color: var(--altar-bright);
-    background: linear-gradient(145deg, var(--altar-bright), var(--altar-accent));
-    color: #171717;
-    box-shadow: 0 0 18px var(--altar-glow);
+.altar-prediction .altar-level-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.5;
+}
+
+.altar-level-breakdown {
+    display: grid;
+    gap: 3px;
+    color: var(--altar-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.altar-level-line {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 10px;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 2px;
+}
+.altar-level-price { text-align: right; overflow-wrap: anywhere; }
+.altar-second-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.altar-second-action { color: #ff8f9b; text-align: center; font-weight: 800; }
+.altar-second-toggle:is(:hover, :focus-visible) {
+    background: #a92d3a40;
+    color: #ffc1c8;
+}
+.altar-second-toggle--omitted { color: #8499a5; }
+.altar-second-toggle--omitted .altar-second-action { color: #84e2b7; }
+.altar-second-toggle--omitted:is(:hover, :focus-visible) {
+    background: #32835d40;
+    color: #b8f5d8;
+}
+.altar-second-toggle:focus-visible { outline: 1px solid currentColor; outline-offset: 1px; }
+
+.altar-level-total {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--altar-accent) 36%, transparent);
 }
 /* Keep incomplete upgrades readable while their prices are pending. */
 .upgrade-row--pending {

@@ -23,8 +23,16 @@
                 unlimitedDeaths: deathState.unlimitedDeaths,
                 players: Object.fromEntries(deathState.players.map(p => [p.id, { id: p.id, name: p.name, hex: p.hex }])),
                 log: Object.fromEntries(deathState.log.map(p => [p.id, p])) },
-            altars: { gifts: protectionAltarGiftsInput?.value || '0', level: selectedProtectionAltarLevel,
-                selected: selectedPurificationAltarCurse, pending: pendingPurificationAltarCurse,
+            altars: { gifts: protectionAltarManualGifts,
+                syncLevel: protectionAltarFollowsRun,
+                startLevel: protectionAltarFollowsRun ? null : normalizeProtectionAltarLevel(protectionAltarLevel.value),
+                display: Number(protectionAltarDisplay.value),
+                dualityLevel: dualityAltarFollowsRun ? null : Number(dualityAltarLevel.value),
+                dualitySyncLevel: dualityAltarFollowsRun,
+                dualityOutcome: dualityAltarOutcome.value,
+                purgatoryLevel: purgatoryAltarFollowsRun ? null : Number(purgatoryAltarLevel.value),
+                purgatorySyncLevel: purgatoryAltarFollowsRun,
+                omittedSecondAltars: setObject(omittedSecondProtectionAltars),
                 curses: setObject(purificationAltarCurses) },
             // Text and its letter styles travel as a single field to keep them aligned.
             lobby: { content: [lobbySnapshot()], typingStyle: clone(lobbyEditor.typingStyle),
@@ -127,10 +135,26 @@
             }
             if (roots.has('altars')) {
                 const data = object(s.altars);
-                if (protectionAltarGiftsInput) protectionAltarGiftsInput.value = bounded(data.gifts, 0, 1000000000, 0);
-                selectedProtectionAltarLevel = data.level === null ? null : bounded(data.level, 1, 100000);
-                selectedPurificationAltarCurse = findCurseByName(canonicalName(data.selected)) ? canonicalName(data.selected) : null;
-                pendingPurificationAltarCurse = findCurseByName(canonicalName(data.pending)) ? canonicalName(data.pending) : null;
+                protectionAltarManualGifts = String(bounded(data.gifts, 0, 1000000000, 0));
+                protectionAltarFollowsRun = data.syncLevel !== false;
+                if (!protectionAltarFollowsRun) {
+                    protectionAltarLevel.value = normalizeProtectionAltarLevel(bounded(data.startLevel, 1, 100000, 8));
+                }
+                protectionAltarDisplay.value = Math.trunc(bounded(data.display, 1, 100, 7));
+                dualityAltarFollowsRun = data.dualitySyncLevel !== false;
+                if (!dualityAltarFollowsRun) dualityAltarLevel.value = Math.trunc(bounded(data.dualityLevel, 15, 100000, 15));
+                dualityAltarOutcome.value = data.dualityOutcome === 'skipped' ? 'skipped' : 'picked';
+                renderDualityAltarPrediction();
+                purgatoryAltarFollowsRun = data.purgatorySyncLevel !== false;
+                if (!purgatoryAltarFollowsRun) purgatoryAltarLevel.value = Math.trunc(bounded(data.purgatoryLevel, 1, 100000, 1));
+                renderPurgatoryAltarPrediction();
+                omittedSecondProtectionAltars.clear();
+                entries(data.omittedSecondAltars).forEach(([key, omitted]) => {
+                    const level = Number(key);
+                    if (omitted === true && Number.isInteger(level) && level >= 1 && level <= 100099) {
+                        omittedSecondProtectionAltars.add(level);
+                    }
+                });
                 purificationAltarCurses.clear();
                 entries(data.curses).forEach(([n,v]) => { const name = canonicalName(n); if (v === true && findCurseByName(name)) purificationAltarCurses.add(name); });
                 renderProtectionAltarCalculator();

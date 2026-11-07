@@ -43,13 +43,13 @@
     <!-- Lobby Maker: the font families used by Roblox rich text. -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Fredoka+One&amp;family=Permanent+Marker&amp;family=Indie+Flower&amp;family=Luckiest+Guy&amp;family=Bangers&amp;family=Grenze+Gotisch:wght@400;700&amp;family=Special+Elite&amp;family=Michroma&amp;family=Creepster&amp;family=Amatic+SC:wght@400;700&amp;family=Nunito:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/tracker.css?v=20261106-enemy-disclosure">
-    <link rel="stylesheet" href="css/upgrades.css?v=20261106-upgrade-slide">
+    <link rel="stylesheet" href="css/tracker.css?v=20261107-restored-gradients">
+    <link rel="stylesheet" href="css/upgrades.css?v=20261108-purgatory-wrap">
     <link rel="stylesheet" href="css/link.css?v=20261106-link-info">
-    <link rel="stylesheet" href="css/tools.css?v=20261026-header1">
-    <link rel="stylesheet" href="css/utilities.css?v=20261026-bgfix2">
-    <link rel="stylesheet" href="css/toolkit-polish.css?v=20261106-delusion-pools">
-    <link rel="stylesheet" href="css/card-reveals.css?v=20261027-pink-purple-logo1">
+    <link rel="stylesheet" href="css/tools.css?v=20261107-uniform-curse-cards">
+    <link rel="stylesheet" href="css/utilities.css?v=20261107-tooltip-style">
+    <link rel="stylesheet" href="css/toolkit-polish.css?v=20261107-sidebar-headers">
+    <link rel="stylesheet" href="css/card-reveals.css?v=20261107-longer-stars">
     <link rel="icon" type="image/png" href="assets/upgrades/Badge.png">
 
 
@@ -78,9 +78,18 @@
 
         <header class="site-header">
             <div class="site-header-top">
-                <a class="toolkit-brand" id="logoText" href="#/" aria-label="Nullscape Toolkits — back to home">
-                    <img src="assets/branding/NullscapeToolkits.png?v=20261028-supplied-logo1" alt="Nullscape Toolkits" width="944" height="379">
-                </a>
+                <div id="sidebarHeader" class="sidebar-header">
+                    <button class="toolkit-brand" id="logoText" type="button" aria-label="Nullscape Toolkits — header options" aria-expanded="false" aria-controls="sidebarHeaderMenu">
+                        <span class="sidebar-header-slide is-current" data-header="logo" aria-hidden="true">
+                            <img class="sidebar-header-logo" src="assets/branding/NullscapeToolkits.png?v=20261028-supplied-logo1" alt="" width="944" height="379">
+                        </span>
+                    </button>
+                    <div id="sidebarHeaderMenu" class="sidebar-header-menu" role="group" aria-label="Header options" hidden>
+                        <button id="sidebarHeaderHide" type="button">Hide</button>
+                        <a href="#/">Main Menu</a>
+                    </div>
+                    <button id="sidebarHeaderShow" class="sidebar-header-show" type="button" hidden>Show Header</button>
+                </div>
 
                 <div class="site-header-controls">
 
@@ -707,96 +716,195 @@
                         <span aria-hidden="true">&larr;</span>
                     </button>
 
-                    <div class="altars-panel-heading animated-header-text">
-                        ALTARS
+                    <div class="tool-header-brand tool-header-brand--altars" role="heading" aria-level="1" aria-label="Altars">
+                        <img src="assets/branding/AltarsHeader.webp" alt="">
                     </div>
 
                 </div>
 
                 <div class="altars-panel-body">
 
-                    <section class="altar-calculator" aria-labelledby="protectionAltarTitle">
+                    <div class="altar-column">
+                        <details id="protectionAltar" class="altar-calculator">
+                            <summary class="altar-calculator-intro">
+                                <img class="altar-type-icon" src="assets/upgrades/MoreAltars.png" alt="">
+                                <h2>Altar of Protection</h2>
+                            </summary>
+                            <div class="altar-calculator-content">
 
-                        <div class="altar-calculator-intro">
-                            <div class="altar-calculator-icon" aria-hidden="true">
-                                <img src="assets/upgrades/MoreAltars.png" alt="">
-                            </div>
-                            <div>
-                                <h2 id="protectionAltarTitle">Protection Altar</h2>
-                            </div>
-                        </div>
-
-                        <div class="altar-calculator-controls">
-                            <label class="altar-gifts-field" for="protectionAltarGifts">
-                                <span>Golden Gifts</span>
-                                <input id="protectionAltarGifts" type="number" min="0" step="1" inputmode="numeric" value="0">
-                            </label>
-                            <button id="protectionAltarUseBalance" class="altar-balance-button" type="button">
-                                Use shop balance
-                            </button>
-                        </div>
-
-                        <div id="protectionAltarContext" class="altar-context" aria-live="polite"></div>
-
-                        <div class="altar-calculator-section-heading">
-                            <span>Altar level</span>
-                            <span id="protectionAltarFormula" class="altar-formula"></span>
-                        </div>
-
-                        <div id="protectionAltarLevels" class="altar-level-grid"></div>
-
-                        <div id="protectionAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
-
-                    </section>
-
-                    <section class="altar-calculator altar-calculator--purification" aria-labelledby="purificationAltarTitle">
-
-                        <div class="altar-calculator-intro">
-                            <div class="altar-calculator-icon" aria-hidden="true">
-                                <img src="assets/upgrades/MedalPink.png" alt="">
-                            </div>
-                            <div>
-                                <h2 id="purificationAltarTitle">Purification Altar</h2>
-                            </div>
-                        </div>
-
-                        <div class="purification-altar-toolbar">
-                            <div>
-                                <span class="purification-altar-toolbar-label">CURSES</span>
-                            </div>
-                            <button id="purificationAltarSync" class="altar-balance-button purification-altar-sync" type="button">
-                                Use active curses
-                            </button>
-                        </div>
-
-                        <div class="purification-altar-picker">
-                            <div class="purification-altar-picker-copy">
-                                <strong>Add a medal curse</strong>
-                            </div>
-                            <div class="purification-altar-picker-controls">
-                                <div class="purification-altar-custom-select">
-                                    <button id="purificationAltarPickerToggle" class="purification-altar-picker-toggle" type="button" aria-expanded="false" aria-controls="purificationAltarPickerMenu">
-                                        <span id="purificationAltarPickerValue">Choose a medal curse</span>
-                                        <span class="purification-altar-picker-chevron" aria-hidden="true">⌄</span>
-                                    </button>
-                                    <div id="purificationAltarPickerMenu" class="purification-altar-picker-menu" role="listbox" aria-label="Medal curses"></div>
+                                <div class="altar-calculator-controls">
+                                    <label class="altar-gifts-field" for="protectionAltarGifts">
+                                        <span class="altar-gift-amount"><img src="assets/upgrades/GoldGiftIcon.png" alt=""> Golden Gifts</span>
+                                        <input id="protectionAltarGifts" type="number" min="0" step="1" inputmode="numeric" value="0">
+                                    </label>
+                                    <div class="altar-balance-action">
+                                        <button id="protectionAltarUseBalance" class="altar-balance-button" type="button">Use Shop Balance</button>
+                                        <span class="altar-help">
+                                            <button type="button" aria-label="About Shop Balance" aria-describedby="protectionAltarUseBalanceTip">i</button>
+                                            <span id="protectionAltarUseBalanceTip" role="tooltip">Copies the Upgrade Calculator's current Golden Gifts into this field, you can edit the amount afterward.</span>
+                                        </span>
+                                    </div>
                                 </div>
-                            <button id="purificationAltarAddCurse" class="altar-balance-button" type="button">Add curse</button>
+
+                                <div class="altar-modifiers">
+                                    <div class="altar-switch-group">
+                                        <span class="altar-switch-name"><img src="assets/delusions/Dependence.png" alt=""> Dependence</span>
+                                        <button id="protectionAltarDependence" class="upgrade-switch upgrade-switch--sub" type="button" role="switch" aria-checked="false" aria-label="Dependence" aria-describedby="protectionAltarDependenceTip">
+                                            <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
+                                            <span class="upgrade-switch-label" aria-hidden="true">OFF</span>
+                                        </button>
+                                        <span class="altar-help">
+                                            <button type="button" aria-label="About Dependence" aria-describedby="protectionAltarDependenceTip">i</button>
+                                            <span id="protectionAltarDependenceTip" role="tooltip">Reduces protection altar costs by 20%. Requires Shield. Cannot be picked with Burnout. <span id="protectionAltarDependenceLock"></span></span>
+                                        </span>
+                                    </div>
+                                    <div class="altar-switch-group">
+                                        <span class="altar-switch-name"><img src="assets/delusions/Burnout.png" alt=""> Burnout</span>
+                                        <button id="protectionAltarBurnout" class="upgrade-switch upgrade-switch--sub" type="button" role="switch" aria-checked="false" aria-label="Burnout" aria-describedby="protectionAltarBurnoutTip">
+                                            <span class="upgrade-switch-track"><span class="upgrade-switch-thumb"></span></span>
+                                            <span class="upgrade-switch-label" aria-hidden="true">OFF</span>
+                                        </button>
+                                        <span class="altar-help">
+                                            <button type="button" aria-label="About Burnout" aria-describedby="protectionAltarBurnoutTip">i</button>
+                                            <span id="protectionAltarBurnoutTip" role="tooltip">Spawns 2 AoPs per level! 2nd altar will cost 1.5x more prior to the first altar. <span id="protectionAltarBurnoutLock"></span></span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="altar-range-controls">
+                                    <div class="altar-gifts-field">
+                                        <div class="altar-level-caption">
+                                            <label for="protectionAltarLevel">Level</label>
+                                            <span class="altar-help altar-level-sync">
+                                                <button id="protectionAltarSyncLevel" class="upgrade-switch upgrade-switch--sub altar-sync-button active" type="button" role="switch" aria-checked="true" aria-describedby="protectionAltarSyncLevelTip">
+                                                    <span class="upgrade-switch-track" aria-hidden="true"><span class="upgrade-switch-thumb"></span></span>
+                                                    <span class="upgrade-switch-label">Sync</span>
+                                                </button>
+                                                <span id="protectionAltarSyncLevelTip" role="tooltip">Syncs to the Curse Tracker's current level.</span>
+                                            </span>
+                                        </div>
+                                        <input id="protectionAltarLevel" type="number" min="1" max="100000" step="1" inputmode="numeric" value="8">
+                                    </div>
+                                    <label class="altar-gifts-field" for="protectionAltarDisplay">
+                                        <span>Display</span>
+                                        <input id="protectionAltarDisplay" type="number" min="1" max="100" step="1" inputmode="numeric" value="7">
+                                    </label>
+                                </div>
+
+                                <div id="protectionAltarLevels" class="altar-level-grid"></div>
+
+                                <div id="protectionAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
+                                <p id="protectionAltarFormula" class="altar-formula"></p>
+
                             </div>
-                        </div>
+                        </details>
 
-                        <div id="purificationAltarTargets" class="purification-altar-targets" aria-live="polite"></div>
+                        <details class="altar-calculator altar-calculator--duality altar-calculator--predictor">
+                            <summary class="altar-calculator-intro">
+                                <img class="altar-type-icon altar-icon--jade" src="assets/upgrades/MoreAltars.png" alt="">
+                                <h2>Altar of Duality</h2>
+                            </summary>
+                            <div class="altar-calculator-content">
+                                <div class="altar-predictor-controls">
+                                    <div class="altar-gifts-field">
+                                        <div class="altar-level-caption">
+                                            <label for="dualityAltarLevel">Activated at</label>
+                                            <span class="altar-help altar-level-sync">
+                                                <button id="dualityAltarSyncLevel" class="upgrade-switch upgrade-switch--sub altar-sync-button active" type="button" role="switch" aria-checked="true" aria-describedby="dualityAltarSyncTip">
+                                                    <span class="upgrade-switch-track" aria-hidden="true"><span class="upgrade-switch-thumb"></span></span>
+                                                    <span class="upgrade-switch-label">Sync</span>
+                                                </button>
+                                                <span id="dualityAltarSyncTip" role="tooltip">Uses the Curse Tracker's current level, starting at level 15.</span>
+                                            </span>
+                                        </div>
+                                        <input id="dualityAltarLevel" type="number" min="15" max="100000" step="1" inputmode="numeric" value="15">
+                                    </div>
+                                    <div class="altar-gifts-field">
+                                        <div class="altar-level-caption">
+                                            <label for="dualityAltarOutcome">Delusion</label>
+                                            <span class="altar-help">
+                                                <button type="button" aria-label="About Duality predictions" aria-describedby="dualityAltarTip">i</button>
+                                                <span id="dualityAltarTip" role="tooltip">Enter the altar's activation level, then choose whether you picked a Delusion. Picking one blocks the next five levels. The cooldown after skipping is unknown.</span>
+                                            </span>
+                                        </div>
+                                        <select id="dualityAltarOutcome">
+                                            <option value="picked">Picked</option>
+                                            <option value="skipped">Skipped</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="dualityAltarPrediction" class="altar-prediction" aria-live="polite"></div>
+                            </div>
+                        </details>
+                    </div>
 
-                        <div id="purificationAltarContext" class="altar-context altar-context--pink" aria-live="polite"></div>
+                    <div class="altar-column">
+                        <details class="altar-calculator altar-calculator--purification">
+                            <summary class="altar-calculator-intro">
+                                <img class="altar-type-icon altar-icon--pink" src="assets/upgrades/MoreAltars.png" alt="">
+                                <h2>Altar of Purification</h2>
+                            </summary>
+                            <div class="altar-calculator-content">
 
-                        <div class="altar-calculator-section-heading">
-                            <span>Purification cost</span>
-                            <span id="purificationAltarFormula" class="altar-formula"></span>
-                        </div>
+                                <div class="purification-altar-picker">
+                                    <span id="purificationAltarCursesLabel" class="altar-field-label"><img src="assets/curses/Lap2.png" alt=""> Curses</span>
+                                    <div class="purification-altar-picker-controls">
+                                        <div class="purification-altar-custom-select">
+                                            <button id="purificationAltarPickerToggle" class="purification-altar-picker-toggle" type="button" aria-expanded="false" aria-controls="purificationAltarPickerMenu" aria-labelledby="purificationAltarCursesLabel purificationAltarPickerValue">
+                                                <span id="purificationAltarPickerValue">Choose a medal curse</span>
+                                                <span class="purification-altar-picker-chevron" aria-hidden="true">⌄</span>
+                                            </button>
+                                            <div id="purificationAltarPickerMenu" class="purification-altar-picker-menu" role="listbox" aria-label="Medal curses" inert></div>
+                                        </div>
+                                        <div class="altar-balance-action">
+                                            <button id="purificationAltarSync" class="altar-balance-button" type="button">Use active curses</button>
+                                            <span class="altar-help">
+                                                <button type="button" aria-label="About active curses" aria-describedby="purificationAltarSyncTip">i</button>
+                                                <span id="purificationAltarSyncTip" role="tooltip">Copies your active medal curses from the Curse Tracker.</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div id="purificationAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
+                                <div id="purificationAltarTargets" class="purification-altar-targets" aria-live="polite"></div>
 
-                    </section>
+                                <div id="purificationAltarSummary" class="altar-cost-summary" aria-live="polite"></div>
+                                <p id="purificationAltarFormula" class="altar-formula"></p>
+
+                            </div>
+                        </details>
+
+                        <details class="altar-calculator altar-calculator--purgatory altar-calculator--predictor">
+                            <summary class="altar-calculator-intro">
+                                <img class="altar-type-icon altar-icon--yellow" src="assets/upgrades/MoreAltars.png" alt="">
+                                <h2>Altar of Purgatory</h2>
+                            </summary>
+                            <div class="altar-calculator-content">
+                                <div class="altar-predictor-controls">
+                                    <div class="altar-gifts-field">
+                                        <div class="altar-level-caption">
+                                            <label for="purgatoryAltarLevel">Activated at</label>
+                                            <span class="altar-help altar-level-sync">
+                                                <button id="purgatoryAltarSyncLevel" class="upgrade-switch upgrade-switch--sub altar-sync-button active" type="button" role="switch" aria-checked="true" aria-describedby="purgatoryAltarSyncTip">
+                                                    <span class="upgrade-switch-track" aria-hidden="true"><span class="upgrade-switch-thumb"></span></span>
+                                                    <span class="upgrade-switch-label">Sync</span>
+                                                </button>
+                                                <span id="purgatoryAltarSyncTip" role="tooltip">Syncs to the Curse Tracker's current level.</span>
+                                            </span>
+                                        </div>
+                                        <input id="purgatoryAltarLevel" type="number" min="1" max="100000" step="1" inputmode="numeric" value="1">
+                                    </div>
+                                    <span class="altar-help">
+                                        <button type="button" aria-label="About Purgatory predictions" aria-describedby="purgatoryAltarTip">i</button>
+                                        <span id="purgatoryAltarTip" role="tooltip">Using the Revive variant blocks the next 3 levels, or 2 on Casual. Difficulty follows the Curse Tracker.</span>
+                                    </span>
+                                </div>
+                                <p id="purgatoryAltarContext" class="altar-predictor-note"></p>
+                                <div id="purgatoryAltarPrediction" class="altar-prediction" aria-live="polite"></div>
+                            </div>
+                        </details>
+                    </div>
+
 
                 </div>
 
@@ -1228,9 +1336,11 @@
                 aria-expanded="false"
                 aria-keyshortcuts="b"
             >
-                <span class="upgrade-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6M5 21h14"/></svg></span>
+                <span class="toolkit-nav-symbol" aria-hidden="true">
+                    <span class="upgrade-toggle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 19V5m-6 6 6-6 6 6M5 21h14"/></svg></span>
+                    <span class="upgrade-toggle-key">B</span>
+                </span>
                 <span class="btn-label">UPGRADES</span>
-                <span class="upgrade-toggle-key">B</span>
             </button>
 
             <button
@@ -1241,9 +1351,11 @@
                 aria-expanded="false"
                 aria-keyshortcuts="n"
             >
-                <span class="altars-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 3v9M9 6h6M6 12h12v3H6zM8 15v5m8-5v5M6 20h12"/></svg></span>
+                <span class="toolkit-nav-symbol" aria-hidden="true">
+                    <span class="altars-toggle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 3v9M9 6h6M6 12h12v3H6zM8 15v5m8-5v5M6 20h12"/></svg></span>
+                    <span class="altars-toggle-key">N</span>
+                </span>
                 <span class="btn-label">ALTARS</span>
-                <span class="altars-toggle-key">N</span>
             </button>
 
             <button
@@ -1254,9 +1366,11 @@
                 aria-expanded="false"
                 aria-keyshortcuts="x"
             >
-                <span class="death-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M9 18H7v-3a7 7 0 1 1 10 0v3h-2v3H9z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="m12 13-1 2h2z"/></svg></span>
+                <span class="toolkit-nav-symbol" aria-hidden="true">
+                    <span class="death-toggle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M9 18H7v-3a7 7 0 1 1 10 0v3h-2v3H9z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="m12 13-1 2h2z"/></svg></span>
+                    <span class="death-toggle-key">X</span>
+                </span>
                 <span class="btn-label">DEATHS</span>
-                <span class="death-toggle-key">X</span>
             </button>
 
             <button
@@ -1267,9 +1381,11 @@
                 aria-expanded="false"
                 aria-keyshortcuts="l"
             >
-                <span class="lobby-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></span>
+                <span class="toolkit-nav-symbol" aria-hidden="true">
+                    <span class="lobby-toggle-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></span>
+                    <span class="lobby-toggle-key">L</span>
+                </span>
                 <span class="btn-label">LOBBY</span>
-                <span class="lobby-toggle-key">L</span>
             </button>
 
         </div>
@@ -1293,13 +1409,14 @@
 
 <script type="module" src="js/presence.js?v=20261106-welcome-layout"></script>
 <script src="js/startup.js"></script>
-<script src="js/tracker.js?v=20261106-death-rankings"></script>
-<script src="js/upgrades.js?v=20261106-upgrade-slide"></script>
-<script src="js/tools.js?v=20261106-tools-tip"></script>
-<script src="js/card-reveals.js?v=20261027-pink-purple-logo1"></script>
+<script src="js/tracker.js?v=20261107-purgatory"></script>
+<script src="js/upgrades.js?v=20261107-altar-controls"></script>
+<script src="js/tools.js?v=20261108-purgatory-style"></script>
+<script src="js/panel-header.js?v=20261107-sidebar-headers"></script>
+<script src="js/card-reveals.js?v=20261107-longer-stars"></script>
 <script src="js/curse-backgrounds.js?v=20261028-landing-shuffle1"></script>
 <script src="js/link-core.js?v=20261027-link1"></script>
-<script src="js/link-state.js?v=20261106-unlimited-deaths"></script>
+<script src="js/link-state.js?v=20261107-purgatory"></script>
 <script src="js/link.js?v=20261106-link-info"></script>
 
 </body>

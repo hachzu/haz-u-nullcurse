@@ -26,7 +26,7 @@
     object-fit: contain;
     transform: rotate(45deg);
     filter: drop-shadow(0 0 2px #fff4b577);
-    animation: card-reveal-star-exit 10000ms linear both;
+    animation: card-reveal-star-exit 40000ms linear both;
     animation-delay: var(--reveal-delay);
 }
 @keyframes card-reveal-orbit { to { --card-reveal-angle: 360deg; } }

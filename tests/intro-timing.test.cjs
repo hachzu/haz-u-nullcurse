@@ -290,7 +290,7 @@ test('nil remains tied to the paused audio clock when the tab is hidden', async 
     h.intro.finish();
 });
 
-test('nil keeps the visualizer active without driving background bumps', async () => {
+test('nil keeps the visualizer active and responds to detected music kicks', async () => {
     const h = harness({ storage: { nullscapeLandingRotation: 'nil' } });
     const canvas = h.elements.landingView.children.find(node => node.className === 'ns-audio-visualizer');
     canvas.clientWidth = 480; canvas.clientHeight = 60;
@@ -299,7 +299,7 @@ test('nil keeps the visualizer active without driving background bumps', async (
     h.advance(7.1);
     analyser.db = -10;
     h.advance(7.2); h.advance(7.35);
-    assert.equal(Number(h.elements['.landing-background'].style['--ns-beat-scale']), 1);
+    assert.ok(Number(h.elements['.landing-background'].style['--ns-beat-scale']) > 1);
     assert.equal(canvas.hidden, false);
     assert.equal(canvas.paint.bars.length, 96);
     assert.ok(canvas.paint.bars.every(bar => bar[2] === 2));

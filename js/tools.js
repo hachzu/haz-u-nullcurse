@@ -471,8 +471,14 @@ const altarsToggleButton = document.getElementById("altarsToggleButton");
 const altarsPanel = document.getElementById("altarsPanel");
 const altarsBackButton = document.getElementById("altarsBackButton");
 const protectionAltarGiftsInput = document.getElementById("protectionAltarGifts");
-const protectionAltarUseBalanceButton = document.getElementById("protectionAltarUseBalance");
-const protectionAltarContext = document.getElementById("protectionAltarContext");
+const protectionAltarSection = document.getElementById("protectionAltar");
+const protectionAltarUseBalance = document.getElementById("protectionAltarUseBalance");
+const protectionAltarDependence = document.getElementById("protectionAltarDependence");
+const protectionAltarBurnout = document.getElementById("protectionAltarBurnout");
+const protectionAltarLevel = document.getElementById("protectionAltarLevel");
+const protectionAltarSyncLevel = document.getElementById("protectionAltarSyncLevel");
+const protectionAltarDisplay = document.getElementById("protectionAltarDisplay");
+const ALTAR_GIFT_ICON = '<img src="assets/upgrades/GoldGiftIcon.png" alt="Golden Gifts">';
 const protectionAltarLevels = document.getElementById("protectionAltarLevels");
 const protectionAltarFormula = document.getElementById("protectionAltarFormula");
 const protectionAltarSummary = document.getElementById("protectionAltarSummary");
@@ -480,15 +486,23 @@ const purificationAltarSyncButton = document.getElementById("purificationAltarSy
 const purificationAltarPickerToggle = document.getElementById("purificationAltarPickerToggle");
 const purificationAltarPickerValue = document.getElementById("purificationAltarPickerValue");
 const purificationAltarPickerMenu = document.getElementById("purificationAltarPickerMenu");
-const purificationAltarAddCurseButton = document.getElementById("purificationAltarAddCurse");
 const purificationAltarTargets = document.getElementById("purificationAltarTargets");
-const purificationAltarContext = document.getElementById("purificationAltarContext");
 const purificationAltarFormula = document.getElementById("purificationAltarFormula");
 const purificationAltarSummary = document.getElementById("purificationAltarSummary");
+const dualityAltarLevel = document.getElementById("dualityAltarLevel");
+const dualityAltarSyncLevel = document.getElementById("dualityAltarSyncLevel");
+const dualityAltarOutcome = document.getElementById("dualityAltarOutcome");
+const dualityAltarPrediction = document.getElementById("dualityAltarPrediction");
+const purgatoryAltarLevel = document.getElementById("purgatoryAltarLevel");
+const purgatoryAltarSyncLevel = document.getElementById("purgatoryAltarSyncLevel");
+const purgatoryAltarPrediction = document.getElementById("purgatoryAltarPrediction");
+const purgatoryAltarContext = document.getElementById("purgatoryAltarContext");
 
-let selectedProtectionAltarLevel = null;
-let selectedPurificationAltarCurse = null;
-let pendingPurificationAltarCurse = null;
+let protectionAltarManualGifts = "0";
+let protectionAltarFollowsRun = true;
+let dualityAltarFollowsRun = true;
+let purgatoryAltarFollowsRun = true;
+const omittedSecondProtectionAltars = new Set();
 const purificationAltarCurses = new Set();
 
 
@@ -504,13 +518,13 @@ function getProtectionAltarMode() {
 function getProtectionAltarShopBalance() {
 
     return typeof upgradeState !== "undefined" && upgradeState
-        ? Math.max(0, Number(upgradeState.goldenGifts) || 0)
+        ? Number(upgradeState.goldenGifts) || 0
         : 0;
 
 }
 
 
-function getProtectionAltarCost(level, goldenGifts, playerCount, mode) {
+function getProtectionAltarCost(level, goldenGifts, playerCount, mode, dependenceActive) {
 
     const soloOrDuo = mode === "solo" || mode === "duo";
     const percent = soloOrDuo ? 0.05 : 0.1;
@@ -525,114 +539,88 @@ function getProtectionAltarCost(level, goldenGifts, playerCount, mode) {
         + (basePrice * levelMultiplier * playerMultiplier)
     );
 
-    const dependenceActive = typeof runState !== "undefined"
-        && runState.activeDelusions instanceof Set
-        && runState.activeDelusions.has("Dependence");
-
     return dependenceActive ? Math.floor(baseCost * 0.8) : baseCost;
 
 }
 
 
-function formatAltarMode(mode) {
-
-    return ({ solo: "Solo", duo: "Duo", party: "Party", partyplus: "Party+" })[mode] || "Solo";
-
+function syncAltarSwitch(button, active) {
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", String(active));
+    button.querySelector(".upgrade-switch-label").textContent = active ? "ON" : "OFF";
 }
 
-
-function renderAltarContext(container, items) {
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    items.forEach(({ label, value }) => {
-
-        const detail = document.createElement("div");
-        const detailLabel = document.createElement("span");
-        const detailValue = document.createElement("strong");
-
-        detail.className = "altar-context-detail";
-        detailLabel.textContent = label;
-        detailValue.textContent = value;
-        detail.append(detailLabel, detailValue);
-        container.appendChild(detail);
-
-    });
-
+function normalizeProtectionAltarLevel(value) {
+    return Math.min(100000, Math.max(1, Math.trunc(Number(value || 8))));
 }
 
+function syncProtectionAltarDelusion(button, name) {
+    const active = runState.activeDelusions.has(name);
+    const reason = getDelusionRequirementReason(DELUSION_BY_NAME.get(name));
+    syncAltarSwitch(button, active);
+    button.setAttribute("aria-disabled", String(Boolean(reason)));
+    const description = document.getElementById(`${button.id}Tip`).firstChild.textContent;
+    document.getElementById(`${button.id}Lock`).textContent = description.includes(reason) ? "" : reason;
+    return active;
+}
 
 function renderProtectionAltarCalculator() {
 
-    if (!protectionAltarGiftsInput || !protectionAltarLevels || !protectionAltarSummary) {
+    if (!protectionAltarSection) return;
 
-        return;
+    const gifts = protectionAltarManualGifts;
+    if (protectionAltarGiftsInput.value !== gifts) protectionAltarGiftsInput.value = gifts;
 
+    protectionAltarSyncLevel.classList.toggle("active", protectionAltarFollowsRun);
+    protectionAltarSyncLevel.setAttribute("aria-checked", String(protectionAltarFollowsRun));
+    const startLevel = normalizeProtectionAltarLevel(protectionAltarFollowsRun ? getLevel() : protectionAltarLevel.value);
+    if (protectionAltarFollowsRun && protectionAltarLevel.value !== String(startLevel)) {
+        protectionAltarLevel.value = startLevel;
     }
 
-    const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
-    const currentLevel = typeof getLevel === "function" ? getLevel() : 1;
+    const dependenceActive = syncProtectionAltarDelusion(protectionAltarDependence, "Dependence");
+    const burnoutActive = syncProtectionAltarDelusion(protectionAltarBurnout, "Burnout");
+    if (!protectionAltarSection.open) return;
+
+    const playerCount = getPlayerCount();
     const mode = getProtectionAltarMode();
-    const goldenGifts = Math.max(0, Number(protectionAltarGiftsInput.value) || 0);
-    const firstLevel = Math.max(8, currentLevel);
-
-    if (selectedProtectionAltarLevel === null || selectedProtectionAltarLevel < firstLevel) {
-
-        selectedProtectionAltarLevel = firstLevel;
-
-    }
+    const goldenGifts = Math.max(0, Number(gifts) || 0);
+    const displayCount = Math.min(100, Math.max(1, Math.trunc(Number(protectionAltarDisplay.value)) || 1));
 
     const soloOrDuo = mode === "solo" || mode === "duo";
-    renderAltarContext(protectionAltarContext, [
-        { label: "Level", value: currentLevel },
-        { label: "Party", value: `${playerCount} player${playerCount === 1 ? "" : "s"}` },
-        { label: "Mode", value: formatAltarMode(mode) }
-    ]);
-
     const baseFormula = soloOrDuo
         ? "5% of Gifts + 12.5 × (level − 4) × players"
         : "10% of Gifts + 50 × (level − 4) × √players ÷ 1.75";
-    const dependenceActive = typeof runState !== "undefined"
-        && runState.activeDelusions instanceof Set
-        && runState.activeDelusions.has("Dependence");
     protectionAltarFormula.textContent = dependenceActive
         ? `${baseFormula} × 0.8 (Dependence)`
         : baseFormula;
 
-    protectionAltarLevels.innerHTML = "";
+    let totalGifts = 0;
+    const cards = document.createDocumentFragment();
+    for (let level = startLevel; level < startLevel + displayCount; level++) {
+        const first = getProtectionAltarCost(level, goldenGifts, playerCount, mode, dependenceActive);
+        const second = burnoutActive ? Math.floor(first * 1.5) : 0;
+        const omitted = omittedSecondProtectionAltars.has(level);
+        const total = first + (omitted ? 0 : second);
+        totalGifts += total;
 
-    for (let level = firstLevel; level < firstLevel + 5; level++) {
-
-        const cost = getProtectionAltarCost(level, goldenGifts, playerCount, mode);
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "altar-level-card";
-        button.classList.toggle("selected", level === selectedProtectionAltarLevel);
-        button.setAttribute("aria-pressed", level === selectedProtectionAltarLevel ? "true" : "false");
-        button.innerHTML = `<span class="altar-level-label">LEVEL ${level}</span><strong>${cost.toLocaleString()} <small>GG</small></strong>`;
-
-        attachClickAction(button, () => {
-
-            selectedProtectionAltarLevel = level;
-            renderProtectionAltarCalculator();
-
-        }, typeof playSelectSound === "function" ? playSelectSound : undefined);
-
-        protectionAltarLevels.appendChild(button);
-
+        const card = document.createElement("div");
+        card.className = "altar-level-card";
+        card.innerHTML = `<span class="altar-level-label">LV ${level}</span>`
+            + (burnoutActive
+                ? `<div class="altar-level-breakdown">
+                       <div class="altar-level-line"><span>1st</span><span class="altar-level-price">${first.toLocaleString()}</span><span></span></div>
+                       <button type="button" class="altar-level-line altar-second-toggle${omitted ? " altar-second-toggle--omitted" : ""}" data-protection-level="${level}" aria-label="${omitted ? "Restore" : "Remove"} second protection altar at level ${level}">
+                           <span>2nd</span><span class="altar-level-price">${omitted ? `<s>${second.toLocaleString()}</s>` : second.toLocaleString()}</span><span class="altar-second-action" aria-hidden="true">${omitted ? "+" : "−"}</span>
+                       </button>
+                   </div>
+                   <span class="altar-level-total"><small>Total</small><strong class="altar-gift-amount">${total.toLocaleString()} ${ALTAR_GIFT_ICON}</strong></span>`
+                : `<strong class="altar-gift-amount">${total.toLocaleString()} ${ALTAR_GIFT_ICON}</strong>`);
+        cards.appendChild(card);
     }
 
-    const selectedCost = getProtectionAltarCost(
-        selectedProtectionAltarLevel,
-        goldenGifts,
-        playerCount,
-        mode
-    );
-
-    protectionAltarSummary.innerHTML = `<span>Level ${selectedProtectionAltarLevel}</span><strong>${selectedCost.toLocaleString()} <small>Golden Gifts</small></strong>`;
+    protectionAltarLevels.replaceChildren(cards);
+    protectionAltarSummary.innerHTML = `<span>Total Gifts</span><strong class="altar-gift-amount">${totalGifts.toLocaleString()} ${ALTAR_GIFT_ICON}</strong>`;
 
 }
 
@@ -643,6 +631,59 @@ function getPurificationAltarLevelMultiplier(level) {
 
 }
 
+function renderDualityAltarPrediction() {
+    if (!dualityAltarPrediction) return;
+    const level = Math.min(100000, Math.max(15, Math.trunc(Number(dualityAltarFollowsRun ? getLevel() : dualityAltarLevel.value)) || 15));
+    if (dualityAltarFollowsRun) dualityAltarLevel.value = level;
+    dualityAltarSyncLevel.classList.toggle("active", dualityAltarFollowsRun);
+    dualityAltarSyncLevel.setAttribute("aria-checked", String(dualityAltarFollowsRun));
+    const prediction = dualityAltarOutcome.value === "skipped" ? "Unknown" : `LV ${level + 6}`;
+    dualityAltarPrediction.innerHTML = `<div class="altar-level-card"><span class="altar-level-label">Next altar spawn</span><strong>${prediction}</strong></div>`;
+}
+
+if (dualityAltarLevel) {
+    dualityAltarLevel.addEventListener("input", () => {
+        dualityAltarFollowsRun = false;
+        renderDualityAltarPrediction();
+    });
+    dualityAltarLevel.addEventListener("change", () => {
+        dualityAltarLevel.value = Math.min(100000, Math.max(15, Math.trunc(Number(dualityAltarLevel.value)) || 15));
+    });
+    dualityAltarOutcome.addEventListener("change", renderDualityAltarPrediction);
+    attachClickAction(dualityAltarSyncLevel, () => {
+        dualityAltarFollowsRun = !dualityAltarFollowsRun;
+        renderDualityAltarPrediction();
+    }, playUtilitySound);
+    renderDualityAltarPrediction();
+}
+
+
+function renderPurgatoryAltarPrediction() {
+    if (!purgatoryAltarPrediction) return;
+    const level = Math.min(100000, Math.max(1, Math.trunc(Number(purgatoryAltarFollowsRun ? getLevel() : purgatoryAltarLevel.value)) || 1));
+    if (purgatoryAltarFollowsRun) purgatoryAltarLevel.value = level;
+    purgatoryAltarSyncLevel.classList.toggle("active", purgatoryAltarFollowsRun);
+    purgatoryAltarSyncLevel.setAttribute("aria-checked", String(purgatoryAltarFollowsRun));
+    const blockedLevels = runState.difficulty === "Casual" ? 2 : 3;
+    const nextAltar = level + blockedLevels + 1;
+    purgatoryAltarContext.textContent = runState.difficulty;
+    purgatoryAltarPrediction.innerHTML = `<div class="altar-level-card"><span class="altar-level-label">Next altar spawn (if revive was used)</span><strong>LV ${nextAltar}</strong></div>`;
+}
+
+if (purgatoryAltarLevel) {
+    purgatoryAltarLevel.addEventListener("input", () => {
+        purgatoryAltarFollowsRun = false;
+        renderPurgatoryAltarPrediction();
+    });
+    purgatoryAltarLevel.addEventListener("change", () => {
+        purgatoryAltarLevel.value = Math.min(100000, Math.max(1, Math.trunc(Number(purgatoryAltarLevel.value)) || 1));
+    });
+    attachClickAction(purgatoryAltarSyncLevel, () => {
+        purgatoryAltarFollowsRun = !purgatoryAltarFollowsRun;
+        renderPurgatoryAltarPrediction();
+    }, playUtilitySound);
+    renderPurgatoryAltarPrediction();
+}
 
 function getPurificationAltarCost(curseValue, level, playerCount) {
 
@@ -672,189 +713,132 @@ function getActiveMedalCurses() {
 
 
 function getAllMedalCurses() {
-
-    if (typeof globalCurses === "undefined" || typeof enemyCurses === "undefined") return [];
-
     return [...globalCurses, ...enemyCurses]
         .filter(curse => curse.medal)
-        .sort(compareMedalCurseLevels);
-
+        .sort((a, b) =>
+            (Number.isFinite(b.value) ? b.value : -1) - (Number.isFinite(a.value) ? a.value : -1)
+            || a.name.localeCompare(b.name));
 }
 
-
 function formatPurificationCurseValue(curse) {
-    return Number.isFinite(curse.value) ? `${curse.value} curse value` : "Curse value unknown";
+    return Number.isFinite(curse.value) ? `${curse.value.toLocaleString()} curse value` : "???";
 }
 
 function renderPurificationAltarCalculator() {
-
-    if (!purificationAltarTargets || !purificationAltarSummary) {
-
-        return;
-
-    }
+    if (!purificationAltarTargets || !purificationAltarSummary) return;
 
     const allMedalCurses = getAllMedalCurses();
     const selectedCurses = allMedalCurses.filter(curse => purificationAltarCurses.has(curse.name));
-
-    if (!selectedCurses.some(curse => curse.name === selectedPurificationAltarCurse)) {
-
-        selectedPurificationAltarCurse = selectedCurses.length > 0 ? selectedCurses[0].name : null;
-
-    }
-
-    const curse = selectedCurses.find(item => item.name === selectedPurificationAltarCurse) || null;
-    const curseValue = Number.isFinite(curse?.value) ? curse.value : null;
-    const level = typeof getLevel === "function" ? getLevel() : 1;
-    const playerCount = typeof getPlayerCount === "function" ? getPlayerCount() : 1;
-    const levelMultiplier = getPurificationAltarLevelMultiplier(level);
-    const cost = curseValue === null ? null : getPurificationAltarCost(curseValue, level, playerCount);
-
+    const level = getLevel();
+    const playerCount = getPlayerCount();
     purificationAltarFormula.textContent = "curse value × level multiplier × √players";
+    purificationAltarPickerValue.textContent = selectedCurses.length === allMedalCurses.length
+        ? "All medal curses added" : "Choose a medal curse";
+    purificationAltarPickerToggle.disabled = selectedCurses.length === allMedalCurses.length;
 
-    const pendingCurse = allMedalCurses.find(curse => curse.name === pendingPurificationAltarCurse);
-
-    if (!pendingCurse || purificationAltarCurses.has(pendingCurse.name)) {
-
-        pendingPurificationAltarCurse = (allMedalCurses.find(curse => !purificationAltarCurses.has(curse.name)) || {}).name || null;
-
+    const options = document.createDocumentFragment();
+    for (const curse of allMedalCurses) {
+        const isAdded = purificationAltarCurses.has(curse.name);
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "purification-altar-picker-option";
+        option.disabled = isAdded;
+        option.setAttribute("role", "option");
+        option.setAttribute("aria-selected", String(isAdded));
+        option.innerHTML = `<img src="${getAssetPath("curses", curse.name)}" alt=""><span><strong>${curse.name}</strong><small>${formatPurificationCurseValue(curse)}</small></span>${isAdded ? "<em>ADDED</em>" : ""}`;
+        attachClickAction(option, () => {
+            purificationAltarCurses.add(curse.name);
+            purificationAltarPickerMenu.classList.remove("open");
+            purificationAltarPickerMenu.inert = true;
+            purificationAltarPickerToggle.setAttribute("aria-expanded", "false");
+            renderPurificationAltarCalculator();
+            purificationAltarPickerToggle.focus({ preventScroll: true });
+        }, playSelectSound);
+        options.appendChild(option);
     }
+    purificationAltarPickerMenu.replaceChildren(options);
 
-    const nextCurse = allMedalCurses.find(curse => curse.name === pendingPurificationAltarCurse) || null;
-
-    if (purificationAltarPickerValue) {
-
-        purificationAltarPickerValue.innerHTML = nextCurse
-            ? `<img src="${getAssetPath("curses", nextCurse.name)}" alt=""><span><strong>${nextCurse.name}</strong><small>${formatPurificationCurseValue(nextCurse)}</small></span>`
-            : "All medal curses added";
-
-    }
-
-    if (purificationAltarPickerMenu) {
-
-        purificationAltarPickerMenu.innerHTML = "";
-
-        allMedalCurses.forEach(medalCurse => {
-
-            const option = document.createElement("button");
-            const isAdded = purificationAltarCurses.has(medalCurse.name);
-
-            option.type = "button";
-            option.className = "purification-altar-picker-option";
-            option.classList.toggle("selected", medalCurse.name === pendingPurificationAltarCurse);
-            option.disabled = isAdded;
-            option.setAttribute("role", "option");
-            option.setAttribute("aria-selected", medalCurse.name === pendingPurificationAltarCurse ? "true" : "false");
-            option.innerHTML = `<img src="${getAssetPath("curses", medalCurse.name)}" alt=""><span><strong>${medalCurse.name}</strong><small>${formatPurificationCurseValue(medalCurse)}</small></span>${isAdded ? "<em>ADDED</em>" : ""}`;
-
-            attachClickAction(option, () => {
-
-                pendingPurificationAltarCurse = medalCurse.name;
-                purificationAltarPickerMenu.classList.remove("open");
-                purificationAltarPickerToggle?.setAttribute("aria-expanded", "false");
-                renderPurificationAltarCalculator();
-
-            }, typeof playSelectSound === "function" ? playSelectSound : undefined);
-
-            purificationAltarPickerMenu.appendChild(option);
-
-        });
-
-    }
-
-    if (purificationAltarAddCurseButton) {
-
-        purificationAltarAddCurseButton.disabled = !nextCurse;
-
-    }
-
-    purificationAltarTargets.innerHTML = "";
-
-    if (selectedCurses.length === 0) {
-
+    const targets = document.createDocumentFragment();
+    let total = 0;
+    let hasUnknownCost = false;
+    if (!selectedCurses.length) {
         const empty = document.createElement("p");
-
         empty.className = "purification-altar-empty";
-        empty.textContent = "Add a curse or use active curses to see its cost.";
-
-        purificationAltarTargets.appendChild(empty);
-
-    } else {
-
-        selectedCurses.forEach(activeCurse => {
-
-            const target = document.createElement("article");
-            const isPayoutCurse = typeof runState !== "undefined" && runState.medalCurseValues.has(activeCurse.name);
-            const selectTarget = document.createElement("button");
-            const removeTarget = document.createElement("button");
-
-            target.className = "purification-altar-target";
-            target.classList.toggle("selected", activeCurse.name === selectedPurificationAltarCurse);
-            selectTarget.type = "button";
-            selectTarget.className = "purification-altar-target-select";
-            selectTarget.setAttribute("aria-pressed", activeCurse.name === selectedPurificationAltarCurse ? "true" : "false");
-            selectTarget.innerHTML = `
-                <img src="${getAssetPath("curses", activeCurse.name)}" alt="">
-                <span class="purification-altar-target-copy"><strong>${activeCurse.name}</strong><small>${formatPurificationCurseValue(activeCurse)}</small></span>
-                <span class="purification-altar-target-source ${isPayoutCurse ? "payout" : "normal"}">${isPayoutCurse ? "PAYOUT" : "NO PAYOUT"}</span>
-            `;
-            removeTarget.type = "button";
-            removeTarget.className = "purification-altar-target-remove";
-            removeTarget.setAttribute("aria-label", `Remove ${activeCurse.name} from purification list`);
-            removeTarget.textContent = "×";
-
-            attachClickAction(selectTarget, () => {
-
-                selectedPurificationAltarCurse = activeCurse.name;
-                renderPurificationAltarCalculator();
-
-            }, typeof playSelectSound === "function" ? playSelectSound : undefined);
-
-            attachClickAction(removeTarget, () => {
-
-                purificationAltarCurses.delete(activeCurse.name);
-                renderPurificationAltarCalculator();
-
-            }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
-
-            target.append(selectTarget, removeTarget);
-            purificationAltarTargets.appendChild(target);
-
-        });
-
+        empty.textContent = "Choose a medal curse or use active curses to calculate the cost.";
+        targets.appendChild(empty);
     }
+    for (const curse of selectedCurses) {
+        const knownValue = Number.isFinite(curse.value);
+        const cost = knownValue ? getPurificationAltarCost(curse.value, level, playerCount) : null;
+        if (knownValue) total += cost;
+        else hasUnknownCost = true;
 
-    renderAltarContext(purificationAltarContext, [
-        { label: "Level", value: level },
-        { label: "Party", value: `${playerCount} player${playerCount === 1 ? "" : "s"}` },
-        { label: "Multiplier", value: `×${levelMultiplier}` },
-        { label: "Curse value", value: curseValue ?? "—" }
-    ]);
-
-    purificationAltarSummary.innerHTML = curse
-        ? `<span>${curse.name}</span><strong>${cost === null ? "—" : cost.toLocaleString()} <small>Golden Gifts</small></strong>`
-        : `<span>Select a curse</span><strong>— <small>Golden Gifts</small></strong>`;
-
+        const target = document.createElement("article");
+        target.className = "altar-level-card purification-altar-target";
+        const image = document.createElement("img");
+        image.className = "purification-altar-curse-icon";
+        image.src = getAssetPath("curses", curse.name);
+        image.alt = "";
+        image.loading = "lazy";
+        const name = document.createElement("strong");
+        name.className = "purification-altar-curse-name";
+        name.textContent = curse.name;
+        const value = document.createElement("small");
+        value.textContent = formatPurificationCurseValue(curse);
+        const price = document.createElement("strong");
+        price.className = "altar-gift-amount";
+        price.innerHTML = `${cost === null ? "???" : cost.toLocaleString()} ${ALTAR_GIFT_ICON}`;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "purification-altar-target-remove";
+        remove.setAttribute("aria-label", `Remove ${curse.name} from purification list`);
+        remove.textContent = "×";
+        attachClickAction(remove, () => {
+            purificationAltarCurses.delete(curse.name);
+            renderPurificationAltarCalculator();
+            purificationAltarPickerToggle.focus({ preventScroll: true });
+        }, playUtilitySound);
+        target.append(image, name, value, price, remove);
+        targets.appendChild(target);
+    }
+    purificationAltarTargets.replaceChildren(targets);
+    purificationAltarSummary.innerHTML = `<span>Total Gifts</span><strong class="altar-gift-amount">${hasUnknownCost ? "???" : total.toLocaleString()} ${ALTAR_GIFT_ICON}</strong>`;
 }
 
 
-if (protectionAltarGiftsInput) {
-
-    protectionAltarGiftsInput.value = getProtectionAltarShopBalance();
-    protectionAltarGiftsInput.addEventListener("input", renderProtectionAltarCalculator);
-
-}
-
-
-if (protectionAltarUseBalanceButton) {
-
-    attachClickAction(protectionAltarUseBalanceButton, () => {
-
-        protectionAltarGiftsInput.value = getProtectionAltarShopBalance();
+if (protectionAltarSection) {
+    protectionAltarLevels.addEventListener("click", event => {
+        const button = event.target.closest("button[data-protection-level]");
+        if (!button || !protectionAltarLevels.contains(button)) return;
+        const level = Number(button.dataset.protectionLevel);
+        if (omittedSecondProtectionAltars.has(level)) omittedSecondProtectionAltars.delete(level);
+        else omittedSecondProtectionAltars.add(level);
         renderProtectionAltarCalculator();
-
-    }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
-
+        protectionAltarLevels.querySelector(`button[data-protection-level="${level}"]`)?.focus({ preventScroll: true });
+    });
+    protectionAltarSection.addEventListener("toggle", renderProtectionAltarCalculator);
+    protectionAltarGiftsInput.addEventListener("input", () => {
+        protectionAltarManualGifts = protectionAltarGiftsInput.value;
+        renderProtectionAltarCalculator();
+    });
+    protectionAltarLevel.addEventListener("input", () => {
+        protectionAltarFollowsRun = false;
+        renderProtectionAltarCalculator();
+    });
+    protectionAltarLevel.addEventListener("change", () => {
+        protectionAltarLevel.value = normalizeProtectionAltarLevel(protectionAltarLevel.value);
+    });
+    attachClickAction(protectionAltarSyncLevel, () => {
+        protectionAltarFollowsRun = !protectionAltarFollowsRun;
+        renderProtectionAltarCalculator();
+    }, playUtilitySound);
+    protectionAltarDisplay.addEventListener("input", renderProtectionAltarCalculator);
+    attachClickAction(protectionAltarUseBalance, () => {
+        protectionAltarManualGifts = String(getProtectionAltarShopBalance());
+        renderProtectionAltarCalculator();
+    }, playUtilitySound);
+    protectionAltarDependence.addEventListener("click", () => toggleActiveDelusion(DELUSION_BY_NAME.get("Dependence")));
+    protectionAltarBurnout.addEventListener("click", () => toggleActiveDelusion(DELUSION_BY_NAME.get("Burnout")));
 }
 
 
@@ -866,27 +850,10 @@ if (purificationAltarSyncButton) {
 
         purificationAltarCurses.clear();
         activeCurses.forEach(curse => purificationAltarCurses.add(curse.name));
-        selectedPurificationAltarCurse = activeCurses.length > 0 ? activeCurses[0].name : null;
+
         renderPurificationAltarCalculator();
 
     }, typeof playUtilitySound === "function" ? playUtilitySound : undefined);
-
-}
-
-
-if (purificationAltarAddCurseButton) {
-
-    attachClickAction(purificationAltarAddCurseButton, () => {
-
-        const curseName = pendingPurificationAltarCurse;
-
-        if (!curseName) return;
-
-        purificationAltarCurses.add(curseName);
-        selectedPurificationAltarCurse = curseName;
-        renderPurificationAltarCalculator();
-
-    }, typeof playSelectSound === "function" ? playSelectSound : undefined);
 
 }
 
@@ -896,6 +863,7 @@ if (purificationAltarPickerToggle && purificationAltarPickerMenu) {
     attachClickAction(purificationAltarPickerToggle, () => {
 
         const isOpen = purificationAltarPickerMenu.classList.toggle("open");
+        purificationAltarPickerMenu.inert = !isOpen;
 
         purificationAltarPickerToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
 
@@ -945,6 +913,8 @@ function setAltarsPanelOpen(isOpen) {
 
         renderProtectionAltarCalculator();
         renderPurificationAltarCalculator();
+        renderDualityAltarPrediction();
+        renderPurgatoryAltarPrediction();
 
     }
 

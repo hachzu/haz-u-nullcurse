@@ -27,10 +27,8 @@
     justify-content: space-between;
     gap: 16px;
     margin-top: 18px;
-    padding: 14px;
-    border-left: 3px solid var(--altar-accent);
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--altar-accent) 12%, transparent);
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--altar-accent) 35%, transparent);
     color: var(--altar-muted);
     font-family: var(--font-modern);
     font-size: 12px;
@@ -43,77 +41,55 @@
     white-space: nowrap;
 }
 
-.purification-altar-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 24px;
-}
 
-.purification-altar-toolbar-label {
-    color: var(--altar-bright);
-    font-family: var(--font-modern);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.8px;
-}
 
-.purification-altar-toolbar p {
-    margin: 4px 0 0;
-    color: var(--altar-muted);
-    font-size: 12px;
-}
 
-.purification-altar-sync {
-    flex: 0 0 auto;
-    border-style: dashed;
-    background: transparent;
-    color: var(--altar-muted);
-}
 
 .purification-altar-picker {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    margin-top: 14px;
-    padding: 12px;
-    border: 1px solid color-mix(in srgb, var(--altar-accent) 58%, transparent);
-    border-radius: 11px;
-    background: linear-gradient(100deg, color-mix(in srgb, var(--altar-accent) 20%, transparent), rgba(0, 0, 0, 0.14));
-    box-shadow: inset 3px 0 0 var(--altar-accent);
-}
-
-.purification-altar-picker-copy {
     display: grid;
+    gap: 5px;
+    padding-top: 12px;
+}
+
+.altar-field-label {
+    display: inline-flex;
+    align-items: center;
     gap: 4px;
-    min-width: 0;
-    font-family: var(--font-modern);
-}
-
-.purification-altar-picker-step {
+    min-height: 18px;
     color: var(--altar-accent);
-    font-size: 9px;
-    font-weight: 900;
+    font: 700 10px/18px var(--font-modern);
     letter-spacing: 1px;
+    text-transform: uppercase;
 }
-
-.purification-altar-picker-copy strong {
-    color: var(--altar-bright);
-    font-size: 13px;
+.altar-field-label img { width: 16px; height: 16px; object-fit: contain; }
+.altar-calculator--purification .altar-help > [role="tooltip"] {
+    border-color: #ff9ccb88;
+    background: #321426;
+    color: #ffe8f4;
 }
-
-.purification-altar-picker-copy > span:last-child {
-    color: var(--altar-muted);
+.purification-altar-curse-icon { width: 32px; height: 32px; object-fit: contain; }
+.purification-altar-target .purification-altar-curse-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     font-size: 11px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
+.purification-altar-target > small { color: var(--altar-muted); }
+.purification-altar-empty { grid-column: 1 / -1; }
+
+
+
+
 
 .purification-altar-picker-controls {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
-    flex: 1 1 360px;
-    gap: 8px;
+    gap: 12px;
     min-width: 0;
 }
 
@@ -129,13 +105,16 @@
     justify-content: space-between;
     width: 100%;
     min-width: 0;
-    padding: 10px 12px;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 8px 10px;
     border: 1px solid color-mix(in srgb, var(--altar-accent) 55%, transparent);
     border-radius: 9px;
     background: rgba(0, 0, 0, 0.35);
     color: var(--altar-bright);
-    font: inherit;
+    font: 600 12px var(--font-modern);
     cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .purification-altar-picker-toggle:hover,
@@ -149,6 +128,13 @@
     align-items: center;
     min-width: 0;
     gap: 8px;
+}
+
+#purificationAltarPickerValue {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .purification-altar-picker-toggle img,
@@ -186,6 +172,7 @@
     color: var(--altar-muted);
     font-size: 18px;
     line-height: 1;
+    transition: transform 160ms ease;
 }
 
 .purification-altar-picker-toggle[aria-expanded="true"] .purification-altar-picker-chevron {
@@ -195,8 +182,10 @@
 .purification-altar-picker-menu {
     position: absolute;
     z-index: 10;
-    display: none;
+    display: grid;
+    gap: 3px;
     width: 100%;
+    box-sizing: border-box;
     max-height: 264px;
     margin-top: 6px;
     overflow-y: auto;
@@ -205,11 +194,19 @@
     border-radius: 10px;
     background: #321426;
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
 }
 
 .purification-altar-picker-menu.open {
-    display: grid;
-    gap: 3px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
 }
 
 .purification-altar-picker-option {
@@ -224,6 +221,14 @@
     color: var(--altar-bright);
     font-family: var(--font-modern);
     cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .purification-altar-picker-toggle,
+    .purification-altar-picker-chevron,
+    .purification-altar-picker-menu,
+    .purification-altar-picker-option { transition: none; }
 }
 
 .purification-altar-picker-option:hover,
@@ -249,104 +254,39 @@
 
 .purification-altar-targets {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 110px), 1fr));
+    align-items: start;
+    gap: 8px;
     margin-top: 13px;
 }
 
 .purification-altar-target {
-    display: flex;
+    position: relative;
+    grid-template-rows: 32px 32px 14px 22px;
     align-items: center;
-    min-width: 0;
-    padding: 0;
-    border: 1px solid color-mix(in srgb, var(--altar-accent) 35%, transparent);
-    border-radius: 11px;
-    background: rgba(0, 0, 0, 0.22);
+    align-content: start;
     color: var(--altar-bright);
     font-family: var(--font-modern);
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.purification-altar-target:hover,
-.purification-altar-target:focus-visible {
-    border-color: var(--altar-bright);
-    background: color-mix(in srgb, var(--altar-accent) 15%, transparent);
-    transform: translateY(-1px);
-}
 
-.purification-altar-target.selected {
-    border-color: var(--altar-bright);
-    background: color-mix(in srgb, var(--altar-accent) 20%, transparent);
-    box-shadow: 0 0 16px var(--altar-glow);
-}
 
-.purification-altar-target-select {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    flex: 1 1 auto;
-    gap: 10px;
-    padding: 10px;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-}
 
-.purification-altar-target-select img {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 auto;
-    object-fit: contain;
-    filter: drop-shadow(0 0 7px var(--altar-glow));
-}
 
-.purification-altar-target-copy {
-    display: grid;
-    min-width: 0;
-    gap: 4px;
-}
 
-.purification-altar-target-copy strong {
-    overflow: hidden;
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
 
-.purification-altar-target-copy small {
-    color: var(--altar-muted);
-    font-size: 10px;
-    font-weight: 700;
-}
 
-.purification-altar-target-source {
-    margin-left: auto;
-    padding: 4px 5px;
-    border-radius: 4px;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-}
 
-.purification-altar-target-source.payout {
-    background: rgba(132, 231, 255, 0.22);
-    color: #bff4ff;
-}
 
-.purification-altar-target-source.normal {
-    background: rgba(255, 255, 255, 0.12);
-    color: #f0d4e2;
-}
 
 .purification-altar-target-remove {
-    width: 28px;
-    height: 28px;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
     flex: 0 0 auto;
-    margin-right: 8px;
+    margin: 0;
     border: 1px solid color-mix(in srgb, var(--altar-accent) 45%, transparent);
     border-radius: 7px;
     background: rgba(0, 0, 0, 0.22);
@@ -402,41 +342,10 @@
 }
 
 
-@media (max-width: 900px) {
-
-    .altars-panel-header {
-        gap: 12px;
-    }
-
-}
-
-
-@media (max-width: 650px) {
-
-    .altar-calculator {
-        padding: 18px;
-    }
-
-    .altar-calculator-controls,
-    .altar-calculator-section-heading {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .altar-balance-button {
-        flex: 0 0 auto;
-    }
+@container (max-width: 470px) {
 
     .altar-formula {
         text-align: left;
-    }
-
-    .altar-level-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .altar-context {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .purification-altar-toolbar {
@@ -444,16 +353,7 @@
         flex-direction: column;
     }
 
-    .purification-altar-targets {
-        grid-template-columns: 1fr;
-    }
-
     .purification-altar-picker {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .purification-altar-picker-controls {
         align-items: stretch;
         flex-direction: column;
     }
@@ -465,10 +365,6 @@
 
     .altars-toggle-button {
         padding: 10px 14px;
-    }
-
-    .altar-calculator-intro {
-        align-items: flex-start;
     }
 
     .altar-cost-summary {

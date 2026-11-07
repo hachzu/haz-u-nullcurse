@@ -28,7 +28,7 @@ body.at-home { margin: 0; background: #000; color: #e8dcff; overflow-x: hidden; 
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
-    opacity: calc(.38 + var(--ns-beat-light, 0));
+    opacity: calc(.57 + var(--ns-beat-light, 0));
     transform: translate3d(var(--landing-x, 0px), var(--landing-y, 0px), 0);
     transition: transform .65s ease-out, opacity .8s ease;
 }
@@ -1014,7 +1014,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
 .landing-view:is([data-intro-state='assembled'], [data-intro-state='revealing']) .logo-slices {
     transition-delay: var(--ns-assembled-late, 0s);
 }
-.landing-view[data-intro-drop='1'] .landing-background { opacity: calc(.22 + var(--ns-beat-light, 0)); }
+.landing-view[data-intro-drop='1'] .landing-background { opacity: calc(.33 + var(--ns-beat-light, 0)); }
 .landing-view[data-intro-state='done'] .landing-background { transition-property: transform; }
 .landing-view[data-intro-drop='1'][data-intro-state='revealing'] .landing-background:not(.ns-background) {
     animation: none;
@@ -1040,7 +1040,7 @@ a.landing-credit:hover { color: rgba(232, 220, 255, .9); }
     5% { opacity: .71; scale: 1.08; translate: 0 -3px; filter: brightness(1.35) contrast(1.16) saturate(1.1); }
     18% { opacity: .55; scale: 1.035; translate: 0 1px; filter: brightness(1.2) contrast(1.08) saturate(1.05); }
     48% { opacity: .32; scale: 1.008; translate: 0 0; filter: brightness(1.05) contrast(1) saturate(1); }
-    100% { opacity: calc(.22 + var(--ns-beat-light, 0)); scale: var(--ns-beat-scale, 1); translate: 0 var(--ns-beat-y, 0px); filter: none; }
+    100% { opacity: calc(.33 + var(--ns-beat-light, 0)); scale: var(--ns-beat-scale, 1); translate: 0 var(--ns-beat-y, 0px); filter: none; }
 }
 .ns-drop-flash {
     position: absolute;

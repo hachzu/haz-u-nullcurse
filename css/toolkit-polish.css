@@ -1,10 +1,97 @@
 /* Toolkit-only polish. Landing styles and panel functionality stay independent. */
 .site-header-top .toolkit-brand {
-    display: flex; flex-direction: column; align-items: center;
-    width: 100%; min-width: 0; color: #f0e2ff; text-decoration: none;
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 128px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #f0e2ff;
+    cursor: pointer;
 }
-.toolkit-brand img { display: block; width: 100%; height: auto; }
 .toolkit-brand:focus-visible { outline: 1px solid #d8b5ff; outline-offset: 6px; }
+.sidebar-header { position: relative; width: 100%; }
+.sidebar-header [hidden] { display: none !important; }
+.sidebar-header-slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .45s ease, visibility 0s .45s;
+    pointer-events: none;
+}
+.sidebar-header-slide.is-current { opacity: 1; visibility: visible; transition-delay: 0s; }
+.sidebar-header-logo { display: block; width: 100%; max-width: 340px; max-height: 128px; height: auto; object-fit: contain; }
+.sidebar-header-slide .tool-header-brand { display: block; }
+.sidebar-header-slide .tool-header-brand--upgrades { width: 260px; height: 84px; }
+.sidebar-header-slide .tool-header-brand--curses { width: 260px; height: 112px; }
+.sidebar-header-slide .tool-header-brand--altars { width: 118px; height: 114px; }
+.sidebar-header-slide:not(.is-current) .tool-header-brand { animation-play-state: paused; }
+.sidebar-header-title {
+    max-width: 100%;
+    font: 900 clamp(22px, 4vw, 30px)/1.2 var(--font-modern, sans-serif);
+    text-transform: uppercase;
+    text-wrap: balance;
+    animation: tool-brand-float 4.8s ease-in-out infinite;
+}
+.sidebar-header-title--deaths { color: #ffb5b5; text-shadow: 0 0 18px #d348484d; }
+.sidebar-header-title--lobby { color: #f0dfba; text-shadow: 0 0 18px #b79a594d; }
+.sidebar-header-slide:not(.is-current) .sidebar-header-title { animation-play-state: paused; }
+.sidebar-header-menu {
+    position: absolute;
+    z-index: 60;
+    bottom: 8px;
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid var(--lp-soft, #4a2270);
+    background: #130b20;
+    box-shadow: 0 6px 20px #0007;
+    white-space: nowrap;
+}
+.sidebar-header-menu > *,
+.sidebar-header-show {
+    border: 0;
+    padding: 7px 12px;
+    background: transparent;
+    color: #e8dbf5;
+    font: 600 11px var(--font-modern, sans-serif);
+    text-decoration: none;
+    cursor: pointer;
+}
+.sidebar-header-menu > *:is(:hover, :focus-visible),
+.sidebar-header-show:is(:hover, :focus-visible) { background: #79529b40; }
+.sidebar-header-show { padding: 2px 0; color: var(--lp-text, #bc9bd7); }
+.site-header:has(.sidebar-header.is-hidden) { margin-bottom: 16px; }
+
+/* Keep panel controls in compact toolbars after their titles move. */
+.panel-headers-in-sidebar :is(.upgrade-panel-header, .death-panel-header, .altars-panel-header, .lobby-panel-header) {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+}
+.panel-headers-in-sidebar :is(.upgrade-panel-header, .altars-panel-header) .toolkit-panel-back { position: static; }
+.panel-headers-in-sidebar .upgrade-shortcut-legend {
+    flex: 1 1 120px;
+    margin-right: auto;
+    padding-top: 0;
+}
+.panel-headers-in-sidebar .upgrade-header-buttons { margin-left: auto; }
+.panel-headers-in-sidebar .lobby-reset-button { margin-left: auto; }
+.panel-headers-in-sidebar .pool-header { min-height: 40px; margin-bottom: 12px; }
+.panel-headers-in-sidebar .curse-settings-cog { width: 40px; height: 40px; padding: 4px; }
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-header-slide { transition: none; }
+    .sidebar-header-title { animation: none; }
+}
 .sidebar-credits { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lp-soft, #4a2270); text-align: center; }
 .sidebar-credits .credit { margin: 0 0 7px; color: var(--lp-text, #9a7cc9); font-size: 11px; }
 .sidebar-credits .credit-handle { animation: none; }
@@ -68,9 +155,41 @@
 @media (hover: hover) and (pointer: fine) {
     #floatingToggleButtons .floating-toggle-buttons-inner > button:hover .btn-label { max-width: 110px; margin-left: 8px; opacity: 1; }
 }
-#floatingToggleButtons :is(.upgrade-toggle-key, .death-toggle-key, .altars-toggle-key, .lobby-toggle-key) { display: none; }
+#floatingToggleButtons .toolkit-nav-symbol {
+    display: grid;
+    flex: none;
+    width: var(--panel-icon-size);
+    height: var(--panel-icon-size);
+}
+#floatingToggleButtons :is(.upgrade-toggle-key, .death-toggle-key, .altars-toggle-key, .lobby-toggle-key) {
+    display: grid;
+    grid-area: 1 / 1;
+    place-items: center;
+    width: var(--panel-icon-size);
+    height: var(--panel-icon-size);
+    max-width: none;
+    margin-left: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 800 22px/1 var(--font-modern, sans-serif);
+    opacity: 0;
+    transition: none;
+    animation: toolkit-nav-key 10s linear infinite;
+}
 #floatingToggleButtons :is(.upgrade-toggle-icon, .death-toggle-icon, .altars-toggle-icon, .lobby-toggle-icon) {
-    display: flex; flex: none; width: var(--panel-icon-size); height: var(--panel-icon-size); transform: none;
+    display: flex; grid-area: 1 / 1; flex: none; width: var(--panel-icon-size); height: var(--panel-icon-size); transform: none;
+    opacity: 1;
+    animation: toolkit-nav-icon 10s linear infinite;
+}
+#floatingToggleButtons.collapsed .toolkit-nav-symbol > span { animation-play-state: paused; }
+@keyframes toolkit-nav-icon {
+    0%, 46%, 100% { opacity: 1; }
+    50%, 96% { opacity: 0; }
+}
+@keyframes toolkit-nav-key {
+    0%, 46%, 100% { opacity: 0; }
+    50%, 96% { opacity: 1; }
 }
 #floatingToggleButtons svg { display: block; width: 100%; height: 100%; }
 #floatingToggleButtons .floating-buttons-hide-toggle {
@@ -102,6 +221,7 @@
     #floatingToggleButtons.collapsed .floating-toggle-buttons-inner,
     #floatingToggleButtons .floating-toggle-buttons-inner > button,
     #floatingToggleButtons .floating-toggle-buttons-inner > button .btn-label,
+    #floatingToggleButtons .toolkit-nav-symbol > span,
     #floatingToggleButtons .floating-buttons-hide-toggle,
     #floatingToggleButtons .floating-buttons-hide-icon { animation: none; transition: none; }
 }

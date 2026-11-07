@@ -25,20 +25,20 @@ const runState = {
 };
 
 const DELUSIONS = [
-    { name: "Arrogance", level: 10, altText: "Most stackable upgrades gain +1 max stack, but having 4 stacks of a temporary enemy turns it into a permament enemy.", locks: ["Conceit"], achievement: "Overload" },
+    { name: "Arrogance", level: 15, altText: "Most stackable upgrades gain +1 max stack, but having 4 stacks of a temporary enemy turns it into a permament enemy.", locks: ["Conceit"], achievement: "Overload" },
     { name: "Assurance", level: 15, altText: "Gain 1 greater curse reroll, 4 enemy and curse rerolls upon picking. All future reroll gains are doubled, but gain the ??? enemy every 8th level." },
     { name: "Burnout", level: 15, altText: "2 More Altars spawn and increases the cap of certain Altars, but every Altar used adds a random negative effect for the level.", locks: ["Dependence", "Gambling"], achievement: "Economic Recession" },
     { name: "Conceit", level: 20, altText: "Most stackable upgrades gain +1 max stack, but all enemies and curses are rerolled upon picking.", locks: ["Arrogance"], achievement: "Middle Lane Champion" },
     { name: "Corrosion", level: 15, altText: "Fanny Pack tiles are worth 4x more and take longer to collapse, but the collapse is faster, starts from the center and Fanny Pack tiles lose value over time.", requiresUpgrade: "Fanny Pack" },
-    { name: "Dependence", level: 20, altText: "Altar of Protection gives 3 shields, is cheaper to use, and has a larger bubble, but disables the Shield upgrade, and Altar of Protection can't be used until a percentage of gifts have been collected.", requiresUpgrade: "Shield", locks: ["Gambling", "Burnout"] },
+    { name: "Dependence", level: 20, altText: "Altar of Protection gives 3 shields, is cheaper to use, and has a larger bubble, but disables the Shield upgrade, and Altar of Protection can't be used until a percentage of gifts have been collected.", locks: ["Gambling", "Burnout"] },
     { name: "Desire", level: 15, altText: "Gain the most expensive upgrade available, but gain 2 random curses." },
-    { name: "Gambling", level: 5, altText: "Spawns more Altars and using Altar of Chance echoes a random Altar, but all Altars are replaced by Altar of Chance.", requiresCurse: "High Roller", locks: ["Dependence", "Burnout"], achievement: "One More Time" },
+    { name: "Gambling", level: 15, altText: "Spawns more Altars and using Altar of Chance echoes a random Altar, but all Altars are replaced by Altar of Chance.", requiresCurse: "High Roller", locks: ["Dependence", "Burnout"], achievement: "One More Time" },
     { name: "Greed", level: 15, minPlayers: 2, altText: "Increases Altar of Purgatory's additive and multiplicative Golden Gift yield increases by +0.5x, but Altar of Purgatory has 1.75x more points, spawns higher leveled enemies earlier, and disables reviving." },
     { name: "Hoarding", level: 15, altText: "Gain +0.8x Golden Gift yield for every enemy with 3 or more permament curses, but increases the max stack of certain curses." , achievement: "I bought a ticket to the zoo not this bro" },
     { name: "Hope", level: 15, altText: "Gain a one-time use extra life, allowing you to retry a level once after losing." },
     { name: "Ignorance", level: 15, altText: "Temporary curses go away twice as fast and Altar of Curses always spawns and gives 1.5x more Golden Gift yield, but gives an additional curse and Altar of Purification doesn't spawn anymore.", locks: ["Perseverance"], achievement: "Maximum Purification" },
-    { name: "Overconfidence", level: 10, altText: "Every temporary curse gives +0.3x Golden Gift yield, but every temporary curse turns into a permament curse.", achievement: "Heh.. this is nothing." },
-    { name: "Perseverance", level: 10, altText: "Medal curses give 1.5x more Golden Gifts, bringing back the Medal gives 2x more Golden Gifts, but temporary curses last 50% longer and carrying the Medal slows you down by 10%.", requiresUpgrade: "Medal", locks: ["Ignorance"] },
+    { name: "Overconfidence", level: 15, altText: "Every temporary curse gives +0.3x Golden Gift yield, but every temporary curse turns into a permament curse.", achievement: "Heh.. this is nothing." },
+    { name: "Perseverance", level: 15, altText: "Medal curses give 1.5x more Golden Gifts, bringing back the Medal gives 2x more Golden Gifts, but temporary curses last 50% longer and carrying the Medal slows you down by 10%.", requiresUpgrade: "Medal", locks: ["Ignorance"] },
     { name: "Vandalism", level: 15, altText: "Generates a large passage biome every level, but Altar of Passage doesn't spawn anymore and Guardian is always enraged.", achievement: "Level 25" }
 ];
 
@@ -3170,6 +3170,9 @@ function render() {
 
         }
 
+        if (typeof renderDualityAltarPrediction === "function") renderDualityAltarPrediction();
+        if (typeof renderPurgatoryAltarPrediction === "function") renderPurgatoryAltarPrediction();
+
     }
 
     saveRunState();
@@ -3532,6 +3535,17 @@ function syncDelusionUpgradeEffects() {
     setUpgradeDelusion("conceit", runState.activeDelusions.has("Conceit"));
 }
 
+function toggleActiveDelusion(delusion) {
+    if (runState.activeDelusions.has(delusion.name)) {
+        runState.activeDelusions.delete(delusion.name);
+    } else {
+        if (getDelusionRequirementReason(delusion)) return;
+        runState.activeDelusions.add(delusion.name);
+    }
+    syncDelusionUpgradeEffects();
+    render();
+}
+
 function renderDelusionCards() {
     const container = document.getElementById('delusionContainer');
     const section = document.getElementById('delusionSection');
@@ -3638,16 +3652,7 @@ function renderDelusionCards() {
             metadata.append(badges);
         }
         card.appendChild(metadata);
-        card.addEventListener('click', () => {
-            if (selected) {
-                runState.activeDelusions.delete(delusion.name);
-            } else {
-                if (getDelusionRequirementReason(delusion)) return;
-                runState.activeDelusions.add(delusion.name);
-            }
-            syncDelusionUpgradeEffects();
-            render();
-        });
+        card.addEventListener('click', () => toggleActiveDelusion(delusion));
         container.appendChild(card);
     });
 

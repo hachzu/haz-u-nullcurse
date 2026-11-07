@@ -51,7 +51,7 @@
             ringDelay: .10, background: 1.5,
             preDropGlint: .85, preDropGlintLead: 1,
             backgroundAttack: .06, backgroundRelease: .42, backgroundWindow: 1.4,
-            backgroundScale: .036, backgroundTravel: 8,
+            backgroundScale: .054, backgroundTravel: 12, backgroundLight: .108,
             assemblyStartScale: 1.08, assemblyPeakScale: 1.25, assemblySettle: 1,
             toolkitRevealDelay: .85, toolkitWipe: 1.25
         }
@@ -871,7 +871,7 @@
             const release = mainSymphonyBeat ? .38 : CONFIG.fx.backgroundRelease;
             const value = (1 - Math.exp(-age / attack)) * Math.exp(-age / release);
             envelope = Math.max(envelope, value * (mainSymphonyBeat ? .38 : intermissionBeat ? .45 : 1));
-            light = Math.max(light, .072 * (1 - Math.exp(-age / .065)) * Math.exp(-age / .22));
+            light = Math.max(light, CONFIG.fx.backgroundLight * (1 - Math.exp(-age / .065)) * Math.exp(-age / .22));
         }
         if (light !== previousLight) {
             previousLight = light;
@@ -993,7 +993,7 @@
             !document.documentElement.classList.contains('low-detail-mode')) {
             analyser.getFloatFrequencyData(spectrum);
             if (track.beatGrid && elapsed < endAt) updateGridBeat(elapsed, track === symphony ? followupAt : songAt, track.beatGrid);
-            else if (!CUT.intermission) detectKick(context, rendered);
+            else detectKick(context, rendered);
             drawVisualizer(rendered);
         }
         while (pendingKicks.length && pendingKicks[0] <= elapsed) backgroundKick(pendingKicks.shift());
