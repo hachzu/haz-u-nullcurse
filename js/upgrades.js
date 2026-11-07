@@ -257,7 +257,7 @@ const upgradesList = [
         "casualPrice": 250,
         "casualSoloPrice": 250,
         "extremePrice": 350,
-        "extremeSoloPrice": 300
+        "extremeSoloPrice": 275
     },
     {
         "name": "Grace Wings",
