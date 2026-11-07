@@ -72,12 +72,7 @@ function ensureUsername() {
                 <button type="button" id="usernameGateSubmit" class="username-gate-pop" style="animation-delay: 0.38s;">
                     CONTINUE
                 </button>
-                <button type="button" id="usernameGateAnonymous" class="username-gate-pop" style="animation-delay: 0.49s;">
-                CONTINUE ANONYMOUSLY
             </div>
-
-                
-            </button>
         `;
         document.body.appendChild(overlay);
 
@@ -90,7 +85,6 @@ function ensureUsername() {
 
         const input = overlay.querySelector("#usernameGateInput");
         const submitButton = overlay.querySelector("#usernameGateSubmit");
-        const anonymousButton = overlay.querySelector("#usernameGateAnonymous");
         let submitted = false;
 
         input.focus();
@@ -108,19 +102,20 @@ function ensureUsername() {
             storeUsername(value);
 
             overlay.classList.remove("username-gate-overlay--visible");
-
-            overlay.addEventListener("transitionend", () => overlay.remove(), { once: true });
+            overlay.inert = true;
+            // Low Detail Mode disables transitions, so transitionend may never fire.
+            const removeTimer = setTimeout(() => overlay.remove(), 500);
+            overlay.addEventListener("transitionend", event => {
+                if (event.target !== overlay) return;
+                clearTimeout(removeTimer);
+                overlay.remove();
+            });
 
             resolve(value);
 
         }
 
         submitButton.addEventListener("click", () => submit());
-        anonymousButton.addEventListener("click", () => {
-            const number = new Uint32Array(1);
-            crypto.getRandomValues(number);
-            submit(`Anonymous #${number[0]}`);
-        });
 
         input.addEventListener("keydown", (e) => {
 

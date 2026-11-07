@@ -4758,6 +4758,7 @@ renderLobbyTagLog();
         targetObserver = null;
 
         overlay.classList.remove("tools-spotlight-overlay--visible");
+        overlay.inert = true;
 
         if (resizeHandler) {
 
@@ -4777,6 +4778,7 @@ renderLobbyTagLog();
 
             overlay.remove();
             elements = null;
+            document.dispatchEvent(new Event("nullscape-tools-spotlight-closed"));
 
         }, FADE_OUT_MS);
 
@@ -5876,6 +5878,7 @@ renderLobbyTagLog();
 
         const { overlay } = elements;
         overlay.classList.remove("settings-spotlight-overlay--visible");
+        overlay.inert = true;
 
         if (resizeHandler) {
             window.removeEventListener("resize", resizeHandler);
@@ -5964,6 +5967,14 @@ renderLobbyTagLog();
 
         // No button → nothing to point at; bail silently.
         if (!target) return;
+
+        // These overlays cover the page: staggering timers alone still stacks them.
+        // Wait for the Tools tip to be removed before showing the Settings tip.
+        if (document.querySelector(".tools-spotlight-overlay")) {
+            document.addEventListener("nullscape-tools-spotlight-closed", open, { once: true });
+            return;
+        }
+        if (elements || !shouldShow()) return;
 
         buildSpotlight(target);
 

@@ -115,7 +115,7 @@
             }
             const presence = document.createElement('script');
             presence.type = 'module';
-            presence.src = 'js/presence.js?v=20261106-welcome-layout';
+            presence.src = 'js/presence.js?v=20261108-username-visibility';
             document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);

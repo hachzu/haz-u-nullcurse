@@ -3,7 +3,7 @@
         if (!previous) return [];
         const reveals = [...current.keys()].filter(key => !previous.has(key)
             || (previous.get(key).locked && !current.get(key).locked));
-        return reveals.length >= 7 ? [] : reveals;
+        return reveals;
     }
 
     if (typeof module !== 'undefined' && module.exports) {
@@ -17,7 +17,8 @@
     const lockedSelector = '.curse-card--locked, .enemy-button--locked, .upgrade-row--locked, .upgrade-row--pending';
     const containerSelector = '.result-grid, #enemyContainer, #activeCurseContainer, #upgradeCategories, #upgradeOwnedCategories';
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    const lifetime = 40000;
+    const lowDetail = () => document.documentElement.classList.contains('low-detail-mode');
+    const lifetime = () => lowDetail() ? 31000 : 40000;
     const highlights = new Map();
     let previous = null;
     let frame = 0;
@@ -35,7 +36,7 @@
 
     function decorate(node, start, now) {
         const elapsed = now - start;
-        if (elapsed >= lifetime || node.querySelector(':scope > .card-reveal-effect')) return;
+        if (elapsed >= lifetime() || node.querySelector(':scope > .card-reveal-effect')) return;
         const opacity = getComputedStyle(node).opacity;
         node.classList.add('card-reveal-host');
         const effect = document.createElement('span');
@@ -43,7 +44,7 @@
         effect.setAttribute('aria-hidden', 'true');
         effect.style.setProperty('--reveal-delay', `${-elapsed}ms`);
         effect.style.setProperty('--reveal-color', getComputedStyle(node).borderTopColor);
-        if (elapsed < 5000) {
+        if (!lowDetail() && elapsed < 5000) {
             const track = document.createElement('span');
             track.className = 'card-reveal-track';
             effect.appendChild(track);
@@ -56,7 +57,7 @@
         star.height = 14;
         effect.appendChild(star);
         node.appendChild(effect);
-        if (!reducedMotion.matches && elapsed < 220) {
+        if (!lowDetail() && !reducedMotion.matches && elapsed < 220) {
             node.animate([{ opacity: 0 }, { opacity }], {
                 duration: 220, delay: -elapsed, easing: 'ease-out'
             });
@@ -66,11 +67,11 @@
     function scheduleExpiry(now) {
         clearTimeout(expiryTimer);
         if (!highlights.size) return;
-        const nextExpiry = Math.min(...highlights.values()) + lifetime;
+        const nextExpiry = Math.min(...highlights.values()) + lifetime();
         expiryTimer = setTimeout(() => {
             const time = performance.now();
             for (const [key, start] of highlights) {
-                if (time - start >= lifetime) highlights.delete(key);
+                if (time - start >= lifetime()) highlights.delete(key);
             }
             root.querySelectorAll(selector).forEach(node => {
                 if (!highlights.has(keyFor(node))) clearEffect(node);
@@ -104,6 +105,10 @@
         if (cardsChanged && !frame) frame = requestAnimationFrame(scan);
     });
     observer.observe(root, { childList: true, subtree: true });
+    window.addEventListener('nullscape-low-detail-change', () => {
+        root.querySelectorAll(selector).forEach(clearEffect);
+        scan();
+    });
     window.addEventListener('pagehide', event => {
         if (event.persisted) return;
         observer.disconnect();

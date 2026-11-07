@@ -156,6 +156,19 @@ const songSource = h => h.contexts[0]?.nodes.find(node => node.kind === 'source'
 
 const preference = h => h.elements.enterToolkit.following[0];
 
+test('a stalled audio clock unlocks the landing page instead of trapping the visitor', async () => {
+    const h = harness();
+    await h.start();
+    h.advance(1);
+    h.contexts[0].state = 'interrupted';
+    h.advance(2);
+    assert.equal(h.elements['.landing-features-viewport'].inert, true);
+    h.advance(4.1);
+    assert.equal(h.elements.landingView.dataset.introState, 'done');
+    assert.equal(h.elements['.landing-features-viewport'].inert, false);
+    assert.equal(h.frames.size, 0);
+});
+
 test('both full-intro rotation orders play the other theme next and nil third', async () => {
     for (const [random, order] of [[.25, ['delightful', 'symphony']], [.75, ['symphony', 'delightful']]]) {
         const storage = {};

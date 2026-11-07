@@ -267,6 +267,7 @@
     let gate;
     let finished = false;
     let started = false;
+    let startupTimer;
     let generation = 0;
     let syncVisibility = () => {};
     let cancelVisibilityPause = () => {};
@@ -442,6 +443,7 @@
         gate = null;
     }
     function finish() {
+        clearTimeout(startupTimer);
         generation++;
         cancelVisibilityPause();
         cancelSkipPlayback();
@@ -1041,6 +1043,8 @@
         let logoComplete = false;
         let lastState = 'waiting';
         let pagePaused = false;
+        let lastAudioTime = context?.currentTime;
+        let lastAudioProgress = performance.now();
         let pauseStarted = 0;
         let pausedAnimations = [];
         let visibilityTask = Promise.resolve();
@@ -1068,6 +1072,7 @@
                 pausedAnimations.forEach(animation => animation.play());
                 pausedAnimations = [];
                 pagePaused = false;
+                lastAudioProgress = performance.now();
                 frame = requestAnimationFrame(tick);
             });
         }
@@ -1172,6 +1177,17 @@
         scheduleFinalPhase(context ? context.currentTime - audioOrigin : -CONFIG.timing.scheduleLead, requiredAssets());
         function tick() {
             if (run !== generation || pagePaused) return;
+            // Audio devices can remain suspended/interrupted without rejecting resume().
+            // A stopped audio clock must never leave the page's controls locked.
+            if (context && !uiComplete) {
+                if (context.currentTime !== lastAudioTime) {
+                    lastAudioTime = context.currentTime;
+                    lastAudioProgress = performance.now();
+                } else if (performance.now() - lastAudioProgress >= 3000) {
+                    finish();
+                    return;
+                }
+            }
             const latency = context ? Math.max(0, (context.baseLatency || 0) + (context.outputLatency || 0)) : 0;
             const rendered = context ? context.currentTime - audioOrigin : (performance.now() - wallOrigin) / 1000;
             const elapsed = rendered - latency - CONFIG.timing.visualOffset;
@@ -1246,6 +1262,8 @@
         recordVisit();
         const leaving = gate;
         leaving.classList.add('is-leaving');
+        // Bound both image decoding and audio resume, even if either never settles.
+        startupTimer = setTimeout(finish, CONFIG.timing.loadTimeout * 1000);
         // Gate removal is cosmetic; its fade is driven by the audio-clock tick.
         const context = createAudio();
         prepareCut();
@@ -1253,6 +1271,7 @@
         const ready = context ? context.resume().catch(() => {}) : Promise.resolve();
         Promise.all([ready, decoded]).then(() => {
             if (finished) return;
+            clearTimeout(startupTimer);
             updateLift();
             begin(Boolean(context) && context.state === 'running');
         }).catch(finish);

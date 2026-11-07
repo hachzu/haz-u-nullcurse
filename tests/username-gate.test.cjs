@@ -12,10 +12,11 @@ function harness({ stored = null, blocked = false } = {}) {
     const elements = {};
     const overlays = [];
     const writes = [];
+    const timers = [];
     function element() {
         return {
             value: '', listeners: {}, classList: { add() {}, remove() {} },
-            focus() { this.focused = true; }, remove() {},
+            focus() { this.focused = true; }, remove() { this.removed = true; },
             addEventListener(name, fn) { this.listeners[name] = fn; },
             querySelector(selector) { return elements[selector] ||= element(); }
         };
@@ -27,20 +28,26 @@ function harness({ stored = null, blocked = false } = {}) {
             setItem(key, value) { if (blocked) throw new Error('blocked'); writes.push([key, value]); stored = value; }
         },
         document: { createElement: element, body: { appendChild: node => overlays.push(node) } },
-        requestAnimationFrame: fn => fn()
+        requestAnimationFrame: fn => fn(),
+        setTimeout: fn => timers.push(fn), clearTimeout() {}
     };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    return { elements, overlays, writes, ensure: () => sandbox.ensureUsername() };
+    return { elements, overlays, writes, timers, ensure: () => sandbox.ensureUsername() };
 }
 
-test('anonymous entry needs no input, persists its name, and is reused on later visits', async () => {
+test('the prompt offers only named entry, persists it, and reuses it on later visits', async () => {
     const h = harness();
     const pending = h.ensure();
-    h.elements['#usernameGateAnonymous'].listeners.click();
-    assert.equal(await pending, 'Anonymous #1234567890');
-    assert.deepEqual(h.writes, [['nullscape_username', 'Anonymous #1234567890']]);
-    assert.equal(await h.ensure(), 'Anonymous #1234567890');
+    assert.ok(!h.overlays[0].innerHTML.includes('usernameGateAnonymous'));
+    h.elements['#usernameGateInput'].value = 'Nullscaper';
+    h.elements['#usernameGateSubmit'].listeners.click();
+    assert.equal(await pending, 'Nullscaper');
+    assert.equal(h.overlays[0].inert, true);
+    h.timers.shift()();
+    assert.equal(h.overlays[0].removed, true, 'removes the overlay even without transitionend');
+    assert.deepEqual(h.writes, [['nullscape_username', 'Nullscaper']]);
+    assert.equal(await h.ensure(), 'Nullscaper');
     assert.equal(h.overlays.length, 1);
     h.elements['#usernameGateSubmit'].listeners.click();
     assert.equal(h.writes.length, 1);
@@ -57,12 +64,13 @@ test('custom names still trim and submit with Enter; blank input stays at the ga
     assert.equal(await pending, 'Nullscaper');
 });
 
-test('existing names bypass the prompt and anonymous entry tolerates blocked storage', async () => {
+test('existing names bypass the prompt and named entry tolerates blocked storage', async () => {
     const saved = harness({ stored: 'Existing alias' });
     assert.equal(await saved.ensure(), 'Existing alias');
     assert.equal(saved.overlays.length, 0);
     const blocked = harness({ blocked: true });
     const pending = blocked.ensure();
-    blocked.elements['#usernameGateAnonymous'].listeners.click();
-    assert.equal(await pending, 'Anonymous #1234567890');
+    blocked.elements['#usernameGateInput'].value = 'Guest';
+    blocked.elements['#usernameGateSubmit'].listeners.click();
+    assert.equal(await pending, 'Guest');
 });

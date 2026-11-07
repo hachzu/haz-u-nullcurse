@@ -32,6 +32,15 @@
 @keyframes card-reveal-orbit { to { --card-reveal-angle: 360deg; } }
 @keyframes card-reveal-track-exit { 0%, 80% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes card-reveal-star-exit { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
+html.low-detail-mode .card-reveal-track { display: none; }
+html.low-detail-mode:has(body:not(.at-home)) .card-reveal-star {
+    animation: card-reveal-star-low-detail-exit 31000ms linear both !important;
+    animation-delay: var(--reveal-delay) !important;
+}
+@keyframes card-reveal-star-low-detail-exit {
+    0%, 96.774% { opacity: 1; }
+    100% { opacity: 0; }
+}
 @media (prefers-reduced-motion: reduce) {
     .card-reveal-track { background: var(--reveal-color); animation-name: card-reveal-track-exit; animation-duration: 5000ms; }
 }
