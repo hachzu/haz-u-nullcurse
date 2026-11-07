@@ -28,6 +28,54 @@ test('Chaos+ needs its mode and base Chaos stays available in Chaos+',()=>{
  run('runState.chaosPlusMode=true;');
  assert.equal(run('chaosCurses.every(c=>isCurseSelectable(c))'),true);
 });
+
+test('Unlock All lets every regular curse be selected together in every player mode', () => {
+ for (const mode of ['solo', 'duo', 'party']) {
+  const run = harness();
+  run(`render = () => {}; var upgradeState = { mode: ${JSON.stringify(mode)} };
+       runState.level = 1; runState.difficulty = 'Casual';
+       curseVisibilityState.showAll = true; curseVisibilityState.unlockAll = true;`);
+  const results = run(`
+   [...getGlobalPool(), ...getEnemyPool(), ...getGreaterPool()].map(curse => {
+    const selectable = isCurseSelectable(curse);
+    selectCurse(curse);
+    return { name: curse.name, selectable, selected: hasCurse(curse.name) };
+   })
+  `);
+  for (const result of results) {
+   assert.equal(result.selectable, true, `${mode}: ${result.name} must be selectable`);
+   assert.equal(result.selected, true, `${mode}: ${result.name} must actually be added`);
+  }
+  assert.equal(results.length, run('globalCurses.length + enemyCurses.length + greaterCurses.length'));
+ }
+});
+
+test('Unlock All bypasses conflicts across Chaos and regular pools while preserving stack caps', () => {
+ const run = harness();
+ run(`render = () => {}; curseVisibilityState.unlockAll = true;
+      runState.chaosMode = true; runState.chaosPlusMode = true;
+      selectCurse(findCurseByName('Mart Infection'));
+      selectCurse(findCurseByName('Mart Slide'));`);
+ assert.equal(run('hasCurse("Mart Infection") && hasCurse("Mart Slide")'), true);
+ assert.equal(run('isCurseSelectable(findCurseByName("Mart Slide"))'), false);
+ run('selectCurse(findCurseByName("Mart Slide"))');
+ assert.equal(run('getCurseStackCount("Mart Slide")'), 1);
+ run('removeCurse("Mart Slide")');
+ assert.equal(run('isCurseSelectable(findCurseByName("Mart Slide"))'), true);
+ run('curseVisibilityState.unlockAll = false');
+ assert.equal(run('isCurseSelectable(findCurseByName("Mart Slide"))'), false);
+});
+
+test('Show All alone retains mode, level, dependency, and exclusive-group locks', () => {
+ const run = harness();
+ run(`render = () => {}; var upgradeState = { mode: 'solo' };
+      curseVisibilityState.showAll = true; runState.level = 1;`);
+ for (const name of ['Mart Infection', 'Deadly Melody', 'Water Planet']) {
+  assert.equal(run(`isCurseSelectable(findCurseByName(${JSON.stringify(name)}))`), false, name);
+ }
+ run('selectCurse(findCurseByName("Lower Gravity"))');
+ assert.equal(run('isCurseSelectable(findCurseByName("Higher Gravity"))'), false);
+});
 test('shared curse names resolve to the Chaos variant only while its mode is enabled',()=>{
  const run=harness();
  assert.equal(run('Boolean(findCurseByName("Pacifier").chaos)'),false);

@@ -5049,12 +5049,12 @@ body {
 .medal-curse-title .temporary-curse-controls {
     position: absolute;
     z-index: 1;
-    bottom: calc(100% + 46px);
+    bottom: calc(100% + 36px);
     left: 50%;
     transform: translateX(-50%);
 }
 .curse-pool-columns--list .medal-curse-title { width: 100%; }
-.curse-pool-columns--list .medal-curse-title .temporary-curse-controls { bottom: calc(100% + 64px); }
+.curse-pool-columns--list .medal-curse-title .temporary-curse-controls { bottom: calc(100% + 54px); }
 /* Keep the controls inside the scrolling strip without moving the pool headings. */
 .curse-pool-columns--list:has(.medal-curse-title .temporary-curse-controls) {
     position: relative;
@@ -5222,7 +5222,7 @@ body:not(:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open)) 
 
 /* The cog replaces the in-flow switch box; opening it never resizes the header. */
 .pool-header { position: relative; min-height: 95px; container-type: inline-size; }
-.curse-settings-cog { position: absolute; top: 0; right: 8px; display: grid; place-items: center; width: 95px; height: 95px; padding: 10px; border: 0; background: transparent; color: #c9a6e2; cursor: pointer; }
+.curse-settings-cog { position: absolute; top: 0; right: 8px; display: grid; place-items: center; width: 95px; height: 95px; padding: 4px; border: 0; background: transparent; color: #c9a6e2; cursor: pointer; }
 .curse-settings-cog svg { width: 100%; height: 100%; transition: transform 220ms ease, color 180ms ease; }
 .curse-settings-cog:hover { color: #f0dbff; }
 .curse-settings-cog[aria-expanded='true'] svg { transform: rotate(30deg); }
@@ -5240,7 +5240,7 @@ body:has(:is(#upgradePanel, #deathPanel, #altarsPanel, #lobbyPanel).open) .curse
 .curse-settings-dialog .pool-control-group-label { color: #bc9dd2; }
 #floatingToggleButtons { z-index: 90; }
 @container (max-width: 480px) {
-    .curse-settings-cog { width: 56px; height: 95px; right: 0; padding: 4px; }
+    .curse-settings-cog { width: 64px; height: 95px; right: 0; padding: 4px; }
     .pool-header .tool-header-brand--curses { width: 180px; height: 78px; }
 }
 @media (max-width: 600px) {

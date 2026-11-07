@@ -1455,8 +1455,8 @@ function isCurseVisibleInPool(curse, ignoreLevel) {
 
 /*
  * Whether a curse can actually be added right now. Unlock All lets
- * the player add a curse with no level/casual/requirement/exclusive-
- * group check - but a curse already at its own stack cap is still
+ * the player add a curse with no level/difficulty/mode/requirement/
+ * exclusive-group check - but a curse already at its own stack cap is still
  * blocked, since that's not a "dependency" to unlock, it's the
  * curse's own limit.
  *
@@ -1472,24 +1472,6 @@ function isCurseSelectable(curse, ignoreLevel = false) {
     }
 
     if (isCurseAtCap(curse)) {
-
-        return false;
-
-    }
-
-    // Mode restrictions are game rules, not a planning dependency:
-    // Unlock All must not make Solo-only exclusions selectable.
-    if (!isCurseModeAllowed(curse)) {
-
-        return false;
-
-    }
-
-    // Same for mutually exclusive curse groups (e.g. High Roller vs
-    // Tweaked Odds) - picking one always closes off the other, even
-    // with Unlock All Curses on. Without this, Unlock All let both
-    // sides of an exclusive pair be active at once.
-    if (!exclusiveGroupAvailable(curse)) {
 
         return false;
 
