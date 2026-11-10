@@ -42,13 +42,6 @@ const UPGRADE_PRICE_DISCOUNTS = {
     both: 0.25
 };
 
-const PARTY_PLUS_PRICE_DIVISOR = 1.125;
-const BIG_PARTY_PRICE_DIVISOR = 1.125;
-const BIG_PARTY_MIN_PLAYERS = 8;
-
-
-// Prices synced with stickstetris.github.io/NullscapeShopCalculator/ on 2026-10-27.
-// Unconfirmed sentinel prices are deliberately excluded from calculations.
 const UPGRADE_NAME_ALIASES = {
     "Last Robloxian Standing": "Final Stand",
     "Last Man Standing": "Final Stand",
@@ -464,8 +457,8 @@ const upgradesList = [
         "soloPrice": 1000,
         "casualPrice": 900,
         "casualSoloPrice": 650,
-        "extremePrice": 1800,
-        "extremeSoloPrice": 1350,
+        "extremePrice": 1400,
+        "extremeSoloPrice": 1200,
         "requires": {
             "type": "upgrade",
             "name": "Ninja Belt",
@@ -494,8 +487,8 @@ const upgradesList = [
         "soloPrices": [1250,1750,2250,5000],
         "casualPrices": [750,1000,1250,3250],
         "casualSoloPrices": [500,800,1150,3000],
-        "extremePrices": [1800,2600,3400,7500],
-        "extremeSoloPrices": [1500,2500,3500,7000]
+        "extremePrices": [1800,2400,3000,7500],
+        "extremeSoloPrices": [1500,2100,2700,6000]
     },
     {
         "name": "Debuff Magnet",
@@ -673,7 +666,7 @@ const upgradesList = [
         "soloPrices": [2000,5000,12500,17500],
         "casualPrices": [2000,5000,12500,17500],
         "casualSoloPrices": [1500,4500,10000,15000],
-        "extremePrices": [3000,9000,15000,25000],
+        "extremePrices": [3000,9000,15000,20000],
         "extremeSoloPrices": [3000,9000,15000,20000]
     },
     {
@@ -1111,19 +1104,7 @@ function computeStackPrice(item, stack) {
     const base = computeBaseForStack(item, item.prices ? stack : 1);
     const playerCount = getScalingPlayerCount();
 
-    let multiplier = Math.sqrt(playerCount);
-
-    let scaled = Math.ceil(base * multiplier);
-
-    if (upgradeState.mode === "partyplus") {
-
-        scaled = Math.ceil(scaled / PARTY_PLUS_PRICE_DIVISOR);
-
-    } else if (upgradeState.mode === "party" && playerCount > BIG_PARTY_MIN_PLAYERS) {
-
-        scaled = Math.ceil(scaled / BIG_PARTY_PRICE_DIVISOR);
-
-    }
+    let scaled = base * Math.sqrt(playerCount);
 
     const nothingActive = isNothingCurseActive();
     const wishActive = isWishPerfectionActive();
@@ -1142,7 +1123,9 @@ function computeStackPrice(item, stack) {
 
     }
 
-    return Math.ceil(scaled) * (item.prices ? 1 : stack);
+    // Match the calculator: player scaling and discounts happen before the
+    // final ceiling, then multiply flat-price upgrades by the requested stack.
+    return Math.ceil(scaled * (item.prices ? 1 : stack));
 
 }
 
