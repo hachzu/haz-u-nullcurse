@@ -115,7 +115,7 @@
             }
             const presence = document.createElement('script');
             presence.type = 'module';
-            presence.src = 'js/presence.js?v=20261108-username-visibility';
+            presence.src = 'js/presence.js?v=20261110-anonymous-username-gate';
             document.head.append(presence);
             initialized = true;
             const observer = new MutationObserver(syncPanelRoute);

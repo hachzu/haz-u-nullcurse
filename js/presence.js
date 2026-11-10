@@ -46,7 +46,17 @@ function ensureUsername() {
 
         const existing = getStoredUsername();
 
-        if (existing) {
+        // Older anonymous entries use a # prefix (for example #1234).
+        // Treat those as signed out so the required username gate appears.
+        if (existing && /^#/.test(existing.trim())) {
+            try {
+                localStorage.removeItem(USERNAME_KEY);
+            } catch {
+                // The gate still requires a new username even when storage is unavailable.
+            }
+        }
+
+        if (existing && !/^#/.test(existing.trim())) {
             resolve(existing);
             return;
         }
