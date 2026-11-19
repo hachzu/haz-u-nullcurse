@@ -924,7 +924,7 @@ function loadUpgradeState() {
  * pending selections, Golden Gifts, and mode) without touching the
  * sidebar run state.
  */
-function resetUpgradeShopState() {
+function resetUpgradeShopState({ preserveMode = false } = {}) {
 
     upgradeState.pending.clear();
     upgradeState.owned.clear();
@@ -933,7 +933,7 @@ function resetUpgradeShopState() {
     upgradeState.arrogance = false;
     upgradeState.conceit = false;
     upgradeState.goldenGifts = 0;
-    upgradeState.mode = "solo";
+    if (!preserveMode) upgradeState.mode = "solo";
     upgradeState.progressive = true;
 
     saveUpgradeState();

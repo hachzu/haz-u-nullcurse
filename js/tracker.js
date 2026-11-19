@@ -3336,9 +3336,6 @@ if (activeCurseSearchClear) {
 attachHoldAction(document.getElementById("resetButton"), () => {
 
     runState.level = 1;
-    runState.difficulty = "Standard";
-    runState.chaosMode = false;
-    runState.chaosPlusMode = false;
 
     runState.activeEnemies.clear();
     runState.activeCurses.clear();
@@ -3363,7 +3360,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
 
     if (typeof resetUpgradeShopState === "function") {
 
-        resetUpgradeShopState();
+        resetUpgradeShopState({ preserveMode: true });
 
     }
 
