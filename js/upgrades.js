@@ -3679,3 +3679,39 @@ if (upgradeBackButton) {
 loadUpgradeState();
 refreshUpgradePanel();
 if (typeof syncDelusionUpgradeEffects === "function") syncDelusionUpgradeEffects();
+
+// Record changes made through the upgrade panel so corrections and purchases can be undone.
+const upgradeUndoHistory = [];
+const upgradeUndoButton = document.getElementById("upgradeUndoButton");
+function snapshotUpgradeUndo() {
+    return { state: { ...upgradeState, owned: Array.from(upgradeState.owned), pending: Array.from(upgradeState.pending) }, level: runState.level };
+}
+function updateUpgradeUndoButton() {
+    if (upgradeUndoButton) upgradeUndoButton.disabled = upgradeUndoHistory.length === 0;
+}
+const upgradeUndoPanel = document.getElementById("upgradePanel");
+if (upgradeUndoPanel && upgradeUndoButton) {
+    for (const eventName of ["click", "change"]) {
+        upgradeUndoPanel.addEventListener(eventName, event => {
+            if (event.target.closest("#upgradeUndoButton")) return;
+            const before = snapshotUpgradeUndo();
+            setTimeout(() => {
+                if (JSON.stringify(before) === JSON.stringify(snapshotUpgradeUndo())) return;
+                before.levelChanged = before.level !== runState.level;
+                upgradeUndoHistory.push(before);
+                if (upgradeUndoHistory.length > 100) upgradeUndoHistory.shift();
+                updateUpgradeUndoButton();
+            }, 0);
+        }, true);
+    }
+    upgradeUndoButton.addEventListener("click", () => {
+        const previous = upgradeUndoHistory.pop();
+        if (!previous) return;
+        Object.assign(upgradeState, previous.state, { owned: new Map(previous.state.owned), pending: new Map(previous.state.pending) });
+        if (previous.levelChanged) runState.level = previous.level;
+        saveUpgradeState();
+        render();
+        refreshUpgradePanel();
+        updateUpgradeUndoButton();
+    });
+}

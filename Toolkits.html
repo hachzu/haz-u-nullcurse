@@ -432,6 +432,8 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 12 4 4 8-8m-3 8 8-8"/></svg><span class="btn-label">OWN ALL</span>
                         </button>
 
+                        <button id="upgradeUndoButton" class="upgrade-reset-button" type="button" title="Undo the last upgrade change" disabled><span class="btn-label">UNDO</span></button>
+
                         <button
                             id="upgradeResetButton"
                             class="upgrade-reset-button"
@@ -1227,7 +1229,7 @@
                         <button type="button" id="temporaryCurseToggle" aria-pressed="false"
                             title="Pick curses that expire after the specified number of levels">TEMPORARY</button>
                         <div class="number-increment-control">
-                            <input type="number" id="temporaryCurseDuration" min="1" max="100000" step="1" value="10"
+                            <input type="number" id="temporaryCurseDuration" min="1" max="100000" step="1" value="8"
                                 aria-label="Temporary curse duration in levels">
                             <button type="button" class="number-increment-button" data-increment-input="temporaryCurseDuration" data-step="1" aria-label="Increase temporary duration by one level">
                                 <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m4 10 4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>

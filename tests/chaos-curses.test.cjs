@@ -174,3 +174,22 @@ test('delusions follow the current level, upcoming dependencies, and the three-p
  assert.equal(visible().length, 15);
  assert.match(run('getDelusionRequirementReason(DELUSION_BY_NAME.get("Conceit"))'), /Cannot be picked with Arrogance/);
 });
+
+
+test('temporary picks remain available until permanently picked', () => {
+ const run = harness();
+ run('render = () => {}; runState.level = 30; globalThis.testCurse = globalCurses.find(c => !c.max && !c.exclusiveGroup && !c.requiresCurses && !c.requiresAnyCurses && isCurseSelectable(c))');
+ run('selectCurse(testCurse, false, false, 8)');
+ assert.equal(run('getGlobalPool().includes(testCurse)'), true);
+ run('selectCurse(testCurse)');
+ assert.equal(run('getGlobalPool().includes(testCurse)'), false);
+});
+
+test('greater curses follow the upcoming visibility setting', () => {
+ const run = harness();
+ run('runState.level = 1; globalThis.testCurse = greaterCurses.find(c => isCurseUpcoming(c))');
+ assert.equal(run('Boolean(testCurse)'), true);
+ assert.equal(run('getGreaterPool().includes(testCurse)'), false);
+ run('curseVisibilityState.showUpcoming = true');
+ assert.equal(run('getGreaterPool().includes(testCurse)'), true);
+});

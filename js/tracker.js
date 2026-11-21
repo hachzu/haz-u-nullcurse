@@ -1351,7 +1351,7 @@ function exclusiveGroupAvailable(curse) {
 
 function isCurseAtCap(curse) {
 
-    const stackCount = getCurseStackCount(curse.name);
+    const stackCount = runState.curseStacks.get(curse.name) || 0;
 
     if (curse.max) {
 
@@ -1545,17 +1545,8 @@ function isCurseLockedOnlyByLevel(curse) {
  * and its exclusive-group partner isn't taken - so it will come up
  * as the run levels, it just isn't here yet. Powers Show Upcoming.
  *
- * Greater curses are left out on purpose: they already show in their
- * pool regardless of level (see getGreaterPool), so there's nothing
- * extra to reveal for them.
  */
 function isCurseUpcoming(curse) {
-
-    if (isGreaterCurse(curse)) {
-
-        return false;
-
-    }
 
     // Mode-disabled curses (Mart Infection / Deadly Melody in Solo,
     // etc.) will never appear in this run no matter how high the
@@ -1679,21 +1670,9 @@ function getEnemyPool() {
 }
 
 
-/*
- * Greater curses always show once their other requirements are met
- * (an active enemy for Enemy-type ones, no exclusive-group conflict,
- * not already maxed/active, not casual-disabled) - level alone no
- * longer hides them. Cards for ones you haven't reached the level
- * for yet render locked with an "Unlocks Lv X" indicator instead of
- * disappearing from the list. Actually selecting one is still
- * blocked by the real level check inside canAppear/selectCurse
- * (unless Unlock All Curses is on - see isCurseSelectable). With
- * Show All Curses on, this same locked-card treatment extends to
- * greater curses whose other requirements aren't met either.
- */
 function getGreaterPool() {
 
-    return greaterCurses.filter(curse => isCurseVisibleInPool(curse, true));
+    return orderPoolWithUpcoming(greaterCurses.filter(curse => isCurseVisibleInPool(curse, false)));
 
 }
 
@@ -2465,6 +2444,25 @@ function createCurseCard(curse, isMedal = false, awardsMedalPayout = false) {
 
     }
 
+    const expiries = isMedal && runState.temporaryCurseExpiries.get(curse.name);
+    if (expiries?.length) {
+        card.classList.add("curse-card--temporary");
+        const expiry = Math.min(...expiries);
+        const badges = document.createElement("div");
+        badges.className = "medal-temporary-badges";
+        for (const [kind, value, title] of [
+            ["countdown", Math.max(0, expiry - Math.floor(runState.level)), "Levels until expiry"],
+            ["expiry", expiry, "Expires at level"]
+        ]) {
+            const badge = document.createElement("span");
+            badge.className = 'temporary-curse-badge temporary-curse-badge--' + kind;
+            badge.textContent = String(value);
+            badge.title = title + ': ' + value;
+            badges.appendChild(badge);
+        }
+        card.appendChild(badges);
+    }
+
     const media = createMediaBox("curses", curse.name);
 
     card.appendChild(media);
@@ -2643,8 +2641,8 @@ function renderActiveCurses() {
 
     let orderedNames = allNames.sort((a, b) => {
 
-        const temporaryOrder = Number(runState.temporaryCurseExpiries.has(b)) -
-            Number(runState.temporaryCurseExpiries.has(a));
+        const temporaryOrder = Number(runState.temporaryCurseExpiries.has(a)) -
+            Number(runState.temporaryCurseExpiries.has(b));
         if (temporaryOrder) return temporaryOrder;
 
         const curseA = findCurseByName(a);
@@ -2815,7 +2813,7 @@ function renderActiveCurses() {
 
         const icon = createActiveCurseIcon("curses", curse.name);
         const expiries = runState.temporaryCurseExpiries.get(curseName);
-        if (expiries?.length) {
+        if (curse.medal && expiries?.length) {
             const expiry = Math.min(...expiries);
             const remaining = Math.max(0, expiry - Math.floor(runState.level));
             const tail = document.createElement("div");
@@ -2907,7 +2905,7 @@ let levelEditPending = false;
 
 function getTemporaryCurseDuration() {
     const value = Math.trunc(Number(document.getElementById("temporaryCurseDuration").value));
-    return Number.isSafeInteger(value) && value > 0 ? Math.min(value, 100000) : 10;
+    return Number.isSafeInteger(value) && value > 0 ? Math.min(value, 100000) : 8;
 }
 
 const STORAGE_KEY = "nullscapeRunState";
@@ -3346,7 +3344,7 @@ attachHoldAction(document.getElementById("resetButton"), () => {
     runState.medalPurified.clear();
 
     setTemporaryCurseMode(false);
-    temporaryCurseDuration.value = 10;
+    temporaryCurseDuration.value = 8;
     document.getElementById("levelInput").value = 1;
     document.getElementById("playerCountInput").value = 1;
 
